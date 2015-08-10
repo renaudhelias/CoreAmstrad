@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="RAMFiller">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2011-3-10T15:0:34</timestamp>
+    <pin polarity="Input" x="0" y="32" name="DO_FILL" />
+    <pin polarity="Input" x="0" y="96" name="DO_READ" />
+    <pin polarity="Input" x="0" y="-160" name="pic_A(18:0)" />
+    <pin polarity="Input" x="0" y="288" name="pixel_A(13:0)" />
+    <pin polarity="Output" x="384" y="-160" name="ram_A(23:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-328" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="32" type="pin DO_FILL" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="96" type="pin DO_READ" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-160" type="pin pic_A(18:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="288" type="pin pixel_A(13:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-160" type="pin ram_A(23:0)" />
+        <rect width="64" x="0" y="276" height="24" />
+        <line x2="0" y1="288" y2="288" x1="64" />
+        <line x2="0" y1="32" y2="32" x1="64" />
+        <line x2="0" y1="96" y2="96" x1="64" />
+        <rect width="64" x="0" y="-172" height="24" />
+        <line x2="0" y1="-160" y2="-160" x1="64" />
+        <rect width="64" x="320" y="-172" height="24" />
+        <line x2="384" y1="-160" y2="-160" x1="320" />
+        <rect width="256" x="64" y="-320" height="636" />
+    </graph>
+</symbol>

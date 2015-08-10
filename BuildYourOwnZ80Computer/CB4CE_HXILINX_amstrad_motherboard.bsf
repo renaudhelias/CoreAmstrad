@@ -1,0 +1,92 @@
+/*
+WARNING: Do NOT edit the input and output ports in this file in a text
+editor if you plan to continue editing the block that represents it in
+the Block Editor! File corruption is VERY likely to occur.
+*/
+/*
+Copyright (C) 1991-2013 Altera Corporation
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, Altera MegaCore Function License 
+Agreement, or other applicable license agreement, including, 
+without limitation, that your use is for the sole purpose of 
+programming logic devices manufactured by Altera and sold by 
+Altera or its authorized distributors.  Please refer to the 
+applicable agreement for further details.
+*/
+(header "symbol" (version "1.1"))
+(symbol
+	(rect 16 16 160 160)
+	(text "CB4CE_HXILINX_amstrad_motherboard" (rect 5 0 176 12)(font "Arial" ))
+	(text "inst" (rect 8 128 20 140)(font "Arial" ))
+	(port
+		(pt 0 32)
+		(input)
+		(text "C" (rect 0 0 7 12)(font "Arial" ))
+		(text "C" (rect 21 27 28 39)(font "Arial" ))
+		(line (pt 0 32)(pt 16 32)(line_width 1))
+	)
+	(port
+		(pt 0 48)
+		(input)
+		(text "CE" (rect 0 0 14 12)(font "Arial" ))
+		(text "CE" (rect 21 43 35 55)(font "Arial" ))
+		(line (pt 0 48)(pt 16 48)(line_width 1))
+	)
+	(port
+		(pt 0 64)
+		(input)
+		(text "CLR" (rect 0 0 21 12)(font "Arial" ))
+		(text "CLR" (rect 21 59 42 71)(font "Arial" ))
+		(line (pt 0 64)(pt 16 64)(line_width 1))
+	)
+	(port
+		(pt 144 32)
+		(output)
+		(text "CEO" (rect 0 0 21 12)(font "Arial" ))
+		(text "CEO" (rect 102 27 123 39)(font "Arial" ))
+		(line (pt 144 32)(pt 128 32)(line_width 1))
+	)
+	(port
+		(pt 144 48)
+		(output)
+		(text "Q0" (rect 0 0 11 12)(font "Arial" ))
+		(text "Q0" (rect 112 43 123 55)(font "Arial" ))
+		(line (pt 144 48)(pt 128 48)(line_width 1))
+	)
+	(port
+		(pt 144 64)
+		(output)
+		(text "Q1" (rect 0 0 10 12)(font "Arial" ))
+		(text "Q1" (rect 113 59 123 71)(font "Arial" ))
+		(line (pt 144 64)(pt 128 64)(line_width 1))
+	)
+	(port
+		(pt 144 80)
+		(output)
+		(text "Q2" (rect 0 0 11 12)(font "Arial" ))
+		(text "Q2" (rect 112 75 123 87)(font "Arial" ))
+		(line (pt 144 80)(pt 128 80)(line_width 1))
+	)
+	(port
+		(pt 144 96)
+		(output)
+		(text "Q3" (rect 0 0 11 12)(font "Arial" ))
+		(text "Q3" (rect 112 91 123 103)(font "Arial" ))
+		(line (pt 144 96)(pt 128 96)(line_width 1))
+	)
+	(port
+		(pt 144 112)
+		(output)
+		(text "TC" (rect 0 0 12 12)(font "Arial" ))
+		(text "TC" (rect 111 107 123 119)(font "Arial" ))
+		(line (pt 144 112)(pt 128 112)(line_width 1))
+	)
+	(drawing
+		(rectangle (rect 16 16 128 128)(line_width 1))
+	)
+)

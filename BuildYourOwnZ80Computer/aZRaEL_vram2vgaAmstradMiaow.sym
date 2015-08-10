@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="aZRaEL_vram2vgaAmstradMiaow">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2014-11-22T19:15:38</timestamp>
+    <pin polarity="Input" x="0" y="-416" name="CLK_25MHz" />
+    <pin polarity="Input" x="0" y="-224" name="DATA(7:0)" />
+    <pin polarity="Input" x="0" y="-32" name="PALETTE_D(7:0)" />
+    <pin polarity="Output" x="512" y="-416" name="VSYNC" />
+    <pin polarity="Output" x="512" y="-352" name="HSYNC" />
+    <pin polarity="Output" x="512" y="-288" name="ADDRESS(14:0)" />
+    <pin polarity="Output" x="512" y="-224" name="PALETTE_A(13:0)" />
+    <pin polarity="Output" x="512" y="-160" name="RED(1:0)" />
+    <pin polarity="Output" x="512" y="-96" name="GREEN(2:0)" />
+    <pin polarity="Output" x="512" y="-32" name="BLUE(1:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="256" y="-456" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-416" type="pin CLK_25MHz" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-224" type="pin DATA(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-32" type="pin PALETTE_D(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-416" type="pin VSYNC" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-352" type="pin HSYNC" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-288" type="pin ADDRESS(14:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-224" type="pin PALETTE_A(13:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-160" type="pin RED(1:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-96" type="pin GREEN(2:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="440" y="-32" type="pin BLUE(1:0)" />
+        <rect width="384" x="64" y="-448" height="448" />
+        <line x2="0" y1="-416" y2="-416" x1="64" />
+        <rect width="64" x="0" y="-236" height="24" />
+        <line x2="0" y1="-224" y2="-224" x1="64" />
+        <rect width="64" x="0" y="-44" height="24" />
+        <line x2="0" y1="-32" y2="-32" x1="64" />
+        <line x2="512" y1="-416" y2="-416" x1="448" />
+        <line x2="512" y1="-352" y2="-352" x1="448" />
+        <rect width="64" x="448" y="-300" height="24" />
+        <line x2="512" y1="-288" y2="-288" x1="448" />
+        <rect width="64" x="448" y="-236" height="24" />
+        <line x2="512" y1="-224" y2="-224" x1="448" />
+        <rect width="64" x="448" y="-172" height="24" />
+        <line x2="512" y1="-160" y2="-160" x1="448" />
+        <rect width="64" x="448" y="-108" height="24" />
+        <line x2="512" y1="-96" y2="-96" x1="448" />
+        <rect width="64" x="448" y="-44" height="24" />
+        <line x2="512" y1="-32" y2="-32" x1="448" />
+    </graph>
+</symbol>

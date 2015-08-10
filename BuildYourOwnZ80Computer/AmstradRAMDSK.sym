@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="AmstradRAMDSK">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2014-11-23T10:58:47</timestamp>
+    <pin polarity="Input" x="0" y="-160" name="transmit" />
+    <pin polarity="Input" x="0" y="32" name="init_done" />
+    <pin polarity="Input" x="0" y="-96" name="A(17:0)" />
+    <pin polarity="Input" x="0" y="-32" name="dsk_A(19:0)" />
+    <pin polarity="Input" x="0" y="96" name="init_A(22:0)" />
+    <pin polarity="Output" x="384" y="-96" name="vram_A_isValid" />
+    <pin polarity="Output" x="384" y="-32" name="ram_A(22:0)" />
+    <pin polarity="Output" x="384" y="-160" name="vram_A(14:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-200" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-160" type="pin transmit" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="32" type="pin init_done" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-96" type="pin A(17:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-32" type="pin dsk_A(19:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="96" type="pin init_A(22:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-96" type="pin vram_A_isValid" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-32" type="pin ram_A(22:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-160" type="pin vram_A(14:0)" />
+        <line x2="0" y1="32" y2="32" x1="64" />
+        <rect width="64" x="0" y="84" height="24" />
+        <line x2="0" y1="96" y2="96" x1="64" />
+        <line x2="0" y1="-160" y2="-160" x1="64" />
+        <rect width="64" x="0" y="-108" height="24" />
+        <line x2="0" y1="-96" y2="-96" x1="64" />
+        <rect width="64" x="0" y="-44" height="24" />
+        <line x2="0" y1="-32" y2="-32" x1="64" />
+        <rect width="64" x="320" y="-44" height="24" />
+        <line x2="384" y1="-32" y2="-32" x1="320" />
+        <rect width="64" x="320" y="-172" height="24" />
+        <line x2="384" y1="-160" y2="-160" x1="320" />
+        <line x2="384" y1="-96" y2="-96" x1="320" />
+        <rect width="256" x="64" y="-192" height="312" />
+    </graph>
+</symbol>

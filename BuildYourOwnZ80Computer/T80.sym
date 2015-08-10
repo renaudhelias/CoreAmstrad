@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="T80">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2011-5-11T7:29:10</timestamp>
+    <pin polarity="Input" x="0" y="-864" name="RESET_n" />
+    <pin polarity="Input" x="0" y="-768" name="CLK_n" />
+    <pin polarity="Input" x="0" y="-672" name="CEN" />
+    <pin polarity="Input" x="0" y="-576" name="WAIT_n" />
+    <pin polarity="Input" x="0" y="-480" name="INT_n" />
+    <pin polarity="Input" x="0" y="-384" name="NMI_n" />
+    <pin polarity="Input" x="0" y="-288" name="BUSRQ_n" />
+    <pin polarity="Input" x="0" y="-192" name="DInst(7:0)" />
+    <pin polarity="Input" x="0" y="-96" name="DI(7:0)" />
+    <pin polarity="Output" x="384" y="-864" name="M1_n" />
+    <pin polarity="Output" x="384" y="-800" name="IORQ" />
+    <pin polarity="Output" x="384" y="-736" name="NoRead" />
+    <pin polarity="Output" x="384" y="-672" name="Write" />
+    <pin polarity="Output" x="384" y="-608" name="RFSH_n" />
+    <pin polarity="Output" x="384" y="-544" name="HALT_n" />
+    <pin polarity="Output" x="384" y="-480" name="BUSAK_n" />
+    <pin polarity="Output" x="384" y="-416" name="IntCycle_n" />
+    <pin polarity="Output" x="384" y="-352" name="IntE" />
+    <pin polarity="Output" x="384" y="-288" name="Stop" />
+    <pin polarity="Output" x="384" y="-224" name="A(15:0)" />
+    <pin polarity="Output" x="384" y="-160" name="DO(7:0)" />
+    <pin polarity="Output" x="384" y="-96" name="MC(2:0)" />
+    <pin polarity="Output" x="384" y="-32" name="TS(2:0)" />
+    <pin polarity="Output" x="384" y="32" name="IO_ACK" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-904" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-864" type="pin RESET_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-768" type="pin CLK_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-672" type="pin CEN" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-576" type="pin WAIT_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-480" type="pin INT_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-384" type="pin NMI_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-288" type="pin BUSRQ_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-192" type="pin DInst(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-96" type="pin DI(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-864" type="pin M1_n" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-800" type="pin IORQ" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-736" type="pin NoRead" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-672" type="pin Write" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-608" type="pin RFSH_n" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-544" type="pin HALT_n" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-480" type="pin BUSAK_n" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-416" type="pin IntCycle_n" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-352" type="pin IntE" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-288" type="pin Stop" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-224" type="pin A(15:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-160" type="pin DO(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-96" type="pin MC(2:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-32" type="pin TS(2:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="32" type="pin IO_ACK" />
+        <line x2="384" y1="32" y2="32" x1="320" />
+        <line x2="0" y1="-864" y2="-864" x1="64" />
+        <line x2="0" y1="-768" y2="-768" x1="64" />
+        <line x2="0" y1="-672" y2="-672" x1="64" />
+        <line x2="0" y1="-576" y2="-576" x1="64" />
+        <line x2="0" y1="-480" y2="-480" x1="64" />
+        <line x2="0" y1="-384" y2="-384" x1="64" />
+        <line x2="0" y1="-288" y2="-288" x1="64" />
+        <rect width="64" x="0" y="-204" height="24" />
+        <line x2="0" y1="-192" y2="-192" x1="64" />
+        <rect width="64" x="0" y="-108" height="24" />
+        <line x2="0" y1="-96" y2="-96" x1="64" />
+        <line x2="384" y1="-864" y2="-864" x1="320" />
+        <line x2="384" y1="-800" y2="-800" x1="320" />
+        <line x2="384" y1="-736" y2="-736" x1="320" />
+        <line x2="384" y1="-672" y2="-672" x1="320" />
+        <line x2="384" y1="-608" y2="-608" x1="320" />
+        <line x2="384" y1="-544" y2="-544" x1="320" />
+        <line x2="384" y1="-480" y2="-480" x1="320" />
+        <line x2="384" y1="-416" y2="-416" x1="320" />
+        <line x2="384" y1="-352" y2="-352" x1="320" />
+        <line x2="384" y1="-288" y2="-288" x1="320" />
+        <rect width="64" x="320" y="-236" height="24" />
+        <line x2="384" y1="-224" y2="-224" x1="320" />
+        <rect width="64" x="320" y="-172" height="24" />
+        <line x2="384" y1="-160" y2="-160" x1="320" />
+        <rect width="64" x="320" y="-108" height="24" />
+        <line x2="384" y1="-96" y2="-96" x1="320" />
+        <rect width="64" x="320" y="-44" height="24" />
+        <line x2="384" y1="-32" y2="-32" x1="320" />
+        <rect width="256" x="64" y="-896" height="960" />
+    </graph>
+</symbol>

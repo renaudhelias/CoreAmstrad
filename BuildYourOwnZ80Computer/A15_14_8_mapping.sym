@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="A15_14_8_mapping">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2011-5-1T16:48:58</timestamp>
+    <pin polarity="Input" x="0" y="-32" name="A15_14_8_in(2:0)" />
+    <pin polarity="Output" x="528" y="-32" name="A15_14_8_out(2:0)" />
+    <graph>
+        <rect width="400" x="64" y="-64" height="64" />
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="264" y="-72" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-32" type="pin A15_14_8_in(2:0)" />
+        <rect width="64" x="0" y="-44" height="24" />
+        <line x2="0" y1="-32" y2="-32" x1="64" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="456" y="-32" type="pin A15_14_8_out(2:0)" />
+        <rect width="64" x="464" y="-44" height="24" />
+        <line x2="528" y1="-32" y2="-32" x1="464" />
+    </graph>
+</symbol>

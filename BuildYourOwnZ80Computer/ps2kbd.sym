@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="ps2kbd">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2011-4-18T15:8:37</timestamp>
+    <pin polarity="Input" x="0" y="-288" name="Rst_n" />
+    <pin polarity="Input" x="0" y="32" name="Clk_bourin" />
+    <pin polarity="Input" x="0" y="96" name="Clk_circuit" />
+    <pin polarity="Input" x="0" y="-96" name="PS2_Clk" />
+    <pin polarity="Input" x="0" y="-32" name="PS2_Data" />
+    <pin polarity="Output" x="384" y="-288" name="Press" />
+    <pin polarity="Output" x="384" y="-208" name="Release" />
+    <pin polarity="Output" x="384" y="-48" name="ScanCode(7:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-328" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-288" type="pin Rst_n" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="32" type="pin Clk_bourin" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="96" type="pin Clk_circuit" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-96" type="pin PS2_Clk" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-32" type="pin PS2_Data" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-288" type="pin Press" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-208" type="pin Release" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-48" type="pin ScanCode(7:0)" />
+        <line x2="0" y1="32" y2="32" x1="64" />
+        <line x2="0" y1="96" y2="96" x1="64" />
+        <line x2="0" y1="-288" y2="-288" x1="64" />
+        <line x2="0" y1="-96" y2="-96" x1="64" />
+        <line x2="0" y1="-32" y2="-32" x1="64" />
+        <line x2="384" y1="-288" y2="-288" x1="320" />
+        <line x2="384" y1="-208" y2="-208" x1="320" />
+        <rect width="64" x="320" y="-60" height="24" />
+        <line x2="384" y1="-48" y2="-48" x1="320" />
+        <rect width="256" x="64" y="-320" height="608" />
+    </graph>
+</symbol>

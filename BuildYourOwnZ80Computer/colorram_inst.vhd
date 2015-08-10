@@ -1,0 +1,16 @@
+-- Xilinx XPort Language Converter, Version 4.1 (110)
+-- 
+-- AHDL Design Source: colorram_inst.tdf
+-- VHDL Design Output: colorram_inst.vhd
+-- Created 23-Apr-2011 05:33 AM
+--
+-- Copyright (c) 2011, Xilinx, Inc.  All Rights Reserved.
+-- Xilinx Inc makes no warranty, expressed or implied, with respect to
+-- the operation and/or functionality of the converted output files.
+-- 
+
+--
+--
+-- *** this module FAILED during conversion
+--Look at error messages.
+--

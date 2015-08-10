@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="aZRaEL_vga">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2010-11-1T17:23:23</timestamp>
+    <pin polarity="Input" x="0" y="-416" name="clock_pop" />
+    <pin polarity="Input" x="0" y="32" name="pop_pixel(2:0)" />
+    <pin polarity="Output" x="384" y="-416" name="red" />
+    <pin polarity="Output" x="384" y="-352" name="green" />
+    <pin polarity="Output" x="384" y="-288" name="blue" />
+    <pin polarity="Output" x="384" y="-224" name="vsync" />
+    <pin polarity="Output" x="384" y="-160" name="hsync" />
+    <pin polarity="Output" x="384" y="-96" name="do_pop" />
+    <pin polarity="Output" x="384" y="-32" name="resynchro_pop" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-456" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-416" type="pin clock_pop" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="32" type="pin pop_pixel(2:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-416" type="pin red" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-352" type="pin green" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-288" type="pin blue" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-224" type="pin vsync" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-160" type="pin hsync" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-96" type="pin do_pop" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-32" type="pin resynchro_pop" />
+        <rect width="64" x="0" y="20" height="24" />
+        <line x2="0" y1="32" y2="32" x1="64" />
+        <line x2="0" y1="-416" y2="-416" x1="64" />
+        <line x2="384" y1="-416" y2="-416" x1="320" />
+        <line x2="384" y1="-352" y2="-352" x1="320" />
+        <line x2="384" y1="-288" y2="-288" x1="320" />
+        <line x2="384" y1="-224" y2="-224" x1="320" />
+        <line x2="384" y1="-160" y2="-160" x1="320" />
+        <line x2="384" y1="-96" y2="-96" x1="320" />
+        <line x2="384" y1="-32" y2="-32" x1="320" />
+        <rect width="256" x="64" y="-448" height="640" />
+    </graph>
+</symbol>

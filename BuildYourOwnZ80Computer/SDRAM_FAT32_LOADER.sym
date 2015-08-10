@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="SDRAM_FAT32_LOADER">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2015-3-14T15:54:3</timestamp>
+    <pin polarity="Input" x="0" y="-352" name="CLK" />
+    <pin polarity="Input" x="0" y="0" name="spi_Rdone" />
+    <pin polarity="Input" x="0" y="64" name="spi_Wdone" />
+    <pin polarity="Input" x="0" y="224" name="spi_init_done" />
+    <pin polarity="Input" x="0" y="368" name="dump_button" />
+    <pin polarity="Input" x="0" y="416" name="stop" />
+    <pin polarity="Input" x="0" y="480" name="key_reset" />
+    <pin polarity="Input" x="0" y="-208" name="changeDSK" />
+    <pin polarity="Input" x="0" y="576" name="dir_entry_ack" />
+    <pin polarity="Input" x="0" y="624" name="dir_entry_downloading" />
+    <pin polarity="Input" x="0" y="-160" name="file_select(7:0)" />
+    <pin polarity="Input" x="0" y="-256" name="ram_Din(7:0)" />
+    <pin polarity="Input" x="0" y="-80" name="spi_Din(7:0)" />
+    <pin polarity="Input" x="0" y="-304" name="leds_select(2:0)" />
+    <pin polarity="Input" x="0" y="528" name="FDC_input(6:0)" />
+    <pin polarity="Output" x="432" y="-352" name="ram_W" />
+    <pin polarity="Output" x="432" y="-304" name="ram_R" />
+    <pin polarity="Output" x="432" y="96" name="spi_Rdo" />
+    <pin polarity="Output" x="432" y="160" name="spi_Wdo" />
+    <pin polarity="Output" x="432" y="320" name="spi_Wblock" />
+    <pin polarity="Output" x="432" y="224" name="load_init_done" />
+    <pin polarity="Output" x="432" y="480" name="is_ucpm" />
+    <pin polarity="Output" x="432" y="576" name="dir_entry_clk" />
+    <pin polarity="Output" x="432" y="624" name="dir_entry_r" />
+    <pin polarity="Output" x="432" y="-160" name="ram_A(22:0)" />
+    <pin polarity="Output" x="432" y="-256" name="ram_Dout(7:0)" />
+    <pin polarity="Output" x="432" y="-32" name="spi_A(31:0)" />
+    <pin polarity="Output" x="432" y="272" name="spi_Dout(7:0)" />
+    <pin polarity="Output" x="432" y="32" name="leds(7:0)" />
+    <pin polarity="Output" x="432" y="528" name="FDC_output(5:0)" />
+    <pin polarity="Input" x="0" y="672" name="dir_entry_d(7:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="216" y="-392" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-352" type="pin CLK" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="0" type="pin spi_Rdone" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="64" type="pin spi_Wdone" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="224" type="pin spi_init_done" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="368" type="pin dump_button" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="416" type="pin stop" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="480" type="pin key_reset" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-208" type="pin changeDSK" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="576" type="pin dir_entry_ack" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="624" type="pin dir_entry_downloading" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-160" type="pin file_select(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-256" type="pin ram_Din(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-80" type="pin spi_Din(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-304" type="pin leds_select(2:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="528" type="pin FDC_input(6:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="-352" type="pin ram_W" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="-304" type="pin ram_R" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="96" type="pin spi_Rdo" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="160" type="pin spi_Wdo" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="320" type="pin spi_Wblock" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="224" type="pin load_init_done" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="480" type="pin is_ucpm" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="576" type="pin dir_entry_clk" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="624" type="pin dir_entry_r" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="-160" type="pin ram_A(22:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="-256" type="pin ram_Dout(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="-32" type="pin spi_A(31:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="272" type="pin spi_Dout(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="32" type="pin leds(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="360" y="528" type="pin FDC_output(5:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="672" type="pin dir_entry_d(7:0)" />
+        <rect width="64" x="0" y="660" height="24" />
+        <line x2="0" y1="672" y2="672" x1="64" />
+        <line x2="0" y1="576" y2="576" x1="64" />
+        <line x2="0" y1="624" y2="624" x1="64" />
+        <line x2="432" y1="576" y2="576" x1="368" />
+        <line x2="432" y1="624" y2="624" x1="368" />
+        <rect width="64" x="0" y="516" height="24" />
+        <line x2="0" y1="528" y2="528" x1="64" />
+        <rect width="64" x="368" y="516" height="24" />
+        <line x2="432" y1="528" y2="528" x1="368" />
+        <line x2="432" y1="480" y2="480" x1="368" />
+        <line x2="0" y1="416" y2="416" x1="64" />
+        <line x2="0" y1="224" y2="224" x1="64" />
+        <line x2="432" y1="224" y2="224" x1="368" />
+        <rect width="64" x="368" y="20" height="24" />
+        <line x2="432" y1="32" y2="32" x1="368" />
+        <line x2="0" y1="-352" y2="-352" x1="64" />
+        <rect width="64" x="0" y="-172" height="24" />
+        <line x2="0" y1="-160" y2="-160" x1="64" />
+        <line x2="432" y1="-352" y2="-352" x1="368" />
+        <rect width="64" x="368" y="-172" height="24" />
+        <line x2="432" y1="-160" y2="-160" x1="368" />
+        <rect width="64" x="368" y="-44" height="24" />
+        <line x2="432" y1="-32" y2="-32" x1="368" />
+        <line x2="0" y1="0" y2="0" x1="64" />
+        <line x2="0" y1="64" y2="64" x1="64" />
+        <line x2="432" y1="-304" y2="-304" x1="368" />
+        <line x2="432" y1="96" y2="96" x1="368" />
+        <line x2="432" y1="160" y2="160" x1="368" />
+        <rect width="64" x="0" y="-92" height="24" />
+        <line x2="0" y1="-80" y2="-80" x1="64" />
+        <rect width="64" x="368" y="260" height="24" />
+        <line x2="432" y1="272" y2="272" x1="368" />
+        <rect width="64" x="0" y="-316" height="24" />
+        <line x2="0" y1="-304" y2="-304" x1="64" />
+        <line x2="0" y1="368" y2="368" x1="64" />
+        <line x2="432" y1="320" y2="320" x1="368" />
+        <line x2="0" y1="480" y2="480" x1="64" />
+        <line x2="0" y1="-208" y2="-208" x1="64" />
+        <rect width="64" x="0" y="-268" height="24" />
+        <line x2="0" y1="-256" y2="-256" x1="64" />
+        <rect width="64" x="368" y="-268" height="24" />
+        <line x2="432" y1="-256" y2="-256" x1="368" />
+        <rect width="304" x="64" y="-384" height="1136" />
+    </graph>
+</symbol>

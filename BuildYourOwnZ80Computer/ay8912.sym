@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="ay8912">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2011-1-16T15:44:25</timestamp>
+    <pin polarity="Input" x="0" y="-416" name="iclk" />
+    <pin polarity="Input" x="0" y="-352" name="reset" />
+    <pin polarity="Input" x="0" y="-288" name="cs" />
+    <pin polarity="Input" x="0" y="-224" name="bc0" />
+    <pin polarity="Input" x="0" y="-160" name="bdir" />
+    <pin polarity="Input" x="0" y="-96" name="PortAin(7:0)" />
+    <pin polarity="Input" x="0" y="-32" name="ioData(7:0)" />
+    <pin polarity="Output" x="384" y="-416" name="rechts(15:0)" />
+    <pin polarity="Output" x="384" y="-224" name="links(15:0)" />
+    <pin polarity="Output" x="384" y="-32" name="oData(7:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-456" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-416" type="pin iclk" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-352" type="pin reset" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-288" type="pin cs" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-224" type="pin bc0" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-160" type="pin bdir" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-96" type="pin PortAin(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-32" type="pin ioData(7:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-416" type="pin rechts(15:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-224" type="pin links(15:0)" />
+        <attrtext style="alignment:RIGHT;fontsize:24;fontname:Arial" attrname="PinName" x="312" y="-32" type="pin oData(7:0)" />
+        <rect width="256" x="64" y="-448" height="448" />
+        <line x2="0" y1="-416" y2="-416" x1="64" />
+        <line x2="0" y1="-352" y2="-352" x1="64" />
+        <line x2="0" y1="-288" y2="-288" x1="64" />
+        <line x2="0" y1="-224" y2="-224" x1="64" />
+        <line x2="0" y1="-160" y2="-160" x1="64" />
+        <rect width="64" x="0" y="-108" height="24" />
+        <line x2="0" y1="-96" y2="-96" x1="64" />
+        <rect width="64" x="0" y="-44" height="24" />
+        <line x2="0" y1="-32" y2="-32" x1="64" />
+        <rect width="64" x="320" y="-428" height="24" />
+        <line x2="384" y1="-416" y2="-416" x1="320" />
+        <rect width="64" x="320" y="-236" height="24" />
+        <line x2="384" y1="-224" y2="-224" x1="320" />
+        <rect width="64" x="320" y="-44" height="24" />
+        <line x2="384" y1="-32" y2="-32" x1="320" />
+    </graph>
+</symbol>

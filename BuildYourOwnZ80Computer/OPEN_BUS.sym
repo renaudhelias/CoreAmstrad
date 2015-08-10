@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<symbol version="7" name="OPEN_BUS">
+    <symboltype>BLOCK</symboltype>
+    <timestamp>2010-9-19T12:4:55</timestamp>
+    <pin polarity="Input" x="0" y="-160" name="CE" />
+    <pin polarity="Input" x="0" y="-96" name="I(7:0)" />
+    <pin polarity="Output" x="0" y="-32" name="O(7:0)" />
+    <graph>
+        <attrtext style="alignment:BCENTER;fontsize:56;fontname:Arial" attrname="SymbolName" x="192" y="-200" type="symbol" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-160" type="pin CE" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-96" type="pin I(7:0)" />
+        <attrtext style="fontsize:24;fontname:Arial" attrname="PinName" x="72" y="-32" type="pin O(7:0)" />
+        <rect width="256" x="64" y="-192" height="192" />
+        <line x2="0" y1="-160" y2="-160" x1="64" />
+        <rect width="64" x="0" y="-108" height="24" />
+        <line x2="0" y1="-96" y2="-96" x1="64" />
+        <rect width="64" x="0" y="-44" height="24" />
+        <line x2="0" y1="-32" y2="-32" x1="64" />
+    </graph>
+</symbol>

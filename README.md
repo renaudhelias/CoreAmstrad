@@ -25,9 +25,20 @@ This core was refactored into Xilinx NEXYS4 dev platform, and then translated fi
 
 MIST_* MiST glue code (added in main quartus schematic)
 
-
-
-
-
-
+Flow Status	Successful - Tue Aug 11 06:03:56 2015
+Quartus II 64-Bit Version	13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition
+Revision Name	FGPAmstrad_MiST_top
+Top-level Entity Name	FGPAmstrad_MiST_top
+Family	Cyclone III
+Device	EP3C25E144C8
+Timing Models	Final
+Total logic elements	13,933 / 24,624 ( 57 % )
+Total combinational functions	13,110 / 24,624 ( 53 % )
+Dedicated logic registers	4,775 / 24,624 ( 19 % )
+Total registers	4791
+Total pins	70 / 83 ( 84 % )
+Total virtual pins	0
+Total memory bits	532,496 / 608,256 ( 88 % )
+Embedded Multiplier 9-bit elements	30 / 132 ( 23 % )
+Total PLLs	1 / 4 ( 25 % )
 

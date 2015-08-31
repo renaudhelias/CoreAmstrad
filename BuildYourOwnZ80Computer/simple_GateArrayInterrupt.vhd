@@ -1,3 +1,19 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- FPGAmstrad_amstrad_motherboard.simple_GateArrayInterrupt
+-- VRAM/PRAM write
+-- CRTC interrupt, IO_ACK
+-- WAIT_n
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.std_logic_arith.ALL;
@@ -5,30 +21,27 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 -- https://sourceforge.net/p/jemu/code/HEAD/tree/JEMU/src/jemu/system/cpc/GateArray.java
 
--- alors voyons �a au clair
--- 12/13 maj de l'offset apr�s au dessus de 9 �a ne sert � rien
--- 0 1 2 3 d�clenche setEvents => �trange ce sont justement tout ce qui touche � l'HORIZONTAL
--- 7 semble chatouilleux si sa valeur est 0 mais �a semble �tre une erreur de coding
--- 3 lance setReg3(value) qui r�glent �trangement hsyncWidth et vsyncWidth
--- 6 lance setReg6() guili pour une d�mo
--- 8 lance setReg8(value) interlace
+-- Being clear about address/data :
+-- 12/13 : offset update, upper to 9 isn't used
+-- 0 1 2 3 do run setEvents => strange it seems about HORIZONTALS
+-- 7 seem making effects if its value is 0 but it seems a source code erratum
+-- 3 does call setReg3(value) which rules under hsyncWidth and vsyncWidth
+-- 6 does call setReg6() with some border effect on a demo
+-- 8 does call setReg8(value) interlace
 
 -- ink 0,2,20
 -- speed ink 1,1
 entity simple_GateArrayInterrupt is
 	Generic (LATENCE_MEM_WR:integer:=1;
-	NB_HSYNC_BY_INTERRUPT:integer:=52; --52; -- 52 normalement 52
-	--SCART_VSYNC_FIX_WIDTH_FROM_BEGIN:integer:=32;
-	--SCART_HSYNC_END_OFFSET:integer:=7;
-	--SCART_HSYNC_BEGIN_OFFSET:integer:=2;
-	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normalement 4 HSYNC
-	-- continuer sur cette voie, fixer le moment de l'interruption exactement � la fin de la HSYNC
-	--j'ai HDISP donc je peut d�terminer les chronos exacte et faire un g�n�rateur fixe.
+	NB_HSYNC_BY_INTERRUPT:integer:=52; --52; -- 52 sure it's 52
+	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
+	-- feel nice policy : interrupt at end of HSYNC
+	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
 	-- 39*8=312   /40=7.8 /52=6 /32=9.75
-  VRAM_HDsp:integer:=800/16; -- des mots de 16bit, contenant plus ou moins de pixels... pensons en r�f�rence mode 2, du 800x600 mode 2
+  VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
   VRAM_VDsp:integer:=600/2;
   VRAM_Hoffset:integer:=63-46-5; -- 63*16-46*16
-  VRAM_Voffset:integer:=38*8-30*8-4*8+4  +0; -- n'influe pas sur superposition rupture-ink image (car eux d�pendent du temps), influe seulement sur position image sur l'�cran
+  VRAM_Voffset:integer:=38*8-30*8-4*8+4  +0; -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
   BUG_Voffset:integer:=0 -- a CRTC original bug ?
 	);
     Port ( nCLK4_1 : in  STD_LOGIC;
@@ -40,13 +53,10 @@ entity simple_GateArrayInterrupt is
 			  Dout : inout  STD_LOGIC_VECTOR (7 downto 0):=(others=>'Z');
 			  crtc_VSYNC : out STD_LOGIC:='0';
 			  IO_ACK : in STD_LOGIC;
-			  --ecoleFix:in std_logic:='0';
 			  crtc_A: out STD_LOGIC_VECTOR (15 downto 0):=(others=>'0');
 			  bvram_A:out STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
 			  bvram_W:out STD_LOGIC:='0'; 
 			  bvram_D:out std_logic_vector(7 downto 0):=(others=>'0');
-			  --bvram_CLK:out std_logic:='0';
-			  --crtc_CLK:out std_logic:='0';
 			  crtc_R:out STD_LOGIC:='0'; --ram_A external solve CRTC read scan
            int : out  STD_LOGIC:='0'; -- JavaCPC reset init
 			  M1_n : in  STD_LOGIC;
@@ -54,9 +64,7 @@ entity simple_GateArrayInterrupt is
 			  WAIT_MEM_n : out  STD_LOGIC:='1';
            WAIT_n : out  STD_LOGIC:='1';
 			  
-			  --ram_R : out  STD_LOGIC:='0';
 			  crtc_D : in  STD_LOGIC_VECTOR (7 downto 0);
-			  --palette_CLK: out std_logic:='0';
 			  palette_A: out STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
 			  palette_D: out std_logic_vector(7 downto 0);
 			  palette_W: out std_logic;
@@ -82,7 +90,7 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal RHtot:std_logic_vector(7 downto 0):="00111111";
 	signal RHdisp:std_logic_vector(7 downto 0):="00101000";
 	signal RHsyncpos:std_logic_vector(7 downto 0):="00101110";
-	signal RHwidth:std_logic_vector(3 downto 0):="1101";-- moins un "1110";
+	signal RHwidth:std_logic_vector(3 downto 0):="1101";-- minus 1 "1110";
 	signal RVwidth:std_logic_vector(4 downto 0):="00100";-- shift 5 "01000";
 	signal RVtot:std_logic_vector(6 downto 0):="0100110";
 	signal RVtotAdjust:std_logic_vector(4 downto 0):="00000";
@@ -101,7 +109,7 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	
 	signal CLK4MHz : STD_LOGIC;
 
-	signal crtc_DISP : STD_LOGIC;--alternance 2MHz d�phas�     ===//
+	signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
 
 	type pen_type is array(15 downto 0) of integer range 0 to 31;
 	signal pen:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
@@ -114,13 +122,26 @@ architecture Behavioral of simple_GateArrayInterrupt is
 begin
 
 
--- scan de la VRAM (de mani�re intrusive) par le CRTC, puis envoi � la VRAM buffer
+-- do scan mirror VRAM (underground way (no way)) via CRTC, and then send data to VRAM buffer
+--
+-- Z80=>RAM         (read/write at 4MHz)
+--    =>mirror_VRAM (mirror : just write at 4MHz)
+--
+--mirror_VRAM<=CRTC (anarchy_clock read at 4MHz)
+--
+--CRTC=>VRAM_BUFFER+PRAM (pixels written at 50Hz)
+--
+--VRAM_BUFFER+PRAM=>VGA (read at 60Hz (that's another anarchy_clock))
+--
+-- anarchy_clock : see FPGAmstrad on CPCWiki about "magic clock" (a special FPGA RAM using two different clock entries at the same time)
+-- mirror_VRAM = bvram_A
+-- VRAM_BUFFER = crtc_A
 
 --crtc_CLK<=CLK4_1; --VALIDATED
 --bvram_CLK<=not(CLK4_1); --VALIDATED
 --palette_CLK<=not(CLK4_1); --VALIDATED
 
-	-- synchronize palette_CLK_tictac with bvram_CLK to provocate clock solver aZRaEL_vram2vgaAmstradMiaow
+	-- synchronize palette_CLK_tictac with bvram_CLK to provocate clock solver aZRaEL_vram2vgaAmstradMiaow (do win a half of clock time)
 	stabilizatorVRAMvsPALETTE:process(nCLK4_1,reset) is
 		variable palette_A_mem:std_logic_vector(palette_A'range):=(others=>'0');
 		variable palette_D_mem:std_logic_vector(7 downto 0):=(others=>'0');
@@ -141,32 +162,25 @@ begin
 	end process;
 
 	bvramWriter:process(nCLK4_1,reset) is -- transmit
-		--variable A2:STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
 		variable D2:STD_LOGIC_VECTOR (7 downto 0):=(others=>'0');
 		variable W2:STD_LOGIC :='0';
 	begin
-		--probelm with D2 and reset !
+		--problem with D2 and reset !
 		if reset='1' then
-			--crtc_D<=(others=>'Z');
-			crtc_R<='0'; -- ne pas g�ner les concurent (adressage RAM externe)
-			--ram_R<='0';
-			bvram_D<=(others=>'0'); -- ne pas d�rythmer D2
+			crtc_R<='0';
+			bvram_D<=(others=>'0'); -- do not loose tempo about D2
 			bvram_W<='0';
-			--bvram_A<=(others=>'0'); -- ne pas d�rythmer
-			--bvram_CLK<='0';
-			--crtc_CLK<='0';
 		else
 			-- address is solved
 			if falling_edge(nCLK4_1) then
 				crtc_R<='1'; -- directly solve external ram_A for CRTC read
 				if crtc_DISP='1' then
-					D2:=crtc_D; --bugbug
+					D2:=crtc_D; --bug bug
 					W2:='1';
 				else
 					W2:='0';
 				end if;
-				bvram_D<=D2; -- rythmer D2 !!!
-				--bvram_D<=bvram_A(7 downto 0);
+				bvram_D<=D2; -- tempo D2 !!!
 				bvram_W<=W2;
 			end if;
 		end if;
@@ -186,11 +200,8 @@ ctrcConfig_process:process(nCLK4_1) is
 	
 	variable pen_mem:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
 	variable border_mem:integer range 0 to 31;
-	--variable ecoleFixMem:std_logic:='0';
 begin
 	if rising_edge(nCLK4_1) then
-		--ecoleFixMem:=ecoleFix;
-		--crtc_D<=crtc_D_tmp;
 		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
 			if D(7) ='0' then
 				-- ink -- osef
@@ -205,13 +216,11 @@ begin
 					else
 						border_mem:=conv_integer(ink_color);
 						border<=border_mem;
-						--border<=0; vertical BORDER OK
 					end if;
 				end if;
 			end if;
 		end if;
 	
-		--RVtotAdjust<="00" & potards(2 downto 0);
 		if (IO_REQ_W or IO_REQ_R)='1' and A15_A14_A9_A8(2)='0' then
 			if A15_A14_A9_A8(1)=A9_WRITE then
 				Dout<=(others=>'Z');
@@ -220,7 +229,6 @@ begin
 				else
 					registres(reg_select):=D;
 					
---if ecoleFixMem='0' then
 					case reg_select is
 						when 0=>
 								RHtot<=registres(0);
@@ -229,9 +237,9 @@ begin
 						when 2=>
 							RHsyncpos<=registres(2);
 						when 3=>
-	-- selon datasheet et Arnold (Arnold dit qu'il y a une table de conversion HSYNC crtc.c.GA_HSyncWidth)
-							RHwidth<=registres(3)(3 downto 0); -- datasheet
-							--RVwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) selon Arnold  ctrct.c.MONITOR_VSYNC_COUNT "01111"; -- arkanoid utilise largeur VSYNC lorsqu'on touvche un monstre ou si on tire avec le bonus
+	-- following DataSheet and Arnold emulator (Arnold says it exists a conversion table HSYNC crtc.c.GA_HSyncWidth)
+							RHwidth<=registres(3)(3 downto 0); -- DataSheet
+							--RVwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111"; -- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
 							RVwidth<='0' & registres(3)(7 downto 4); -- JavaCPC 2015
 						when 4=>
 							RVtot<=registres(4)(RVtot'range);
@@ -264,7 +272,6 @@ begin
 						when 17=>NULL;
 							--light pen L
 					end case;
---end if;
 				end if;
 			else
 				-- A9_READ
@@ -272,24 +279,24 @@ begin
 			end if;
 		elsif IO_ACK='1' then
 			-- IO_ACK DATA_BUS
-			Dout<=(others=>'0'); -- value to check... cpcwiki seem done at the moment I write this sentence :P
+			Dout<=(others=>'0'); -- value to check... cpcwiki seem down at the moment I write this sentence :P
 		else
 			Dout<=(others=>'Z');
 		end if;
 	end if;
 end process ctrcConfig_process;
 
-	-- ATTENTION : partie CRTC test� et valid� via testbench
+	-- DANGEROUS WARNING : CRTC PART WAS TESTED AND VALIDATED USING TESTBENCH
 simple_GateArray_process : process(nCLK4_1) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
 	variable disp:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
-	-- selon Quazar 300 fois par seconde
-	-- selon une trace dans google de www.cepece.info/amstrad/docs/garray.html j'ai
+	-- following Quazar legends, 300 times per second
+	-- Following a lost trace in Google about www.cepece.info/amstrad/docs/garray.html I have
 	-- "In the CPC the Gate Array generates maskable interrupts, to do this it uses the HSYNC and VSYNC signals from CRTC, a 6-bit internal counter and monitors..."
--- � lire aussi peut etre : http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display 
-		-- selon http://cpcrulez.fr/coding_amslive04-z80.htm
+-- perhaps useful also : http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display 
+		-- following http://cpcrulez.fr/coding_amslive04-z80.htm
 		variable horizontal_counter : integer range 0 to 256-1:=0; --640/16
 		variable vertical_counter : integer range 0 to 128*8-1:=0; --600
 		variable vertical_counter_line : integer range 0 to 128-1:=0;
@@ -298,14 +305,14 @@ simple_GateArray_process : process(nCLK4_1) is
 		variable etat_vsync : STD_LOGIC:=DO_NOTHING;
 		variable last_etat_hsync : STD_LOGIC:=DO_NOTHING;
 		variable last_etat_vsync : STD_LOGIC:=DO_NOTHING;
-		variable ligne_carac_v:integer range 0 to 32-1:=0; -- buggy boy a RRmax=5
+		variable ligne_carac_v:integer range 0 to 32-1:=0; -- buggy boy has value RRmax=5
 		variable MA:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable RA:STD_LOGIC_VECTOR(4 downto 0):=(others=>'0');
 		variable ADRESSE_CONSTANT_mem:integer range 0 to 16*1024-1;
 		variable ADRESSE_INC_mem:integer range 0 to 16*1024-1;
 		variable ADRESSE_VAR_mem:integer range 0 to 16*1024-1;
-		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); --memoire 16bit
-		variable bvram_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); --memoire 16bit
+		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
+		variable bvram_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable MA_1514_begin:std_logic_vector(1 downto 0):=(others=>'0');
 
 		variable crtc_VSYNC_counter:std_logic_vector(7 downto 0):=(others=>'0');
@@ -316,7 +323,7 @@ simple_GateArray_process : process(nCLK4_1) is
 		variable was_MEMWR_0:boolean:=false;
 		
 		--(128*1024)/64 2*1024=2^11
-		variable zap_scan:boolean:=true; -- il n'y a pas eu de blank donc ne pas scanner la m�moire
+		variable zap_scan:boolean:=true; -- if in last round, has no blank signal, do not scan memory !
 
 		variable vram_vertical_offset_counter:integer:=0;
 		variable vram_vertical_counter:integer:=0;
@@ -332,73 +339,41 @@ simple_GateArray_process : process(nCLK4_1) is
 		variable in_800x600:boolean:=false;
 		variable last_CENTER:boolean:=false; -- not in left BORDER, in right BORDER if disp=0, in CENTER if disp=1
 		
-		--variable gatearrayVSYNC_generator : integer range 0 to SCART_VSYNC_FIX_WIDTH_FROM_BEGIN-1:=0;
-		--variable gatearrayHSYNC_generator : integer range 0 to SCART_HSYNC_END_OFFSET-1:=0;
-		
 	begin
 	--it's Z80 time !
 		if rising_edge(nCLK4_1) then
 		
 		compteur1MHz:=(compteur1MHz+1) mod 4;
 		
---crtc_R<='0';
 crtc_DISP<='0';
 palette_W_tictac<='0';
 
--- Crazy Car II n'aime pas le little_reset
-			-- asphalt IACK sans test sur int_mem
-			-- compteur jamais sup�rieur � 52
+-- Crazy Car II doesn't like little_reset
+			-- Asphalt IACK without test in int_mem
+			-- counter never upper than  52
 			-- z80 mode 1 : the byte need no be sent, as the z80 restarts at logical address x38 regardless(z80 datasheet)
 			case compteur1MHz is
 			when 0=>
 				if horizontal_counter>=RHsyncpos and horizontal_counter<RHsyncpos+RHwidth then
 					etat_hsync:=DO_HSYNC;
-hsync<='1'; -- selon javacpc,grimware et arnold
+hsync<='1'; -- following javacpc,grimware and arnold
 				else
 					etat_hsync:=DO_NOTHING;
 hsync<='0';
 				end if;
 
 				--http://www.phenixinformatique.com/modules/newbb/viewtopic.php?topic_id=4316&forum=9
-				--Dans les sp�cifications originale du CRTC, il n'y a aucun controle sur la dur�e du VSync, de plus, les bits 4 � 7 du R3 sont inutilis�s. Certains constructeurs ont donc "r�cup�r�" ces bits libres pour y coller leurs propres "features", pour la plupart li�es au VSync (un peu comme le mode entrelac� du R8, d'ou les incompatiblit�s d'un type de CRTC � l'autre).
+				--In original CRTC DataSheet, it doesn't have any test about VSync period, and also, bits 4 to 7 of R3 are not taken into account. Some factories shall have reused this free bits to put on it its own features, feel more about somes linked to VSync (like interlaced R8, adding difference between a certain model of CRTC and another).
 				--PPI read CRTC.isVSYnc bool
 				
---				--hSyncEnd() : scart_vsync donc inutile ici
---				if etat_hsync=DO_NOTHING and last_etat_hsync=DO_HSYNC then
---					if vertical_counter+BUG_Voffset=RVsyncpos*(RRmax+1) then
---						gatearrayVSYNC_generator:=0;
---						scart_vsync<='1';
---					elsif gatearrayVSYNC_generator<SCART_VSYNC_FIX_WIDTH_FROM_BEGIN-1 then
---						gatearrayVSYNC_generator:=gatearrayVSYNC_generator+1;
---						scart_vsync<='1';
---					else
---						scart_vsync<='0';
---					end if;
---				end if;
---				if etat_hsync=DO_HSYNC and last_etat_hsync=DO_NOTHING then
---					gatearrayHSYNC_generator:=0;
---				elsif gatearrayHSYNC_generator<SCART_HSYNC_END_OFFSET-1 then
---					gatearrayHSYNC_generator:=gatearrayHSYNC_generator+1;
---					if gatearrayHSYNC_generator=SCART_HSYNC_BEGIN_OFFSET then
---						scart_hsync<='1';
---					elsif gatearrayHSYNC_generator=SCART_HSYNC_END_OFFSET-1 then
---						scart_hsync<='0';
---					end if;
---				elsif etat_hsync=DO_NOTHING and last_etat_hsync=DO_HSYNC then
---					if gatearrayHSYNC_generator<SCART_HSYNC_END_OFFSET-1 then
---						gatearrayHSYNC_generator:=SCART_HSYNC_END_OFFSET-1;
---						scart_hsync<='0';
---					end if;
---				end if;
-					
 				if vertical_counter+BUG_Voffset>=RVsyncpos*(RRmax+1) and vertical_counter+BUG_Voffset<RVsyncpos*(RRmax+1)+RVwidth then
 					etat_vsync:=DO_VSYNC;
-crtc_VSYNC<='1'; -- c'est bien 1 ici car il faut qu'un interrupt pendant le vsync=1 sinon border va trop vite
-vsync<='1'; -- déclenche un compteur de 2 hsync failing avant interruption
-				else -- selon Grim (forum) and 
+crtc_VSYNC<='1'; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
+vsync<='1'; -- do start a counter permitting 2 hsync failing before interrupt
+				else -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 crtc_VSYNC<='0';
-vsync<='0'; -- sert à rien, sauf à cascader plusieurs vsync qui se superposeraient.
+vsync<='0'; -- useless, except to addition several vsync layering them each others
 				end if;
 
 				if not(zap_scan) and horizontal_counter<RHdisp then -- and vertical_counter<RVDisp*(RRmax+1) then
@@ -409,7 +384,7 @@ vsync<='0'; -- sert à rien, sauf à cascader plusieurs vsync qui se superposera
 				if not(zap_scan) and horizontal_counter<RHdisp and vertical_counter<RVDisp*(RRmax+1) then
 					disp:='1';
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
-					-- il faut respecter les ruptures ADRESSE_CONSTANT_mem:=conv_integer(OFFSET(13 downto 0)) mod (16*1024);
+					-- Have to respect address cut ADRESSE_CONSTANT_mem:=conv_integer(OFFSET(13 downto 0)) mod (16*1024);
 					ADRESSE_INC_mem:=(vertical_counter_line*conv_integer(RHdisp)) mod (16*1024);
 					ADRESSE_VAR_mem:=(horizontal_counter) mod (16*1024);
 					MA:=conv_std_logic_vector(ADRESSE_CONSTANT_mem+ADRESSE_INC_mem+ADRESSE_VAR_mem,14);
@@ -421,16 +396,11 @@ vsync<='0'; -- sert à rien, sauf à cascader plusieurs vsync qui se superposera
 					disp:='0';
 					crtc_A_mem:=(others=>'0');
 				end if;
-				-- il n'est pas � 16MHz, mais on s'en fou.
+				-- it's not really 16MHz, but we don't care
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
-				--crtc_D<=crtc_D_16MHz;
-
--- bvram_A : adresse sur la VRAM32Ko
--- la bvram_A doit �tre scann�e pour du 800x600 constant, et affich� sur du 640x480 centr� constant.
--- crtc_A : adresse physique
 
 -- VRAM_HDsp VRAM_VDsp
--- on va y aller tout dou
+-- it's just the begin, do relax...
 if etat_vsync=DO_VSYNC and last_etat_vsync=DO_NOTHING then
 	vram_vertical_offset_counter:=0;
 	vram_vertical_counter:=0;
@@ -447,7 +417,7 @@ if etat_hsync=DO_HSYNC and last_etat_hsync=DO_NOTHING then
 	last_CENTER:=false;
 end if;
 
--- l� on scan du 800x600 selon VSYNC et HSYNC, donc on peut �crire du border...
+-- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
 if vram_horizontal_offset_counter>VRAM_Hoffset then
 	if vram_horizontal_counter<VRAM_HDsp then
 		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
@@ -463,7 +433,7 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 			elsif dispH='1' and disp='0' then
 				-- full VERTICAL BORDER
 				last_CENTER:=true;
-				-- on nourri la palette
+				-- filling palette (PRAM)
 				if last_dispH='0' then
 					palette_horizontal_counter:=0;
 				else
@@ -472,7 +442,6 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 				if palette_horizontal_counter<1 then
 					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:="00" & conv_std_logic_vector(vram_horizontal_counter,6);
-					--palette_D_tictac_mem:=conv_std_logic_vector(15,8);
 					palette_D_tictac<=palette_D_tictac_mem;
 					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -495,10 +464,8 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 				elsif palette_horizontal_counter<2+16+1 then
 					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
-					--palette_D_tictac_mem:=RHdisp;
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					--palette_D_tictac_mem:=conv_std_logic_vector(35,8);
 					palette_D_tictac<=palette_D_tictac_mem;
 					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -510,7 +477,7 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 			elsif dispH='1' and disp='1' then
 				-- DISPLAY
 				last_CENTER:=true;
-				-- on nourri la palette
+				-- filling palette (PRAM)
 				if last_dispH='0' then
 					palette_horizontal_counter:=0;
 				else
@@ -519,7 +486,6 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 				if palette_horizontal_counter<1 then
 					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
-					--palette_D_tictac_mem:=conv_std_logic_vector(15,8);
 					palette_D_tictac<=palette_D_tictac_mem;
 					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -542,10 +508,8 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 				elsif palette_horizontal_counter<2+16+1 then
 					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
-					--palette_D_tictac_mem:=RHdisp;
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					--palette_D_tictac_mem:=conv_std_logic_vector(35,8);
 					palette_D_tictac<=palette_D_tictac_mem;
 					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -572,8 +536,8 @@ last_dispH:=dispH;
 last_etat_vsync:=etat_vsync;
 last_etat_hsync:=etat_hsync;
 
-				-- le CRTC est s�par� de la gatearray donc il y a un temps de retard ?
-				-- pas s�r car c'est du gate array (une table de v�rit� barbare) sur �tat (et non sur front !)
+				-- The CRTC component is separated from Gatearray component, so does we have some late ?
+				-- Not certain, as this old component was really old ones : using state and no rising_egde...
 				if horizontal_counter=RHtot then -- tot-1 ok
 					horizontal_counter:=0;
 					if vertical_counter=(RVtot)*(RRmax+1)+RRmax + RVtotAdjust then
@@ -653,7 +617,7 @@ last_etat_hsync:=etat_hsync;
 					WAIT_n<='0';
 					waiting:=true;
 				elsif compteur1MHz=0 and not(waiting) then
-					-- il existe des instruction de plus de 4 Tstate (je confirme)
+					-- Some instructions has more than 4 Tstate -- validated
 				end if;
 			end if;
 			if M1_n='1' then
@@ -769,20 +733,20 @@ begin
 --and has to be reissued if more than one interrupt needs to be delayed.
 --Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
 
---Je pense que suppressed signifie ici passer � z�ro le signal INTERRUPT, puis raises passer �
---un le signal INTERRUPT (d�clenchement). Au IO_ACK bien entendu on passe � z�ro le signal
+--I think that "suppressed" is falling_edge the INTERRUPT signal (to 0), and I think that "raises" is rising_edge the INTERRUPT signal (to 1)
+--At IO_ACK signal certainly we shut down the INTERRUPT signal (to 0)
 --INTERRUPT
 	
---selon ma r�tro-ing�ni�rie de Space Invaders sur MameVHDL, en fait le IO_ACK se d�clanche lorsque l'interruption d�cide de finalement commencer, et lors du IO_ACK, le DATA_BUS est lu (selon l'interruption �a joue)
+--Following my refactoring of Space Invaders during my MameVHDL project, in fact an IO_ACK do event when an interrupt finally want to start, and during IO_ACK, the DATA_BUS is read (warning several instruction, several consequences...)
 	if rising_edge(nCLK4_1) then
 		if IO_ACK='1' then
 			--the Gate Array will reset bit5 of the counter
 			--Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
 			-- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
-			compteur52(5):= '0'; -- selon grimware : When the CPU acknowledge the interrupt (eg. it is going to jump to the interrupt vector), the Gate Array will reset bit5 of the counter, so the next interrupt can't occur closer than 32 HSync.
-			--compteur52(5 downto 1):= (others=>'0'); -- selon JavaCPC 2015
+			compteur52(5):= '0'; -- following Grimware legends : When the CPU acknowledge the interrupt (eg. it is going to jump to the interrupt vector), the Gate Array will reset bit5 of the counter, so the next interrupt can't occur closer than 32 HSync.
+			--compteur52(5 downto 1):= (others=>'0'); -- following JavaCPC 2015
 			-- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
-			int<='0'; -- selon JavaCPC 2015
+			int<='0'; -- following JavaCPC 2015
 		end if;
 		
 		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
@@ -843,7 +807,7 @@ begin
 				end if;
 				--Regardless of whether or not an interrupt is raised, the scan line counter is reset to 0.
 				compteur52:=(others=>'0');
-			elsif conv_integer(compteur52)=NB_HSYNC_BY_INTERRUPT then -- asphalt ? -- 52="110100"
+			elsif conv_integer(compteur52)=NB_HSYNC_BY_INTERRUPT then -- Asphalt ? -- 52="110100"
 				--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
 				compteur52:=(others=>'0');
 				int<='1';

@@ -1,3 +1,18 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- FPGAmstrad_amstrad_motherboard.PWM patched for luxurious output quality
+-- clk : a big clock, upper than dog sound frequency, here 17MHz
+-- clk_ref : clock matching with PWM_in data, here YM2149.CLK (Yamaha chip clock)
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;

@@ -1,3 +1,21 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- MIST_*.vhd : MiST-board simple adapter (glue-code)
+-- This type of components is only used on my main schematic.
+-- Policy here is generating all clocks from one component only, this way you can apply "Time Constraints" more easily.
+-- Policy here is not setting a "not(CLK)" outside of here. It's a true clock factory component.
+-- nCLK4MHz does feed Z80 slave components... that shall be under "Time Constraints", in order to debug/optimize them easily.
+-- CLK4MHz does feed Z80 component, in what I thrust completely, not needing then to being under "Time Constraints" law.
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
@@ -9,8 +27,8 @@ entity MIST_clocks is
            reset : in std_logic:='0'; -- '0'
            --SPI_SCK : in  STD_LOGIC; -- useless here ? 24MHz
            ps2_clk : out  STD_LOGIC;
-			  CLK4MHz : out  STD_LOGIC; -- Z80 (osef Time Contraints)
-			  nCLK4MHz : out  STD_LOGIC; -- not Z80 (under Time Contraints)
+			  CLK4MHz : out  STD_LOGIC; -- Z80 (don't care about Time Constraints)
+			  nCLK4MHz : out  STD_LOGIC; -- not Z80 (under Time Constraints)
            CLK8MHz : out  STD_LOGIC; -- Bootloader (nCLK4MHz)
            nCLK8MHz : out  STD_LOGIC; -- Bootloader (CLK4MHz)
 			  CLK25MHz : out  STD_LOGIC; -- VGA
@@ -173,7 +191,7 @@ begin
 		clk3_multiply_by => 1,
 		clk3_phase_shift => "0",
 		compensate_clock => "CLK0",
-		inclk0_input_frequency => 37037, --mensonge mais on garde :)
+		inclk0_input_frequency => 37037, -- I'm lying here, so that I can use lower frequencies equation, it's great :)
 		intended_device_family => "Cyclone III",
 		lpm_type => "altpll",
 		operation_mode => "NORMAL",
@@ -228,18 +246,6 @@ begin
 		clk => sub_wire0,
 		locked => pll_locked
 	);
-
-
-
-
---statuts(0) reset (downloading)
-
-	--in : CLOCK_27(0);
-	-- c0     => CLK_114M, -- *572/135
-   -- c1     => SDRAM_CLK, -- 572/135 phase shift -2500
-   -- c2     => CLK_12k, --*1/2250
-   -- locked => pll_locked
-	
 
 end Behavioral;
 

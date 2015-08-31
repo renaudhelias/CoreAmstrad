@@ -1,3 +1,18 @@
+//    {@{@{@{@{@{@
+//  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+//  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+//  {@{@{@{@{@{@{@{@
+//  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+//  {@{@        {@{@   Contact : renaudhelias@gmail.com
+//  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+//    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+//
+//
+//------------------------------------------------------------------------------
+// *.v : MiST-board controllers
+// This type of component is only used on my main schematic.
+// DELTA_ASYNC : using Amstrad, you can read/write into RAM and read from ROM, if you write in ROM in fact you write into RAM. Address solving here does come after WR/RD signal
+//------------------------------------------------------------------------------
 //
 // asdram.v
 //

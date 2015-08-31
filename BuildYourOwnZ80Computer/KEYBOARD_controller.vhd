@@ -1,33 +1,20 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    13:55:31 04/21/2011 
--- Design Name: 
--- Module Name:    KEYBOARD_controller - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
 --
--- Dependencies: 
 --
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- FPGAmstrad_amstrad_motherboard.KEYBOARD_controller
+-- see KEYBOARD_driver.vhd
+-- see Keyboard.vhd
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity KEYBOARD_controller is
     Port ( CLK : in  STD_LOGIC;
@@ -82,8 +69,7 @@ begin
 			elsif scancode_in= x"00" or scancode_in= x"FF"  then
 				--ignore (overrun)
 			elsif releasing and not(scancode_in = x"F0" or scancode_in= x"E0" or scancode_in= x"E1") then
-				-- on est en train de relacher la touche RX_ShiftReg
-				-- de toute façon c'est tout pourri le PS/2 on peut pas appuyer sur beaucoup de touche à la fois...
+				-- we are relaxing key RX_ShiftReg
 				releasing:=false;
 				unpress<='1';
 				
@@ -93,17 +79,17 @@ begin
 				is_e1:='0';
 			else
 				if scancode_in = x"F0" then
-					-- c'est un relachement
-					-- il faut zapper le paquet suivant !
+					-- let's relax
+					-- and so do zap next packet !
 					releasing:=true;
 				elsif scancode_in = x"E0" then
-					-- on s'en fou le paquet suivant c'est F0
+					-- we don't care : next packet is F0
 					is_e0:='1';
 				elsif scancode_in = x"E1" then
-					-- on s'en fou le paquet suivant c'est F0
+					-- we don't care : next packet is F0
 					is_e1:='1';
 				else
-					-- c'est une touche
+					-- it's a key
 					keycode_mem:=is_e0 & is_e1 & scancode_in;
 					keycode<=keycode_mem;
 					is_e0:='0';

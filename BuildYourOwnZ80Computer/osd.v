@@ -1,3 +1,21 @@
+//    {@{@{@{@{@{@
+//  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+//  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+//  {@{@{@{@{@{@{@{@
+//  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+//  {@{@        {@{@   Contact : renaudhelias@gmail.com
+//  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+//    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+//
+//
+//------------------------------------------------------------------------------
+// *.v : MiST-board controllers
+// This type of components is only used on my main schematic.
+// Hexa 7 segments for debug purpose (can had bad "time constraint" border effect, so unplug them in deployed versions)
+// Less memory used (poor character display...)
+// see CoreAmstradDevNotes wiki
+//------------------------------------------------------------------------------
+//
 // A simple OSD implementation. Can be hooked up between a cores
 // VGA output and the physical VGA pins
 
@@ -20,7 +38,7 @@ module osd (
 	
 	// debug 7seg input examples
 	//input [7:0] leds8,
-	//input [3:0] leds4, (RAMBank ROMBank & ROMen sont utilent que pour NEXYS4 : s'ils s'animent alors le clavier est ok)
+	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
 	
@@ -30,8 +48,10 @@ module osd (
 	
 	//input [7:0] leds8_fat32,
 	//input [255:0] dir_entry,
-	input [15:0] leds8_debug_crc_c,
-	input [15:0] leds8_debug_crc_r,
+	//input [15:0] leds8_debug_crc_c,
+	//input [15:0] leds8_debug_crc_r,
+	//input [31:0] leds8_debug_chrn,
+	//input [31:0] leds8_debug_chrnR,
 	
 	// VGA signals going to video connector
 	output reg [5:0]  	red_out,
@@ -61,7 +81,7 @@ reg [4:0]      cnt;
 reg [10:0]     bcnt;
 reg    			osd_enable;
 
-reg [7:0] osd_buffer [2047:0];  // the OSD buffer itself
+reg [7:0] osd_buffer [1024:0];  // the OSD buffer itself
 
 // the OSD has its own SPI interface to the io controller
 always@(posedge sck, posedge ss) begin
@@ -90,7 +110,7 @@ always@(posedge sck, posedge ss) begin
 
     // command 0x20: OSDCMDWRITE
     if((cmd[7:3] == 5'b00100) && (cnt == 15)) begin
-      osd_buffer[bcnt] <= {sbuf[6:0], sdi};
+      if (bcnt[0]== 1'b1) osd_buffer[bcnt[10:1]] <= {sbuf[6:0], sdi};
       bcnt <= bcnt + 11'd1;
     end
   end
@@ -194,7 +214,7 @@ wire osd_pixel = osd_byte[osd_vcnt[3:1]];
 
 reg [7:0] osd_byte; 
 always @(posedge pclk)
-  osd_byte <= osd_buffer[{osd_vcnt[6:4], osd_hcnt}];
+  osd_byte <= osd_buffer[{osd_vcnt[6:4], osd_hcnt[7:1]}];
 
 wire [2:0] osd_color = OSD_COLOR;
 
@@ -230,16 +250,39 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter8(.halfByte(4'h0),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(4'h0),.segment(segment[9]));
 
-osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug_crc_c[15:12]),.segment(segment[0]));
-osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug_crc_c[11:8]),.segment(segment[1]));
-osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug_crc_c[7:4]),.segment(segment[2]));
-osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug_crc_c[3:0]),.segment(segment[3]));
-osd_HEXA_7SEG my7segConverter4(.halfByte(4'h0),.segment(segment[4]));
-osd_HEXA_7SEG my7segConverter5(.halfByte(4'h0),.segment(segment[5]));
-osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug_crc_r[15:12]),.segment(segment[6]));
-osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug_crc_r[11:8]),.segment(segment[7]));
-osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_crc_r[7:4]),.segment(segment[8]));
-osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_crc_r[3:0]),.segment(segment[9]));
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug_crc_c[15:12]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug_crc_c[11:8]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug_crc_c[7:4]),.segment(segment[2]));
+//osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug_crc_c[3:0]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(4'h0),.segment(segment[4]));
+//osd_HEXA_7SEG my7segConverter5(.halfByte(4'h0),.segment(segment[5]));
+//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug_crc_r[15:12]),.segment(segment[6]));
+//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug_crc_r[11:8]),.segment(segment[7]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_crc_r[7:4]),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_crc_r[3:0]),.segment(segment[9]));
+
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug_chrnR[15:12]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug_chrnR[11:8]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug_chrn[31:28]),.segment(segment[2]));
+//osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug_chrn[27:24]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug_chrn[23:20]),.segment(segment[4]));
+//osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug_chrn[19:16]),.segment(segment[5]));
+//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug_chrn[15:12]),.segment(segment[6]));
+//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug_chrn[11:8]),.segment(segment[7]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_chrn[7:4]),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_chrn[3:0]),.segment(segment[9]));
+
+osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
+osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));
+osd_HEXA_7SEG my7segConverter2(.halfByte(4'hA),.segment(segment[2]));
+osd_HEXA_7SEG my7segConverter3(.halfByte(4'hB),.segment(segment[3]));
+osd_HEXA_7SEG my7segConverter4(.halfByte(4'hC),.segment(segment[4]));
+osd_HEXA_7SEG my7segConverter5(.halfByte(4'hD),.segment(segment[5]));
+osd_HEXA_7SEG my7segConverter6(.halfByte(4'hE),.segment(segment[6]));
+osd_HEXA_7SEG my7segConverter7(.halfByte(4'hF),.segment(segment[7]));
+osd_HEXA_7SEG my7segConverter8(.halfByte(4'h0),.segment(segment[8]));
+osd_HEXA_7SEG my7segConverter9(.halfByte(4'h0),.segment(segment[9]));
+
 
 
 wire matrice_pixel [9:0];

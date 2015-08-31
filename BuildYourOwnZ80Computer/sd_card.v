@@ -1,4 +1,21 @@
-// 
+//    {@{@{@{@{@{@
+//  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+//  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+//  {@{@{@{@{@{@{@{@
+//  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+//  {@{@        {@{@   Contact : renaudhelias@gmail.com
+//  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+//    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+//
+//
+//------------------------------------------------------------------------------
+// *.v : MiST-board controllers
+// This type of components is only used on my main schematic.
+// atchoum : data start bits pattern
+// easier debug : overrun (response before ask)
+// crc16
+//------------------------------------------------------------------------------
+//
 // sd_card.v
 //
 // This file implelents a sd card for the MIST board since on the board
@@ -54,6 +71,39 @@ module sd_card (
 	output [7:0] cmd_len_leds,
 	output [7:0] reply_leds
 ); 
+
+
+
+localparam CRC16_WRITE = 1'b0;
+// crc16_value:=(others=>'0'); -- not like USB protocol...
+// crc16_value:=crc16(d,crc16_value);
+function [15:0] crc16;
+	input d;
+	input [15:0] crc16in;
+	reg [15:0] crc;
+	reg a;
+	reg b;
+begin
+	b=d; // frontiere (paranoia ?)
+	crc=crc16in; // frontiere (paranoia ?)
+	a=crc[15] ^ b; //crc[15] xor b
+	crc16[15:13]=crc[14 : 12];
+	crc16[12]=crc[12] ^ a; //crc[12] xor a
+	crc16[11:6]=crc[10 : 5];
+	crc16[5]=crc[5] ^ a; //crc[5] xor a
+	crc16[4:1]=crc[3 : 0];
+	crc16[0]=a;
+end
+endfunction
+
+
+
+
+
+
+
+
+
 
 // set io_rd once read_state machine starts waiting (rising edge of req_io_rd)
 // and clear it once io controller uploads something (io_ack==1) 
@@ -166,6 +216,7 @@ end
 
 // ---------------- buffer write engine -----------------------
 reg [9:0] buffer_wptr;
+reg [15:0] crc16_value = 16'h0000;
 reg buffer_write_strobe;
 wire buffer_din_strobe = io_din_strobe || buffer_write_strobe;
 wire [7:0] buffer_din = (cmd == 8'h51)?io_din:{sbuf, sd_sdi};
@@ -174,7 +225,11 @@ always @(posedge buffer_din_strobe or posedge new_cmd_rcvd) begin
 	if(new_cmd_rcvd == 1)
 		buffer_wptr <= 10'd0;
 	else begin
-		buffer[buffer_wptr] <= buffer_din;	
+		if (CRC16_WRITE && (cmd == 8'h58)) begin
+			if (buffer_wptr == 511) buffer[511] <= crc16_value[15:8];
+			else if (buffer_wptr == 512) buffer[512] <= crc16_value[7:0];
+			else buffer[buffer_wptr] <= buffer_din;
+		end else buffer[buffer_wptr] <= buffer_din;
 		buffer_wptr <= buffer_wptr + 10'd1;
 	end
 end
@@ -346,10 +401,14 @@ always @(posedge sd_sck or posedge sd_cs) begin
 		   bit_cnt <= bit_cnt + 3'd1;
 		end
 	   
+		if (write_state == WR_STATE_RECV_DATA)
+			crc16_value = crc16(sd_sdi,crc16_value);
+		
 		if((bit_cnt != 7) && (write_state==WR_STATE_EXP_DTOKEN) && ({ sbuf, sd_sdi} == 8'hfe )) begin
 			write_state <= WR_STATE_RECV_DATA;
 			bit_cnt<= 0; // atchoum
 		end
+		
 		// assemble byte
 		else if(bit_cnt != 7)
 			sbuf[6:0] <= { sbuf[5:0], sd_sdi };
@@ -363,7 +422,7 @@ always @(posedge sd_sck or posedge sd_cs) begin
 			// first byte of valid command is 01xxxxxx
 			// don't accept new commands once a write or read command has been accepted
  			if((byte_cnt > 5) && (write_state == WR_STATE_IDLE) && 
-				(read_state == RD_STATE_IDLE) && !receiver_folks) begin //   && sbuf[6:5] == 2'b01 derniÃƒÂ¨re barriÃƒÂ¨re, pas pratique pour debug.
+				(read_state == RD_STATE_IDLE) && !receiver_folks) begin //   && sbuf[6:5] == 2'b01 (I prefer removing this clause : I prefer to receive a strange response to a not asked question, turning my personal machine state into "overrun state" (FATAL))
 				byte_cnt <= 4'd0;			
 				cmd <= { sbuf, sd_sdi};
 				new_cmd_rcvd <= 1'b1;
@@ -429,6 +488,7 @@ always @(posedge sd_sck or posedge sd_cs) begin
 				else if(cmd == 8'h58) begin
 					reply <= 8'h00;    // ok
 					write_state <= WR_STATE_EXP_DTOKEN;  // expect data token
+					crc16_value <= 16'h0000;
 					receiver_folks<=1'b0;
 				end
 

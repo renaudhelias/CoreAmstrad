@@ -1,3 +1,18 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- FPGAmstrad_*.vhd : Auto-generated code from FGPAmstrad 3 main schematics
+-- This type of component is only used on my main schematic.
+-- As it is about auto-generated code, you'll find no comments by here
+--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
 --------------------------------------------------------------------------------
@@ -428,7 +443,6 @@ entity FPGAmstrad_amstrad_motherboard is
           init_Din   : in    std_logic_vector (7 downto 0); 
           init_R_n   : in    std_logic; 
           init_W_n   : in    std_logic;
-          is_ucpm    : in    std_logic; 
           JOYSTICK1  : in    std_logic_vector (5 downto 0); 
           JOYSTICK2  : in    std_logic_vector (5 downto 0); 
           nCLK4MHz   : in    std_logic; 
@@ -441,7 +455,7 @@ entity FPGAmstrad_amstrad_motherboard is
 			 lowerVRAM : in std_logic_vector(1 downto 0);
 			 upperVRAM : in std_logic_vector(1 downto 0);
 			 ppi_jumpers : in std_logic_vector(3 downto 0);
-			 is_dskReady: in    std_logic; 
+			 is_dskReady : in std_logic_vector(1 downto 0);
           audio_AB      : out   std_logic; 
 			 audio_BC      : out   std_logic; 
           change     : out   std_logic; 
@@ -452,16 +466,28 @@ entity FPGAmstrad_amstrad_motherboard is
           palette_A  : out   std_logic_vector (13 downto 0); 
           palette_D  : out   std_logic_vector (7 downto 0); 
           palette_W  : out   std_logic; 
-          RAMBank    : out   std_logic_vector (2 downto 0); 
+          --RAMBank    : out   std_logic_vector (2 downto 0); 
           ram_A      : out   std_logic_vector (22 downto 0); 
           ram_Dout   : out   std_logic_vector (7 downto 0); 
           ram_R      : out   std_logic; 
           ram_W      : out   std_logic; 
-          ROMbank    : out   std_logic_vector (3 downto 0); 
-          ROMen      : out   std_logic; 
+          --ROMbank    : out   std_logic_vector (7 downto 0); 
+          --ROMen      : out   std_logic; 
           vram_A     : out   std_logic_vector (14 downto 0); 
           vram_D     : out   std_logic_vector (7 downto 0); 
-          vram_W     : out   std_logic);
+          vram_W     : out   std_logic;
+			 
+			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
+			  megashark_doGOTO : out std_logic; -- not a W/R operation finally
+			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection
+			  megashark_Din : in std_logic_vector(7 downto 0);
+			  megashark_Dout : out std_logic_vector(7 downto 0);
+			  megashark_doREAD : out std_logic;
+			  megashark_doWRITE : out std_logic;
+			  megashark_done : in std_logic;
+			  megashark_face : out std_logic
+			  );
 end FPGAmstrad_amstrad_motherboard;
 
 architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
@@ -488,7 +514,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_180      : std_logic;
    signal XLXN_283      : std_logic_vector (7 downto 0);
    signal XLXN_303      : std_logic;
-   signal XLXN_427      : std_logic_vector (19 downto 0);
    signal XLXN_462      : std_logic_vector (7 downto 0);
    signal XLXN_464      : std_logic;
    signal XLXN_470      : std_logic;
@@ -522,17 +547,15 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_884      : std_logic;
    signal XLXN_904      : std_logic;
    signal XLXN_907      : std_logic;
-   signal XLXN_908      : std_logic;
-   signal XLXN_914      : std_logic;
-   signal XLXN_915      : std_logic;
    signal XLXN_916      : std_logic;
   -- signal XLXN_918      : std_logic;
    signal XLXN_940      : std_logic;
-   signal xram_A        : std_logic_vector (17 downto 0);
+   signal xram_A        : std_logic_vector (22 downto 0);
    signal zero          : std_logic;
-   signal ROMbank_DUMMY : std_logic_vector (3 downto 0);
+   signal ROMbank_DUMMY : std_logic_vector (7 downto 0);
    signal ram_W_DUMMY   : std_logic;
    signal RAMBank_DUMMY : std_logic_vector (2 downto 0);
+   signal RAMBank_DUMMY512 : std_logic_vector (2 downto 0);
    component T80se_p
       port ( RESET_n : in    std_logic; 
              CLK_n   : in    std_logic; 
@@ -563,7 +586,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              lowerROMen : out   std_logic; 
              upperROMen : out   std_logic; 
              MODE       : out   std_logic_vector (1 downto 0); 
-             RAMbank    : out   std_logic_vector (2 downto 0));
+             RAMbank    : out   std_logic_vector (2 downto 0);
+			 RAMbank512 : out   std_logic_vector (2 downto 0)
+			 );
    end component;
    
    component simple_GateArrayInterrupt
@@ -601,7 +626,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              A13     : in    std_logic; 
              IO_WR   : in    std_logic; 
              D       : in    std_logic_vector (7 downto 0); 
-             ROMbank : out   std_logic_vector (3 downto 0));
+             ROMbank : out   std_logic_vector (7 downto 0));
    end component;
    
    component I82C55
@@ -644,9 +669,10 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              upperROMen : in    std_logic;
 				 --ROMarea:out std_logic;
              A          : in    std_logic_vector (15 downto 0); 
-             RAMbank    : in    std_logic_vector (2 downto 0); 
-             ROMbank    : in    std_logic_vector (3 downto 0); 
-             ram_A      : out   std_logic_vector (17 downto 0));
+             RAMbank    : in    std_logic_vector (2 downto 0);
+			 RAMbank512 : in    std_logic_vector (2 downto 0);
+             ROMbank    : in    std_logic_vector (7 downto 0); 
+             ram_A      : out   std_logic_vector (22 downto 0));
    end component;
    
    component INV
@@ -654,27 +680,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              O : out   std_logic);
    end component;
    attribute BOX_TYPE of INV : component is "BLACK_BOX";
-   
-   component RAM_driver
-      port ( rd        : in    std_logic; 
-             wr        : in    std_logic; 
-             dsk_RD    : in    std_logic; 
-             dsk_WR    : in    std_logic; 
-             transmit  : in    std_logic; 
-             reset     : in    std_logic; 
-             Din       : in    std_logic_vector (7 downto 0); 
-             Dout      : inout std_logic_vector (7 downto 0); 
-				 --ROMarea : in std_logic;
-             ram_W     : out   std_logic; 
-             ram_R     : out   std_logic; 
-             init_done : in    std_logic; 
-             init_W_n  : in    std_logic; 
-             init_R_n  : in    std_logic; 
-             init_Din  : in    std_logic_vector (7 downto 0); 
-             ram_Din   : in    std_logic_vector (7 downto 0); 
-             init_Dout : out   std_logic_vector (7 downto 0); 
-             ram_Dout  : out   std_logic_vector (7 downto 0));
-   end component;
    
    component GND
       port ( G : out   std_logic);
@@ -689,32 +694,54 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              IO_WR          : in    std_logic; 
              cafe           : in    std_logic; 
              --cafePifHercule : in    std_logic;
-				 is_dskReady       : in    std_logic;
-             is_ucpm        : in    std_logic; 
+				 is_dskReady    : in    std_logic_vector (1 downto 0);
              A10_A8_A7      : in    std_logic_vector (2 downto 0); 
              D_command      : in    std_logic_vector (7 downto 0); 
             -- FDD_input      : in    std_logic_vector (5 downto 0); 
              D_result       : inout std_logic_vector (7 downto 0); 
              change         : out   std_logic; 
-             dsk_W          : out   std_logic; 
-             dsk_R          : out   std_logic; 
-             transmit       : out   std_logic; 
              DSK_select     : out   std_logic_vector (7 downto 0); 
-             dsk_A          : out   std_logic_vector (19 downto 0)
             -- FDD_output     : out   std_logic_vector (6 downto 0)
+				  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
+			  megashark_doGOTO : out std_logic; -- not a W/R operation finally
+			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection
+			  megashark_Din : in std_logic_vector(7 downto 0);
+			  megashark_Dout : out std_logic_vector(7 downto 0);
+			  megashark_doREAD : out std_logic;
+			  megashark_doWRITE : out std_logic;
+			  megashark_done : in std_logic;
+			  megashark_face : out std_logic
 				 );
    end component;
    
-   component AmstradRAMDSK
-      port ( transmit       : in    std_logic; 
-             init_done      : in    std_logic; 
-             A              : in    std_logic_vector (17 downto 0); 
-             dsk_A          : in    std_logic_vector (19 downto 0); 
-             init_A         : in    std_logic_vector (22 downto 0); 
-             vram_A_isValid : out   std_logic; 
-             ram_A          : out   std_logic_vector (22 downto 0); 
-             vram_A         : out   std_logic_vector (15 downto 0));
+	component AmstradRAM
+    port ( reset:in  STD_LOGIC;
+			  
+			  init_done : in std_logic;
+			  init_A : in  STD_LOGIC_VECTOR (22 downto 0);
+			  init_Din : in  STD_LOGIC_VECTOR (7 downto 0);
+			  init_Dout: out  STD_LOGIC_VECTOR (7 downto 0);
+			  init_W_n : in STD_LOGIC;
+			  init_R_n : in STD_LOGIC;
+           
+			  A : in  STD_LOGIC_VECTOR (22 downto 0);
+           rd:in STD_LOGIC; -- Z80 MEM_RD
+			  wr:in STD_LOGIC; -- Z80 MEM_WR
+			  Din : in  STD_LOGIC_VECTOR (7 downto 0);
+			  Dout : inout  STD_LOGIC_VECTOR (7 downto 0); -- against I82C55.IO_DATA
+			  
+			  ram_A : out  STD_LOGIC_VECTOR (22 downto 0);
+			  ram_W : out  STD_LOGIC:='0'; -- sim
+           ram_R : out  STD_LOGIC:='0'; -- sim
+           ram_Din : in  STD_LOGIC_VECTOR (7 downto 0);
+			  ram_Dout : out STD_LOGIC_VECTOR (7 downto 0);
+			  
+			  vram_A:out STD_LOGIC_VECTOR (15 downto 0);
+			  vram_A_isValid:out std_logic
+			  );
    end component;
+
    
    component YM2149
       port ( I_A9_L    : in    std_logic; 
@@ -805,9 +832,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 	
 	--signal ROMarea: std_logic;
 begin
-   RAMBank(2 downto 0) <= RAMBank_DUMMY(2 downto 0);
+   --RAMBank(2 downto 0) <= RAMBank_DUMMY(2 downto 0);
    ram_W <= ram_W_DUMMY;
-   ROMbank(3 downto 0) <= ROMbank_DUMMY(3 downto 0);
+   --ROMbank(7 downto 0) <= ROMbank_DUMMY(7 downto 0);
    AmstradT80 : T80se_p
       port map (BUSRQ_n=>XLXN_16,
                 CLKEN=>XLXN_16,
@@ -837,6 +864,7 @@ begin
                 lowerROMen=>LED1,
                 MODE(1 downto 0)=>XLXN_857(1 downto 0),
                 RAMbank(2 downto 0)=>RAMBank_DUMMY(2 downto 0),
+				RAMbank512(2 downto 0)=>RAMBank_DUMMY512(2 downto 0),
                 upperROMen=>LED2);
    
    GA_interrupt : simple_GateArrayInterrupt
@@ -876,7 +904,7 @@ begin
                 D(7 downto 0)=>D(7 downto 0),
                 IO_WR=>IO_WR,
                 reset=>XLXN_907,
-                ROMbank(3 downto 0)=>ROMbank_DUMMY(3 downto 0));
+                ROMbank(7 downto 0)=>ROMbank_DUMMY(7 downto 0));
    
    PPI : I82C55
       port map (CLK=>nCLK4MHz,
@@ -927,11 +955,12 @@ MEM_WR<=XLXN_785 and XLXN_786;
                 lowerROMen=>LED1,
 					 --ROMarea=>ROMarea,
                 RAMbank(2 downto 0)=>RAMBank_DUMMY(2 downto 0),
-                ROMbank(3 downto 0)=>ROMbank_DUMMY(3 downto 0),
+				RAMbank512(2 downto 0)=>RAMBank_DUMMY512(2 downto 0),
+                ROMbank(7 downto 0)=>ROMbank_DUMMY(7 downto 0),
                 upperROMen=>LED2,
                 wr_io_z80=>IO_WR,
                 wr_z80=>MEM_WR,
-                ram_A(17 downto 0)=>xram_A(17 downto 0));
+                ram_A(22 downto 0)=>xram_A(22 downto 0));
    
 --   XLXI_181 : INV
 --      port map (I=>XLXN_58,
@@ -966,26 +995,32 @@ MEM_RD<=XLXN_787 and XLXN_786;
 --                O=>IO_RD);
 IO_RD<=XLXN_787 and IO_REQ;
    
-   XLXI_224 : RAM_driver
-      port map (Din(7 downto 0)=>D(7 downto 0),
-                dsk_RD=>XLXN_915,
-                dsk_WR=>XLXN_914,
-                init_Din(7 downto 0)=>init_Din(7 downto 0),
-                init_done=>RESET_n,
-                init_R_n=>init_R_n,
-                init_W_n=>init_W_n,
-                ram_Din(7 downto 0)=>ram_Din(7 downto 0),
-                rd=>MEM_RD,
-                reset=>XLXN_907,
-                transmit=>XLXN_908,
-					 --ROMarea=>ROMarea,
-                wr=>MEM_WR,
-                init_Dout(7 downto 0)=>init_Dout(7 downto 0),
-                ram_Dout(7 downto 0)=>ram_Dout(7 downto 0),
-                ram_R=>ram_R,
-                ram_W=>ram_W_DUMMY,
-                Dout(7 downto 0)=>XLXN_283(7 downto 0));
-   
+	XLXI_348 : AmstradRAM
+port map ( reset=>XLXN_907,
+			  
+			  init_done=>RESET_n,
+			  init_A(22 downto 0)=>init_A(22 downto 0),
+			  init_Din(7 downto 0)=>init_Din(7 downto 0),
+			  init_Dout(7 downto 0)=>init_Dout(7 downto 0),
+			  init_W_n=>init_W_n,
+			  init_R_n=>init_R_n,
+           
+			  A(22 downto 0)=>xram_A(22 downto 0),
+           rd=>MEM_RD, -- Z80 MEM_RD
+			  wr=>MEM_WR, -- Z80 MEM_WR
+			  Din(7 downto 0)=>D(7 downto 0),
+			  Dout(7 downto 0)=>XLXN_283(7 downto 0), -- against I82C55.IO_DATA
+			  
+			  ram_A(22 downto 0)=>ram_A(22 downto 0),
+			  ram_W=>ram_W_DUMMY,
+           ram_R=>ram_R,
+           ram_Din(7 downto 0)=>ram_Din(7 downto 0),
+			  ram_Dout(7 downto 0)=>ram_Dout(7 downto 0),
+			  
+			  vram_A(15 downto 0)=>XLXN_874(15 downto 0),
+			  vram_A_isValid=>XLXN_872
+			  );
+
 --   XLXI_253 : GND
 --      port map (G=>zero);
 zero<='0';
@@ -1030,27 +1065,25 @@ XLXN_814<=not(XLXN_835);
                 IO_RD=>IO_RD,
                 IO_WR=>IO_WR,
 					 is_dskReady=>is_dskReady,
-                is_ucpm=>is_ucpm,
                 nCLK4_1=>nCLK4MHz,
                 reset=>XLXN_907,
                 change=>change,
-                dsk_A(19 downto 0)=>XLXN_427(19 downto 0),
-                dsk_R=>XLXN_915,
                 DSK_select(7 downto 0)=>DSK_select(7 downto 0),
-                dsk_W=>XLXN_914,
                 --FDD_output(6 downto 0)=>FDD_output(6 downto 0),
-                transmit=>XLXN_908,
-                D_result(7 downto 0)=>XLXN_283(7 downto 0));
+                D_result(7 downto 0)=>XLXN_283(7 downto 0),
+			  megashark_CHRNresult=>megashark_CHRNresult,
+			  megashark_doGOTO=>megashark_doGOTO,
+			  megashark_CHRN=>megashark_CHRN,
+			  megashark_A=>megashark_A,
+			  megashark_Din=>megashark_Din,
+			  megashark_Dout=>megashark_Dout,
+			  megashark_doREAD=>megashark_doREAD,
+			  megashark_doWRITE=>megashark_doWRITE,
+			  megashark_done=>megashark_done,
+			  megashark_face=>megashark_face
+					 );
    
-   XLXI_348 : AmstradRAMDSK
-      port map (A(17 downto 0)=>xram_A(17 downto 0),
-                dsk_A(19 downto 0)=>XLXN_427(19 downto 0),
-                init_A(22 downto 0)=>init_A(22 downto 0),
-                init_done=>RESET_n,
-                transmit=>XLXN_908,
-                ram_A(22 downto 0)=>ram_A(22 downto 0),
-                vram_A(15 downto 0)=>XLXN_874(15 downto 0),
-                vram_A_isValid=>XLXN_872);
+
    
    XLXI_349 : YM2149
       port map (CLK=>XLXN_940,
@@ -1160,7 +1193,7 @@ XLXN_830<=XLXN_807 and XLXN_806; -- MEM_WR and M1
 --      port map (I0=>LED2,
 --                I1=>LED1,
 --                O=>ROMen);
-ROMen<=LED2 or LED1;
+--ROMen<=LED2 or LED1;
    
    XLXI_589 : VRAM32Ko_Amstrad_MUSER_amstrad_motherboard
       port map (vga_A(15 downto 0)=>XLXN_868(15 downto 0),

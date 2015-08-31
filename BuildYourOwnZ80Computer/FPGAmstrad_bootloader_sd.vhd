@@ -1,3 +1,18 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- FPGAmstrad_*.vhd : Auto-generated code from FGPAmstrad 3 main schematics
+-- This type of component is only used on my main schematic.
+-- As it is about auto-generated code, you'll find no comments by here
+--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
 --------------------------------------------------------------------------------
@@ -18,7 +33,6 @@
 --    This vhdl netlist is translated from an ECS schematic. It can be 
 --    synthesized and simulated, but it should not be modified. 
 --
-
 library ieee;
 use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.ALL;
@@ -32,52 +46,66 @@ entity FPGAmstrad_bootloader_sd is
           file_change : in    std_logic; 
           FILE_SELECT : in    std_logic_vector (7 downto 0); 
           key_reset   : in    std_logic; 
-          leds_select : in    std_logic_vector (4 downto 0):="00000"; 
+          --leds_select : in    std_logic_vector (4 downto 0):="00000"; 
           MISO        : in    std_logic; 
           nCLK8MHz    : in    std_logic; 
           ram_Din     : in    std_logic_vector (7 downto 0); 
 			 reset : in std_logic;
           --FDC_output  : out   std_logic_vector (5 downto 0); 
           FILE_LOADED : out   std_logic; 
-          is_ucpm     : out   std_logic; 
-          LEDS        : out   std_logic_vector (7 downto 0);
+          --LEDS        : out   std_logic_vector (7 downto 0);
 			 MOSI        : out   std_logic; 
           ram_A       : out   std_logic_vector (22 downto 0); 
           ram_Dout    : out   std_logic_vector (7 downto 0); 
           ram_R_n     : out   std_logic; 
           ram_W_n     : out   std_logic; 
           SCLK        : out   std_logic; 
-          SS_n        : out   std_logic;
+          --SS_n        : out   std_logic;
           dir_entry_ack         : in    std_logic; 
           dir_entry_downloading : in    std_logic; 
           dir_entry_clk         : out   std_logic; 
           dir_entry_d           : in   std_logic_vector (7 downto 0); 
           dir_entry_r        : out   std_logic;
 			 init_RAM: out std_logic;
-			 debug_crc_r:out std_logic_vector(15 downto 0):=(others=>'0');
-			 debug_crc_c:out std_logic_vector(15 downto 0):=(others=>'0');
-			 is_dskReady    : out   std_logic
+			 --debug_crc_r:out std_logic_vector(15 downto 0):=(others=>'0');
+			 --debug_crc_c:out std_logic_vector(15 downto 0):=(others=>'0');
+			 is_dskReady:out std_logic_vector(1 downto 0);
+			 
+			 
+			 -- simpleDSK interface
+			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
+			  megashark_doGOTO : in std_logic; -- not a W/R operation finally
+			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
+			  megashark_Din : out std_logic_vector(7 downto 0);
+			  megashark_Dout : in std_logic_vector(7 downto 0);
+			  megashark_doREAD : in std_logic;
+			  megashark_doWRITE : in std_logic;
+			  megashark_done : out std_logic;
+			  megashark_select : in std_logic;
+			  megashark_face : in std_logic
 			 );
 end FPGAmstrad_bootloader_sd;
 
 architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
    attribute BOX_TYPE   : string ;
-   signal DO_STOP           : std_logic;
+   --signal DO_STOP           : std_logic;
    signal INIT_DONE         : std_logic;
    signal ram_W             : std_logic;
    signal XLXN_52           : std_logic_vector (7 downto 0);
    signal XLXN_55           : std_logic_vector (31 downto 0);
-   signal XLXN_76           : std_logic;
+	signal XLXN_55b          : std_logic_vector (8 downto 0);
+   --signal XLXN_76           : std_logic;
    signal XLXN_89           : std_logic;
-   signal XLXN_91           : std_logic;
+   --signal XLXN_91           : std_logic;
    signal XLXN_94           : std_logic;
    signal XLXN_98           : std_logic;
    signal XLXN_99           : std_logic;
    signal XLXN_100          : std_logic;
    signal XLXN_101          : std_logic;
    signal XLXN_103          : std_logic_vector (7 downto 0);
-   signal XLXN_107          : std_logic_vector (7 downto 0);
-   signal XLXN_114          : std_logic_vector (7 downto 0);
+   --signal XLXN_107          : std_logic_vector (7 downto 0);
+   --signal XLXN_114          : std_logic_vector (7 downto 0);
    signal XLXN_126          : std_logic;
    signal XLXN_127          : std_logic;
    signal XLXN_128          : std_logic;
@@ -91,19 +119,21 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
              spi_R         : in    std_logic; 
              spi_W         : in    std_logic; 
              spi_Wblock    : in    std_logic; 
-             special_W     : in    std_logic; 
-             leds_select   : in    std_logic; 
+             --special_W     : in    std_logic; 
+             --leds_select   : in    std_logic; 
              address       : in    std_logic_vector (31 downto 0); 
+				 address_block : in    std_logic_vector (8 downto 0); 
              data_in       : in    std_logic_vector (7 downto 0); 
              MOSI          : out   std_logic; 
              SS_n          : out   std_logic; 
              spi_Rdone     : out   std_logic; 
              spi_Wdone     : out   std_logic; 
              spi_init_done : out   std_logic; 
-             data_out      : out   std_logic_vector (7 downto 0);
-				 debug_crc_r:out std_logic_vector(15 downto 0):=(others=>'0');
-			    debug_crc_c:out std_logic_vector(15 downto 0):=(others=>'0');
-             leds          : out   std_logic_vector (7 downto 0));
+             data_out      : out   std_logic_vector (7 downto 0)
+				 --debug_crc_r:out std_logic_vector(15 downto 0):=(others=>'0');
+			    --debug_crc_c:out std_logic_vector(15 downto 0):=(others=>'0');
+             --leds          : out   std_logic_vector (7 downto 0)
+				 );
    end component;
    
    component SDRAM_FAT32_LOADER
@@ -112,12 +142,12 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
              spi_Wdone      : in    std_logic; 
              spi_init_done  : in    std_logic; 
              dump_button    : in    std_logic; 
-             stop           : in    std_logic; 
+             --stop           : in    std_logic; 
              key_reset      : in    std_logic; 
              changeDSK      : in    std_logic; 
              file_select    : in    std_logic_vector (7 downto 0); 
              spi_Din        : in    std_logic_vector (7 downto 0); 
-             leds_select    : in    std_logic_vector (2 downto 0); 
+             --leds_select    : in    std_logic_vector (2 downto 0); 
              --FDC_input      : in    std_logic_vector (6 downto 0); 
              ram_W          : out   std_logic; 
              ram_R          : out   std_logic; 
@@ -125,12 +155,12 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
              spi_Wdo        : out   std_logic; 
              spi_Wblock     : out   std_logic; 
              load_init_done : out   std_logic; 
-				 is_dskReady    : out   std_logic;
-             is_ucpm        : out   std_logic;
+				 is_dskReady    : out   std_logic_vector (1 downto 0);
              ram_A          : out   std_logic_vector (22 downto 0); 
              spi_A          : out   std_logic_vector (31 downto 0); 
+				 spi_A_block    : out   std_logic_vector (8 downto 0); 
              spi_Dout       : out   std_logic_vector (7 downto 0); 
-             leds           : out   std_logic_vector (7 downto 0);
+             --leds           : out   std_logic_vector (7 downto 0);
              --FDC_output     : out   std_logic_vector (5 downto 0); 
              ram_Din        : in    std_logic_vector (7 downto 0); 
              ram_Dout       : out   std_logic_vector (7 downto 0);
@@ -139,7 +169,19 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
              dir_entry_clk         : out   std_logic; 
              dir_entry_r           : out   std_logic; 
              dir_entry_d           : in   std_logic_vector (7 downto 0);
-				 init_RAM: out std_logic);
+				 init_RAM: out std_logic;
+-- simpleDSK interface
+			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
+			  megashark_doGOTO : in std_logic; -- not a W/R operation finally
+			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
+			  megashark_Din : out std_logic_vector(7 downto 0);
+			  megashark_Dout : in std_logic_vector(7 downto 0);
+			  megashark_doREAD : in std_logic;
+			  megashark_doWRITE : in std_logic;
+			  megashark_done : out std_logic;
+			  megashark_select : in std_logic;
+			  megashark_face : in std_logic);
    end component;
    
    component INV
@@ -171,12 +213,12 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
    end component;
    attribute BOX_TYPE of AND2 : component is "BLACK_BOX";
    
-   component LEDS_SWITCH2
-      port ( select_leds : in    std_logic; 
-             leds1       : in    std_logic_vector (7 downto 0); 
-             leds2       : in    std_logic_vector (7 downto 0); 
-             leds        : out   std_logic_vector (7 downto 0));
-   end component;
+--   component LEDS_SWITCH2
+--      port ( select_leds : in    std_logic; 
+--             leds1       : in    std_logic_vector (7 downto 0); 
+--             leds2       : in    std_logic_vector (7 downto 0); 
+--             leds        : out   std_logic_vector (7 downto 0));
+--   end component;
    
 	signal dump_button : std_logic:='0';
 begin
@@ -184,23 +226,24 @@ begin
    XLXI_1 : SDRAM_SPIMASTER
       port map (reset=>reset,
 					 address(31 downto 0)=>XLXN_55(31 downto 0),
+					 address_block(8 downto 0)=>XLXN_55b(8 downto 0),
                 CD_n=>XLXN_89,
                 data_in(7 downto 0)=>XLXN_103(7 downto 0),
-                leds_select=>leds_select(4),
+                --leds_select=>leds_select(4),
                 MISO=>MISO,
                 SCLK=>nCLK8MHz,
-                special_W=>XLXN_91,
+                --special_W=>XLXN_91,
                 spi_R=>XLXN_100,
                 spi_W=>XLXN_101,
                 spi_Wblock=>XLXN_129,
                 data_out(7 downto 0)=>XLXN_52(7 downto 0),
-                leds(7 downto 0)=>XLXN_107(7 downto 0),
+                --leds(7 downto 0)=>XLXN_107(7 downto 0),
                 MOSI=>MOSI,
                 spi_init_done=>INIT_DONE,
                 spi_Rdone=>XLXN_98,
                 spi_Wdone=>XLXN_99,
-					 debug_crc_r=>debug_crc_r,
-					 debug_crc_c=>debug_crc_c,
+					 --debug_crc_r=>debug_crc_r,
+					 --debug_crc_c=>debug_crc_c,
                 SS_n=>open);
    
 	dump_button <= dump(0) and dump(1); -- do press the 2 buttons at the same time to create a RAM dump.
@@ -211,17 +254,16 @@ begin
                 --FDC_input(6 downto 0)=>FDC_input(6 downto 0),
                 file_select(7 downto 0)=>FILE_SELECT(7 downto 0),
                 key_reset=>key_reset,
-                leds_select(2 downto 0)=>leds_select(2 downto 0),
+                --leds_select(2 downto 0)=>leds_select(2 downto 0),
                 ram_Din(7 downto 0)=>ram_Din(7 downto 0),
                 spi_Din(7 downto 0)=>XLXN_52(7 downto 0),
                 spi_init_done=>INIT_DONE,
                 spi_Rdone=>XLXN_98,
                 spi_Wdone=>XLXN_99,
-                stop=>DO_STOP,
+                --stop=>DO_STOP,
                 --FDC_output(5 downto 0)=>FDC_output(5 downto 0),
 					 is_dskReady=>is_dskReady,
-                is_ucpm=>is_ucpm,
-                leds(7 downto 0)=>XLXN_114(7 downto 0),
+                --leds(7 downto 0)=>XLXN_114(7 downto 0),
 					 --first_BR_leds(7 downto 0)=>first_BR_leds(7 downto 0),
                 load_init_done=>FILE_LOADED_DUMMY,
                 ram_A(22 downto 0)=>ram_A(22 downto 0),
@@ -229,6 +271,7 @@ begin
                 ram_R=>XLXN_126,
                 ram_W=>ram_W,
                 spi_A(31 downto 0)=>XLXN_55(31 downto 0),
+					 spi_A_block(8 downto 0)=>XLXN_55b(8 downto 0),
                 spi_Dout(7 downto 0)=>XLXN_103(7 downto 0),
                 spi_Rdo=>XLXN_100,
                 spi_Wblock=>XLXN_129,
@@ -238,7 +281,19 @@ begin
                 dir_entry_clk=>dir_entry_clk,
 					 dir_entry_r=>dir_entry_r,
 					 dir_entry_d=>dir_entry_d,
-					 init_RAM=>init_RAM
+					 init_RAM=>init_RAM,
+					 -- simpleDSK interface
+			  megashark_CHRNresult=>megashark_CHRNresult,
+			  megashark_doGOTO=>megashark_doGOTO,
+			  megashark_CHRN=>megashark_CHRN,
+			  megashark_A=>megashark_A,
+			  megashark_Din=>megashark_Din,
+			  megashark_Dout=>megashark_Dout,
+			  megashark_doREAD=>megashark_doREAD,
+			  megashark_doWRITE=>megashark_doWRITE,
+			  megashark_done=>megashark_done,
+			  megashark_select=>megashark_select,
+			  megashark_face=>megashark_face
 					 );
    
 --   XLXI_26 : INV
@@ -249,15 +304,15 @@ ram_W_n<=not(XLXN_94);
 --   XLXI_40 : INV
 --      port map (I=>XLXN_76,
 --                O=>SS_n);
-SS_n<=not(XLXN_76);
+--SS_n<=not(XLXN_76);
    
 --   XLXI_41 : VCC
 --      port map (P=>XLXN_76);
-XLXN_76<='1';
+--XLXN_76<='1';
    
 --   XLXI_43 : GND
 --      port map (G=>DO_STOP);
-DO_STOP<='0';
+--DO_STOP<='0';
    
 --   XLXI_46 : BUF
 --      port map (I=>CLK8MHz,
@@ -270,7 +325,7 @@ XLXN_89<='0';
    
 --   XLXI_54 : GND
 --      port map (G=>XLXN_91);
-XLXN_91<='0';
+--XLXN_91<='0';
    
 --   XLXI_57 : AND2
 --      port map (I0=>XLXN_127,
@@ -283,11 +338,11 @@ XLXN_94<=XLXN_127 and ram_W;
 --                O=>XLXN_127);
 XLXN_127<=not(FILE_LOADED_DUMMY);
    
-   XLXI_60 : LEDS_SWITCH2
-      port map (leds1(7 downto 0)=>XLXN_107(7 downto 0),
-                leds2(7 downto 0)=>XLXN_114(7 downto 0),
-                select_leds=>leds_select(3),
-                leds(7 downto 0)=>LEDS(7 downto 0));
+--   XLXI_60 : LEDS_SWITCH2
+--      port map (leds1(7 downto 0)=>XLXN_107(7 downto 0),
+--                leds2(7 downto 0)=>XLXN_114(7 downto 0),
+--                select_leds=>leds_select(3),
+--                leds(7 downto 0)=>LEDS(7 downto 0));
    
 --   XLXI_63 : AND2
 --      port map (I0=>XLXN_126,

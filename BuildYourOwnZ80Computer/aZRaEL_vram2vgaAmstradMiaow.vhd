@@ -1,3 +1,26 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- FPGAmstrad_amstrad_video.aZRaEL_vram2vgaAmstradMiaow
+-- VRAM 800x600 at middle of screen 640x480@60Hz
+-- PRAM Raster line per line palette
+-- VGA protocol
+--
+-- Historically, the first image I succeed to display with that code was Azrael cat.
+--
+-- Amstrad output RGB is using 3-state output :
+-- * red   possible outputs : 0.0 0.5 1.0
+-- * green possible outputs : 0.0 0.5 1.0
+-- * blue  possible outputs : 0.0 0.5 1.0
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.std_logic_arith.ALL;
@@ -7,58 +30,56 @@ entity aZRaEL_vram2vgaAmstradMiaow is
     Generic(
 	 VOFFSET_NEGATIF:integer:=(600/2-480/2)/2;
 	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
-	 HardHZoom : integer:=1; -- divise l'horloge n�cessaire par HardHZoom et HZoom HardHZoom fois
+	 HardHZoom : integer:=1; -- do remember to divide clock entry by HardHZoom, and also HZoom by HardHZoom, if changing this parameter
 	 -- Amstrad
 	 -- 
 	 --OFFSET:STD_LOGIC_VECTOR(15 downto 0):=x"C000";
-	 -- ecran.bas
+	 -- screen.bas
 	 -- CLS
 	 -- FOR A=&C000 TO &FFFF
 	 -- POKE A,&FF
 	 -- NEXT A
 	 -- 
-	 -- ligne.bas
+	 -- line.bas
 	 -- CLS
 	 -- FOR A=&C000 TO &C050
 	 -- POKE A,&FF
 	 -- NEXT A
 	 -- 
-	 -- lignes.bas
+	 -- lines.bas
 	 -- CLS
 	 -- FOR A=&C000 TO &C7FF
 	 -- POKE A,&FF
 	 -- NEXT A
 	 -- 
-	 -- Organisation d'un octet :
+	 -- byte pixels structure :
 	 -- mode 1 :
-	 --   1 octet <=> 4 pixels
-	 --   [AAAA][BBBB] : superposition des couleurs de [AAAA] et [BBBB]
-	 --   A+B=0+0=bleu fonc� (couleur du fond par d�faut)
-	 --   A+B=0+1=bleu clair
-	 --   A+B=1+0=jaune
-	 --   A+B=1+1=rouge
-	 --  par exemple [1100][0011] donnera 2 pixels jaune suivi de 2 pixels bleu clair &C3
+	 --   1 byte <=> 4 pixels
+	 --   [AAAA][BBBB] : layering colors [AAAA] and [BBBB]
+	 --   A+B=0+0=dark blue (default Amstrad background color)
+	 --   A+B=0+1=light blue
+	 --   A+B=1+0=yellow
+	 --   A+B=1+1=red
+	 --  for example [1100][0011] with give 2 yellow pixels followed by 2 light blue pixels &C3
 	 -- mode 0 : 
-	 --   1 octet <=> 2 pixels
-	 --   [AA][BB][CC][DD] : superposition des couleurs de AA, BB, CC, DD
-	 --   comme il y a "trop" de combinaisons pour une sortie RGB sans variation de lumi�re
-	 --   ils ont fait clignoter les derni�re combinaisons. La variation de lumi�re a �t�
-	 --   ajout� par la suite, avec PEN/PAPER...
+	 --   1 byte <=> 2 pixels
+	 --   [AA][BB][CC][DD] : layering colors of AA, BB, CC, DD
+	 --   Because it results too many equations for a simple RGB output, they do switch the last equation (alternating at a certain low frequency (INK SPEED))
 	 -- mode 2 :
-	 --   1 octet <=> 8 pixels
-	 --   [AAAAAAAA] : on a donc que 2 couleurs xD
+	 --   1 byte <=> 8 pixels
+	 --   [AAAAAAAA] : so only 2 colors xD
 	 MODE_MAX:integer:=2;
 --	 NB_PIXEL_PER_OCTET:integer:=4;--2**(MODE+1);
 	NB_PIXEL_PER_OCTET_MAX:integer:=8;
 	NB_PIXEL_PER_OCTET_MIN:integer:=2;
-	 -- Lorsqu'on lance lignes.bas on peut ensuite d�placer le curseur pour compter
+	 -- Just after having launched lines.bas we can count them... while moving cursor.
 	 -- mode 1 :
-	 --   On a 40 caract�res par lignes en mode 1, un caract�re fait 8 pixels de large
-	 CHAR_WIDTH:integer:=16; -- c'est stupide en fait c'est l'octet, car le crtc pond des adresses et non une sortie RGB normalement xD
-	 -- On a 320x200pixels=64000pixels=16000 octets utilis�s
-	 --  or on scanne &FFFF+1-&C000=16384 octets... donc il y a des trous x)
+	 --   We have 40 characters per line in mode 1, one character does 8 pixels width.
+	 CHAR_WIDTH:integer:=16; -- sucks, it's about bytes finally.... crtc is done for building addresses, not RGB output... :/
+	 -- using 320x200pixels=64000pixels=16000 bytes used
+	 --  but we are currently scanning &FFFF+1-&C000=16384 bytes... so some bytes are not used :D
 	 -- 
-	 -- trou.bas
+	 -- forget.bas
 	 -- MODE 1
 	 -- CLS
 	 -- FOR A=0 TO 639
@@ -67,28 +88,29 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 	 -- NEXT b
 	 -- NEXT a
 	 -- 
-	 -- On observe le snapshoot on a des &F0 aux adresses :
-	 -- C000 � C7D0-1
-	 -- C800 � CFD0-1
-	 -- D000 � D7D0-1
-	 -- D800 � DFD0-1
-	 -- E000 � E7D0-1
-	 -- E800 � EFD0-1
-	 -- F000 � F7D0-1
-	 -- F800 � FFD0-1
+	 -- If we make a snapshot, we can see &F0 values at addresses :
+	 -- C000 .. C7D0-1
+	 -- C800 .. CFD0-1
+	 -- D000 .. D7D0-1
+	 -- D800 .. DFD0-1
+	 -- E000 .. E7D0-1
+	 -- E800 .. EFD0-1
+	 -- F000 .. F7D0-1
+	 -- F800 .. FFD0-1
 	 --
-	 -- plus rapide :D
+	 -- More quickly :D
 	 --
-	 -- trou2.bas
+	 -- forget2.bas
 	 -- paper 2
 	 -- cls
 	 -- 
-	 -- si on va en bas de l'�cran afin de remonter l'image d'un cran et qu'on refait un snapshoot
-	 -- on remarque que c'est le bazard niveau m�moire : les trou ne sont plus au m�me endroit !
-	 -- c'est pourquoi j'ai mis "MODE 1" dans trou.bas x)
-	 -- si on remonte l'image en allant en bas de l'�cran avec le curseur
-	 --  un "poke &C000,&ff" ne vise plus en haut � gauche... parfois il ne marche m�me plus : il est dans le trou !
+	 -- If by going bottom (using cursor) and make the picture scrolling up on screen. Let's do then another snapshot
+	 -- We conclude that it's hazardous in memory areas employed : forgotten bytes has change of location !
+	 -- It's why I added "MODE 1" in forget.bas source code x)
+	 -- If I do scroll screen placing cursor at bottom, "poke &C000,&ff" does not target any more the top-left pixel,
+	 -- and in certain time it disappear : in this case it is just on a forgotten byte.
 	 -- 
+-- "modeline" is a Unix command, it's a helper command, listing VGA screen parameters on Unix.
 --   --modeline label pxcl HDsp HSS HSE HTot VDsp VSS VSE VTot flags
 --   --modeline "640x480@60" 25.2 640 656 752 800 480 490 492 525 -vsync -hsync
               label_modeline  :string:="640x480@60";--(ignored  by  svgalib) mainly there to be compatible with XF86Config.   I  use  the  format  "Width  x   Height   @   Vert.Refresh", but that's just personal taste...
@@ -110,7 +132,7 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 				  HZoom:integer:=1;
 				  VZoom:integer:=2;
 				  
-				  VRAM_HDsp:integer:=800; --suivant les mode, le nombre de pixels affich�s est constant !
+				  VRAM_HDsp:integer:=800; --changing mode doesn't affect number of pixel finally outputted
 				  VRAM_VDsp:integer:=300 --600/2
 		  );
     Port ( DATA : in  STD_LOGIC_VECTOR (7 downto 0); -- buffer
@@ -269,7 +291,7 @@ begin
 			NB_PIXEL_PER_OCTET:=2;
 		end if;
 		
-		-- plus stable
+		-- more stable
 		cursor_pixel_retard:=cursor_pixel;
 		if etat_rgb_retard = DO_READ then
 			color:=(others=>'0');
@@ -289,7 +311,7 @@ begin
 				GREEN<=pen(conv_integer(color(3 downto 2)))(3 downto 2);
 				BLUE<=pen(conv_integer(color(3 downto 2)))(1 downto 0);
 			elsif MODE_select="00" then
-				color_patch:=color(3) & color(1) & color(2) & color(0); -- pas relou xD
+				color_patch:=color(3) & color(1) & color(2) & color(0); -- wtf xD
 				RED<=pen(conv_integer(color_patch))(5 downto 4);
 				GREEN<=pen(conv_integer(color_patch))(3 downto 2);
 				BLUE<=pen(conv_integer(color_patch))(1 downto 0);
@@ -327,11 +349,10 @@ begin
 		etat_vsync_retard:=etat_vsync;
 		
 		
-
---puis la palette c'est celle du 800x600... pas du 640x400
--- puis c'est trop petit cet RAM, � peine de quoi afficher 60 lignes en 33o par palette et 100 lignes en 32*5bit+2bit
---donc il faudrai au minimum tripler la m�moire si on la joue serr�, ou au maximum multiplier par 5
---Number of RAMB16s: 18 out of      20   90% => on peut triper la m�moire mais pas plus
+--beware : PRAM is PRAM of VRAM800x600, not PRAM of VGA640x480
+--Number of RAMB16s: 18 out of      20   90%
+--reality : some memory area are mocked, do to problem of space, so when you are out of screen, generally you are in mocked ram areas.
+--brain garbage : PRAM 60 lines/33bits, PRAM 100 lines/32*5bit+2bit.
 		if palette_action_retard=DO_MODE then
 --nopb palette
 			palette_D_mem:=palette_D;
@@ -347,8 +368,8 @@ begin
 			palette_D_mem:=palette_D;
 			pen(palette_color_retard):=palette(conv_integer(palette_D_mem(4 downto 0)));
 
-		--RHdisp fait 40 hors 16*40=640 pixels donc on a 16* en ratio.
-		--HDecal_negatif/16=5 donc on peut tenter d'emp�cher un d�passement.
+		--RHdisp equals 40 so 16*40=640 pixels so ratio is 16*.
+		--HDecal_negatif/16=5 so we can try not going out of displayed RAM area.
 		elsif palette_action_retard=DO_HBEGIN then
 			palette_D_mem:=palette_D;
 			horizontal_counter_LEFT_BORDER:=conv_integer(palette_D_mem(7 downto 0));
@@ -386,7 +407,7 @@ begin
 		
 		
 		
-		if palette_vertical_counter mod VZoom=0 and palette_vertical_counter<VDsp then  -- une ligne sur deux d�j�... + ne d�passe pas VRAM verticalement
+		if palette_vertical_counter mod VZoom=0 and palette_vertical_counter<VDsp then  -- one line per two... + no out of VRAM range vertically
 			if palette_horizontal_counter<1 then
 				-- mode
 				palette_A<=palette_A_mem;
@@ -438,18 +459,18 @@ begin
 				v:=(vertical_counter+VDecal_negatif-VDecal)/(VZoom);
 				h:=(horizontal_counter+HDecal_negatif-HDecal)/(HZoom);
 				no_char:=(h / 8) mod (CHAR_WIDTH/8);
-				-- 640�200 pixels with 2 colours ("Mode 2", 80 text columns) donc bien 8 pixels physique par octets
+				-- 640x200 pixels with 2 colours ("Mode 2", 80 text columns) so it is really 8 physicals pixels per bytes
 				if NB_PIXEL_PER_OCTET=2 then
 					cursor_pixel_ref:=(((h-1+8) mod 8) / 4) mod 8;
 					cursor_pixel:=cursor_pixel_ref;
 				elsif NB_PIXEL_PER_OCTET=4 then
 					cursor_pixel_ref:=(((h-1+8) mod 8) / 2) mod 8; -- ok
-					cursor_pixel:=cursor_pixel_ref; -- correction trajectoire... retard arriv� data par rapport adressage : un temps
+					cursor_pixel:=cursor_pixel_ref; -- target correction... data more slow than address coming : one tic
 				elsif NB_PIXEL_PER_OCTET=8 then
 					cursor_pixel_ref:=(((h-1+8) mod 8) / 1) mod 8;
-					cursor_pixel:=cursor_pixel_ref; -- cacher un pixel sur deux
+					cursor_pixel:=cursor_pixel_ref; -- hide one pixel on both
 				end if;
-				new_h:=h/CHAR_WIDTH; -- v�ritablement un octet repr�sente physique 8 pixels, 
+				new_h:=h/CHAR_WIDTH; -- really 8 physicals pixels per bytes
 				etat_rgb:=DO_READ;
 
 				MA:=conv_std_logic_vector(v*(VRAM_HDsp/CHAR_WIDTH),14);
@@ -505,12 +526,12 @@ begin
 				palette_A_mem:=(others=>'0');
 			else
 				palette_vertical_counter:=palette_vertical_counter+1;
-				if palette_vertical_counter mod VZoom=0 then -- une ligne sur deux d�j�...
+				if palette_vertical_counter mod VZoom=0 then -- one line per two...
 					palette_A_mem:=palette_A_mem+1;
 				end if;
 			end if;
 		elsif palette_horizontal_counter<2+16+1 then
-				if palette_vertical_counter mod VZoom=0 then -- une ligne sur deux d�j�...
+				if palette_vertical_counter mod VZoom=0 then -- one line per two...
 					palette_A_mem:=palette_A_mem+1;
 				end if;
 		end if;

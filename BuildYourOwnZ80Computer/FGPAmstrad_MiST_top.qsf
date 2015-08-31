@@ -273,6 +273,20 @@ set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
 set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT EXTRA
+set_global_assignment -name VHDL_FILE VRAM_Amstrad_MiST.vhd
+set_global_assignment -name VHDL_FILE simple_GateArrayInterrupt.vhd
+set_global_assignment -name VHDL_FILE simple_GateArray.vhd
+set_global_assignment -name VHDL_FILE SELECT8.vhd
+set_global_assignment -name VHDL_FILE ROMselect.vhd
+set_global_assignment -name VHDL_FILE pwm.vhd
+set_global_assignment -name VHDL_FILE please_wait.vhd
+set_global_assignment -name VHDL_FILE LEDS_SWITCH2.vhd
+set_global_assignment -name VHDL_FILE KEYBOARD_driver.vhd
+set_global_assignment -name VHDL_FILE KEYBOARD_controller.vhd
+set_global_assignment -name VHDL_FILE Keyboard.vhd
+set_global_assignment -name VHDL_FILE detect_CAFE.vhd
+set_global_assignment -name VHDL_FILE and_then.vhd
+set_global_assignment -name VHDL_FILE AmstradRAMROM.vhd
 set_global_assignment -name VHDL_FILE simple_DSK.vhd
 set_global_assignment -name VHDL_FILE YM2149_linmix_AmstradStereo.vhd
 set_global_assignment -name VHDL_FILE aZRaEL_vram2vgaAmstradMiaow.vhd
@@ -300,12 +314,8 @@ set_global_assignment -name BDF_FILE FGPAmstrad_MiST_top.bdf
 set_global_assignment -name VHDL_FILE MiST_RGB.vhd
 set_global_assignment -name VHDL_FILE MiST_clocks.vhd
 set_global_assignment -name VHDL_FILE MiST_SDRAM.vhd
-set_global_assignment -name QIP_FILE T80_RegA.qip
-set_global_assignment -name QIP_FILE VRAM_Amstrad_MiST.qip
 set_global_assignment -name VHDL_FILE MiST_dqm.vhd
-set_global_assignment -name QIP_FILE MiST_RAMB16_S9.qip
 set_global_assignment -name VHDL_FILE MIST_conf_str.vhd
-set_global_assignment -name QIP_FILE MiST_RAM_bootloader.qip
 set_global_assignment -name VHDL_FILE MiST_status.vhd
 set_global_assignment -name VHDL_FILE osd_7SEG.vhd
 set_global_assignment -name VHDL_FILE osd_HEXA_7SEG.vhd
@@ -314,4 +324,5 @@ set_global_assignment -name VERILOG_FILE asdram.v
 set_global_assignment -name VHDL_FILE SELECT8tris.vhd
 set_global_assignment -name VHDL_FILE T80se_p.vhd
 set_global_assignment -name SDC_FILE FPGAmstrad_MiST_top.sdc
+set_global_assignment -name VHDL_FILE AmstradRAM.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

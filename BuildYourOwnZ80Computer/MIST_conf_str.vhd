@@ -1,16 +1,31 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- MIST_*.vhd : MiST-board simple adapter (glue-code)
+-- This type of component is only used on my main schematic.
+-- see MIST_status.vhd
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 entity MIST_conf_str is
-    Port ( CONF_STR : out  STD_LOGIC_VECTOR (143*8-1 downto 0)
+    Port ( CONF_STR : out  STD_LOGIC_VECTOR (133*8-1 downto 0)
 			);
 end MIST_conf_str;
 
 architecture Behavioral of MIST_conf_str is
   --constant CONF_STRING : string := "Amstrad;DSK;O1,Bootloader,0XXXX,1XXXX;O2,Bootloader,X0XXX,X1XXX;O3,Bootloader,XX0XX,XX1XX;O4,Bootloader,XXX0X,XXX1X;O5,Bootloader,XXXX0,XXXX1;";
   --constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,1X,0X;";
-  constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,1X,0X;O5,Brand name,Schneider,Amstrad;O6,Frequency,50Hz,60Hz;";
+  constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,1X,0X;O5,Brand name,Schneider,Amstrad;O6,Drive,A,B;";
 
  function to_slv(s: string) return std_logic_vector is 
     constant ss: string(1 to s'length) := s; 

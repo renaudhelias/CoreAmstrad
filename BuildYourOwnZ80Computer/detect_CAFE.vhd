@@ -1,38 +1,26 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    14:46:21 12/14/2014 
--- Design Name: 
--- Module Name:    detect_CAFE - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
 --
--- Dependencies: 
 --
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- FPGAmstrad_amstrad_motherboard.detect_CAFE
+-- out &cafe,3 -- followed by reboot key ("page up" key) does insert third disk
+-- does insert dsk existing in root folder of sdcard, without using OSD.
+-- Using OSD dsk select does turn off this possibility.
+-- for debug purpose (on others platforms)
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity detect_CAFE is
     Port ( A : in  STD_LOGIC_VECTOR (15 downto 0);
            cafe : out  STD_LOGIC
-			  --cafePifHercule : out STD_LOGIC
 			  );
 end detect_CAFE;
 
@@ -40,6 +28,5 @@ architecture Behavioral of detect_CAFE is
 
 begin
 	cafe <='1' when A=x"CAFE" else '0';
-	--cafePifHercule <='1' when A=x"C4F3" else '0';
 end Behavioral;
 

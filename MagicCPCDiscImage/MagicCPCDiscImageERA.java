@@ -25,14 +25,12 @@ import jemu.core.device.floppy.*;
  * 10 print"t
  * save"t.bas
  * cat
+ * => 0Ko
+ * |era,"t.bas
  * => 1Ko
  * run"t.bas
  */
-public class MagicCPCDiscImage extends DiscImage {
-	
-	// FIXME : I think it is about 2 by here. (see teaForTwo patch)
-	private final static int MACGYVER=1;
-	
+public class MagicCPCDiscImageERA extends DiscImage {
 	String path="D:\\Users\\frup64427\\Desktop\\mecasharkV0\\jemu-code-52\\JEMU\\magic";
 //	String path = "C:\\workspaceLWJGL\\JEMU_CPC\\magic";
 
@@ -41,10 +39,11 @@ public class MagicCPCDiscImage extends DiscImage {
 	int lastCylinder = 79;
 	int headMask = 1;
 
+	Integer selectedFile = null;
 	byte[] selectedFileContent = null;
 
 	/** Creates a new instance of CPCDiscImage */
-	public MagicCPCDiscImage() {
+	public MagicCPCDiscImageERA() {
 		super("MagicCPCDiscImage");
 		createSectorStructure();
 		listDir();
@@ -99,7 +98,6 @@ public class MagicCPCDiscImage extends DiscImage {
 			File folder = new File(path);
 			if (folder.isDirectory()) {
 				for (File sf : folder.listFiles()) {
-					if (sf.isDirectory()) continue; // ignore directories
 					String name = sf.getName().toUpperCase();
 					if (name.contains(".")) {
 						int point = name.indexOf(".");
@@ -135,33 +133,32 @@ public class MagicCPCDiscImage extends DiscImage {
 			}
 
 			int i = 0;
-			// file content pointer (from DIRSTRUCT)
-			byte writeNoSect = 0x02; // +1 do a step about 1024Ko ?
-			// file content
-			int writeH = 0;
-			int writeC = 0;
-			int writeR = 4;
-			
-			boolean teaForTwo=false; 
-
 			for (String name : dirContentKeys) {
 				noSect = i / 16; // 0x1800 / 0x20
-				if (noSect >= 4) {
-					//FIXME : throw ERROR FILE DIR STRUCT TOO BIG !
+				if (noSect >= 4)
 					break;
-				}
 				ii = i % 16;
 				byte[] sectData = sectors[0][0][noSect];
 
+				if (selectedFile != null && selectedFile == i
+						&& dirContent.get(name).isDirectory()) {
+					path = dirContent.get(name).getAbsolutePath();
+					selectedFile=null;
+					listDir();
+					return;
+				} else	if (selectedFile != null && selectedFile == i
+						&& dirContent.get(name).length() > 0) {
 					File f = dirContent.get(name);
 					double l = f.length();
 					System.out.println("DIR : "+name);
 					selectedFileContent = new byte[512];
 					FileInputStream fis = new FileInputStream(f);
+					int writeH = 0;
+					int writeC = 0;
+					int writeR = 4;
 					while (fis.read(selectedFileContent) > 0) {
 						System.arraycopy(selectedFileContent, 0,
 								sectors[writeH][writeC][writeR], 0, 512);
-						teaForTwo=!teaForTwo;
 						writeR++;
 						if (writeR >= 9) {
 							writeR = 0;
@@ -170,34 +167,17 @@ public class MagicCPCDiscImage extends DiscImage {
 								break;
 							}
 						}
-						
 						System.arraycopy(empty, 0, selectedFileContent, 0, 512);
-					}
-					if (teaForTwo) {
-						teaForTwo=!teaForTwo;
-						writeR++;
-						if (writeR >= 9) {
-							writeR = 0;
-							writeC++;
-							if (writeC >= CYLS) {
-								break;
-							}
-						}
 					}
 					fis.close();
 
+					byte writeNoSect = 0x02;
 
-					int m = (int) Math.ceil(l / (MACGYVER*16.0 * 1024.0));
+					int m = (int) Math.ceil(l / (16.0 * 1024.0));
 
 					for (int n = 0; n < m; n++) {
 
 						noSect = (i + n) / 16;
-						
-						if (noSect >= 4) {
-							//FIXME : throw ERROR FILE DIR STRUCT TOO BIG !
-							break;
-						}
-						
 						ii = (i + n) % 16;
 						sectData = sectors[0][0][noSect];
 
@@ -234,21 +214,13 @@ public class MagicCPCDiscImage extends DiscImage {
 						sectData[(ii) * 0x20 + 1 + 8 + 3] = (byte) n;
 					}
 					i += m;
-					
-//					
-//					// do separate packets
-//					
-//					writeR++;
-//					if (writeR >= 9) {
-//						writeR = 0;
-//						writeC++;
-//						if (writeC >= CYLS) {
-//							break;
-//						}
-//					}
-//					writeNoSect++;
-					
-					//FIXME : if (writeNoSect>SOMETHING) throw ERROR FILE CONTENT OUT OF RANGE (FILE CONTENT TOO BIG !)
+				} else {
+					System.out.println("DIR : "+name);
+					System.arraycopy(line, 0, sectData, ii * 0x20, 32);
+					System.arraycopy(name.getBytes(), 0, sectData,
+							ii * 0x20 + 1, 8 + 3);
+					i++;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -291,6 +263,7 @@ public class MagicCPCDiscImage extends DiscImage {
 
 	boolean isData = false;
 	boolean isDrop = false;
+	boolean isDrag = false;
 	List<String> scanNames = new ArrayList<String>();
 	List<Byte> buffer = new ArrayList<Byte>();
 	int cursorWrite = 0;
@@ -331,7 +304,7 @@ public class MagicCPCDiscImage extends DiscImage {
 									s += (char) filename[j];
 								}
 								if (!scanNames.contains(s)) scanNames.add(s);
-								if (!dirContentKeys.contains(s)) {
+								if (!dirContentKeys.contains(s) && selectedFile == null) { //wasSelectedFile==null ?
 									dirContentKeys.add(s);
 									// save"toto.txt"
 									System.out.println("DROPPING file " + s);
@@ -361,11 +334,36 @@ public class MagicCPCDiscImage extends DiscImage {
 									}
 									isDrop = true;
 									scanNames.clear();
+									selectedFile=null;
 								}
 							}
 	
 						}
-						
+						// check if some files was renamed or erased
+						if (!isDrop) {
+							List<String> checkNames = new ArrayList<String>();
+							checkNames.addAll(dirContentKeys);
+							checkNames.removeAll(scanNames);
+							if (checkNames.size() == 1) {
+								for (String s : checkNames) {
+									// |era,"toto.txt" (can be twice to undo this
+									// mode)
+									System.out.println("DRAG file " + s);
+									isDrag = true;
+									scanNames.clear();
+									if (selectedFile != null
+											&& selectedFile == dirContentKeys
+													.indexOf(s)) {
+										selectedFile = null;
+									} else {
+										selectedFile = dirContentKeys.indexOf(s);
+									}
+								}
+							} else {
+								selectedFile = null;
+								isDrag = false;
+							}
+						}
 					}
 				} else {
 					// writing on data area
@@ -393,8 +391,9 @@ public class MagicCPCDiscImage extends DiscImage {
 			int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
 			if (index != -1) {
 				if (beginOfSector && index <4) {
-					if (isDrop) {
+					if (isDrag || isDrop) {
 						listDir();
+						isDrag=false;
 						isDrop=false;
 					}
 				}

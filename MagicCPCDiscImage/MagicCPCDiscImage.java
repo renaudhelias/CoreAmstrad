@@ -336,6 +336,10 @@ public class MagicCPCDiscImage extends DiscImage {
 									// save"toto.txt"
 									System.out.println("DROPPING file " + s);
 									int size = result[i * 0x20 + 1 + 8 + 3 + 3] * 0x80;
+									// TODO : check storing files with larger filesize
+									// TEST : save"image",b,&c000,&4000
+									//Brain : int size = (result[i * 0x20 + 1 + 8 + 3 + 3] * 0x80)&0x0FFFF;
+									//Brain : if (size < 0) size = 0-size;
 									System.out.println("Size :"
 											+ result[i * 0x20 + 1 + 8 + 3 + 3]
 											+ " = " + size + " bytes");

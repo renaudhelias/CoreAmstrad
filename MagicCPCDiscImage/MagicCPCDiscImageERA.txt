@@ -1,1 +1,3 @@
-This is a JEMU/JavaCPC add-on : it does help exporting/importing files between dsk and a hard drive folder.
+Old version, with |era as DRAG and save as DROP. Having only one file mounted (others at 0Ko)
+
+Perhaps |era should be ERASE in next version "MagicCPCDiscImage", so here a backup of this old version.

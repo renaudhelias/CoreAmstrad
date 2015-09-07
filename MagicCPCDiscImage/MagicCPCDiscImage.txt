@@ -1,0 +1,6 @@
+This is a JEMU/JavaCPC add-on : it does help exporting/importing files between dsk and a hard drive folder.
+Does list all files, with correct size.
+
+Saving files ok
+Listing/running files ok
+Large file size problem

@@ -41,7 +41,7 @@ public class MagicCPCDiscImage extends DiscImage {
 	int lastCylinder = 79;
 	int headMask = 1;
 
-	byte[] selectedFileContent = null;
+	
 
 	/** Creates a new instance of CPCDiscImage */
 	public MagicCPCDiscImage() {
@@ -50,8 +50,8 @@ public class MagicCPCDiscImage extends DiscImage {
 		listDir();
 	}
 
-	public static final int SECTS = 50; // = data[offs + 0x15] & 0xff;
-	public static final int CYLS = 20;
+	public static final int SECTS = 9; // = data[offs + 0x15] & 0xff;
+	public static final int CYLS = 28;
 	public static final int HEADS = 1;
 
 	private void createSectorStructure() {
@@ -156,36 +156,40 @@ public class MagicCPCDiscImage extends DiscImage {
 					File f = dirContent.get(name);
 					double l = f.length();
 					System.out.println("DIR : "+name);
-					selectedFileContent = new byte[512];
-					FileInputStream fis = new FileInputStream(f);
-					while (fis.read(selectedFileContent) > 0) {
-						System.arraycopy(selectedFileContent, 0,
-								sectors[writeH][writeC][writeR], 0, 512);
-						teaForTwo=!teaForTwo;
-						writeR++;
-						if (writeR >= 9) {
-							writeR = 0;
-							writeC++;
-							if (writeC >= CYLS) {
-								break;
+					try  {
+						byte[] selectedFileContent = new byte[512];
+						FileInputStream fis = new FileInputStream(f);
+						while (fis.read(selectedFileContent) > 0) {
+							System.arraycopy(selectedFileContent, 0,
+									sectors[writeH][writeC][writeR], 0, 512);
+							teaForTwo=!teaForTwo;
+							writeR++;
+							if (writeR >= SECTS) {
+								writeR = 0;
+								writeC++;
+								if (writeC >= CYLS) {
+									break;
+								}
+							}
+							
+							System.arraycopy(empty, 0, selectedFileContent, 0, 512);
+						}
+						if (teaForTwo) {
+							teaForTwo=!teaForTwo;
+							writeR++;
+							if (writeR >= 9) {
+								writeR = 0;
+								writeC++;
+								if (writeC >= CYLS) {
+									break;
+								}
 							}
 						}
-						
-						System.arraycopy(empty, 0, selectedFileContent, 0, 512);
+						fis.close();
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					if (teaForTwo) {
-						teaForTwo=!teaForTwo;
-						writeR++;
-						if (writeR >= 9) {
-							writeR = 0;
-							writeC++;
-							if (writeC >= CYLS) {
-								break;
-							}
-						}
-					}
-					fis.close();
-
+					// a file of 64Kb filled with x"20" (space chat) : 65536bytes
 
 					int m = (int) Math.ceil(l / (MACGYVER*16.0 * 1024.0));
 

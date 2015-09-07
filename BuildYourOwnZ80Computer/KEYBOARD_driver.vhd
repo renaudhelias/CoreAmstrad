@@ -39,8 +39,8 @@ architecture Behavioral of KEYBOARD_driver is
 	constant amstrad_decode:amstrad_decode_type:=(
 			(x"75",x"74",x"72",x"01",x"0B",x"04",x"69",x"7A"),--  0 ligne 19 /\ -> \/ 9 6 3 Enter . -- Enter is "End" here
 			(x"6B",x"70",x"83",x"0A",x"03",x"05",x"06",x"09"), --  1 ligne 18 <= COPY 7 8 5 1 2 0
-			(x"71",x"54",x"5A",x"5B",x"0C",x"12",x"5D",x"14"), --  2 ligne 17 CLR [ Enter ] 4 SHIFT_LEFT \ CRTL_LEFT
-			(x"59",x"4E",x"52",x"4D",x"55",x"4C",x"4A",x"49"), --  3 ligne 16 Za - @ P + : ? > -- Za is mapped in right shift key, because it's a missing key in PC 102 keyboard, needed to play "holdup.dsk"
+			(x"71",x"5B",x"5A",x"5D",x"0C",x"12",x"59",x"14"), --  2 ligne 17 CLR [ Enter ] 4 SHIFT_LEFT \ CRTL_LEFT
+			(x"55",x"4E",x"54",x"4D",x"52",x"4C",x"4A",x"49"), --  3 ligne 16 _ - @ P + : ? > -- _ is mapped in right shift key, because it's a missing key in PC 102 keyboard, needed to play "holdup.dsk"
 			(x"45",x"46",x"44",x"43",x"4B",x"42",x"3A",x"41"), --  4 ligne 15 0_ 9_ O I L K M <
 			(x"3E",x"3D",x"3C",x"35",x"33",x"3B",x"31",x"29"), --  5 ligne 14 8_ 7_ U Y H J N SPACE
 			(x"36",x"2E",x"2D",x"2C",x"34",x"2B",x"32",x"2A"), --  6 ligne 13 6_ 5_ R T G F B V

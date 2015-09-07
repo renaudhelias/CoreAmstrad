@@ -19,9 +19,14 @@ entity MIST_RGB is
     Port ( RED_FF : in  STD_LOGIC_VECTOR (1 downto 0);
            GREEN_FF : in  STD_LOGIC_VECTOR (1 downto 0);
            BLUE_FF : in  STD_LOGIC_VECTOR (1 downto 0);
+			  HSYNC_FF : in STD_logic;
+			  VSYNC_FF : in STD_logic;
            RED6 : out  STD_LOGIC_VECTOR (5 downto 0);
            GREEN6 : out  STD_LOGIC_VECTOR (5 downto 0);
-           BLUE6 : out  STD_LOGIC_VECTOR (5 downto 0));
+           BLUE6 : out  STD_LOGIC_VECTOR (5 downto 0);
+			  HSYNC6 : out STD_logic;
+			  VSYNC6 : out STD_logic
+			  );
 end MIST_RGB;
 
 architecture Behavioral of MIST_RGB is
@@ -30,5 +35,7 @@ begin
 RED6<= RED_FF & "0000";
 GREEN6<= GREEN_FF & "0000";
 BLUE6<= BLUE_FF & "0000";
+HSYNC6<=HSYNC_FF;
+VSYNC6<=VSYNC_FF;
 end Behavioral;
 

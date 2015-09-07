@@ -20,9 +20,9 @@ applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 256 128)
+	(rect 16 16 256 160)
 	(text "MIST_RGB" (rect 5 0 54 12)(font "Arial" ))
-	(text "inst" (rect 8 96 20 108)(font "Arial" ))
+	(text "inst" (rect 8 128 20 140)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -45,6 +45,20 @@ applicable agreement for further details.
 		(line (pt 0 64)(pt 16 64)(line_width 3))
 	)
 	(port
+		(pt 0 80)
+		(input)
+		(text "HSYNC_FF" (rect 0 0 51 12)(font "Arial" ))
+		(text "HSYNC_FF" (rect 21 75 72 87)(font "Arial" ))
+		(line (pt 0 80)(pt 16 80)(line_width 1))
+	)
+	(port
+		(pt 0 96)
+		(input)
+		(text "VSYNC_FF" (rect 0 0 53 12)(font "Arial" ))
+		(text "VSYNC_FF" (rect 21 91 74 103)(font "Arial" ))
+		(line (pt 0 96)(pt 16 96)(line_width 1))
+	)
+	(port
 		(pt 240 32)
 		(output)
 		(text "RED6[5..0]" (rect 0 0 47 12)(font "Arial" ))
@@ -65,7 +79,21 @@ applicable agreement for further details.
 		(text "BLUE6[5..0]" (rect 169 59 219 71)(font "Arial" ))
 		(line (pt 240 64)(pt 224 64)(line_width 3))
 	)
+	(port
+		(pt 240 80)
+		(output)
+		(text "HSYNC6" (rect 0 0 38 12)(font "Arial" ))
+		(text "HSYNC6" (rect 181 75 219 87)(font "Arial" ))
+		(line (pt 240 80)(pt 224 80)(line_width 1))
+	)
+	(port
+		(pt 240 96)
+		(output)
+		(text "VSYNC6" (rect 0 0 40 12)(font "Arial" ))
+		(text "VSYNC6" (rect 179 91 219 103)(font "Arial" ))
+		(line (pt 240 96)(pt 224 96)(line_width 1))
+	)
 	(drawing
-		(rectangle (rect 16 16 224 96)(line_width 1))
+		(rectangle (rect 16 16 224 128)(line_width 1))
 	)
 )

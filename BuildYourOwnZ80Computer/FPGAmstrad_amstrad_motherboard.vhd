@@ -474,7 +474,7 @@ entity FPGAmstrad_amstrad_motherboard is
           --ROMbank    : out   std_logic_vector (7 downto 0); 
           --ROMen      : out   std_logic; 
           vram_A     : out   std_logic_vector (14 downto 0); 
-          vram_D     : out   std_logic_vector (7 downto 0); 
+          vram_D     : out   std_logic_vector (7 downto 0); -- pixel_DATA
           vram_W     : out   std_logic;
 			 
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
@@ -486,7 +486,9 @@ entity FPGAmstrad_amstrad_motherboard is
 			  megashark_doREAD : out std_logic;
 			  megashark_doWRITE : out std_logic;
 			  megashark_done : in std_logic;
-			  megashark_face : out std_logic
+			  megashark_face : out std_logic;
+			  pixel_hsync:out std_logic;
+			  pixel_vsync:out std_logic
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -617,7 +619,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              bvram_D       : out   std_logic_vector (7 downto 0); 
              palette_A     : out   std_logic_vector (13 downto 0); 
              palette_D     : out   std_logic_vector (7 downto 0); 
-             nCLK4_1       : in    std_logic);
+             nCLK4_1       : in    std_logic;
+				 pixel_vsync:out std_logic;
+				 pixel_hsync:out std_logic);
    end component;
    
    component ROMselect
@@ -832,6 +836,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 	
 	--signal ROMarea: std_logic;
 begin
+
    --RAMBank(2 downto 0) <= RAMBank_DUMMY(2 downto 0);
    ram_W <= ram_W_DUMMY;
    --ROMbank(7 downto 0) <= ROMbank_DUMMY(7 downto 0);
@@ -886,6 +891,8 @@ begin
                 reset=>XLXN_907,
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
                 bvram_D(7 downto 0)=>vram_D(7 downto 0),
+					 pixel_vsync=>pixel_vsync,
+					 pixel_hsync=>pixel_hsync,
                 bvram_W=>vram_W,
                 crtc_A(15 downto 0)=>XLXN_868(15 downto 0),
                 crtc_R=>open,

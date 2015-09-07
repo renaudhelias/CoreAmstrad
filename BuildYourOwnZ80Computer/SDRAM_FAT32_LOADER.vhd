@@ -1733,8 +1733,8 @@ end if;
 		type face_integer_type is array(0 to 1) of integer range 0 to 255;
 		variable nb_tracks:face_integer_type:=(0,0); -- super cauldron has 42 tracks !!! -- Batman demo has 80 tracks
 		variable no_track:integer range 0 to 255; -- force simple face
-		--variable nb_sides:integer range 0 to 3:=1;
-		--variable no_side:integer range 0 to 3:=0;
+		variable nb_sides:face_integer_type:=(1,1); -- Batman demo one-dsk version has 2 sides
+		variable no_side:integer range 0 to 255:=0;
 		variable nb_sects:face_integer_type:=(9,9); -- super cauldron has 10 sectors !! -- batman demo has 9 sectors (track size 13) 10 sectors (track size 15)
 		variable no_sect:integer range 0 to 255;
 		variable track_size:std_logic_vector(40 downto 0):=(others=>'0');
@@ -1842,20 +1842,30 @@ end if;
 							mecashark_step:=3;
 						when 3=>
 							nb_tracks(mecashark_face):=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"000000E0"); -- goto x110
+							output_A:=output_A+(PREFIX & x"00000001"); -- goto x31
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=7;
+						when 7=>
+							nb_sides(mecashark_face):=conv_integer(spi_Din);
+							output_A:=output_A+(PREFIX & x"000000DF"); -- goto x110
 							meca_spi_A<=output_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=8;
 						
 						
-						when 7=>NULL; -- DEPRECATED
 						when 8=> -- First Track-info
 							no_track:=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"00000005"); -- goto x115
+							output_A:=output_A+(PREFIX & x"00000001"); -- goto x111
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=10;
+						when 10=>
+							no_side:=conv_integer(spi_Din);
+							output_A:=output_A+(PREFIX & x"00000004"); -- goto x115
 							meca_spi_A<=output_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=11;
-						when 10=>NULL; -- DEPRECATED
 						when 11=>
 							nb_sects(mecashark_face):=conv_integer(spi_Din);
 							output_A:=output_A+(PREFIX & x"00000003"); -- goto x118
@@ -1928,11 +1938,17 @@ end if;
 							chrn:=megashark_CHRN;
 							mecashark_step:=18;
 						when 18=> -- looking after track/sector from CHRN value
-							no_track:=conv_integer(chrn(31 downto 24));
+							no_track:=0;
+							no_side:=0;
 							mecashark_step:=19;
 						when 19=>
-							if no_track>0 then
-								no_track:=no_track-1;
+							if (no_track=nb_tracks(mecashark_face)-1 and no_side/=nb_sides(mecashark_face)-1) or (no_track=conv_integer(chrn(31 downto 24)) and no_side = conv_integer(chrn(23 downto 16))) then
+								-- need nb_sects of the track here
+								output_A:=input_A + (PREFIX & x"00000015");
+								meca_spi_A<=output_A;
+								meca_spi_Rdo<='1';
+								mecashark_step:=5;
+							else
 								if winape(mecashark_face) then
 									-- need nb_sects here
 									output_A:=input_A + (PREFIX & x"00000015");
@@ -1942,7 +1958,7 @@ end if;
 								else
 									-- using track_size (that contains Track-Info size)
 									if extended(mecashark_face) then
-										output_A:=mecashark_addr_mem + (PREFIX & x"00000034") + conv_std_logic_vector(no_track,41);
+										output_A:=mecashark_addr_mem + (PREFIX & x"00000034") + conv_std_logic_vector(no_track*nb_sides(mecashark_face)+no_side,41);
 										meca_spi_A<=output_A;
 										meca_spi_Rdo<='1';
 										mecashark_step:=30;
@@ -1953,13 +1969,13 @@ end if;
 										mecashark_step:=4;
 									end if;
 								end if;
-							else
-								no_track:=conv_integer(chrn(31 downto 24));
-								-- need nb_sects of the track here
-								output_A:=input_A + (PREFIX & x"00000015");
-								meca_spi_A<=output_A;
-								meca_spi_Rdo<='1';
-								mecashark_step:=5;
+								
+								if no_side = nb_sides(mecashark_face)-1 then
+									no_track:=no_track+1;
+									no_side:=0;
+								else
+									no_side:=no_side+1;
+								end if;
 							end if;
 						when 4=> -- not WinApe and not Extended 1/2
 							track_size(7 downto 0):=spi_Din;

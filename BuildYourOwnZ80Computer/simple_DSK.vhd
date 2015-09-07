@@ -14,7 +14,7 @@
 --
 -- State machine : PHASE_* (one-to-one with FDC "state" responses to Z80)
 -- Crossing state machine : etat_*
--- Global state : etat_zap '1:busy' : goto PHASE_*_WAIT, '0:not busy' : do leave PHASE_*_WAIT (one-to-one with FDC "ST0/ST1/ST2/ST3" responses to Z80)
+-- Global state : etat_wait '1:busy' : goto PHASE_*_WAIT, '0:not busy' : do leave PHASE_*_WAIT (one-to-one with FDC "ST0/ST1/ST2/ST3" responses to Z80)
 -- Bonus : is_dskReady(current_face), at '1' when a dsk is selected/inserted
 --
 -- see SDRAM_FAT32_LOADER.vhd mecashark
@@ -37,9 +37,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --Usually single sided 40 Track 3" disk drives are used in CPCs, whereas 40 tracks is the official specification, practically 42 tracks could be used (the limit is specific to the FDD, some support more tracks. 42 is a good maximum). The FDC controller can be used to control 80 tracks, and/or double sided drives also, even though AMSDOS isn't supporting such formats. AMSDOS is supporting a maximum of two disk drives only. 
 
 entity simple_DSK is
-	Generic (
-		IS_WRITE_PROTECTED:boolean:=false -- TESTED OK : simply do nothing during save operation...
-	);
     Port ( nCLK4_1 : in  STD_LOGIC;
            reset : in STD_LOGIC;
            A10_A8_A7 : in  STD_LOGIC_VECTOR (2 downto 0); -- chip select
@@ -133,7 +130,6 @@ architecture Behavioral of simple_DSK is
 	end component;
 	
 	signal memshark_chrn:STD_LOGIC_VECTOR(4*8-1 downto 0):=(others=>'0');
-	--signal memshark_is_current:boolean:=false; -- current 512 block conform to current chrn is loaded in memory
 	signal memshark_doGOTO:boolean:=false;
 	signal memshark_doREAD:boolean:=false;
 	signal memshark_doWRITE:boolean:=false;
@@ -266,7 +262,6 @@ begin
 						megashark_doGOTO_s<='1';
 						memshark_step:=1;
 					when 1=>
-						--memshark_is_current<=false;
 						chrn_mem:=megashark_CHRNresult;
 						memshark_step:=2;
 					when 2=> -- CHRN OK
@@ -298,7 +293,6 @@ begin
 						end if;
 					when 5=>
 						chrn_mem:=megashark_CHRNresult;
-						--memshark_is_current<=true;
 						memshark_step:=2;
 						
 					when 6=> -- WRITE memshark_chrn
@@ -348,12 +342,6 @@ begin
 						end if;
 					when 8=>
 						chrn_mem:=megashark_CHRNresult;
-						--if memshark_DTL=SECTOR_SIZE then
-						--	memshark_is_current<=true;
-						--else
-						--	-- some bytes are missing in memshark buffer to optimize a read
-						--	memshark_is_current<=false;
-						--end if;
 						memshark_step:=2;
 				end case;
 			end if;
@@ -402,7 +390,8 @@ cortex:process(nCLK4_1,reset)
 
 	variable etat:integer range 0 to 8;
 	variable check_dsk_face:boolean:=false;
-	variable etat_zap:boolean:=false; -- memshark is busy or out of synchro (work in progress, do generate a ST0/ST1 failing for this round)
+	variable etat_wait:boolean:=false; -- memshark is busy or out of synchro (work in progress, do generate a ST0/ST1 failing for this round)
+	variable etat_zap:boolean:=false;
 	variable command:std_logic_vector(7 downto 0);
 	
 	variable data:std_logic_vector(7 downto 0);
@@ -455,7 +444,7 @@ cortex:process(nCLK4_1,reset)
 -- b6     WP  Write Protected (write protected)
 -- b7     FT  Fault (if supported: 1=Drive failure)
 	variable ST0:std_logic_vector(7 downto 0):=(others=>'0');
-	 variable current_US:std_logic_vector(7 downto 0):=(others=>'0');
+	variable current_HUS:std_logic_vector(7 downto 0):=(others=>'0'); -- H + US + US
 	variable ST1:std_logic_vector(7 downto 0):=(others=>'0');
 	variable ST2:std_logic_vector(7 downto 0):=(others=>'0');
 	variable ST3:std_logic_vector(7 downto 0):=(others=>'0');
@@ -480,16 +469,16 @@ begin
 		was_concerned:=false;
 		do_update:=false;
 		phase<=PHASE_ATTENTE_COMMANDE;
-		etat_zap:=false;
+		etat_wait:=false;
 	elsif rising_edge(nCLK4_1) then --CLK4
 	
 			memshark_doGOTO<=false;
 			memshark_doREAD<=false;
 			memshark_doWRITE<=false;
 	
-			if current_US(0)='0' and is_dskReady(0) = '1' then
+			if current_HUS(0)='0' and is_dskReady(0) = '1' then
 				current_face_notReady:=false;
-			elsif current_US(0)='1' and is_dskReady(1) = '1' then
+			elsif current_HUS(0)='1' and is_dskReady(1) = '1' then
 				current_face_notReady:=false;
 			else
 				current_face_notReady:=true;
@@ -502,22 +491,22 @@ begin
 			
 			block_W_cortex_mem:='0';
 			
-			if etat_zap then -- and is_dskReady(current_face)='1'
+			if etat_wait then
 				if phase = PHASE_WAIT_ATTENTE_COMMANDE and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					etat_zap:=false;
+					etat_wait:=false;
 					phase <= PHASE_ATTENTE_COMMANDE;
 				elsif phase = PHASE_WAIT_EXECUTION_READ and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					etat_zap:=false;
+					etat_wait:=false;
 					phase <= PHASE_EXECUTION_READ;
 				elsif phase = PHASE_WAIT_EXECUTION_WRITE and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					etat_zap:=false;
+					etat_wait:=false;
 					phase <= PHASE_EXECUTION_WRITE;
 				elsif phase = PHASE_WAIT_RESULT and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					etat_zap:=false;
+					etat_wait:=false;
 					phase <= PHASE_RESULT;
 				end if;
 			end if;
@@ -534,22 +523,17 @@ begin
 				--b0 MD (Missing address Mark in Data field)
 			
 				-- DSK NOT READY MESSAGE
-				ST0:=ST0_SEEK_END or ST0_ABNORMAL or ST0_NOT_READY or current_US;
+				ST0:=ST0_SEEK_END or ST0_ABNORMAL or ST0_NOT_READY or current_HUS;
 				ST1:=ST1_NO_DATA or ST1_MISSING_ADDR;
-			elsif etat_zap then
-				ST0:=ST0_SEEK_END or ST0_ABNORMAL or ST0_NOT_READY or current_US; -- do press retry to test :/
+			elsif etat_wait then
+				ST0:=ST0_SEEK_END or ST0_ABNORMAL or ST0_NOT_READY or current_HUS; -- do press retry to test :/
 				ST1:=ST1_NO_DATA or ST1_MISSING_ADDR;
 			else
 				-- x00 et x00 selon DSK file format definition
-				ST0:=ST0_SEEK_END or current_US;
+				ST0:=ST0_SEEK_END or current_HUS;
 				ST1:=(others=>'0');
 			end if;
-			if IS_WRITE_PROTECTED then
-				ST3:=ST3_READY or ST3_WRITE_PROTECTED or current_US;
-				ST1:=ST1 or ST1_NOT_WRITABLE;
-			else
-				ST3:=ST3_READY or current_US;
-			end if;
+			ST3:=ST3_READY or current_HUS;
 	
 			if cafe='1' and (wasIO_WR='0' and IO_WR='1') then
 				-- out &cafe,dskNumber
@@ -633,7 +617,7 @@ begin
 							end if;
 							if etat=ETAT_READ then
 								chrn:=getCHRN(megashark_CHRNresult);
-								if not(etat_zap) then
+								if not(etat_wait) and not(etat_zap) then
 									data:=block_Dout;
 									D_result<=data;
 									--if current_byte<16*2 then
@@ -650,21 +634,21 @@ begin
 								else
 									current_byte:=current_byte+1;
 								end if;
-								if not(etat_zap) then
+								if not(etat_wait) and not(etat_zap) then
 									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									block_W_cortex_mem:='0';
 								end if;
 
 								
 								if exec_restant=0 then
-									if etat_zap then
+									if etat_wait then
 										phase<=PHASE_WAIT_RESULT;
 									else
 										phase<=PHASE_RESULT;
 									end if;
 									result_restant:=7;
 									results(6):=ST0; -- ST0
-									results(5):=ST1; -- ST1 (dependance etat_zap ok)
+									results(5):=ST1; -- ST1
 									results(4):=ST2; -- ST2
 									results(3):=chrn(3); -- params(6); -- C
 									results(2):=chrn(2); -- params(5); -- H
@@ -724,7 +708,7 @@ begin
 								D_result<=data;
 								
 								if result_restant=0 then
-									if etat_zap then
+									if etat_wait then
 										phase<=PHASE_WAIT_ATTENTE_COMMANDE;
 									else
 										phase<=PHASE_ATTENTE_COMMANDE;
@@ -751,7 +735,7 @@ begin
 							if etat=ETAT_WRITE then
 								--if current_byte>=SECTOR_SIZES(chrn(3)) then
 								data:=D_command;
-								if not(etat_zap) then
+								if not(etat_wait) and not(etat_zap) then
 									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									-- OK if current_byte=0 then
 									-- OK 	block_A_cortex_mem:=conv_std_logic_vector(1,9);
@@ -772,10 +756,12 @@ begin
 								end if;
 								if exec_restant_write=0 then
 									if etat_zap then
+										phase<=PHASE_RESULT;
+									elsif etat_wait then
 										phase<=PHASE_WAIT_RESULT;
 									else
 										phase<=PHASE_AFTER_EXECUTION_WRITE;
-										etat_zap:=true;
+										etat_wait:=true;
 									end if;
 									result_restant:=7;
 									results(6):=ST0; -- ST0
@@ -809,7 +795,7 @@ begin
 									check_dsk_face:=true;
 								when x"08" => -- sense interrupt status : status information about the FDC at the end of operation
 									result_restant:=2;
-									if etat_zap then
+									if etat_wait then
 										phase<=PHASE_WAIT_RESULT;
 									else
 										phase<=PHASE_RESULT;
@@ -862,13 +848,13 @@ begin
 								params(command_restant):=D_command;
 								if check_dsk_face then
 									check_dsk_face:=false;
-									current_US(1 downto 0):=D_command(1 downto 0);
-									megashark_face<=current_US(0);
+									current_HUS(1 downto 0):=D_command(1 downto 0); -- H US1 US0
+									megashark_face<=current_HUS(0);
 								end if;
 							end if;
 							if command_restant=0 then
 								if etat=ETAT_RECALIBRATE then -- no results
-									-- goto track 0
+									-- goto track 0 side 0
 									if current_face_notReady then
 										-- disk not inserted
 										etat_zap := true;
@@ -876,10 +862,12 @@ begin
 										-- let's go
 										memshark_chrn<=x"00000002";
 										memshark_doGOTO<=true;
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 								elsif etat=ETAT_READ_ID then
 									result_restant:=7;
@@ -891,10 +879,12 @@ begin
 										chrn(0):=x"02";
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doGOTO<=true;
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 								elsif etat=ETAT_READ_DIAGNOSTIC then
 									-- params select C H R N EOT GPL DTL
@@ -908,19 +898,18 @@ begin
 									if current_face_notReady then
 										-- disk not inserted
 										etat_zap := true;
-									--elsif memshark_is_current and setCHRN(chrn) = megashark_CHRNresult and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
-									--	-- It's all right
-									--	etat_zap := false;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- let's go
 										dtl:=SECTOR_SIZE;
 										memshark_DTL<=dtl;
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doREAD<=true; -- special : EOT is a sector id here
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 									
 									
@@ -944,42 +933,39 @@ begin
 									if current_face_notReady then
 										-- disk not inserted
 										etat_zap := true;
-									--elsif memshark_is_current and setCHRN(chrn) = megashark_CHRNresult and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE ) then
-									--	-- It's all right
-									--	etat_zap := false;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- on lance une tentative de lecture du block en parallele
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doREAD<=true;
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 									-- pointer charger le premier octet (tout de suite ou apres la sortie d'un PHASE_WAIT_*)
 									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									block_W_cortex_mem:='0';
 								elsif etat=ETAT_SEEK then -- no results
 									-- params select NCN
-									if memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
-										if current_face_notReady then
-											-- disk not inserted
-											etat_zap := true;
-										--elsif chrn(3) = params(0) then -- C == param NCN
-										--	etat_zap := false; -- cool
-										else
-											-- let's go
-											chrn(3):=params(0); -- C = param NCN
-											chrn(2):=x"00"; -- H
-											chrn(1):=x"00"; -- R
-											chrn(0):=x"02"; -- N
-											memshark_chrn<=setCHRN(chrn);
-											memshark_doGOTO<=true;
-											etat_zap := true;
-										end if;
+									if current_face_notReady then
+										-- disk not inserted
+										etat_zap := true;
+									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
+										-- let's go
+										chrn(3):=params(0); -- C = param NCN
+										chrn(2):=x"00"; -- H
+										chrn(1):=x"00"; -- R
+										chrn(0):=x"02"; -- N
+										memshark_chrn<=setCHRN(chrn);
+										memshark_doGOTO<=true;
+										etat_wait := true;
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 								elsif etat=ETAT_SENSE_DRIVE_STATUS then
 									result_restant:=1;
@@ -991,26 +977,16 @@ begin
 										chrn(0):=x"02";
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doGOTO<=true;
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 								elsif etat=ETAT_WRITE then
 									-- params select C H R N EOT GPL DTL
-									if IS_WRITE_PROTECTED then
-										exec_restant_write:=0; -- no write
-										dtl:=0;
-										memshark_DTL<=dtl;
-											result_restant:=7;
-											results(6):=ST0; -- ST0
-											results(5):=ST1; -- ST1
-											results(4):=ST2; -- ST2
-											results(3):=params(6); -- C
-											results(2):=params(5); -- H
-											results(1):=params(2); -- R EOT
-											results(0):=params(3); -- N (DTL applyed)
-									elsif params(3)>0 then -- N
+									if params(3)>0 then -- N
 										exec_restant_write:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
 										dtl:=SECTOR_SIZE;
 										memshark_DTL<=dtl;
@@ -1029,32 +1005,34 @@ begin
 										-- disk not inserted
 										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
-										etat_zap := false; -- cool, no action at this step, goto next step.
+										etat_wait := false; -- cool, no action at this step, goto next step.
+										etat_zap := false;
 									else
 										-- system not ready
-										etat_zap := true;
+										etat_wait := true;
+										etat_zap := false;
 									end if;
 								end if;
 								if exec_restant>0 then
-									if etat_zap then
+									if etat_wait then
 										phase<=PHASE_WAIT_EXECUTION_READ; -- we switch into execution_read
 									else
 										phase<=PHASE_EXECUTION_READ;
 									end if;
 								elsif exec_restant_write>0 then
-									if etat_zap then
+									if etat_wait then
 										phase<=PHASE_WAIT_EXECUTION_WRITE;
 									else
 										phase<=PHASE_EXECUTION_WRITE;
 									end if;
 								elsif result_restant>0 then
-									if etat_zap then
+									if etat_wait then
 										phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
 									else
 										phase<=PHASE_RESULT;
 									end if;
 								else
-									if etat_zap then
+									if etat_wait then
 										-- This case does really exists, proof : etat=ETAT_OSEF, command recalibrate()
 										phase<=PHASE_WAIT_ATTENTE_COMMANDE;
 									else
@@ -1072,15 +1050,17 @@ begin
 				if current_face_notReady then
 					-- disk not inserted
 					etat_zap := true;
-					phase<=PHASE_WAIT_RESULT;
+					phase<=PHASE_RESULT;
 				elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					memshark_chrn<=setCHRN(chrn);
 					memshark_doWRITE<=true;
-					etat_zap:=true;
+					etat_wait:=true;
+					etat_zap := false;
 					phase<=PHASE_WAIT_RESULT;
 				else
 					-- system not ready
-					etat_zap := true;
+					etat_wait := true;
+					etat_zap := false;
 					phase<=PHASE_WAIT_RESULT;
 				end if;
 			end if;

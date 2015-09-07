@@ -56,7 +56,7 @@ entity simple_GateArrayInterrupt is
 			  crtc_A: out STD_LOGIC_VECTOR (15 downto 0):=(others=>'0');
 			  bvram_A:out STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
 			  bvram_W:out STD_LOGIC:='0'; 
-			  bvram_D:out std_logic_vector(7 downto 0):=(others=>'0');
+			  bvram_D:out std_logic_vector(7 downto 0):=(others=>'0'); -- pixel_DATA
 			  crtc_R:out STD_LOGIC:='0'; --ram_A external solve CRTC read scan
            int : out  STD_LOGIC:='0'; -- JavaCPC reset init
 			  M1_n : in  STD_LOGIC;
@@ -68,8 +68,9 @@ entity simple_GateArrayInterrupt is
 			  palette_A: out STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
 			  palette_D: out std_logic_vector(7 downto 0);
 			  palette_W: out std_logic;
-			  reset:in  STD_LOGIC
-			  
+			  reset:in  STD_LOGIC;
+			  pixel_vsync:out std_logic;
+			  pixel_hsync:out std_logic
 			  );
 end simple_GateArrayInterrupt;
 
@@ -121,7 +122,8 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal palette_W_tictac: std_logic;
 begin
 
-
+pixel_vsync<=vsync;
+pixel_hsync<=hsync;
 -- do scan mirror VRAM (underground way (no way)) via CRTC, and then send data to VRAM buffer
 --
 -- Z80=>RAM         (read/write at 4MHz)
@@ -178,6 +180,7 @@ begin
 					D2:=crtc_D; --bug bug
 					W2:='1';
 				else
+					D2:=x"00";
 					W2:='0';
 				end if;
 				bvram_D<=D2; -- tempo D2 !!!

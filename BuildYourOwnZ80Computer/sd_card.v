@@ -64,12 +64,12 @@ module sd_card (
    input         sd_cs,
    input         sd_sck,
    input         sd_sdi,
-   output reg    sd_sdo=1'b1,
+   output reg    sd_sdo=1'b1
 	
 	// monitoring
-	output [7:0] cmd_leds,
-	output [7:0] cmd_len_leds,
-	output [7:0] reply_leds
+//	output [7:0] cmd_leds,
+//	output [7:0] cmd_len_leds,
+//	output [7:0] reply_leds
 ); 
 
 
@@ -144,15 +144,15 @@ reg [6:0] sbuf=7'b1111111;
 reg cmd55;
 reg new_cmd_rcvd;
 reg [7:0] cmd=8'd0;
-assign cmd_leds=cmd;
+//assign cmd_leds=cmd;
 reg [2:0] bit_cnt=3'd0;           // counts bits 0-7 0-7 ...
 reg [3:0] byte_cnt= 4'd15;   // counts bytes
-assign cmd_len_leds=byte_cnt;
+//assign cmd_len_leds=byte_cnt;
 reg [31:0] lba;
 assign io_lba = io_sdhc?lba:{9'd0, lba[31:9]};
 
 reg [7:0] reply=8'd0;
-assign reply_leds=reply;
+//assign reply_leds=reply;
 reg [7:0] reply0, reply1, reply2, reply3;
 reg [3:0] reply_len;
 

@@ -353,6 +353,8 @@ public class MagicCPCDiscImage extends DiscImage {
 									try {
 										if (f.createNewFile()) {
 											byte[] buff = new byte[size];
+											// FIXME : Math.min, here buff does 0x80 several times and last time <0x80
+											// buffer is the sum, but perhaps has to be cut using last buff size.
 											for (int b = 0; b < Math.min(
 													buff.length, buffer.size()); b++) {
 												buff[b] = buffer.get(b);

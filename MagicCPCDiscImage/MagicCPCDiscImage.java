@@ -51,7 +51,7 @@ public class MagicCPCDiscImage extends DiscImage {
 	}
 
 	public static final int SECTS = 9; // = data[offs + 0x15] & 0xff;
-	public static final int CYLS = 28;
+	public static final int CYLS = 40; // x28
 	public static final int HEADS = 1;
 
 	private void createSectorStructure() {

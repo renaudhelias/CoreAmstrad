@@ -33,11 +33,8 @@ import jemu.core.device.floppy.*;
  */
 public class MagicCPCDiscImage extends DiscImage {
 	
-	/** if two DIRStruct entries to save (>16Kb (and <32Kb...)) */
-	public final boolean FILE_MORE_THAN_16KB_AND_LESS_THAN_32KB_WITH_HEADFILE = false;
-	
-//	String path="D:\\Users\\frup64427\\Desktop\\mecasharkV0\\jemu-code-52\\JEMU\\magic";
-	String path = "C:\\workspaceLWJGL\\JEMU_CPC\\magic";
+	String path="D:\\Users\\frup64427\\Desktop\\mecasharkV0\\jemu-code-52\\JEMU\\magic";
+//	String path = "C:\\workspaceLWJGL\\JEMU_CPC\\magic";
 
 	int[][][][] ids;
 	byte[][][][] sectors;
@@ -297,11 +294,14 @@ public class MagicCPCDiscImage extends DiscImage {
 	boolean isData = false;
 	boolean isDrop = false;
 	boolean isBank = true;
-	boolean isBank2 = FILE_MORE_THAN_16KB_AND_LESS_THAN_32KB_WITH_HEADFILE;
 	List<String> scanNames = new ArrayList<String>();
 	List<Byte> buffer = new ArrayList<Byte>();
 	List<Byte> bufferAppend = new ArrayList<Byte>();
 	int cursorWrite = 0;
+	
+	Integer cylinderBank=null;
+	Integer headBank=null;
+	Integer indexBank=null;
 	
 	@Override
 	public void notifyWriteSector(byte data, int cylinder, int head, int c,
@@ -318,10 +318,6 @@ public class MagicCPCDiscImage extends DiscImage {
 						cursorWrite = 0;
 						scanNames.clear();
 						isData = false;
-						if (!isBank2) {
-							isBank=false;
-						}
-						isBank2 = false; // stopping to Bank
 					}
 					if (cursorWrite == 512 - 1) {
 						for (int i = 0; i < result.length / 32; i++) {
@@ -377,7 +373,6 @@ public class MagicCPCDiscImage extends DiscImage {
 											bufferAppend.clear();
 											bufferAppend.addAll(buffer);
 											buffer.clear();
-											isBank=true;
 											dirContent.put(s,f);
 										} else {
 											bufferAppend.addAll(buffer);
@@ -397,7 +392,6 @@ public class MagicCPCDiscImage extends DiscImage {
 											}
 											fos.flush();
 											fos.close();
-											isBank=true;
 										}
 									} catch (Exception e) {
 										e.printStackTrace();
@@ -416,6 +410,16 @@ public class MagicCPCDiscImage extends DiscImage {
 						cursorWrite = 0;
 						isData = true;
 					}
+					
+					if (cylinderBank==null && cursorWrite==0) {
+						cylinderBank=cylinder;
+						headBank=head;
+						indexBank=index;
+						isBank=true;
+					} else if (cursorWrite==0 && cylinderBank==cylinder && headBank==head && indexBank==index) {
+						isBank=false; // stopping to Bank
+					}
+					
 					if (isBank) {
 						// Writing pure DATA, before writing complete filename in DirStruct
 						buffer.add(data);
@@ -428,6 +432,7 @@ public class MagicCPCDiscImage extends DiscImage {
 								buffer.remove(512);
 							}
 						}
+						cylinderBank=null; // leaving
 					}
 				}
 			}

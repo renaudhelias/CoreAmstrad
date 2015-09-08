@@ -320,6 +320,7 @@ public class MagicCPCDiscImage extends DiscImage {
 						isData = false;
 					}
 					if (cursorWrite == 512 - 1) {
+						System.out.println("\n#DIRSTRUCT WRITE "+index);
 						for (int i = 0; i < result.length / 32; i++) {
 							byte[] filename = new byte[8 + 3];
 							System.arraycopy(result, i * 0x20 + 1, filename, 0,
@@ -340,11 +341,10 @@ public class MagicCPCDiscImage extends DiscImage {
 								}
 								if (!scanNames.contains(s)) scanNames.add(s);
 								if (!dirContentKeys.contains(s)) {
-									dirContentKeys.add(s);
 									// save"toto.txt"
 									System.out.println("DROPPING file " + s);
 									int size = result[i * 0x20 + 1 + 8 + 3 + 3] * 0x80;
-									// TODO : check storing files with larger filesize
+									// TEST : save"bigFile",b,&8000,&8000
 									// TEST : save"image",b,&c000,&4000
 									// TEST : load"image",&c000
 									// That does write DATA, but with filename at begin of data, and then re-read it...
@@ -373,7 +373,6 @@ public class MagicCPCDiscImage extends DiscImage {
 											bufferAppend.clear();
 											bufferAppend.addAll(buffer);
 											buffer.clear();
-											dirContent.put(s,f);
 										} else {
 											bufferAppend.addAll(buffer);
 											buffer.clear();
@@ -386,7 +385,6 @@ public class MagicCPCDiscImage extends DiscImage {
 												if (b%512==511) {
 													fos.write(buff);
 												} else if (b == bufferAppend.size()-1) {
-													// TODO : supposed array,begin,size
 													fos.write(buff,0,b%512+1);
 												}
 											}
@@ -424,7 +422,6 @@ public class MagicCPCDiscImage extends DiscImage {
 						// Writing pure DATA, before writing complete filename in DirStruct
 						buffer.add(data);
 					} else {
-						// FIXME : pure DATA start with a certain {cyl,head,sectID}, that is same as fileHead, that shall be a better way to detect a fileHead just before the last DIRStruct entry write
 						// Writing file HEAD, before writing complete filename in DirStruct (big binary files, in more than 1 DIRStruct page)
 						buffer.add(cursorWrite, data);
 						if (cursorWrite == 512 - 1) {
@@ -432,7 +429,7 @@ public class MagicCPCDiscImage extends DiscImage {
 								buffer.remove(512);
 							}
 						}
-						cylinderBank=null; // leaving
+						cylinderBank=null; // leaving fileHead (for normal txt, no pb : always isBank=true)
 					}
 				}
 			}
@@ -453,7 +450,9 @@ public class MagicCPCDiscImage extends DiscImage {
 			if (index != -1) {
 				if (head == 0 && cylinder==0 && beginOfSector && index <4) {
 					if (isDrop) {
+						System.out.println("\n#DIRSTRUCT READ "+index);
 						listDir();
+						// FIXME some cat reordering does become from here (some WRITE of existing files, so in cat a file can be double-size (2 times the same DIREntry pack))
 						isDrop=false;
 					}
 				}

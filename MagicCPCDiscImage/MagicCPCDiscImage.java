@@ -27,14 +27,17 @@ import jemu.core.device.floppy.*;
  * cat
  * => 1Ko
  * run"t.bas
+ *
+ * save"file",p => protected file, with '*' in cat
+ * 
  */
 public class MagicCPCDiscImage extends DiscImage {
 	
-	// FIXME : I think it is about 2 by here. (see teaForTwo patch)
-	private final static int MACGYVER=1;
+	/** if two DIRStruct entries to save (>16Kb (and <32Kb...)) */
+	public final boolean FILE_MORE_THAN_16KB_AND_LESS_THAN_32KB_WITH_HEADFILE = false;
 	
-	String path="D:\\Users\\frup64427\\Desktop\\mecasharkV0\\jemu-code-52\\JEMU\\magic";
-//	String path = "C:\\workspaceLWJGL\\JEMU_CPC\\magic";
+//	String path="D:\\Users\\frup64427\\Desktop\\mecasharkV0\\jemu-code-52\\JEMU\\magic";
+	String path = "C:\\workspaceLWJGL\\JEMU_CPC\\magic";
 
 	int[][][][] ids;
 	byte[][][][] sectors;
@@ -147,15 +150,23 @@ public class MagicCPCDiscImage extends DiscImage {
 			for (String name : dirContentKeys) {
 				noSect = i / 16; // 0x1800 / 0x20
 				if (noSect >= 4) {
-					//FIXME : throw ERROR FILE DIR STRUCT TOO BIG !
-					break;
+					throw new MagicCPCDiscImageException(MagicCPCDiscImageException.FILE_STRUCTDIR_TOO_BIG);
 				}
 				ii = i % 16;
 				byte[] sectData = sectors[0][0][noSect];
 
 					File f = dirContent.get(name);
-					double l = f.length();
+					long fileLength = f.length();
 					System.out.println("DIR : "+name);
+					
+					// SAMPLE 180.DSK : fileSize=x49 (73), displayed : 
+					// 16bits listing "sectors" : 02 03 04 05 06 07 08 09 0A 0B 00 00 00 00 00 00
+					// So One full DIREntry equals 10Kb 
+					// A full DIREntry has size x80 (128)
+					// 16Kb=> 128
+					// 1Kb   => 8 increments
+					// 1025b => 8 increments
+					//  128b => 1 increment
 					try  {
 						byte[] selectedFileContent = new byte[512];
 						FileInputStream fis = new FileInputStream(f);
@@ -191,15 +202,17 @@ public class MagicCPCDiscImage extends DiscImage {
 					}
 					// a file of 64Kb filled with x"20" (space chat) : 65536bytes
 
-					int m = (int) Math.ceil(l / (MACGYVER*16.0 * 1024.0));
-
+					long m = fileLength / (16 * 1024); // number of this file DIREntry
+					long mm = fileLength % (16 * 1024); // data referenced by last DIREntry (if not a full data DIREntry)
+					if (mm>0) {
+						m++; // last block does include the last not full-sized packet.
+					}
 					for (int n = 0; n < m; n++) {
 
 						noSect = (i + n) / 16;
 						
 						if (noSect >= 4) {
-							//FIXME : throw ERROR FILE DIR STRUCT TOO BIG !
-							break;
+							throw new MagicCPCDiscImageException(MagicCPCDiscImageException.FILE_STRUCTDIR_TOO_BIG);
 						}
 						
 						ii = (i + n) % 16;
@@ -209,18 +222,21 @@ public class MagicCPCDiscImage extends DiscImage {
 						System.arraycopy(name.getBytes(), 0, sectData,
 								ii * 0x20 + 1, 8 + 3);
 
-						if (n == m - 1) {
-							// byte count in the last sector pointed.
-							int mEnd = ((int) l) % (16 * 1024);
-							// 16*1024 => 0x80
-							// mEnd=> ?
-
-							byte value = (byte) (mEnd * 0x80 / (16 * 1024) + 1);
-							sectData[ii * 0x20 + 1 + 8 + 3 + 3] = value;
-
-							// 16*1024 => 16
-							// mEnd => ?
-							for (int k = 0; k < Math.ceil(mEnd / 512.0); k++) {
+						if (n == m - 1 && mm > 0) {
+							// mm : byte count in the last sector pointed.
+							long mmm=mm/128;
+							long mmmm=mm%128;
+							if (mmmm>0) {
+								mmm++; // last small bytes are also on it.
+							}
+							sectData[ii * 0x20 + 1 + 8 + 3 + 3] = (byte) mmm;
+							// mm : byte count in the last sector pointed.
+							long nnn=mm/1024;
+							long nnnn=mm%1024;
+							if (nnnn>0) {
+								nnn++; // last small bytes are also on it.
+							}
+							for (int k = 0; k < nnn; k++) {
 								// <16KB of different sector IDs
 								sectData[ii * 0x20 + 16 + k] = writeNoSect; // 0x02;
 								writeNoSect++;
@@ -238,21 +254,6 @@ public class MagicCPCDiscImage extends DiscImage {
 						sectData[(ii) * 0x20 + 1 + 8 + 3] = (byte) n;
 					}
 					i += m;
-					
-//					
-//					// do separate packets
-//					
-//					writeR++;
-//					if (writeR >= 9) {
-//						writeR = 0;
-//						writeC++;
-//						if (writeC >= CYLS) {
-//							break;
-//						}
-//					}
-//					writeNoSect++;
-					
-					//FIXME : if (writeNoSect>SOMETHING) throw ERROR FILE CONTENT OUT OF RANGE (FILE CONTENT TOO BIG !)
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -295,10 +296,13 @@ public class MagicCPCDiscImage extends DiscImage {
 
 	boolean isData = false;
 	boolean isDrop = false;
+	boolean isBank = true;
+	boolean isBank2 = FILE_MORE_THAN_16KB_AND_LESS_THAN_32KB_WITH_HEADFILE;
 	List<String> scanNames = new ArrayList<String>();
 	List<Byte> buffer = new ArrayList<Byte>();
+	List<Byte> bufferAppend = new ArrayList<Byte>();
 	int cursorWrite = 0;
-
+	
 	@Override
 	public void notifyWriteSector(byte data, int cylinder, int head, int c,
 			int h, int r, int n) {
@@ -314,6 +318,10 @@ public class MagicCPCDiscImage extends DiscImage {
 						cursorWrite = 0;
 						scanNames.clear();
 						isData = false;
+						if (!isBank2) {
+							isBank=false;
+						}
+						isBank2 = false; // stopping to Bank
 					}
 					if (cursorWrite == 512 - 1) {
 						for (int i = 0; i < result.length / 32; i++) {
@@ -342,8 +350,8 @@ public class MagicCPCDiscImage extends DiscImage {
 									int size = result[i * 0x20 + 1 + 8 + 3 + 3] * 0x80;
 									// TODO : check storing files with larger filesize
 									// TEST : save"image",b,&c000,&4000
-									//Brain : int size = (result[i * 0x20 + 1 + 8 + 3 + 3] * 0x80)&0x0FFFF;
-									//Brain : if (size < 0) size = 0-size;
+									// TEST : load"image",&c000
+									// That does write DATA, but with filename at begin of data, and then re-read it...
 									System.out.println("Size :"
 											+ result[i * 0x20 + 1 + 8 + 3 + 3]
 											+ " = " + size + " bytes");
@@ -352,20 +360,45 @@ public class MagicCPCDiscImage extends DiscImage {
 									File f = new File(path + "\\" + s);
 									try {
 										if (f.createNewFile()) {
-											byte[] buff = new byte[size];
-											// FIXME : Math.min, here buff does 0x80 several times and last time <0x80
-											// buffer is the sum, but perhaps has to be cut using last buff size.
-											for (int b = 0; b < Math.min(
-													buff.length, buffer.size()); b++) {
-												buff[b] = buffer.get(b);
-											}
+											byte[] buff = new byte[512];
 											FileOutputStream fos = new FileOutputStream(
 													f, true);
-											fos.write(buff);
+											for (int b = 0; b < buffer.size(); b++) {
+												buff[b%512] = buffer.get(b);
+												if (b%512==511) {
+													fos.write(buff);
+												} else if (b == buffer.size()-1) {
+													// TODO : supposed array,begin,size
+													fos.write(buff,0,b%512+1);
+												}
+											}
 											fos.flush();
 											fos.close();
+											bufferAppend.clear();
+											bufferAppend.addAll(buffer);
+											buffer.clear();
+											isBank=true;
+											dirContent.put(s,f);
+										} else {
+											bufferAppend.addAll(buffer);
+											buffer.clear();
+											
+											byte[] buff = new byte[512];
+											FileOutputStream fos = new FileOutputStream(
+													f, true);
+											for (int b = 0; b < bufferAppend.size(); b++) {
+												buff[b%512] = bufferAppend.get(b);
+												if (b%512==511) {
+													fos.write(buff);
+												} else if (b == bufferAppend.size()-1) {
+													// TODO : supposed array,begin,size
+													fos.write(buff,0,b%512+1);
+												}
+											}
+											fos.flush();
+											fos.close();
+											isBank=true;
 										}
-										dirContent.put(s,f);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
@@ -381,10 +414,21 @@ public class MagicCPCDiscImage extends DiscImage {
 					// writing on data area
 					if (!isData) {
 						cursorWrite = 0;
-						buffer.clear();
 						isData = true;
 					}
-					buffer.add(data);
+					if (isBank) {
+						// Writing pure DATA, before writing complete filename in DirStruct
+						buffer.add(data);
+					} else {
+						// FIXME : pure DATA start with a certain {cyl,head,sectID}, that is same as fileHead, that shall be a better way to detect a fileHead just before the last DIRStruct entry write
+						// Writing file HEAD, before writing complete filename in DirStruct (big binary files, in more than 1 DIRStruct page)
+						buffer.add(cursorWrite, data);
+						if (cursorWrite == 512 - 1) {
+							for (int i=0;i<512;i++) {
+								buffer.remove(512);
+							}
+						}
+					}
 				}
 			}
 
@@ -402,7 +446,7 @@ public class MagicCPCDiscImage extends DiscImage {
 		if (cylinder <= lastCylinder) {
 			int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
 			if (index != -1) {
-				if (beginOfSector && index <4) {
+				if (head == 0 && cylinder==0 && beginOfSector && index <4) {
 					if (isDrop) {
 						listDir();
 						isDrop=false;

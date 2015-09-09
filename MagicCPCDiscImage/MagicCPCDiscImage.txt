@@ -3,4 +3,7 @@ Does list all files, with correct size.
 
 Saving files ok
 Listing/running files ok
-Large file size problem
+Erasing files ok
+Renaming files ok
+
+Warning : all files in hard drive folder are "prepared" at begin of process, all files are renamed in Amstrad CPC style !

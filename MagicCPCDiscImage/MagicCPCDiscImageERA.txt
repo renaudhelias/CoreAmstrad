@@ -1,3 +1,0 @@
-Old version, with |era as DRAG and save as DROP. Having only one file mounted (others at 0Ko)
-
-Perhaps |era should be ERASE in next version "MagicCPCDiscImage", so here a backup of this old version.

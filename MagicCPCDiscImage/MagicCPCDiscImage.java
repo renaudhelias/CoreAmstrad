@@ -22,11 +22,13 @@ import jemu.core.device.floppy.*;
  * 
  * |b
  * cat
- * 10 print"t
- * save"t.bas
- * cat
- * => 1Ko
- * run"t.bas
+ * 10 print"hello
+ * save"hello
+ * save"pic",b,&c000,&4000
+ * save"big",b,&8000,&8000
+ * run"hello
+ * |era,"hello.bas"
+ * |ren,"pic2","pic"
  *
  * save"file",p => protected file, with '*' in cat
  * 
@@ -50,7 +52,7 @@ public class MagicCPCDiscImage extends DiscImage {
 		listDir();
 	}
 
-	public static final int SECTS = 9; // = data[offs + 0x15] & 0xff;
+	public static final int SECTS = 9;
 	public static final int CYLS = 40; // x28
 	public static final int HEADS = 1;
 
@@ -117,7 +119,11 @@ public class MagicCPCDiscImage extends DiscImage {
 						name = name.substring(0, 8 + 3);
 					}
 					System.out.println("#DIR : "+name);
-					dirContent.put(name, sf);
+					// FIXME Dangerous : all files are renamed at begin of process, into Amstrad CPC filename style.
+					// This will not be corrected on this "experimental" version :P
+					File fSuperAmstradName = new File(path + "\\" + name);
+					sf.renameTo(fSuperAmstradName);
+					dirContent.put(name, fSuperAmstradName);
 					dirContentKeys.add(name);
 
 				}
@@ -256,6 +262,7 @@ public class MagicCPCDiscImage extends DiscImage {
 			e.printStackTrace();
 		}
 
+		scanNames = doScanAllNamesFromSectors();
 	}
 
 	protected static int sectorSize(int n) {
@@ -292,11 +299,9 @@ public class MagicCPCDiscImage extends DiscImage {
 	}
 
 	boolean isData = false;
-	boolean isDrop = false;
 	boolean isBank = true;
 	List<String> scanNames = new ArrayList<String>();
 	List<Byte> buffer = new ArrayList<Byte>();
-	List<Byte> bufferAppend = new ArrayList<Byte>();
 	int cursorWrite = 0;
 	
 	Integer cylinderBank=null;
@@ -307,100 +312,17 @@ public class MagicCPCDiscImage extends DiscImage {
 	public void notifyWriteSector(byte data, int cylinder, int head, int c,
 			int h, int r, int n) {
 		head &= headMask;
-		byte[] result = null;
 		if (cylinder <= lastCylinder) {
 			int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
 			if (index != -1) {
-				result = sectors[head][cylinder][index];
 
 				if (head == 0 && cylinder == 0 && index < 4) {
 					if (isData) {
 						cursorWrite = 0;
-						scanNames.clear();
 						isData = false;
 					}
 					if (cursorWrite == 512 - 1) {
-						System.out.println("\n#DIRSTRUCT WRITE "+index);
-						for (int i = 0; i < result.length / 32; i++) {
-							byte[] filename = new byte[8 + 3];
-							System.arraycopy(result, i * 0x20 + 1, filename, 0,
-									8 + 3);
-							if (result[i * 0x20] != -27
-									&& filename[8 + 3 - 1] != -27) {
-								if (filename[8 + 3 - 1] == '$') {
-									// save"toto.bas" does create a toto.$$$ temporary file.
-									cursorWrite++;
-									if (cursorWrite == 512) {
-										cursorWrite = 0;
-									}
-									return;
-								}
-								String s = "";
-								for (int j = 0; j < 8 + 3; j++) {
-									s += (char) filename[j];
-								}
-								if (!scanNames.contains(s)) scanNames.add(s);
-								if (!dirContentKeys.contains(s)) {
-									// save"toto.txt"
-									System.out.println("DROPPING file " + s);
-									int size = result[i * 0x20 + 1 + 8 + 3 + 3] * 0x80;
-									// TEST : save"bigFile",b,&8000,&8000
-									// TEST : save"image",b,&c000,&4000
-									// TEST : load"image",&c000
-									// That does write DATA, but with filename at begin of data, and then re-read it...
-									System.out.println("Size :"
-											+ result[i * 0x20 + 1 + 8 + 3 + 3]
-											+ " = " + size + " bytes");
-									System.out.println("Content size :"
-											+ buffer.size());
-									File f = new File(path + "\\" + s);
-									try {
-										if (f.createNewFile()) {
-											byte[] buff = new byte[512];
-											FileOutputStream fos = new FileOutputStream(
-													f, true);
-											for (int b = 0; b < buffer.size(); b++) {
-												buff[b%512] = buffer.get(b);
-												if (b%512==511) {
-													fos.write(buff);
-												} else if (b == buffer.size()-1) {
-													// TODO : supposed array,begin,size
-													fos.write(buff,0,b%512+1);
-												}
-											}
-											fos.flush();
-											fos.close();
-											bufferAppend.clear();
-											bufferAppend.addAll(buffer);
-											buffer.clear();
-										} else {
-											bufferAppend.addAll(buffer);
-											buffer.clear();
-											
-											byte[] buff = new byte[512];
-											FileOutputStream fos = new FileOutputStream(
-													f, true);
-											for (int b = 0; b < bufferAppend.size(); b++) {
-												buff[b%512] = bufferAppend.get(b);
-												if (b%512==511) {
-													fos.write(buff);
-												} else if (b == bufferAppend.size()-1) {
-													fos.write(buff,0,b%512+1);
-												}
-											}
-											fos.flush();
-											fos.close();
-										}
-									} catch (Exception e) {
-										e.printStackTrace();
-									}
-									isDrop = true;
-									scanNames.clear();
-								}
-							}
-	
-						}
-						
+						doScanNames(true, head,cylinder,index);
 					}
 				} else {
 					// writing on data area
@@ -409,13 +331,17 @@ public class MagicCPCDiscImage extends DiscImage {
 						isData = true;
 					}
 					
-					if (cylinderBank==null && cursorWrite==0) {
-						cylinderBank=cylinder;
-						headBank=head;
-						indexBank=index;
-						isBank=true;
-					} else if (cursorWrite==0 && cylinderBank==cylinder && headBank==head && indexBank==index) {
-						isBank=false; // stopping to Bank
+					if (cursorWrite==0) {
+						if (cylinderBank==null) {
+							// START OF DATA BLOCK.
+							cylinderBank=cylinder;
+							headBank=head;
+							indexBank=index;
+							isBank=true;
+						} else if (cylinderBank==cylinder && headBank==head && indexBank==index) {
+							// second time you are writing on this block, certainly a headFile write operation.
+							isBank=false; // stopping to Bank
+						}
 					}
 					
 					if (isBank) {
@@ -423,13 +349,19 @@ public class MagicCPCDiscImage extends DiscImage {
 						buffer.add(data);
 					} else {
 						// Writing file HEAD, before writing complete filename in DirStruct (big binary files, in more than 1 DIRStruct page)
-						buffer.add(cursorWrite, data);
-						if (cursorWrite == 512 - 1) {
-							for (int i=0;i<512;i++) {
-								buffer.remove(512);
+						if (buffer.size()>0) {
+							buffer.add(cursorWrite, data);
+							if (cursorWrite == 512 - 1) {
+								// called just one time for a file of 32Kb, seems really good here.
+								for (int i=0;i<512;i++) {
+									buffer.remove(512);
+								}
 							}
+							cylinderBank=null; // leaving fileHead (for normal txt, no pb : always isBank=true)
+						} else {
+							// what ?
+							cylinderBank=null;
 						}
-						cylinderBank=null; // leaving fileHead (for normal txt, no pb : always isBank=true)
 					}
 				}
 			}
@@ -441,6 +373,249 @@ public class MagicCPCDiscImage extends DiscImage {
 		}
 	}
 
+	/**
+	 * @return list of all filenames in DIRStruct sectors, flat.
+	 */
+	private List<String> doScanAllNamesFromSectors() {
+		List<String> flatScanNames= new ArrayList<String>();
+		for (int index=0;index<4;index++) {
+			byte[] result = sectors[0][0][index];
+			System.out.println("\n#DIRSTRUCT SCAN "+index);
+			for (int i = 0; i < result.length / 32; i++) {
+				byte[] filename = new byte[8 + 3];
+				System.arraycopy(result, i * 0x20 + 1, filename, 0,
+						8 + 3);
+				// toto.$$$ : temporary file.
+				if (result[i * 0x20] != -27
+						&& filename[8 + 3 - 1] != -27 && filename[8 + 3 - 1] != '$') {
+					String s = "";
+					for (int j = 0; j < 8 + 3; j++) {
+						s += (char) filename[j];
+					}
+					flatScanNames.add(s);
+				}
+			}
+		}
+		return flatScanNames;
+	}
+	
+	/**
+	 * Before a read or after a write on DIRStruct sectors (index<4)
+	 */
+	private void doScanNames(boolean isWrite, int head, int cylinder, int index) {
+		List<String> newScanNames = doScanAllNamesFromSectors();
+		try {
+			String filename = checkNewFile(scanNames,newScanNames);
+			if (filename!=null) {
+				System.out.println("FILE ADDED (isWrite="+isWrite+") : " + filename);
+				File f = new File(path + "\\" + filename);
+				
+				try {
+					byte[] buff = new byte[512];
+					// do append file
+					FileOutputStream fos = new FileOutputStream(
+							f, true);
+					for (int b = 0; b < buffer.size(); b++) {
+						buff[b%512] = buffer.get(b);
+						if (b%512==511) {
+							fos.write(buff);
+						} else if (b == buffer.size()-1) {
+							fos.write(buff,0,b%512+1);
+						}
+					}
+					fos.flush();
+					fos.close();
+					buffer.clear();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			// new file or else nothing : that's ok to turn this page.
+			scanNames=newScanNames;
+			return;
+		} catch (BadScanNameMomentException e) {
+			// DIRStruct is not yet aligned (turning page)
+			// or else a not implemented yet operation (rename/erase)
+			System.out.println("Something but a new file by here");
+		}
+		
+		try {
+			List<String> filenames = checkRenameFile(scanNames,newScanNames);
+			if (filenames != null) {
+				System.out.println("Renaming file "+filenames.get(0) + " into "+filenames.get(1));
+				File f = new File(path + "\\" + filenames.get(0));
+				File f2 = new File(path + "\\" + filenames.get(1));
+				f.renameTo(f2);
+			}
+			// renamed file or else nothing : that's ok to turn this page.
+			scanNames=newScanNames;
+			return;
+		} catch (BadScanNameMomentException e) {
+			// DIRStruct is not yet aligned (turning page)
+			// or else a not implemented yet operation (rename/erase)
+			System.out.println("Something but a new file/a rename file by here");
+		}
+		
+		try {
+			String filename = checkEraseFile(scanNames,newScanNames);
+			if (filename != null) {
+				System.out.println("Erasing file "+filename);
+				File f = new File(path + "\\" + filename);
+				f.delete();
+			}
+			// renamed file or else nothing : that's ok to turn this page.
+			scanNames=newScanNames;
+			return;
+		} catch (BadScanNameMomentException e) {
+			// DIRStruct is not yet aligned (turning page)
+			// or else a not implemented yet operation (rename/erase)
+			System.out.println("Something but a new file/a rename file/an erase file by here : DIRStruct is not yet aligned, do just continue.");
+		}
+		// DIRStruct is not yet aligned (turning page), cannot deduce operation, do just continue.
+	}
+	/**
+	 * Erasing a file... does disappear one filename only.
+	 * @return null : nothing has changed
+	 * @return filename : a file has been erased
+	 * @throw BadScanNameMomentException : something else happen (page turn, or erase or rename)
+	 */
+	private String checkEraseFile(List<String> scanNames,
+			List<String> newScanNames) throws BadScanNameMomentException {
+		HashMap<String,Integer> fileEntryCounts = new HashMap<String,Integer>();
+		for (String name : scanNames) {
+			if (fileEntryCounts.containsKey(name)) {
+				int n = fileEntryCounts.get(name)-1;
+				fileEntryCounts.put(name, n);
+			} else {
+				fileEntryCounts.put(name, -1);
+			}
+		}
+		for (String name : newScanNames) {
+			if (fileEntryCounts.containsKey(name)) {
+				int n =fileEntryCounts.get(name)+1;
+				fileEntryCounts.put(name, n);
+			} else {
+				fileEntryCounts.put(name, +1);
+			}
+		}
+		String candidate=null;
+		boolean candidateHasProblem=false;
+		for (String name : fileEntryCounts.keySet()) {
+			if (fileEntryCounts.get(name)<0) {
+				if (!candidateHasProblem) {
+					candidate=name;
+					candidateHasProblem=true;
+				} else {
+					// second problem
+					throw new BadScanNameMomentException();
+				}
+			} else if (fileEntryCounts.get(name)>0) {
+				// an new file or a rename happened...
+				throw new BadScanNameMomentException();
+			}
+		}
+		return candidate;
+	}
+	/**
+	 * Renaming a file... does disappear and appear one filename only on the same DIRStruct entry.
+	 * @return null : nothing has changed
+	 * @return filename : a file has been renamed
+	 * @throw BadScanNameMomentException : something else happen (page turn, or erase or rename)
+	 */
+	private List<String> checkRenameFile(List<String> scanNames,
+			List<String> newScanNames) throws BadScanNameMomentException {
+		HashMap<String,Integer> fileEntryCounts = new HashMap<String,Integer>();
+		for (String name : scanNames) {
+			if (fileEntryCounts.containsKey(name)) {
+				int n = fileEntryCounts.get(name)-1;
+				fileEntryCounts.put(name, n);
+			} else {
+				fileEntryCounts.put(name, -1);
+			}
+		}
+		for (String name : newScanNames) {
+			if (fileEntryCounts.containsKey(name)) {
+				int n =fileEntryCounts.get(name)+1;
+				fileEntryCounts.put(name, n);
+			} else {
+				fileEntryCounts.put(name, +1);
+			}
+		}
+		String candidateFrom=null;
+		String candidateTo=null;
+		boolean candidateFromHasProblem=false;
+		boolean candidateToHasProblem=false;
+		for (String name : fileEntryCounts.keySet()) {
+			if (fileEntryCounts.get(name)>0) {
+				if (!candidateToHasProblem) {
+					candidateTo=name;
+					candidateToHasProblem=true;
+				} else {
+					// second problem
+					throw new BadScanNameMomentException();
+				}
+			} else if (fileEntryCounts.get(name)<0) {
+				if (!candidateFromHasProblem) {
+					candidateFrom=name;
+					candidateFromHasProblem=true;
+				} else {
+					// second problem
+					throw new BadScanNameMomentException();
+				}
+			}
+		}
+		if (candidateFromHasProblem!=candidateToHasProblem) {
+			throw new BadScanNameMomentException();
+		} else if (candidateFrom == null && candidateTo == null) {
+			return null;
+		}
+		List<String> candidates=new ArrayList<String>();
+		candidates.add(candidateFrom);
+		candidates.add(candidateTo);
+		return candidates;
+	}
+	/**
+	 * @return null : nothing has changed
+	 * @return filename : a new file or a new file append
+	 * @throw BadScanNameMomentException : something else happen (page turn, or erase or rename)
+	 */
+	private String checkNewFile(List<String> scanNames, List<String> newScanNames) throws BadScanNameMomentException {
+		HashMap<String,Integer> fileEntryCounts = new HashMap<String,Integer>();
+		for (String name : scanNames) {
+			if (fileEntryCounts.containsKey(name)) {
+				int n = fileEntryCounts.get(name)-1;
+				fileEntryCounts.put(name, n);
+			} else {
+				fileEntryCounts.put(name, -1);
+			}
+		}
+		for (String name : newScanNames) {
+			if (fileEntryCounts.containsKey(name)) {
+				int n =fileEntryCounts.get(name)+1;
+				fileEntryCounts.put(name, n);
+			} else {
+				fileEntryCounts.put(name, +1);
+			}
+		}
+		String candidate=null;
+		boolean candidateHasProblem=false;
+		for (String name : fileEntryCounts.keySet()) {
+			if (fileEntryCounts.get(name)>0) {
+				if (!candidateHasProblem) {
+					candidate=name;
+					candidateHasProblem=true;
+				} else {
+					// second problem
+					throw new BadScanNameMomentException();
+				}
+			} else if (fileEntryCounts.get(name)<0) {
+				// an erasure or a rename happened...
+				throw new BadScanNameMomentException();
+			}
+		}
+		return candidate;
+	}
+	
 	@Override
 	public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r,
 			int n) {
@@ -449,12 +624,7 @@ public class MagicCPCDiscImage extends DiscImage {
 			int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
 			if (index != -1) {
 				if (head == 0 && cylinder==0 && beginOfSector && index <4) {
-					if (isDrop) {
-						System.out.println("\n#DIRSTRUCT READ "+index);
-						listDir();
-						// FIXME some cat reordering does become from here (some WRITE of existing files, so in cat a file can be double-size (2 times the same DIREntry pack))
-						isDrop=false;
-					}
+					doScanNames(true, head,cylinder,index);
 				}
 			}
 		}

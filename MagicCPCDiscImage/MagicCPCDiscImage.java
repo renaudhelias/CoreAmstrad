@@ -232,6 +232,7 @@ public class MagicCPCDiscImage extends DiscImage {
 							if (mmmm>0) {
 								mmm++; // last small bytes are also on it.
 							}
+							// FIXME (for bigger disk : 
 							sectData[ii * 0x20 + 1 + 8 + 3 + 3] = (byte) mmm;
 							// mm : byte count in the last sector pointed.
 							long nnn=mm/1024;
@@ -254,7 +255,10 @@ public class MagicCPCDiscImage extends DiscImage {
 
 						}
 						// "first add"
-						sectData[(ii) * 0x20 + 1 + 8 + 3] = (byte) n;
+						int c=n/32;
+						int cc=n%32;
+						sectData[(ii) * 0x20 + 1 + 8 + 3 + 2] = (byte) c;
+						sectData[(ii) * 0x20 + 1 + 8 + 3] = (byte) cc;
 					}
 					i += m;
 			}

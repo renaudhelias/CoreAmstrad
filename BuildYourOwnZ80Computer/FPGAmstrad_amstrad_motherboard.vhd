@@ -478,7 +478,7 @@ entity FPGAmstrad_amstrad_motherboard is
           vram_W     : out   std_logic;
 			 
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : out std_logic; -- not a W/R operation finally
+			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
@@ -487,8 +487,11 @@ entity FPGAmstrad_amstrad_motherboard is
 			  megashark_doWRITE : out std_logic;
 			  megashark_done : in std_logic;
 			  megashark_face : out std_logic;
-			  pixel_hsync:out std_logic;
-			  pixel_vsync:out std_logic
+			  megashark_INFO_2SIDES : in std_logic;
+			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0);
+			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0)
+			  --pixel_hsync:out std_logic;
+			  --pixel_vsync:out std_logic
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -514,7 +517,16 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_75       : std_logic;
    signal XLXN_86       : std_logic;
    signal XLXN_180      : std_logic;
-   signal XLXN_283      : std_logic_vector (7 downto 0);
+   --signal XLXN_283      : std_logic_vector (7 downto 0);
+	signal MIX_DOUT : std_logic_vector (7 downto 0):=(others=>'1');
+	signal MIX_DOUT0 : std_logic_vector (7 downto 0):=(others=>'1');
+	signal MIX_DOUT1 : std_logic_vector (7 downto 0):=(others=>'1');
+	signal MIX_DOUT01 : std_logic_vector (7 downto 0):=(others=>'1');
+	signal MIX_DOUT2 : std_logic_vector (7 downto 0):=(others=>'1');
+	signal MIX_DOUT3 : std_logic_vector (7 downto 0):=(others=>'1');
+	signal MIX_DOUT23 : std_logic_vector (7 downto 0):=(others=>'1');
+	
+	
    signal XLXN_303      : std_logic;
    signal XLXN_462      : std_logic_vector (7 downto 0);
    signal XLXN_464      : std_logic;
@@ -559,7 +571,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal RAMBank_DUMMY : std_logic_vector (2 downto 0);
    signal RAMBank_DUMMY512 : std_logic_vector (2 downto 0);
    component T80se_p
-      port ( RESET_n : in    std_logic; 
+      port ( RESET_n : in    std_logic; -- under time constraint test
              CLK_n   : in    std_logic; 
              CLKEN   : in    std_logic; 
              WAIT_n  : in    std_logic; 
@@ -619,9 +631,10 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              bvram_D       : out   std_logic_vector (7 downto 0); 
              palette_A     : out   std_logic_vector (13 downto 0); 
              palette_D     : out   std_logic_vector (7 downto 0); 
-             nCLK4_1       : in    std_logic;
-				 pixel_vsync:out std_logic;
-				 pixel_hsync:out std_logic);
+             nCLK4_1       : in    std_logic
+				 --pixel_vsync:out std_logic;
+				 --pixel_hsync:out std_logic
+				 );
    end component;
    
    component ROMselect
@@ -707,7 +720,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              DSK_select     : out   std_logic_vector (7 downto 0); 
             -- FDD_output     : out   std_logic_vector (6 downto 0)
 				  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : out std_logic; -- not a W/R operation finally
+			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
@@ -715,14 +728,16 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  megashark_doREAD : out std_logic;
 			  megashark_doWRITE : out std_logic;
 			  megashark_done : in std_logic;
-			  megashark_face : out std_logic
+			  megashark_face : out std_logic;
+			  megashark_INFO_2SIDES : in std_logic;
+			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0);
+			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0)
 				 );
    end component;
    
 	component AmstradRAM
     port ( reset:in  STD_LOGIC;
-			  
-			  init_done : in std_logic;
+			  init_done:in  STD_LOGIC;
 			  init_A : in  STD_LOGIC_VECTOR (22 downto 0);
 			  init_Din : in  STD_LOGIC_VECTOR (7 downto 0);
 			  init_Dout: out  STD_LOGIC_VECTOR (7 downto 0);
@@ -844,10 +859,10 @@ begin
       port map (BUSRQ_n=>XLXN_16,
                 CLKEN=>XLXN_16,
                 CLK_n=>XLXN_802,
-                DI(7 downto 0)=>XLXN_283(7 downto 0),
+                DI(7 downto 0)=>MIX_DOUT(7 downto 0),
                 INT_n=>XLXN_814,
                 NMI_n=>XLXN_16,
-                RESET_n=>RESET_n,
+                RESET_n=>RESET_n, -- under time constraint test
                 WAIT_n=>XLXN_16,
                 A(15 downto 0)=>A(15 downto 0),
                 BUSAK_n=>open,
@@ -860,6 +875,12 @@ begin
                 RFSH_n=>open,
                 WR_n=>XLXN_38);
    
+	-- print inp(&0800)
+	-- 255
+	MIX_DOUT01<=MIX_DOUT0 and MIX_DOUT1;
+	MIX_DOUT23<=MIX_DOUT2 and MIX_DOUT3;
+	MIX_DOUT<=MIX_DOUT01 and MIX_DOUT23;
+	
    GA : simple_GateArray
       port map (A15_A14(1 downto 0)=>A(15 downto 14),
                 CLK=>nCLK4MHz,
@@ -891,8 +912,8 @@ begin
                 reset=>XLXN_907,
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
                 bvram_D(7 downto 0)=>vram_D(7 downto 0),
-					 pixel_vsync=>pixel_vsync,
-					 pixel_hsync=>pixel_hsync,
+					 --pixel_vsync=>pixel_vsync,
+					 --pixel_hsync=>pixel_hsync,
                 bvram_W=>vram_W,
                 crtc_A(15 downto 0)=>XLXN_868(15 downto 0),
                 crtc_R=>open,
@@ -903,7 +924,7 @@ begin
                 palette_W=>palette_W,
                 WAIT_MEM_n=>XLXN_807,
                 WAIT_n=>XLXN_806,
-                Dout(7 downto 0)=>XLXN_283(7 downto 0));
+                Dout(7 downto 0)=>MIX_DOUT0(7 downto 0)); --inout
    
    MyROMSelect : ROMselect
       port map (A13=>A(13),
@@ -913,6 +934,8 @@ begin
                 reset=>XLXN_907,
                 ROMbank(7 downto 0)=>ROMbank_DUMMY(7 downto 0));
    
+	-- print inp(&0000)
+	-- 255 (Caprice32) 0 (JavaCPC)
    PPI : I82C55
       port map (CLK=>nCLK4MHz,
                 ENA=>XLXN_303,
@@ -920,22 +943,22 @@ begin
                 I_CS_L=>A(11),
                 I_DATA(7 downto 0)=>D(7 downto 0),
                 I_PA(7 downto 0)=>XLXN_519(7 downto 0),
-                I_PB(7)=>zero,
-                I_PB(6)=>zero,
-                I_PB(5)=>zero,
+                I_PB(7)=>un, -- pull up (default)
+                I_PB(6)=>un, -- pull up (default)
+                I_PB(5)=>un, -- pull up (default)
                 I_PB(4)=>ppi_jumpers(3), --un, --50Hz
                 I_PB(3)=>ppi_jumpers(2), --un,
                 I_PB(2)=>ppi_jumpers(1), --zero,
                 I_PB(1)=>ppi_jumpers(0), --un,
                 I_PB(0)=>n_crtc_vsync,
-                I_PC(7)=>zero,
-                I_PC(6)=>zero,
-                I_PC(5)=>zero,
-                I_PC(4)=>zero,
-                I_PC(3)=>zero,
-                I_PC(2)=>zero,
-                I_PC(1)=>zero,
-                I_PC(0)=>zero,
+                I_PC(7)=>un, -- pull up (default)
+                I_PC(6)=>un, -- pull up (default)
+                I_PC(5)=>un, -- pull up (default)
+                I_PC(4)=>un, -- pull up (default)
+                I_PC(3)=>un, -- pull up (default)
+                I_PC(2)=>un, -- pull up (default)
+                I_PC(1)=>un, -- pull up (default)
+                I_PC(0)=>un, -- pull up (default)
                 I_RD_L=>XLXN_180,
                 I_WR_L=>XLXN_904,
                 RESET=>XLXN_907,
@@ -945,7 +968,7 @@ begin
                 O_PB_OE_L=>open,
                 O_PC(7 downto 0)=>portC(7 downto 0),
                 O_PC_OE_L=>open,
-                IO_DATA(7 downto 0)=>XLXN_283(7 downto 0));
+                IO_DATA(7 downto 0)=>MIX_DOUT1(7 downto 0)); -- inout
    
 --   XLXI_168 : VCC
 --      port map (P=>XLXN_16);
@@ -1005,7 +1028,7 @@ IO_RD<=XLXN_787 and IO_REQ;
 	XLXI_348 : AmstradRAM
 port map ( reset=>XLXN_907,
 			  
-			  init_done=>RESET_n,
+			  init_done=>RESET_n, -- under time constraint test
 			  init_A(22 downto 0)=>init_A(22 downto 0),
 			  init_Din(7 downto 0)=>init_Din(7 downto 0),
 			  init_Dout(7 downto 0)=>init_Dout(7 downto 0),
@@ -1016,7 +1039,7 @@ port map ( reset=>XLXN_907,
            rd=>MEM_RD, -- Z80 MEM_RD
 			  wr=>MEM_WR, -- Z80 MEM_WR
 			  Din(7 downto 0)=>D(7 downto 0),
-			  Dout(7 downto 0)=>XLXN_283(7 downto 0), -- against I82C55.IO_DATA
+			  Dout(7 downto 0)=>MIX_DOUT2(7 downto 0), -- against I82C55.IO_DATA inout
 			  
 			  ram_A(22 downto 0)=>ram_A(22 downto 0),
 			  ram_W=>ram_W_DUMMY,
@@ -1077,7 +1100,7 @@ XLXN_814<=not(XLXN_835);
                 change=>change,
                 DSK_select(7 downto 0)=>DSK_select(7 downto 0),
                 --FDD_output(6 downto 0)=>FDD_output(6 downto 0),
-                D_result(7 downto 0)=>XLXN_283(7 downto 0),
+                D_result(7 downto 0)=>MIX_DOUT3(7 downto 0), -- inout
 			  megashark_CHRNresult=>megashark_CHRNresult,
 			  megashark_doGOTO=>megashark_doGOTO,
 			  megashark_CHRN=>megashark_CHRN,
@@ -1087,7 +1110,10 @@ XLXN_814<=not(XLXN_835);
 			  megashark_doREAD=>megashark_doREAD,
 			  megashark_doWRITE=>megashark_doWRITE,
 			  megashark_done=>megashark_done,
-			  megashark_face=>megashark_face
+			  megashark_face=>megashark_face,
+			  megashark_INFO_2SIDES=>megashark_INFO_2SIDES,
+			  megashark_INFO_ST1=>megashark_INFO_ST1,
+			  megashark_INFO_ST2=>megashark_INFO_ST2
 					 );
    
 

@@ -20,9 +20,9 @@ applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 256 224)
+	(rect 16 16 256 160)
 	(text "data_io" (rect 5 0 33 12)(font "Arial" ))
-	(text "inst" (rect 8 192 20 204)(font "Arial" ))
+	(text "inst" (rect 8 128 20 140)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -59,74 +59,25 @@ applicable agreement for further details.
 		(line (pt 0 96)(pt 16 96)(line_width 1))
 	)
 	(port
-		(pt 0 112)
-		(input)
-		(text "clk" (rect 0 0 10 12)(font "Arial" ))
-		(text "clk" (rect 21 107 31 119)(font "Arial" ))
-		(line (pt 0 112)(pt 16 112)(line_width 1))
-	)
-	(port
 		(pt 240 32)
 		(output)
-		(text "downloading" (rect 0 0 46 12)(font "Arial" ))
-		(text "downloading" (rect 173 27 219 39)(font "Arial" ))
-		(line (pt 240 32)(pt 224 32)(line_width 1))
+		(text "dir_entry_d[7..0]" (rect 0 0 67 12)(font "Arial" ))
+		(text "dir_entry_d[7..0]" (rect 152 27 219 39)(font "Arial" ))
+		(line (pt 240 32)(pt 224 32)(line_width 3))
 	)
 	(port
 		(pt 240 48)
 		(output)
-		(text "size[24..0]" (rect 0 0 40 12)(font "Arial" ))
-		(text "size[24..0]" (rect 179 43 219 55)(font "Arial" ))
-		(line (pt 240 48)(pt 224 48)(line_width 3))
+		(text "dir_entry_ack" (rect 0 0 56 12)(font "Arial" ))
+		(text "dir_entry_ack" (rect 163 43 219 55)(font "Arial" ))
+		(line (pt 240 48)(pt 224 48)(line_width 1))
 	)
 	(port
 		(pt 240 64)
 		(output)
-		(text "index[4..0]" (rect 0 0 41 12)(font "Arial" ))
-		(text "index[4..0]" (rect 178 59 219 71)(font "Arial" ))
-		(line (pt 240 64)(pt 224 64)(line_width 3))
-	)
-	(port
-		(pt 240 80)
-		(output)
-		(text "dir_entry_d[7..0]" (rect 0 0 67 12)(font "Arial" ))
-		(text "dir_entry_d[7..0]" (rect 152 75 219 87)(font "Arial" ))
-		(line (pt 240 80)(pt 224 80)(line_width 3))
-	)
-	(port
-		(pt 240 96)
-		(output)
-		(text "dir_entry_ack" (rect 0 0 56 12)(font "Arial" ))
-		(text "dir_entry_ack" (rect 163 91 219 103)(font "Arial" ))
-		(line (pt 240 96)(pt 224 96)(line_width 1))
-	)
-	(port
-		(pt 240 112)
-		(output)
 		(text "dir_entry_downloading" (rect 0 0 88 12)(font "Arial" ))
-		(text "dir_entry_downloading" (rect 131 107 219 119)(font "Arial" ))
-		(line (pt 240 112)(pt 224 112)(line_width 1))
-	)
-	(port
-		(pt 240 128)
-		(output)
-		(text "wr" (rect 0 0 9 12)(font "Arial" ))
-		(text "wr" (rect 210 123 219 135)(font "Arial" ))
-		(line (pt 240 128)(pt 224 128)(line_width 1))
-	)
-	(port
-		(pt 240 144)
-		(output)
-		(text "a[24..0]" (rect 0 0 30 12)(font "Arial" ))
-		(text "a[24..0]" (rect 189 139 219 151)(font "Arial" ))
-		(line (pt 240 144)(pt 224 144)(line_width 3))
-	)
-	(port
-		(pt 240 160)
-		(output)
-		(text "d[7..0]" (rect 0 0 24 12)(font "Arial" ))
-		(text "d[7..0]" (rect 195 155 219 167)(font "Arial" ))
-		(line (pt 240 160)(pt 224 160)(line_width 3))
+		(text "dir_entry_downloading" (rect 131 59 219 71)(font "Arial" ))
+		(line (pt 240 64)(pt 224 64)(line_width 1))
 	)
 	(parameter
 		"START_ADDR"
@@ -134,7 +85,7 @@ applicable agreement for further details.
 		""
 		(type "PARAMETER_UNSIGNED_BIN")	)
 	(drawing
-		(rectangle (rect 16 16 224 192)(line_width 1))
+		(rectangle (rect 16 16 224 128)(line_width 1))
 	)
 	(annotation_block (parameter)(rect 256 -64 356 16))
 )

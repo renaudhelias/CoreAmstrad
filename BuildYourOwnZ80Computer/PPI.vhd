@@ -66,7 +66,7 @@ entity I82C55 is
     I_DATA            : in    std_logic_vector(7 downto 0); -- D7-D0
     --O_DATA            : out   std_logic_vector(7 downto 0);
     --O_DATA_OE_L       : out   std_logic;
-	 IO_DATA				 : inout std_logic_vector(7 downto 0);
+	 IO_DATA				 : out std_logic_vector(7 downto 0):= (others=>'1');
 
     I_CS_L            : in    std_logic;
     I_RD_L            : in    std_logic;
@@ -156,13 +156,15 @@ signal O_DATA            : std_logic_vector(7 downto 0);
 begin
 
 --IO_DATA <= O_DATA when O_DATA_OE_L='0' else (others=>'Z');
-sortie:process (CLK)
+sortie:process (RESET,CLK)
 begin
-	if rising_edge(CLK) then
+	if RESET = '1' then
+		IO_DATA <= (others=>'1');
+	elsif rising_edge(CLK) then
 		if O_DATA_OE_L='0' then
 			IO_DATA <= O_DATA;
 		else
-			IO_DATA <= (others=>'Z');
+			IO_DATA <= (others=>'1');
 		end if;
 	end if;
 end process;
@@ -220,7 +222,7 @@ end process;
     variable r_portc_masked : std_logic_vector(7 downto 0);
     variable r_portc_setclr : std_logic_vector(7 downto 0);
   begin
-    if (RESET = '1') then
+    if RESET = '1' then
       r_porta <= x"00";
       r_portb <= x"00";
       r_portc <= x"00";
@@ -393,7 +395,7 @@ end process;
     variable set1 : boolean;
     variable set2 : boolean;
   begin
-    if (RESET = '1') then
+    if RESET = '1' then
       a_obf_l <= '1';
       a_inte1 <= '0';
       a_ibf   <= '0';

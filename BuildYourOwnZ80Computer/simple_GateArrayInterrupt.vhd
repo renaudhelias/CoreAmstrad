@@ -50,7 +50,7 @@ entity simple_GateArrayInterrupt is
            A15_A14_A9_A8 : in  STD_LOGIC_VECTOR (3 downto 0);
 			  MODE_select:in STD_LOGIC_VECTOR (1 downto 0);
            D : in  STD_LOGIC_VECTOR (7 downto 0);
-			  Dout : inout  STD_LOGIC_VECTOR (7 downto 0):=(others=>'Z');
+			  Dout : out  STD_LOGIC_VECTOR (7 downto 0):= (others=>'1');
 			  crtc_VSYNC : out STD_LOGIC:='0';
 			  IO_ACK : in STD_LOGIC;
 			  crtc_A: out STD_LOGIC_VECTOR (15 downto 0):=(others=>'0');
@@ -68,9 +68,9 @@ entity simple_GateArrayInterrupt is
 			  palette_A: out STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
 			  palette_D: out std_logic_vector(7 downto 0);
 			  palette_W: out std_logic;
-			  reset:in  STD_LOGIC;
-			  pixel_vsync:out std_logic;
-			  pixel_hsync:out std_logic
+			  reset:in  STD_LOGIC
+			  --pixel_vsync:out std_logic;
+			  --pixel_hsync:out std_logic
 			  );
 end simple_GateArrayInterrupt;
 
@@ -122,8 +122,8 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal palette_W_tictac: std_logic;
 begin
 
-pixel_vsync<=vsync;
-pixel_hsync<=hsync;
+--pixel_vsync<=vsync;
+--pixel_hsync<=hsync;
 -- do scan mirror VRAM (underground way (no way)) via CRTC, and then send data to VRAM buffer
 --
 -- Z80=>RAM         (read/write at 4MHz)
@@ -190,13 +190,13 @@ pixel_hsync<=hsync;
 		
 	end process;
 
-ctrcConfig_process:process(nCLK4_1) is
+ctrcConfig_process:process(reset,nCLK4_1) is
+	variable reg_select32 : std_logic_vector(7 downto 0);
 	variable reg_select : integer range 0 to 17;
+	-- normally 0..17 but 0..31 in JavaCPC
 	type registres_type is array(0 to 17) of std_logic_vector(7 downto 0);
 	variable registres:registres_type;
 		
-	constant A9_WRITE:std_logic:='0';
-	
 	variable ink:STD_LOGIC_VECTOR(3 downto 0);
 	variable border_ink:STD_LOGIC;
 	variable ink_color:STD_LOGIC_VECTOR(4 downto 0);
@@ -204,7 +204,9 @@ ctrcConfig_process:process(nCLK4_1) is
 	variable pen_mem:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
 	variable border_mem:integer range 0 to 31;
 begin
-	if rising_edge(nCLK4_1) then
+	if reset='1' then
+		Dout<=(others=>'1');
+	elsif rising_edge(nCLK4_1) then
 		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
 			if D(7) ='0' then
 				-- ink -- osef
@@ -224,14 +226,26 @@ begin
 			end if;
 		end if;
 	
-		if (IO_REQ_W or IO_REQ_R)='1' and A15_A14_A9_A8(2)='0' then
-			if A15_A14_A9_A8(1)=A9_WRITE then
-				Dout<=(others=>'Z');
+		if (IO_REQ_W or IO_REQ_R)='1' then
+			Dout<=(others=>'1');
+			if A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='0' then -- A9_WRITE
 				if A15_A14_A9_A8(0)='0' then
-					reg_select:=conv_integer(D and x"1F");
-				else
-					registres(reg_select):=D;
-					
+					if IO_REQ_W='1' then
+						reg_select32:=D and x"1F";
+						if reg_select32<=x"11" then -- < 17
+							reg_select:=conv_integer(reg_select32);
+						end if;
+					else
+						-- parasite : pull up
+						reg_select32:=x"1F";
+					end if;
+				elsif reg_select32<=x"11" then
+					if IO_REQ_W='1' then
+						registres(reg_select):=D;
+					else
+						-- parasite : pull up
+						registres(reg_select):=x"FF";
+					end if;
 					case reg_select is
 						when 0=>
 								RHtot<=registres(0);
@@ -276,15 +290,13 @@ begin
 							--light pen L
 					end case;
 				end if;
-			else
-				-- A9_READ
-				Dout<=(others=>'1');
+			-- A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='1'-- A9_READ
 			end if;
 		elsif IO_ACK='1' then
 			-- IO_ACK DATA_BUS
 			Dout<=(others=>'0'); -- value to check... cpcwiki seem down at the moment I write this sentence :P
 		else
-			Dout<=(others=>'Z');
+			Dout<=(others=>'1');
 		end if;
 	end if;
 end process ctrcConfig_process;

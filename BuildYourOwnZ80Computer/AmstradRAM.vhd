@@ -19,7 +19,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity AmstradRAM is
     Port ( reset:in  STD_LOGIC;
 			  
-			  init_done : in std_logic;
+			  init_done : in std_logic; -- under time constraint test
 			  init_A : in  STD_LOGIC_VECTOR (22 downto 0);
 			  init_Din : in  STD_LOGIC_VECTOR (7 downto 0);
 			  init_Dout: out  STD_LOGIC_VECTOR (7 downto 0);
@@ -30,7 +30,7 @@ entity AmstradRAM is
            rd:in STD_LOGIC; -- Z80 MEM_RD
 			  wr:in STD_LOGIC; -- Z80 MEM_WR
 			  Din : in  STD_LOGIC_VECTOR (7 downto 0);
-			  Dout : inout  STD_LOGIC_VECTOR (7 downto 0); -- against I82C55.IO_DATA
+			  Dout : out  STD_LOGIC_VECTOR (7 downto 0):= (others=>'1'); -- against I82C55.IO_DATA
 			  
 			  ram_A : out  STD_LOGIC_VECTOR (22 downto 0);
 			  ram_W : out  STD_LOGIC:='0';
@@ -58,6 +58,6 @@ begin
 
 	ram_Dout<= init_Din when init_done='0' else Din when (wr='1' and rd='0') else (others=>'Z');
 	init_Dout <= ram_Din when init_done='0' else (others=>'0');
-	Dout<=(others=>'L') when init_done='0' or reset='1' else ram_Din when (rd='1' and wr='0') else (others=>'Z');
+	Dout<=(others=>'1') when init_done='0' or reset='1' else ram_Din when (rd='1' and wr='0') else (others=>'1');
 
 end Behavioral;

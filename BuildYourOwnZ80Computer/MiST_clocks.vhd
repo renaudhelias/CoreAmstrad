@@ -39,7 +39,7 @@ entity MIST_clocks is
 			  SDRAM_CLK : out  STD_LOGIC;
 			  sdram_v_clk : out STD_LOGIC;
 			  sdram_v_clkref : out STD_LOGIC;
-			  sdram_v_init : out STD_LOGIC;
+			  --sdram_v_init : out STD_LOGIC;
 			  CLK_PWM: out STD_lOGIC
            );
 end MIST_clocks;
@@ -156,7 +156,7 @@ begin
 	SDRAM_CLK<=c2;
 	sdram_v_clk<=c2;
 	sdram_v_clkref<=c0; -- esclave Z80, executant de bootloader
-	sdram_v_init<=not(pll_locked); -- si 1 alors reset sdram.
+	--sdram_v_init<=not(pll_locked); -- si 1 alors reset sdram.
 	CLK_PWM<=c1; --CLK25MHz --c0; --nCLK4MHz 
 	
 -- c0 27MHz 89/600=4.005 Z80
@@ -244,7 +244,7 @@ begin
 		areset => '0',
 		inclk => inclk0,
 		clk => sub_wire0,
-		locked => pll_locked
+		locked => OPEN --pll_locked
 	);
 
 end Behavioral;

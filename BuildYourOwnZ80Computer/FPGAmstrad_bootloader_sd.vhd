@@ -74,7 +74,7 @@ entity FPGAmstrad_bootloader_sd is
 			 
 			 -- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : in std_logic; -- not a W/R operation finally
+			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
@@ -83,7 +83,10 @@ entity FPGAmstrad_bootloader_sd is
 			  megashark_doWRITE : in std_logic;
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
-			  megashark_face : in std_logic
+			  megashark_face : in std_logic;
+			  megashark_INFO_2SIDES : out std_logic;
+			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
+			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0)
 			 );
 end FPGAmstrad_bootloader_sd;
 
@@ -172,7 +175,7 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 				 init_RAM: out std_logic;
 -- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : in std_logic; -- not a W/R operation finally
+			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
@@ -181,7 +184,10 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 			  megashark_doWRITE : in std_logic;
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
-			  megashark_face : in std_logic);
+			  megashark_face : in std_logic;
+			  megashark_INFO_2SIDES : out std_logic;
+			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
+			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0));
    end component;
    
    component INV
@@ -293,7 +299,10 @@ begin
 			  megashark_doWRITE=>megashark_doWRITE,
 			  megashark_done=>megashark_done,
 			  megashark_select=>megashark_select,
-			  megashark_face=>megashark_face
+			  megashark_face=>megashark_face,
+			  megashark_INFO_2SIDES=>megashark_INFO_2SIDES,
+			  megashark_INFO_ST1=>megashark_INFO_ST1,
+			  megashark_INFO_ST2=>megashark_INFO_ST2
 					 );
    
 --   XLXI_26 : INV

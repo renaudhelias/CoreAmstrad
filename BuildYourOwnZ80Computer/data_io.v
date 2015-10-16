@@ -41,29 +41,29 @@ module data_io (
 	input             ss,
 	input             sdi,
 
-	output            downloading,   // signal indicating an active download
-	output [24:0]     size,          // number of bytes in input buffer
-	output reg [4:0]  index,         // menu index used to upload the file
+	//output            downloading,   // signal indicating an active download
+	//output [24:0]     size,          // number of bytes in input buffer
+	//output reg [4:0]  index,         // menu index used to upload the file
 
 	//output [255:0] dir_entry,        // directory entry user has selected
 	input dir_entry_clk,
 	output reg [7:0] dir_entry_d,
 	input dir_entry_r,
 	output reg dir_entry_ack,
-	output reg dir_entry_downloading,
+	output reg dir_entry_downloading
 	
 	// external ram interface
-	input 			   clk,
-	output reg        wr,
-	output reg [24:0] a,
-	output [7:0]      d
+	//input 			   clk,
+	//output reg        wr,
+	//output reg [24:0] a,
+	//output [7:0]      d
 );
 
-assign d = data;
+//assign d = data;
 
 parameter START_ADDR = 25'h0;
 
-assign size = addr;
+//assign size = addr;
 
 // *********************************************************************************
 // spi client
@@ -71,19 +71,19 @@ assign size = addr;
 
 reg [6:0]      sbuf;
 reg [7:0]      cmd;
-reg [7:0]      data;
+//reg [7:0]      data;
 reg [4:0]      cnt;
 reg [4:0]      bcnt;
 
-reg [24:0]     addr;
+//reg [24:0]     addr;
 reg rclk;
 
 localparam UIO_FILE_TX      = 8'h53;
-localparam UIO_FILE_TX_DAT  = 8'h54;
-localparam UIO_FILE_INDEX   = 8'h55;
+//localparam UIO_FILE_TX_DAT  = 8'h54;
+//localparam UIO_FILE_INDEX   = 8'h55;
 localparam UIO_FILE_INFO    = 8'h56;
 
-assign downloading = downloading_reg;
+//assign downloading = downloading_reg;
 reg downloading_reg = 1'b0;
 
 //// plus de place en RAM interne si je commente ce code...
@@ -110,7 +110,7 @@ always@(posedge spi_sck, posedge ss) begin
 		cnt <= 5'd0;
 		bcnt <= 5'd0;
 	end else begin
-		rclk <= 1'b0;
+		//rclk <= 1'b0;
 
 		// don't shift in last bit. It is evaluated directly
 		// when writing to ram
@@ -118,8 +118,8 @@ always@(posedge spi_sck, posedge ss) begin
 			sbuf <= { sbuf[5:0], sdi};
 
 		// increase target address after write
-		if(rclk)
-			addr <= addr + 25'd1;
+		//if(rclk)
+		//	addr <= addr + 25'd1;
 	 
 		// count 0-7 8-15 8-15 ... 
 		if(cnt < 15)
@@ -137,22 +137,22 @@ always@(posedge spi_sck, posedge ss) begin
 		if((cmd == UIO_FILE_TX) && (cnt == 15)) begin
 			// prepare
 			if(sdi) begin
-				addr <= START_ADDR;
+				//addr <= START_ADDR;
 				downloading_reg <= 1'b1; 
 			end else
 				downloading_reg <= 1'b0; 
 		end
 		
 		// command 0x54: UIO_FILE_TX
-		if((cmd == UIO_FILE_TX_DAT) && (cnt == 15)) begin
-			data <= {sbuf, sdi};
-			rclk <= 1'b1;
-			a <= addr;
-		end
+		//if((cmd == UIO_FILE_TX_DAT) && (cnt == 15)) begin
+		//	data <= {sbuf, sdi};
+		//	rclk <= 1'b1;
+		//	a <= addr;
+		//end
 
 		// expose file (menu) index
-		if((cmd == UIO_FILE_INDEX) && (cnt == 15))
-			index <= {sbuf[3:0], sdi};
+		//if((cmd == UIO_FILE_INDEX) && (cnt == 15))
+		//	index <= {sbuf[3:0], sdi};
 			
 		if((cmd == UIO_FILE_INFO) && (cnt == 15)) begin
 			dir_entry_reg[bcnt] <= {sbuf, sdi};
@@ -160,16 +160,16 @@ always@(posedge spi_sck, posedge ss) begin
 	end
 end
 
-reg rclkD, rclkD2;
-always@(posedge clk) begin
-	// bring rclk from spi clock domain into core clock domain
-	rclkD <= rclk;
-	rclkD2 <= rclkD;
-	wr <= 1'b0;
-	
-	if(rclkD && !rclkD2) 
-		wr <= 1'b1;
-end
+//reg rclkD, rclkD2;
+//always@(posedge clk) begin
+//	// bring rclk from spi clock domain into core clock domain
+//	rclkD <= rclk;
+//	rclkD2 <= rclkD;
+//	wr <= 1'b0;
+//	
+//	if(rclkD && !rclkD2) 
+//		wr <= 1'b1;
+//end
 
 reg [4:0] bcntRead=5'd0;
 // transmitting

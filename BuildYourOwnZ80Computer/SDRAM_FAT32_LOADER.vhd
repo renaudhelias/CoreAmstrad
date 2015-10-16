@@ -71,11 +71,14 @@ entity SDRAM_FAT32_LOADER is
 			  
 			  -- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : in std_logic; -- not a W/R operation finally
+			  megashark_doGOTO : in STD_LOGIC_VECTOR(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
+			  megashark_INFO_2SIDES : out std_logic:='0';
+			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
+			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
 			  megashark_doREAD : in std_logic;
 			  megashark_doWRITE : in std_logic;
 			  megashark_done : out std_logic;
@@ -596,10 +599,10 @@ begin
 		variable transmit_sdram_wait: integer range 0 to SDRAM_ASYNC_DELTA;
 		variable ram_init_period_counter : integer range 0 to RAM_INIT_PERIOD;
 		variable ram_refresh_period_counter : integer range 0 to RAM_REFRESH_PERIOD;
-		-- Fill init_A(17:0) with zeros, see AmstradRAMDSK.vhd : it's R0M and RAM part normaly (not dsk part)
+		-- Fill init_A(17:0) with uns, see AmstradRAMDSK.vhd : it's R0M and RAM part normaly (not dsk part)
 		-- bug : some RAM here seems at ROM localisation, so not initializing them with zero make diff on "tomorrow start up"
 		-- "tomorrow start up" : it I start today, RAM is boot filled with 0x"33CC" (and somes xE5), if I start it tomorrow, it is boot filled with random values.
-		variable ram_fillZero_period_counter : std_logic_vector(22 downto 0);
+		variable ram_fillUn_period_counter : std_logic_vector(22 downto 0);
 	begin
 		if rising_edge(CLK) then
 			if transmit_do then
@@ -608,14 +611,14 @@ begin
 				if not transmit_done then
 					transmit_step:=4;--overrun
 				elsif transmit_doRAMinit then
-					-- do init RAM and perhaps also fill RAM with zeros
+					-- do init RAM and perhaps also fill RAM with uns
 					ram_init_period_counter:=0;
 					ram_refresh_period_counter:=0;
-					ram_fillZero_period_counter:="1000000" & x"00" & x"00";
+					ram_fillUn_period_counter:="1000000" & x"00" & x"00";
 					transmit_step:=6;
 				elsif transmit_doRAMfill then
-					-- do fill RAM with zeros
-					ram_fillZero_period_counter:="1000000" & x"00" & x"00";
+					-- do fill RAM with uns
+					ram_fillUn_period_counter:="1000000" & x"00" & x"00";
 					transmit_step:=8;
 				else
 					transmit_step:=0;
@@ -684,10 +687,10 @@ begin
 						else
 							ram_refresh_period_counter:=ram_refresh_period_counter+1;
 						end if;
-					when 8=> -- RAM init phase fill with 0
-						transmit_ram_A<=ram_fillZero_period_counter;
+					when 8=> -- RAM init phase fill with 1
+						transmit_ram_A<=ram_fillUn_period_counter;
 						transmit_ram_W<='1';
-						transmit_ram_D<=(others=>'0');
+						transmit_ram_D<=(others=>'1');
 						transmit_sdram_wait:=0;
 						if transmit_sdram_wait = SDRAM_ASYNC_DELTA then
 							transmit_step:=10;
@@ -703,10 +706,10 @@ begin
 							transmit_sdram_wait:=transmit_sdram_wait+1;
 						end if;
 					when 10=>
-						if ram_fillZero_period_counter="1111111" & x"FF" & x"FF" then
+						if ram_fillUn_period_counter="1111111" & x"FF" & x"FF" then
 							transmit_step:=0;
 						else
-							ram_fillZero_period_counter:=ram_fillZero_period_counter+1;
+							ram_fillUn_period_counter:=ram_fillUn_period_counter+1;
 							transmit_step:=8;
 						end if;
 				end case;
@@ -1735,16 +1738,20 @@ end if;
 		variable no_track:integer range 0 to 255; -- force simple face
 		variable nb_sides:face_integer_type:=(1,1); -- Batman demo one-dsk version has 2 sides
 		variable no_side:integer range 0 to 255:=0;
-		variable nb_sects:face_integer_type:=(9,9); -- super cauldron has 10 sectors !! -- batman demo has 9 sectors (track size 13) 10 sectors (track size 15)
+		variable nb_sects:integer range 0 to 255:=9; -- super cauldron has 10 sectors !! -- batman demo has 9 sectors (track size 13) 10 sectors (track size 15)
 		variable no_sect:integer range 0 to 255;
 		variable track_size:std_logic_vector(40 downto 0):=(others=>'0');
 		--type sector_sizes_type is array(0 to 6) of std_logic_vector(15 downto 0);
 		--constant SECTOR_SIZE:sector_sizes_type:=(x"0080",x"0100",x"0200",x"0400",x"0800",x"1000",x"1800");
-		constant DEFAULT_SECTOR_SIZE:std_logic_vector(15 downto 0):=x"0200";
-		--variable sector_size:std_logic_vector(40 downto 0):=(others=>'0'); -- Mission delta has ST2=x20 (crc error) + sector_size 4 + parfois sector_size 1
+		--constant DEFAULT_SECTOR_SIZE:std_logic_vector(15 downto 0):=x"0200";
+		variable track_sector_size:std_logic_vector(40 downto 0):=PREFIX & x"00000200"; -- Mission delta has ST2=x20 (crc error) + sector_size 4 + parfois sector_size 1
+		variable sector_sector_size:std_logic_vector(7 downto 0):=x"02";
 		variable chrn:std_logic_vector(31 downto 0);
 		variable doWRITE:boolean:=false;
 		variable doGOTO:boolean:=false;
+		
+		variable is_multitrack:boolean:=false;
+		variable is_searching_track:boolean:=false;
 		
 		variable mecashark_addr_mem:std_logic_vector(40 downto 0); -- work
 		variable mecashark_addr_memFaceA:std_logic_vector(40 downto 0); -- stock address face A
@@ -1757,23 +1764,40 @@ end if;
 		variable mecashark_face:integer range 0 to 1:=FACE_A;
 		variable mecashark_face_dskB:boolean:=false;
 		variable dskIsValid:boolean:=false;
+		
+		variable megashark_INFO_ST1_mem:std_logic_vector(7 downto 0):=x"00";
+		variable megashark_INFO_ST2_mem:std_logic_vector(7 downto 0):=x"00";
+		variable is_sector_or_track_not_found:boolean:=false;
+		variable is_first_sector_of_track:boolean:=false;
+		
+		constant ST1_END_OF_CYLINDER : std_logic_vector(7 downto 0):=x"80";
+		constant ST1_NO_DATA : std_logic_vector(7 downto 0):=x"04";
+		constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
+		constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
+
 	begin
 		if rising_edge(CLK) then
 			if mecashark_changeDSK_do then
 				mecashark_changeDSK_done<=false;
 				megashark_done_s<='1'; -- unbind
 				mecashark_step:=0;
-			elsif megashark_doGOTO='1' then
+			elsif megashark_doGOTO(0)='1' then
+				is_searching_track:=( megashark_doGOTO(1)='1');
+				is_multitrack:=(megashark_doGOTO(2)='1');
 				megashark_done_s<='0';
 				mecashark_step:=25;
 				doGOTO:=true;
 				doWRITE:=false;
 			elsif megashark_doREAD='1' then
+				is_searching_track:=false;
+				is_multitrack:=(megashark_doGOTO(2)='1');
 				megashark_done_s<='0';
 				doGOTO:=false;
 				doWRITE:=false;
 				mecashark_step:=25;
 			elsif megashark_doWRITE='1' then
+				is_searching_track:=false;
+				is_multitrack:=(megashark_doGOTO(2)='1');
 				megashark_done_s<='0';
 				doGOTO:=false;
 				doWRITE:=true;
@@ -1848,56 +1872,18 @@ end if;
 							mecashark_step:=7;
 						when 7=>
 							nb_sides(mecashark_face):=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"000000DF"); -- goto x110
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=8;
-						
-						
-						when 8=> -- First Track-info
-							no_track:=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"00000001"); -- goto x111
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=10;
-						when 10=>
-							no_side:=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"00000004"); -- goto x115
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=11;
-						when 11=>
-							nb_sects(mecashark_face):=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"00000003"); -- goto x118
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=12;
-						when 12=> -- First Sector-info
-							no_sect:=0;
-							chrn(31 downto 24):=spi_Din;
-							output_A:=output_A+(PREFIX & x"00000001"); -- goto x119
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=13;
-						when 13=>
-							chrn(23 downto 16):=spi_Din;
-							output_A:=output_A+(PREFIX & x"00000001"); -- goto x11A
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=14;
-						when 14=>
-							chrn(15 downto 8):=spi_Din;
-							output_A:=output_A+(PREFIX & x"00000001"); -- goto x11B
-							meca_spi_A<=output_A;
-							meca_spi_Rdo<='1';
-							mecashark_step:=15;
-						when 15=>
-							chrn(7 downto 0):=spi_Din;
-							input_A:=output_A + (PREFIX & x"000000E5"); -- goto x200
 							dskIsValid:=false; -- invalidate
+							megashark_INFO_2SIDES<='0';
+							megashark_INFO_ST1_mem:=x"00";
+							megashark_INFO_ST1<=megashark_INFO_ST1_mem;
+							megashark_INFO_ST2_mem:=x"00";
+							megashark_INFO_ST2<=megashark_INFO_ST2_mem;
+							is_first_sector_of_track:=false;
+							is_sector_or_track_not_found:=false;
 							mecashark_step:=16;
-						when 16=> -- DSK is just inserted, CHRN is loaded. input_A is ready
+						when 16=>-- DSK is just inserted, CHRN is not loaded. input_A is not ready (invalidated)
 							mecashark_changeDSK_done<=true;
+
 							
 							
 						when 25=> -- megashark_doREAD || megashark_doWRITE || megashark_doGOTO
@@ -1936,22 +1922,36 @@ end if;
 							dskIsValid:=true;
 							input_A:=mecashark_addr_mem+(PREFIX & x"00000100");
 							chrn:=megashark_CHRN;
-							mecashark_step:=18;
-						when 18=> -- looking after track/sector from CHRN value
+							if nb_sides(mecashark_face)=1 then
+								chrn(23 downto 16):=x"00"; -- one side only
+								megashark_INFO_2SIDES<='0';
+							else
+								megashark_INFO_2SIDES<='1';
+							end if;
+							-- looking after track/sector from CHRN value (old mecashark_step 18)
 							no_track:=0;
 							no_side:=0;
 							mecashark_step:=19;
 						when 19=>
-							if (no_track=nb_tracks(mecashark_face)-1 and no_side/=nb_sides(mecashark_face)-1) or (no_track=conv_integer(chrn(31 downto 24)) and no_side = conv_integer(chrn(23 downto 16))) then
-								-- need nb_sects of the track here
-								output_A:=input_A + (PREFIX & x"00000015");
+							-- if last track/side reached or else good track/side found then
+							if no_track=conv_integer(chrn(31 downto 24)) and no_side = conv_integer(chrn(23 downto 16)) then
+								is_sector_or_track_not_found:=false; -- TRACK FOUND
+								-- need sector_size+nb_sects of the track here
+								output_A:=input_A + (PREFIX & x"00000014");
+								meca_spi_A<=output_A;
+								meca_spi_Rdo<='1';
+								mecashark_step:=5;
+							elsif no_track=nb_tracks(mecashark_face)-1 and no_side=nb_sides(mecashark_face)-1 then
+								is_sector_or_track_not_found:=true; -- TRACK NOT FOUND
+								-- need sector_size+nb_sects of the track here
+								output_A:=input_A + (PREFIX & x"00000014");
 								meca_spi_A<=output_A;
 								meca_spi_Rdo<='1';
 								mecashark_step:=5;
 							else
 								if winape(mecashark_face) then
-									-- need nb_sects here
-									output_A:=input_A + (PREFIX & x"00000015");
+									-- need sector_size+nb_sects here
+									output_A:=input_A + (PREFIX & x"00000014");
 									meca_spi_A<=output_A;
 									meca_spi_Rdo<='1';
 									mecashark_step:=6;
@@ -1991,67 +1991,177 @@ end if;
 							track_size(15 downto 0):=spi_Din & x"00";
 							input_A:=input_A + track_size;
 							mecashark_step:=19;
-						when 6=> -- WinApe : reached nb_sects
-							nb_sects(mecashark_face):=conv_integer(spi_Din);
+						when 6=> -- WinApe : reached sector_size+nb_sects
+							track_sector_size(15 downto 8):=spi_Din;
+							-- need nb_sects here
+							output_A:=input_A + (PREFIX & x"00000015");
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=8;
+						when 8=> -- WinApe : reached sector_size+nb_sects
+							nb_sects:=conv_integer(spi_Din);
 							-- using sector_size for track sizes
 							input_A:=input_A+(PREFIX & x"00000100");
 							no_sect:=0;
 							mecashark_step:=20; -- do eat all sector of this track...
 						when 20=> -- WinApe : zap sectors
-							if no_sect/=nb_sects(mecashark_face) then
+							if no_sect/=nb_sects then
 								no_sect:=no_sect+1;
 								-- zap sector
-								input_A:=input_A + DEFAULT_SECTOR_SIZE;
-							else
+								input_A:=input_A + track_sector_size;
+							else --nb_sects zero (empty track) OK
 								mecashark_step:=19;
 							end if;
 						when 5=>
+							track_sector_size(15 downto 8):=spi_Din;
+							-- need sector_size+nb_sects of the track here
+							output_A:=input_A + (PREFIX & x"00000015");
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=10;
+						when 10=>
 							-- can change between one sector and another
-							nb_sects(mecashark_face):=conv_integer(spi_Din);
+							nb_sects:=conv_integer(spi_Din);
+							if nb_sects = 0 then
+								is_sector_or_track_not_found:=true;
+								-- anarchy...
+							end if;
 							mecashark_step:=21;
+
 						when 21=> -- we are front to the nice wanted Track-Info
 							no_sect:=0;
-							 -- x"18"+x"02"=x"1a" : sector ID -- R
+							is_first_sector_of_track:=true;
+							 -- x"18"+x"00"=x"18" : track -- C
+							output_A:=input_A+(PREFIX & x"00000018"); -- +conv_std_logic_vector(no_sect*8,41);
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=11;
+						when 11=>
+							if not(doGoto) and chrn(31 downto 24)/=spi_Din then
+								-- bad track (protection : missing one track ?)
+								is_sector_or_track_not_found:=true;
+							end if;
+							-- x"18"+x"01"=x"19" : side -- H
+							output_A:=input_A+(PREFIX & x"00000019"); -- +conv_std_logic_vector(no_sect*8,41);
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=18;
+						when 18=>
+							if not(doGoto) and chrn(23 downto 16)/=spi_Din then
+								-- bad side (protection : missing one track ?)
+								is_sector_or_track_not_found:=true;
+							end if;
+							-- x"18"+x"02"=x"1a" : sector ID -- R
 							output_A:=input_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
 							meca_spi_A<=output_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=22;
 						when 22=> -- x"18"+x"02"=x"1a" : sector ID -- R
-							if doGOTO then
+							if doGOTO and is_searching_track then
 								chrn(15 downto 8):=spi_Din;
 								-- no_sect found (=0)
-								mecashark_step:=23;
+								mecashark_step:=12;
 							elsif chrn(15 downto 8)=spi_Din then
 								-- no_sect found
-								mecashark_step:=23;
+								if doGOTO then
+									-- I want the new one
+									no_sect:=no_sect+1;
+									if no_sect>=nb_sects then
+										if is_multitrack then
+											is_searching_track:=true;
+											is_multitrack:=false;
+											if nb_sides(mecashark_face)=1 or chrn(23 downto 16)=x"01" then
+												chrn(31 downto 24):=chrn(31 downto 24)+1;
+											else
+												chrn(23 downto 16):=x"01";
+											end if;
+											-- looking after track/sector from CHRN value (old mecashark_step 18)
+											no_track:=0;
+											no_side:=0;
+											mecashark_step:=19;
+										else
+											output_A:=input_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+											meca_spi_A<=output_A;
+											meca_spi_Rdo<='1';
+											mecashark_step:=14;
+										end if;
+									else
+										output_A:=output_A+(PREFIX & x"00000008");
+										meca_spi_A<=output_A;
+										meca_spi_Rdo<='1';
+										mecashark_step:=14;
+									end if;
+								else
+									-- here we are :)
+									mecashark_step:=12;
+								end if;
 							else
 								no_sect:=no_sect+1;
-								if no_sect>=nb_sects(mecashark_face) then
+								is_first_sector_of_track:=false;
+								if no_sect>=nb_sects then
 									-- sector not found
-									no_sect := nb_sects(mecashark_face)-1;
+									is_sector_or_track_not_found:=true;
+									no_sect := nb_sects-1;
 									chrn(15 downto 8):=spi_Din; -- R
-									mecashark_step:=23;
+									mecashark_step:=12;
 								else
-									-- try next sector
-									output_A:=output_A+conv_std_logic_vector(8,41); -- + sizeof(SectorInfo)=8
+									-- goto next sector info
+									-- sizeof(SectorInfo) = 8
+									output_A:=output_A+(PREFIX & x"00000008");
 									meca_spi_A<=output_A;
 									meca_spi_Rdo<='1';
 								end if;
 							end if;
+						when 14=>-- doGOTO !is_searching_track "I want the new one"
+							chrn(15 downto 8):=spi_Din;
+							mecashark_step:=12;
+						when 12=> -- sector_sector_size
+							output_A:=output_A+(PREFIX & x"00000001");
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=13;
+						when 13=>
+							-- sector_sector_size
+							sector_sector_size:=spi_Din;
+							-- FDC ST1
+							output_A:=output_A+(PREFIX & x"00000001");
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=15;
+						when 15=>
+							if is_sector_or_track_not_found then
+								megashark_INFO_ST1_mem:=ST1_NO_DATA or ST1_MISSING_ADDR;
+							elsif is_first_sector_of_track then
+								megashark_INFO_ST1_mem:=spi_Din or ST1_END_OF_CYLINDER;
+							else
+								megashark_INFO_ST1_mem:=spi_Din;
+							end if;
+							megashark_INFO_ST1<=megashark_INFO_ST1_mem;
+							-- FDC ST2
+							output_A:=output_A+(PREFIX & x"00000001");
+							meca_spi_A<=output_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=23;
 						when 23=>
+							if is_sector_or_track_not_found then
+								megashark_INFO_ST2_mem:=ST2_MISSING_ADDR;
+							else
+								megashark_INFO_ST2_mem:=spi_Din;
+							end if;
+							megashark_INFO_ST2<=megashark_INFO_ST2_mem;
 							-- go to start of sector list of this track
 							input_A:=input_A + (PREFIX & x"00000100");
 							mecashark_step:=24;
 						when 24=>
 							if no_sect>0 then
 								no_sect:=no_sect-1;
-								input_A:=input_A + DEFAULT_SECTOR_SIZE;
+								input_A:=input_A + track_sector_size;
 							else
 								mecashark_step:=26; -- input_A is just before concerned data block
 							end if;
 						
 						when 26=> -- chrn and input_A are great, let's go
-							if doGOTO then
+							if doGOTO or (sector_sector_size/=x"02" and sector_sector_size/=x"01") then
 								-- thanks for all, and good bye
 								megashark_CHRNresult<=chrn;
 								mecashark_step:=29;
@@ -2064,7 +2174,9 @@ end if;
 								-- spi_Wblock (in block): just fill internal RAM
 								-- spi_Wblock+spi_W (begin of block): do full read into internal and just fill internal RAM
 								-- spi_W (end of block): do write internal block into SPI, writing also last byte given
-								if megashark_A_mem = "0" & x"00" then
+								if sector_sector_size=x"01" and megashark_A_mem(8)='1' then
+									-- out of range
+								elsif megashark_A_mem = "0" & x"00" then
 									--begin of input block
 									if output_A(8 downto 0) = "1" & x"FF" then
 										--unluck : end of output block...
@@ -2073,7 +2185,9 @@ end if;
 										meca_spi_Wdo<='1';
 										meca_spi_Wblock<='1';
 									end if;
-								elsif megashark_A_mem = "1" & x"FF" then
+								-- sector_sector_size(1) = 1 => x"02"
+								-- sector_sector_size(1) = 0 => x"01"
+								elsif megashark_A_mem = sector_sector_size(1) & x"FF" then
 									-- end of action !
 									meca_spi_Wdo<='1';
 								elsif output_A(8 downto 0) = "1" & x"FF" then
@@ -2090,6 +2204,9 @@ end if;
 								mecashark_step:=29;
 							else
 								megashark_A_mem(8 downto 0):=megashark_A;
+								if sector_sector_size=x"01" then
+									megashark_A_mem(8):='0';
+								end if;
 								output_A:=input_A + megashark_A_mem;
 								meca_spi_A<=output_A;
 								meca_spi_Rdo<='1';

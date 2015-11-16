@@ -1,0 +1,1375 @@
+007.dsk.zip KO (calques)
+1942.dsk.zip OK
+1943.dsk.zip OK
+20000avantjc.dsk.zip OK
+2kinvaders.dsk.zip OK
+3dboxing.dsk.zip 0111
+3dfight.dsk.zip 0111
+3dgrandprix.dsk.zip OK
+3dstarfighter.dsk.zip OK
+3dstarstrike.dsk.zip KO (no keyboard)
+3dstuntrider.dsk.zip KO (no keyboard)
+3dvoicechess.dsk.zip OK
+4kroid.dsk.zip 0111
+5thaxis.dsk.zip OK
+720degrees.dsk.zip OK
+aaargh.dsk.zip OK
+abadia64.dsk.zip OK
+abu.dsk.zip OK
+academy.dsk.zip KO (no fire) 
+acornsoftpacman.dsk.zip KO 0001
+actionfighter.dsk.zip 0111
+actionforce.dsk.zip OK
+actionservice.dsk.zip KO
+addams.dsk.zip OK
+addamsb.zip OK
+adidaschampionship.dsk.zip KO
+advancedlawn.dsk.zip OK
+advancedpinball.dsk.zip KO (key still pressed)
+adventuresofbond.dsk.zip OK (Basildon Bond OK)
+africantrail.dsk.zip KO (cannot define joystick)
+after.dsk.zip OK
+afterburner.dsk.zip KO (no key)
+afterthewar_es.dsk.zip KO (0001 puis 1011)
+afterthewar_uk.dsk.zip KO
+agentorange.dsk.zip KO (no key)
+agentxii.dsk.zip OK
+aigledor.dsk.zip OK
+airballs.dsk.zip KO (no key)
+airwolf.dsk.zip OK
+airwolf2.dsk.zip OK
+alexhiggworldpool.dsk.zip KO
+alexhiggworldsnook.dsk.zip KO
+alien8.dsk.zip OK
+aliens.dsk.zip KO (too slow scrooling)
+aliens_us.dsk.zip KO (key off after a certain screen)
+alienstorm.dsk.zip OK (DISC309A)
+aliensyndrome.dsk.zip OK
+amaurote.dsk.zip OK
+AMCAPLIB.DSK.ZIP OK
+americascup.dsk.zip OK
+amodelmundo.dsk.zip OK
+antattack.dsk.zip OK
+antiriad.dsk.zip KO (no key)
+antiriad_de.dsk.zip KO (no key)
+antiriad_es.dsk.zip KO (no key)
+antiriad_fr.dsk.zip KO (no key)
+ao.dsk.zip OK
+apb.dsk.zip OK
+aqua.dsk.zip OK
+arachna1.dsk.zip 0111
+arachna2.dsk.zip 0111
+arcadefruitmachine.dsk.zip OK
+arcadia.dsk.zip OK
+archon.dsk.zip KO
+archon2.dsk.zip KO (what shall I do ?)
+arcticfox.dsk.zip OK
+argonavis.dsk.zip OK
+arkanoid.dsk.zip OK
+arkanoid2.dsk.zip OK
+army.dsk.zip KO (II strange)
+arquimedes.dsk.zip OK
+artura.dsk.zip OK
+aspargp.dsk.zip OK
+asphalt.dsk.zip OK
+assaultcourse.dsk.zip OK
+assaultonport.dsk.zip 0111
+asterixandthemagic.dsk.zip OK
+asterixchezrahazade1.dsk.zip KO
+asterixchezrahazade2.dsk.zip KO
+asteriximmorgenland1.dsk.zip OK
+asteriximmorgenland2.dsk.zip OK
+atomant.dsk.zip OK
+atomic.dsk.zip KO
+atomicdriver.dsk.zip OK
+aton.dsk.zip OK
+atrog.dsk.zip KO (noise)
+aufmonty.dsk.zip OK
+aussiegames_1.dsk.zip OK
+aussiegames_2.dsk.zip OK
+australianrulesfoot.dsk.zip OK
+avenger.dsk.zip OK
+aventuresdemoktar.dsk.zip KO (slow key)
+axysthelastbattle_1.dsk.zip KO (0001 and then 1001...)
+axysthelastbattle_2.dsk.zip KO
+axysthelastbattle_3.dsk.zip KO
+babyjogoinghome.dsk.zip OK
+backtothefuture1.dsk.zip OK
+backtothefuture2_1.dsk.zip KO
+backtothefuture2_2.dsk.zip KO
+backtothefuture3_1.dsk.zip KO
+backtothefuture3_2.dsk.zip KO
+backtothegoldenage1.dsk.zip 0011
+backtothegoldenage2.dsk.zip 0011
+bactron.zip OK
+badcat1.dsk.zip OK
+badcat2.dsk.zip OK
+badlands.dsk.zip OK
+ballbearing.dsk.zip OK
+ballbrkr.dsk.zip OK
+bangel69_A.zip OK
+bangel69_B.zip OK
+bangersmash.dsk.zip KO
+barbari1.dsk.zip KO (no key ?)
+barbari2.dsk.zip OK
+barbarian_m.dsk.zip OK
+basil.dsk.zip 0111
+bat_disk_1.dsk.zip OK
+bat_disk_2.dsk.zip OK
+bat_disk_3.dsk.zip OK
+bat_disk_4.dsk.zip OK
+batman.dsk.zip OK
+batmanthecaped.dsk.zip KO
+batmanthemovie.dsk.zip OK
+Battle_Command_A.zip KO (no joystick/mouse)
+Battle_Command_B.zip KO (no joystick/mouse)
+battleships.dsk.zip OK
+batty.dsk.zip OK
+bb4cpc.dsk.zip OK
+bdash.dsk.zip OK
+beachbuggy.dsk.zip OK
+beachhead.dsk.zip OK
+beachhead2.dsk.zip OK
+beachvolley.dsk.zip KO
+bestial.dsk.zip KO (no key)
+beverlyhills.dsk.zip KO
+beyond.dsk.zip OK
+bigfoot.dsk.zip OK
+bigtrouble.dsk.zip OK
+BigTroubleEuskal.dsk.zip OK
+billy1.dsk.zip OK
+billy2.dsk.zip OK
+bionicninja.dsk.zip OK
+birdie.dsk.zip KO (no second screen)
+bivouac.dsk.zip OK
+blackbeard.dsk.zip OK
+blacklandg_a.dsk.zip KO
+blacklandg_b.dsk.zip KO
+blacklandg_c.dsk.zip KO
+blacklandg_d.dsk.zip KO
+blacklanduka.zip KO
+blacklandukb.zip KO
+blacklandukc.zip KO
+blacklandukd.zip KO
+Blade_Runner.zip OK
+bladewarrior.dsk.zip OK
+blazingthunder.dsk.zip OK
+bloodbrothers.dsk.zip OK
+bloodvalley.dsk.zip KO
+bloodwych.dsk.zip OK
+bluestar.dsk.zip OK
+bmxsimulator.dsk.zip OK
+bmxsimulator2.dsk.zip OK
+bobbybearing.dsk.zip 0011 (pas de joystick, clavier ok)
+bobmorane.dsk.zip OK
+bobmoranechevalerie.dsk.zip OK
+bobmoranejungle.dsk.zip OK
+bobmoraneocean.dsk.zip OK
+bobo.dsk.zip OK
+boggit.dsk.zip OK
+Bomb_Jack.zip OK
+Bomb_Jack_II.zip OK
+bonanzabros.dsk.zip OK
+booty.dsk.zip OK
+bosconian87.dsk.zip OK
+bounder.dsk.zip OK
+bountyhunter.dsk.zip OK
+boyracer.dsk.zip OK
+brainache.dsk.zip OK
+bravestarr.dsk.zip OK
+bricktheb.zip OK
+brideof.dsk.zip OK
+bronx.dsk.zip OK
+brucelee.dsk.zip OK
+Bubble_Ghost.zip OK
+bubbler.dsk.zip OK
+bublbobl.dsk.zip KO (one ok,two ko)
+Budokan_-_The_Martial_Spirit_A.zip KO
+Budokan_-_The_Martial_Spirit_B.zip KO
+buggy2.dsk.zip 0111
+buggyboy.dsk.zip OK
+buggyranger.dsk.zip OK
+buitre.dsk.zip OK
+burninwheels.dsk.zip KO
+busterblock.dsk.zip OK
+cabal.dsk.zip KO
+camelot.dsk.zip OK
+captainamericad.dsk.zip OK
+captainblood.dsk.zip OK
+captaintrueno.dsk.zip OK
+captsevilla.dsk.zip 0111
+carlossainz.dsk.zip OK
+Carrier_Command.zip KO (no key)
+carsoncity.dsk.zip OK
+carvalho.dsk.zip OK
+Castle_Master.zip OK
+Castle_Master_II_-_The_Crypt.zip OK
+cauldro2.dsk.zip KO (no key)
+cauldron.dsk.zip OK
+cavemania.dsk.zip OK
+cerberus.dsk.zip OK
+chainreaction.dsk.zip OK
+challengefoot.dsk.zip KO
+championshipgolf.dsk.zip OK
+championshipsprint.dsk.zip OK
+Charlie_Chaplin.zip OK
+charlydiams.dsk.zip KO (jump right is strange)
+charmonixchallenge.dsk.zip OK
+chasehq.dsk.zip OK
+cherilof.dsk.zip OK
+chessmaster2000b.zip OK
+chicago90.dsk.zip OK
+chicagos30.dsk.zip OK
+chickinchase.dsk.zip OK
+chiller.dsk.zip OK
+Cholo.zip OK
+choylee.dsk.zip OK
+chronos.dsk.zip OK
+chubbygristle.dsk.zip OK
+chuckieegg1.dsk.zip OK
+chuckieegg2.dsk.zip OK
+chuckyeagersadvanced.dsk.zip OK
+circusgm.dsk.zip OK
+ciscoheat.dsk.zip OK
+cityslicker.dsk.zip OK
+Classic_Invaders.zip OK
+Classic_Muncher.zip OK
+classicaxiens.dsk.zip OK
+clevsmart1.dsk.zip OK
+clevsmart2.dsk.zip OK
+cluedo.dsk.zip OK
+cobra.dsk.zip 0111
+cobraforce.dsk.zip OK
+cobrapinball.dsk.zip OK
+cobras.dsk.zip OK
+cobrastallone.dsk.zip KO (no key)
+coliseum.dsk.zip OK
+colossal.dsk.zip OK
+comandoquatro.dsk.zip KO (auto game reset)
+combatlynx.dsk.zip OK
+combatschool.dsk.zip KO
+cometencounter.dsk.zip OK
+commando.dsk.zip KO (glitch)
+Confuzion.zip OK
+contamination.dsk.zip OK
+continentalcircus.dsk.zip 0111
+convoyraider.dsk.zip 0111
+copout.dsk.zip OK
+corsario.dsk.zip OK
+cosanostra.dsk.zip OK
+countduckula.dsk.zip OK
+countduckula2.dsk.zip KO (no screen)
+covenanttheb.zip OK
+cowboykidz.dsk.zip 0111
+cozumel.dsk.zip KO
+cpcadventure1.dsk.zip OK
+cpcadventure2.dsk.zip OK
+cpcinvaders.dsk.zip OK
+crackdown.dsk.zip KO
+Crafton_Xunk.zip OK
+crazycars.dsk.zip 0011
+crazycars2.dsk.zip KO (calques welcome)
+crazycars3.dsk.zip KO (goto right)
+crazysnake.dsk.zip OK
+Critical_Mass.zip OK
+Crystal_Castles.zip 0111
+crystann.dsk.zip OK
+currojimenez.dsk.zip OK
+curseofsherwoodtheb.zip OK
+cyberball.dsk.zip OK
+cybnoid1.dsk.zip OK
+cybnoid2.dsk.zip OK
+cyclestheb.zip OK
+cyrus2.dsk.zip OK
+dakar4x4.dsk.zip KO (cannot buy food) (DISC055A)
+dakarmoto.dsk.zip KO (cannot buy food) (DISC070A)
+daleythompsonsdecathlon.dsk.zip OK
+daleythompsonssupertest.dsk.zip OK
+daleytoc.dsk.zip KO
+dambusterstheb.zip OK
+dandare1.dsk.zip OK
+dandare2.dsk.zip OK
+dandare3.dsk.zip OK
+dangermousemakinwhoopee.dsk.zip KO
+dangerstreet.dsk.zip KO
+dark.dsk.zip OK (FUSION)
+Dark_Side.zip OK
+darkcentury.dsk.zip KO
+darkman.dsk.zip KO
+darkpower.dsk.zip OK
+darkwurlde.dsk.zip OK
+darts180.dsk.zip OK
+dawnssley.dsk.zip OK
+deadontime.dsk.zip 0111
+deathchase.dsk.zip OK
+deathorglory.dsk.zip OK
+deathstalker.dsk.zip OK
+deathsticket.dsk.zip 0111
+deathsville.dsk.zip OK
+DEATHSWORD128K.DSK.zip OK
+deathwish3.zip OK
+deeptheb.zip OK
+defcom1.dsk.zip 0011
+Defender_Of_The_Crown_0.zip KO
+Defender_Of_The_Crown_1.zip KO
+Defender_Of_The_Crown_2.zip KO
+defendordie.dsk.zip OK
+deflektr.dsk.zip OK
+deliriumtremens.dsk.zip KO
+deliverance.dsk.zip OK
+demonsrevenge.dsk.zip OK
+desper.dsk.zip OK
+desperado2.dsk.zip 0111
+despotikdesign.dsk.zip OK
+devilscrowntheb.zip 0011
+diealienslime.dsk.zip KO (can not go up more than 2 times)
+dimensionomega.dsk.zip OK
+disc.dsk.zip OK
+dizzy1.dsk.zip OK
+dizzy2.dsk.zip KO (no key)
+dizzy3.dsk.zip KO (no key)
+dizzy4.dsk.zip KO (no key)
+dizzy5.dsk.zip OK
+dizzy6.dsk.zip KO (no key)
+dizzy7.dsk.zip OK
+dizzybub.dsk.zip KO (no key)
+dizzydtr.dsk.zip OK
+dizzyff.dsk.zip KO (no key)
+dizzyks.dsk.zip KO (no key)
+dizzypnc.dsk.zip OK
+djpuffsvolcanic.dsk.zip OK
+dkong.dsk.zip OK
+dlair1.dsk.zip OK
+dlair2.dsk.zip OK
+doctordoomsrevenge1.dsk.zip OK
+doctordoomsrevenge2.dsk.zip KO (nothing)
+doctorwho.dsk.zip KO (calques)
+dogsbody.dsk.zip OK
+domcamillo.dsk.zip OK
+dominat.dsk.zip OK (DISC208A)
+doomsdayblues.dsk.zip OK
+doppleganger.dsk.zip 0111
+doubledragond.dsk.zip KO ((s) disk access)
+doubledragond2.dsk.zip KO (K7)
+doubledragonv.dsk.zip OK (UK)
+doubledragonv2.dsk.zip OK (UK 128K)
+doubledragonz3.dsk.zip KO (slow)
+dracula_crl.dsk.zip OK
+dragonsofflame.dsk.zip KO (no key)
+dragonspirit.dsk.zip OK
+dragontorcb.zip OK
+drakkar.dsk.zip OK
+dreamwarrior.dsk.zip OK
+drgninja.dsk.zip OK
+Driller.zip OK
+droids.dsk.zip OK
+Druid.zip OK
+ducttheb.zip OK
+Dun_Darach.zip OK
+dustin.dsk.zip OK
+dwarf.dsk.zip KO (tremble quand marche)
+dynadan.dsk.zip OK
+dynamicduo.dsk.zip KO (bad screen, no key)
+dynamitedux.dsk.zip 0111
+dynastywars.dsk.zip KO ,(reset)
+edenblues.dsk.zip OK
+edgegrinder.dsk.zip KO (screen accoups)
+eidolon.dsk.zip OK
+electricwonderland.dsk.zip OK
+electrofreddy.dsk.zip OK
+elektraglide.dsk.zip KO (no key)
+elevator.dsk.zip OK
+elidon.dsk.zip OK
+elite.zip OK
+elvenwarrior.dsk.zip KO
+emotion.dsk.zip OK
+enlightenment.dsk.zip KO (bad screen)
+equinox.dsk.zip OK
+er.dsk.zip 0111
+erbschaft.dsk.zip OK
+escapefromtheplanet.dsk.zip OK
+eswat_0.dsk.zip OK
+eswat_1.dsk.zip OK
+eswat_2.dsk.zip OK
+everyonewally.dsk.zip OK
+exolon.dsk.zip OK
+expressraider.dsk.zip OK
+extreme.dsk.zip 0111
+f16combat.dsk.zip OK
+f1tornadosimulator.dsk.zip OK
+fairlightprelude.dsk.zip KO
+fairlighttrail.dsk.zip OK
+fantasticvoyageb.zip OK
+feartheb.zip OK
+feliznavidad_esp.dsk.zip 0111
+fernandezmustdie.dsk.zip KO
+feud.dsk.zip OK
+fifthquadranttheb.zip OK
+fightingsoccer.dsk.zip OK
+finalfight_1.dsk.zip OK
+finalfight_2.dsk.zip OK
+finalmatrixtheb.zip OK
+finderskeepers.dsk.zip OK
+fire.dsk.zip OK
+fireland.dsk.zip OK
+firenforget.dsk.zip 0011 (cool)
+flash.dsk.zip 0111
+flintstones.dsk.zip OK (DISC257A)
+fmbasket.dsk.zip OK
+footballeroftheyear1.dsk.zip OK
+footballeroftheyear2.dsk.zip 0111
+forgottenworlds.dsk.zip OK
+formula1.dsk.zip OK
+forteresse1.dsk.zip OK
+forteresse2.dsk.zip OK
+frankenstein.dsk.zip OK
+frankensteinjnr.dsk.zip OK
+frankiethecomputergame.dsk.zip KO (no key)
+freddy.dsk.zip OK
+freddysm.dsk.zip OK
+freedom1.dsk.zip 0111
+freedom2.dsk.zip 0111
+freestylebmx.dsk.zip OK
+fresfi1.dsk.zip KO (BOS)
+frestris.dsk.zip KO (BOS)
+friday13.dsk.zip KO
+frosty.dsk.zip OK
+fruitmachine.dsk.zip OK
+fruitmachinesimulator1.dsk.zip OK
+fruitmachinesimulator2.dsk.zip OK
+fruity_frank.dsk.zip OK
+fugitif1.dsk.zip KO
+fugitif2.dsk.zip KO
+fugitif3.dsk.zip KO
+fugitif4.dsk.zip KO
+furytheb.zip KO (no key)
+fusion2.dsk.zip OK
+futurebikesimulator.dsk.zip OK
+futureknight.dsk.zip OK
+gabrielle.dsk.zip OK
+galacticconqueror.dsk.zip 0011
+galacticplaguetheb.zip OK
+galaxia.dsk.zip OK
+galaxyforce.dsk.zip KO (no key)
+galvan.dsk.zip KO (no key)
+gamber_dsk.zip OK
+gameofdragonstheb.zip OK
+gameover.dsk.zip OK
+gameover2.dsk.zip OK
+gamessummereditionthe1.zip OK
+gamessummereditionthe2.zip OK
+gameswintereditionb.zip OK
+garfield.dsk.zip KO (calque)
+garylinekershot.dsk.zip 0111
+gatestohell.dsk.zip OK
+gauntlet.dsk.zip KO (raster)
+gauntletb.dsk.zip KO (raster)
+gauntletbdeeper.dsk.zip KO (raster)
+gauntletiii1.dsk.zip OK
+gauntletiii2.dsk.zip OK
+geebee.dsk.zip KO (DISC056B)
+geminiwing.dsk.zip OK
+genghiskhan.dsk.zip OK
+ghostbusters.zip 0111
+ghostbusters2.dsk.zip KO (no key)
+ghosthunters.dsk.zip OK
+ghostngoblins.dsk.zip OK
+ghoulsandghosts.zip KO (freeze)
+gihero.dsk.zip OK
+gilbertescape.dsk.zip OK
+gilligansgold.dsk.zip OK
+glaurung.dsk.zip OK
+glenhoddlesoccer.dsk.zip OK
+gliderrider.dsk.zip OK
+glocr360.dsk.zip OK
+gnomeranger1.dsk.zip OK
+gnomeranger2.dsk.zip OK
+goldenaxe_1.dsk.zip OK
+goldenaxe_2.dsk.zip OK
+goldenbasket.dsk.zip OK
+goodmoon.dsk.zip OK
+goody.dsk.zip OK
+gooniestheb.zip OK
+gothik.dsk.zip OK
+grandprix.dsk.zip OK
+greatescapetheb.zip OK
+greatgianasistersb.zip KO (screen/raster)
+greatgurianos.dsk.zip OK
+greenberet.dsk.zip 0111
+grelfala.dsk.zip OK
+gremlins.dsk.zip KO (bad key)
+gremlins2.dsk.zip KO (sound freeze)
+groops.dsk.zip KO (overscan)
+growingpains1.dsk.zip OK
+growingpains2.dsk.zip OK
+gryzor.dsk.zip OK
+guerra.dsk.zip OK
+gunfright.dsk.zip KO (key locked (loved game...))
+gunship1.dsk.zip KO
+gunship2.dsk.zip KO
+gunstar.dsk.zip OK
+gyroscope.dsk.zip OK
+hacker1.dsk.zip OK
+hacker2.dsk.zip OK
+haegar.dsk.zip OK
+hallsofgold.dsk.zip OK
+hammerboy.dsk.zip OK
+hammerfist.dsk.zip OK
+hamrhead.dsk.zip OK
+hanse.dsk.zip OK
+hardhatmack.dsk.zip KO
+hardmare_1.dsk.zip KO (raster)
+hardmare_2.dsk.zip KO (raster)
+harricana.dsk.zip KO
+harrierattack.dsk.zip KO (no comprendo)
+harveyheadbanger.dsk.zip OK
+hate.dsk.zip OK
+havingfits.dsk.zip OK
+havoc.dsk.zip 0111
+hawkstorm.dsk.zip OK
+headover.dsk.zip OK
+heartland.dsk.zip OK
+heavyonthemagick.dsk.zip OK
+helterskelter.dsk.zip OK
+herbert.dsk.zip OK
+herculesslayer.dsk.zip KO (bad sound ?)
+heritage.dsk.zip OK
+hero.dsk.zip OK
+heroofthegolden.dsk.zip OK
+heroquest.dsk.zip KO (cannot choose set of spell)
+hexekueche2.dsk.zip KO (no key)
+hexenkueche.dsk.zip OK
+hideous.dsk.zip KO
+highepidemy.dsk.zip 0011
+highlander.dsk.zip KO (no key)
+highwayencounter.dsk.zip OK
+histeel.dsk.zip OK
+hitsquadtheb.zip OK
+hobbit_the.dsk.zip OK
+hobglobin.dsk.zip OK
+hongkongphooey.dsk.zip OK (DISC188A)
+hopping.dsk.zip 0111
+horabruja.dsk.zip OK
+hostages1.dsk.zip KO
+hostages2.dsk.zip KO
+hotrod.dsk.zip KO (screen)
+howardtheduck.dsk.zip KO (locked in first grey floor)
+howtobeacompletebastard.dsk.zip OK
+howtobeahero.dsk.zip OK
+hudsonhawk.dsk.zip OK
+humankillingmachine.dsk.zip KO (too slow)
+humphrey.dsk.zip OK
+hunchback.dsk.zip OK
+hunchback2.dsk.zip KO (always key)
+hunchbacktheadventure.dsk.zip KO (nokey)
+hundra.dsk.zip KO (no key)
+hydra.dsk.zip OK (DISC310A)
+hydrofool.dsk.zip OK
+hyperbowl.dsk.zip OK
+icetempletheb.zip OK
+ikari.dsk.zip OK
+ikplus.dsk.zip OK
+imaginariocolectivo.dsk.zip OK
+impossiblemission1.dsk.zip OK
+impossiblemission2.dsk.zip OK
+indianajonesandthefate1.dsk.zip OK (slow ?)
+indianajonesandthefate2.dsk.zip OK (slow ?)
+indianajonesandthelastcrusade.dsk.zip KO (reset)
+indianajonesandthetemple.dsk.zip OK
+inertie1.dsk.zip KO (no key)
+inertie2.dsk.zip KO (no key)
+ingridsback_1.dsk.zip OK
+ingridsback_2.dsk.zip OK
+inheritance.dsk.zip OK
+inhumanos.dsk.zip KO (not regular sound music speed)
+insidout.dsk.zip OK
+interchange.dsk.zip KO (no key)
+international3dtennis.dsk.zip KO (no key)
+internationalkarat.dsk.zip OK
+internationalkarate.dsk.zip OK
+internationalninja.dsk.zip KO (too slow)
+intoeag.dsk.zip KO
+invasion.dsk.zip KO (what ?)
+invasionofthez.zip OK
+ironlord1.dsk.zip OK
+ironlord2.dsk.zip OK
+ironlord3.dsk.zip OK
+ironlord4.dsk.zip OK
+irontrackers_a.dsk.zip OK
+irontrackers_b.dsk.zip OK
+ishido1.dsk.zip OK
+islandofdrdestructotheb.zip 0111
+iss.dsk.zip KO (no key)
+italiansupercar.dsk.zip OK
+itsaknockout.dsk.zip OK
+jabato.dsk.zip OK
+jackal.dsk.zip OK
+jacknipper1.dsk.zip OK
+jacknipper2.dsk.zip OK
+jamesclavellsshogun.dsk.zip KO (sound freeze)
+jamesdebug.dsk.zip OK
+jaws.dsk.zip OK
+jawsle1.dsk.zip OK
+jawsle2.dsk.zip OK
+jetsonstheb.zip OK
+jetsw.dsk.zip OK
+jetsw2.dsk.zip OK
+jimpower1.dsk.zip KO (basic)
+jimpower2.dsk.zip KO (basic)
+jnyquest.dsk.zip KO (freeze)
+joeblade1.dsk.zip OK
+joeblade2.dsk.zip KO (no key)
+joeblade3.dsk.zip OK
+juggernaut.dsk.zip OK
+jumpjet.dsk.zip KO (unkown key)
+jumpmania.dsk.zip OK
+junglwar.dsk.zip KO (always key)
+justin.dsk.zip OK
+kaiser.dsk.zip KO (464)
+kane.dsk.zip OK
+kessin.dsk.zip OK
+keyfactortheb.zip OK
+killeduntildead.dsk.zip OK
+killerball.dsk.zip KO (black screen after first crash (layer ?))
+kinetik.dsk.zip OK
+klax64.dsk.zip OK
+knightforce1.dsk.zip KO
+knightforce2.dsk.zip KO
+knightghost.dsk.zip OK
+knightlore.dsk.zip OK
+knightorc1.dsk.zip OK
+knightorc2.dsk.zip OK
+knightrider.dsk.zip OK
+knighttyme.dsk.zip OK
+kobayashinaru.dsk.zip OK
+kongsrevenge.dsk.zip OK
+kongstrikesback.dsk.zip OK
+krakout.dsk.zip OK
+kristal.dsk.zip OK
+ktris.dsk.zip OK
+kungfumaster.dsk.zip 0111
+labescape.dsk.zip OK
+lalaprologue.dsk.zip OK
+lasersquad.dsk.zip OK
+lastmission.dsk.zip OK
+lastninja2_1.zip OK
+lastninja2_2.zip OK
+lastv8.zip OK
+lazertag.dsk.zip OK
+ledstorm.dsk.zip KO
+lemmings1.dsk.zip OK
+lemmings2.dsk.zip OK
+letresor.dsk.zip OK
+leviathan.dsk.zip OK
+liberator.dsk.zip OK
+licencetokill.dsk.zip OK
+lightcorridortheb.zip OK
+lightforce.dsk.zip OK
+littlecomputerpeople.dsk.zip OK
+littlepuff.dsk.zip OK
+liveandlet.dsk.zip OK
+liverpool.dsk.zip 0111
+livingstone1.dsk.zip OK
+livingstoneii.dsk.zip OK
+loderunner.dsk.zip OK
+logistic.dsk.zip OK
+lonewolf.dsk.zip KO (no key)
+lorna.dsk.zip OK (DISC255B)
+lotr.dsk.zip OK
+lotusesprit.dsk.zip OK
+luckyluke.dsk.zip OK (DISC206B)
+mac.dsk.zip OK
+madballs.dsk.zip OK
+madflunky.dsk.zip OK
+madmix.dsk.zip OK
+madn.dsk.zip OK
+magmax.dsk.zip OK
+manhattan95.dsk.zip OK
+manicminer1.dsk.zip OK
+manicminer2.dsk.zip OK
+manoirdemortvielle_1.dsk.zip KO (no key)
+manoirdemortvielle_2.dsk.zip KO (no key)
+mantis1.dsk.zip OK
+marauder.dsk.zip KO (bad joystick)
+mariobros.dsk.zip OK
+marsport.dsk.zip OK
+mart.dsk.zip OK
+mask.dsk.zip KO (screen scan and then reset)
+mastersofspacetheb.zip OK
+matahari_fr.dsk.zip OK
+matchdy2.dsk.zip KO (always key)
+mazemania.dsk.zip OK
+mazie.dsk.zip OK
+megablasters1.dsk.zip KO
+megablasters2.dsk.zip KO
+megablasters3.dsk.zip KO
+megablasters4.dsk.zip KO
+megaches.dsk.zip OK
+megacorp.dsk.zip OK
+meganova.dsk.zip OK
+megatwins.dsk.zip KO (screen offset)
+meltdowngame.dsk.zip OK
+mercenaire.dsk.zip OK
+mercenary.zip KO (no key)
+mercenary_g.dsk.zip KO
+mercs.dsk.zip KO (DISC226B)
+mermaid.dsk.zip OK
+metalarmy.dsk.zip OK
+metropol.dsk.zip 0011
+mgt.dsk.zip OK
+miamicobra.dsk.zip KO (layers in 1001)
+miamivice.dsk.zip KO (always key)
+mickeymouse.dsk.zip OK
+micromouse.dsk.zip KO (no key)
+midnightresistance.dsk.zip KO (DISC226A) (no key)
+mig29.dsk.zip OK
+mikie.dsk.zip OK
+milkrace.dsk.zip OK
+missionelevator.dsk.zip OK
+misterionilo.dsk.zip OK
+moneymolch.dsk.zip OK
+monopoly.dsk.zip OK
+montecarlocasino.dsk.zip OK (DISC061A)
+montechristo1.dsk.zip OK
+montechristo2.dsk.zip OK
+moonblaster.dsk.zip 0111
+moonbuggy.dsk.zip OK
+mooncrst.dsk.zip OK
+moontorc.dsk.zip OK
+moonwalker.dsk.zip OK (DISC105A)
+mot.dsk.zip OK
+motorbikemadness.dsk.zip OK
+motos.dsk.zip OK
+movie.dsk.zip 0011
+movingtarget.dsk.zip KO (always key)
+mrfreeze.dsk.zip OK
+mrgas.dsk.zip OK
+mrheli.dsk.zip KO (DISC168A)
+mrpingo.dsk.zip OK
+munsters.dsk.zip OK
+mutantfortress.dsk.zip KO (always key)
+mutants.dsk.zip OK
+mutanzone.dsk.zip OK
+mysterdansmomy.dsk.zip OK
+mysterynile.zip KO (reset)
+mysteryofarkhammanortheb.zip KO (no key)
+mystical.dsk.zip KO
+myth.dsk.zip KO (always key)
+mythos.dsk.zip OK
+nanakodescends.dsk.zip OK
+nanakoinclassic.dsk.zip OK
+narc1.dsk.zip KO (freeze in control select menu)
+narc2.dsk.zip KO (freeze in control select menu)
+narcopolice.dsk.zip KO (too slow)
+navy.dsk.zip OK
+nebulus.dsk.zip 0111
+nemwarlock.dsk.zip OK
+netherw.dsk.zip 0111
+neveredingstory.dsk.zip KO (no key)
+nexor.dsk.zip KO (suicide)
+nexus.dsk.zip KO (strange key events)
+nibbler.dsk.zip OK
+nigelmansellsgrandprix.dsk.zip KO (no key)
+nightbreed1.dsk.zip OK
+nightbreed2.dsk.zip OK
+nighthunter.dsk.zip 0011
+nightshift.dsk.zip 0111
+ninjahamster.dsk.zip OK
+ninjamsc.dsk.zip OK
+ninjaspirit.dsk.zip OK
+ninjawarriorstheb.zip OK
+nomad.dsk.zip OK
+nonamed.dsk.zip OK
+nonterraqueous.dsk.zip OK
+northandsouth1.dsk.zip OK
+northandsouth2.dsk.zip OK
+northstr.dsk.zip OK
+nosferatu.dsk.zip OK
+nucleardefence.dsk.zip OK
+oberon69.dsk.zip OK
+oblitera.dsk.zip OK
+octoplex.dsk.zip KO (screen instable)
+offshore.dsk.zip 0011
+ohmummy.dsk.zip OK
+oink.dsk.zip OK
+oletoro.dsk.zip OK
+olliandlissa1.dsk.zip 0011
+olliandlissa3.dsk.zip KO
+one.dsk.zip 0011
+operationgunship.dsk.zip KO (no key)
+opwolf.dsk.zip OK
+Orion_Prime_DE_3p5.zip KO
+orionprimees.dsk.zip KO
+orionprimefr.dsk.zip KO
+orionprimeuk.dsk.zip KO
+outrun.dsk.zip KO (raster)
+outruneuropa.dsk.zip OK
+overlander.dsk.zip OK
+oxphar.dsk.zip OK (DISC244A)
+p47.dsk.zip 0111
+pacifik.dsk.zip OK (DISC050B)
+pacland.dsk.zip KO (no key)
+pacmania.dsk.zip OK
+paladin.dsk.zip OK
+panzadrome.dsk.zip OK
+panzakickboxing.dsk.zip OK
+paperboy_2.dsk.zip OK
+paperboy1.dsk.zip OK
+paperboy2.dsk.zip 0111
+paranoiacomplextheb.zip OK
+parisdakar.dsk.zip KO (reset)
+penggy.dsk.zip OK
+penguins.dsk.zip OK
+pericodelgado.dsk.zip KO (reset)
+peterpackrat.dsk.zip KO (no key)
+phantis.dsk.zip OK
+phantom2.dsk.zip OK
+phantomassaga.dsk.zip OK
+phantomastales1.dsk.zip OK
+phantomclub.dsk.zip 0011
+phenixnoir.dsk.zip OK
+phileasfogg.dsk.zip OK
+piclos.dsk.zip KO (bomb sucks)
+pinbpower.dsk.zip KO (no key)
+pingpong.dsk.zip OK
+pinkpanther.dsk.zip OK
+pirates_1.dsk.zip OK
+pirates_2.dsk.zip OK
+platformermedley.dsk.zip OK
+plottheb.zip OK
+plumpya.dsk.zip KO
+plumpyb.dsk.zip KO
+poder.dsk.zip OK
+poker.dsk.zip OK
+pollutingbacteriatheb.zip OK
+pontoon.dsk.zip OK
+popeye.dsk.zip OK
+popeye2.dsk.zip KO (reset)
+popup.dsk.zip OK
+postmanpat1.dsk.zip OK
+postmanpat2.dsk.zip OK
+postmanpat3.dsk.zip OK
+potsworth.dsk.zip OK
+powerandmagic.dsk.zip OK
+powerdrift.dsk.zip 0111
+prayerof.dsk.zip KO (game over)
+predator.dsk.zip OK
+predator2.dsk.zip OK
+prehistorik1.dsk.zip KO (no key)
+prehistorik2.dsk.zip KO
+princeofpersia.dsk.zip OK
+prizetheb.zip OK
+profanation.dsk.zip KO
+professionalbmx_1.dsk.zip OK
+professionalbmx_2.dsk.zip OK
+prohibit.dsk.zip KO
+prohibition128.dsk.zip KO 
+psi5_1.dsk.zip KO (no key in game)
+psi5_2.dsk.zip KO (no key in game)
+psychocity.dsk.zip OK
+psychohopper.dsk.zip KO (reset)
+psychopiguxb.dsk.zip KO (always key)
+psychosoldier.dsk.zip OK
+punchandjudy.dsk.zip OK
+purplesaturnday.dsk.zip KO
+puzznic.dsk.zip OK
+puzznix.dsk.zip KO (raster hidding cursor)
+pyromydya.dsk.zip KO (no key)
+q10.dsk.zip OK
+qabbalah.dsk.zip 0111
+quackajack.dsk.zip OK
+quad.dsk.zip OK
+questor.dsk.zip OK
+quijote.dsk.zip OK
+racetheb.zip 0011
+radius.dsk.zip OK
+radzone.dsk.zip OK
+raid.dsk.zip OK
+rainbowisland.dsk.zip KO (no key)
+rally2.dsk.zip 0111
+rallycross.dsk.zip KO (reset)
+rallysimulator.dsk.zip KO (no key)
+ram.dsk.zip OK
+rambo.dsk.zip OK
+rambo3.dsk.zip OK (DISC116B)
+rampage.dsk.zip 0111
+ranarama.dsk.zip OK
+rastan_a.dsk.zip 0111
+rastan_b.dsk.zip 0111
+rattha.dsk.zip OK
+rdi.dsk.zip OK
+realghostbusters.dsk.zip OK (DISC306A) 
+realstuntexpertstheb.zip KO (always key)
+rebelplanet.dsk.zip KO (no key)
+rebelstar.dsk.zip OK
+redarrowstheb.zip 0111
+redled.dsk.zip OK
+renaud.dsk.zip OK
+renegade.dsk.zip OK
+renegade3.dsk.zip KO (reset)
+rescue_on_fractalus.dsk.zip OK
+resgolfo.dsk.zip OK
+returntooz.dsk.zip OK
+revolutn.dsk.zip OK
+rex.dsk.zip KO
+rick.dsk.zip OK
+rick2.dsk.zip OK
+risiko.zip OK
+roadblasters.dsk.zip OK
+roadrunner.dsk.zip KO (no key)
+roadrunner2.dsk.zip OK
+robin_dsk.zip OK
+robinhoodlegendquest.dsk.zip KO
+robocop.dsk.zip 0111
+robotcop.dsk.zip KO
+rock.dsk.zip 0111
+rocknroll_a.dsk.zip KO (reset)
+rocknroll_b.dsk.zip KO (reset)
+rockraid.dsk.zip OK
+rockyhorrorshowtheb.zip OK
+rodland.dsk.zip OK
+rogue.dsk.zip OK
+roguetrooper.dsk.zip OK
+rolandahoy.dsk.zip KO (no key)
+rolandgoesdigging.dsk.zip OK
+rolandgoessquarebashing.dsk.zip KO (pink screen)
+rolandinspace.dsk.zip KO (no key)
+rolandinthecaves.dsk.zip OK
+rolandinthehaunted.dsk.zip OK
+rolandintime.dsk.zip OK
+rolandontherun.dsk.zip OK
+rolandro.dsk.zip OK
+rollingthunder.dsk.zip OK
+rrufus.dsk.zip OK
+rtype.dsk.zip 0011
+rtype_remake.dsk.zip OK
+ruffandreddy.dsk.zip KO
+runningman1.dsk.zip KO (lost of controls after boss 1)
+runningman2.dsk.zip KO (lost of controls after boss 1)
+runthegauntlet.dsk.zip OK
+rygar.dsk.zip OK
+saboteur.dsk.zip 0011
+saboteur2.dsk.zip KO (no key)
+sabrewulf.dsk.zip OK
+sabrina.dsk.zip KO (lag key)
+saicombat.dsk.zip OK
+saigoncombatunit.dsk.zip OK
+saintandgreavsie.dsk.zip OK
+samantha.dsk.zip OK
+samurai.dsk.zip OK
+sapiens.dsk.zip OK
+saracen.dsk.zip KO (white screen)
+sardina4ever.dsk.zip KO
+sardina4ever_overhauled.zip OK
+satan.dsk.zip OK
+sauvezyurk1.dsk.zip KO
+sauvezyurk2.dsk.zip KO
+savage.dsk.zip OK
+scoobyandscrappy.dsk.zip OK
+scoobydoo.dsk.zip OK
+score3020.dsk.zip OK
+scoutout.dsk.zip OK
+sdaw_1.dsk.zip OK
+sdaw_2.dsk.zip OK
+secretagent.dsk.zip OK
+secretdiary.dsk.zip OK
+sendasalvaje.dsk.zip KO (no fire key)
+sentinel.dsk.zip OK
+sevenlostgnomes.dsk.zip OK
+sgrizam.dsk.zip OK
+shackled.dsk.zip KO
+shadowofthebeast1.dsk.zip OK
+shadowofthebeast2.dsk.zip OK
+shadowsofmordor.dsk.zip OK
+shadowwarriors.dsk.zip OK
+sharpesdeeds.dsk.zip OK
+shevampiresb.zip OK
+shinobi.dsk.zip OK
+shockway.dsk.zip OK
+shrtcrct.dsk.zip OK
+shuffle.dsk.zip 0111
+sidearms.dsk.zip OK
+sideralwar.dsk.zip OK
+sidewalk.dsk.zip OK
+sigma7.dsk.zip KO (no key)
+silent_service.dsk.zip KO (no key)
+silentshadow.dsk.zip OK
+silkworm.dsk.zip KO (no key)
+simcity.dsk.zip KO (no key)
+simpsonsthe1.zip KO (no key)
+simpsonsthe2.zip KO
+sirababol.dsk.zip OK
+sirfred.dsk.zip KO (no key)
+sitopons.dsk.zip OK
+skateball.dsk.zip KO (no key)
+skatecrazy.dsk.zip KO (calques scan 0111) (DISC041B)
+skatewars.dsk.zip KO (no key)
+skullandcrossbones.dsk.zip KO (strange key)
+skweek64.dsk.zip OK
+skyhunter.dsk.zip OK
+skywar.dsk.zip KO (no key)
+skyx1.dsk.zip KO cpm DISC169A/DISC169B
+skyx2.dsk.zip KO cpm DISC169A/DISC169B
+slaine.dsk.zip OK
+smashtv.dsk.zip OK
+snoopy.dsk.zip OK
+snowstrike.dsk.zip KO (layers)
+soccerchallenge.dsk.zip OK
+soldieroflight.dsk.zip OK
+solnegro.dsk.zip OK
+solomonskey.dsk.zip OK
+sorcery.dsk.zip OK
+sorceryp.dsk.zip OK
+sortliege3d.dsk.zip OK
+soulofarobot.dsk.zip OK
+spacefroggy.dsk.zip OK
+spacefroggy2.dsk.zip OK
+spaceharrier.dsk.zip OK
+spaceharrier21.dsk.zip KO (freeze in game)
+spaceharrier22.dsk.zip KO (freeze in game)
+spaceinvasion.dsk.zip KO (glitch)
+spaceshuttle.dsk.zip OK
+spannerman.dsk.zip OK
+spectra.dsk.zip OK
+spellbound.dsk.zip OK
+spiderman1.zip OK
+spiderman2.zip KO
+spindizz.dsk.zip OK
+spindrone.dsk.zip OK
+spirits.dsk.zip OK
+spitfire.dsk.zip KO (no key)
+spitfire40.dsk.zip KO (glitch)
+spittingimage.dsk.zip OK
+splitpersonalities.dsk.zip KO (no key)
+spooked.dsk.zip KO (always key)
+spy.dsk.zip OK
+spyhunter.dsk.zip OK
+spyvsspy.dsk.zip OK
+spyvsspy2.dsk.zip KO (music lag iregular)
+spyvsspy3.dsk.zip OK
+spywho.dsk.zip OK DISC005A
+sram1a.dsk.zip OK
+sram1b.dsk.zip OK
+sram2.dsk.zip OK
+stainles.dsk.zip OK
+stairwaytohell.dsk.zip OK
+staravenger.dsk.zip 0011
+stardust.dsk.zip KO (glitch)
+starfox.dsk.zip KO (no key)
+starglider.dsk.zip KO (no key)
+starlife.dsk.zip OK
+starquake.dsk.zip OK
+starranger.dsk.zip OK
+starsabre.dsk.zip KO (no key)
+starsordium.dsk.zip OK
+startrap1.dsk.zip OK
+startrap2.dsk.zip OK
+startrooper.dsk.zip OK
+starwars.dsk.zip OK
+starwarsesb.dsk.zip OK
+starwarsrotj.dsk.zip OK
+steg.dsk.zip OK
+stifflip.dsk.zip OK
+stormbringer.dsk.zip OK
+stormlrd.dsk.zip OK
+stormwarrior.dsk.zip KO
+stranded.dsk.zip OK
+strangeloop.dsk.zip OK
+streaker.dsk.zip OK
+streetcredboxing.dsk.zip OK
+streetfighter.dsk.zip OK
+streetfighter2.dsk.zip OK
+streetgangfootball.dsk.zip OK
+streetmachine.dsk.zip OK
+strider.dsk.zip OK
+strider2.dsk.zip OK
+strikeforcecobra.dsk.zip KO (slow down while having monsters)
+striptakin.dsk.zip OK
+stroper.dsk.zip OK
+stryfe.dsk.zip OK
+stuntbikesimulator.dsk.zip OK
+stuntcarracer.dsk.zip 0111
+subhunter.dsk.zip 0111
+subwayvigilante.dsk.zip KO
+sudokumaster.dsk.zip OK
+suicidaltendencies.dsk.zip 0111
+sultansmaze.dsk.zip KO (Function keys as arrows)
+supercars.dsk.zip OK
+supercau.dsk.zip KO
+superedgegrinder.dsk.zip KO (secousses)
+superkid.dsk.zip OK
+supermonacogp.dsk.zip OK
+superpipeline2.dsk.zip OK
+SuperpixA.dsk.zip KO (protected disk)
+SuperpixB.dsk.zip KO (protected disk)
+superrobin.dsk.zip OK
+supersam.dsk.zip OK
+superscramble.dsk.zip KO (raster scan)
+superski.dsk.zip OK
+superskweek.dsk.zip OK
+supersprint.dsk.zip KO (no key)
+superstockcar.dsk.zip OK
+superted.dsk.zip OK
+supertripper.dsk.zip OK
+supertrux.dsk.zip OK
+suprhero.dsk.zip OK
+survivre1.dsk.zip KO (no key)
+survivre2.dsk.zip OK
+sweevo.dsk.zip OK
+switchblade.dsk.zip OK
+swiv.dsk.zip OK
+swordofthesamurai.dsk.zip OK
+swordslayer.dsk.zip KO
+talesb.zip OK
+talismandosiris.dsk.zip OK
+tank.dsk.zip KO (disk protection)
+tankcommand.dsk.zip OK
+tapperb.zip OK
+targetrenegadeb.zip 0111
+targhan1.zip KO (cannot insert B)
+targhan2.zip KO (cannot insert B)
+tarzanb.zip OK
+taskforce.dsk.zip OK
+taucetib.zip OK
+tbirdb.zip OK
+techniciantedb.zip OK
+technocop.dsk.zip KO
+teenagemutantheroturtlesb.zip OK
+teenagequeenb.zip OK
+tempest.dsk.zip OK
+tempestb.zip OK
+templos.dsk.zip OK
+tennis3db.zip OK
+tenniscup.dsk.zip KO (reset)
+tenniscupb.zip OK
+tenpinb.zip OK
+Teodoro_NSV.dsk.zip OK
+terminator2b.zip 0111
+terminus.dsk.zip OK
+terracognitab.zip OK
+terramexb.zip 0111
+terrorb.zip OK
+terrorpods.dsk.zip OK
+testdrive2b.zip OK
+tetris.dsk.zip OK
+tetris95.dsk.zip OK
+thaiboxingb.zip OK
+thanatosb.zip KO (no key)
+theamazingb.zip OK
+theapprenticeb.zip OK
+thearmageddonmanb.zip OK
+theateamb.zip OK
+thebardstale1.zip OK
+thebardstale2.zip OK
+thebluesbb.zip KO (no key)
+thingbb.dsk.zip OK
+thingspr.dsk.zip OK
+thomasthetankengine.dsk.zip OK
+threeweeksparadise.dsk.zip OK
+thunderbirds.dsk.zip OK
+thunderblade.dsk.zip KO (DISC121A)
+thunderburner.dsk.zip OK
+thundercats.dsk.zip 0111
+thunderjaws.dsk.zip KO (no key)
+thunderzone.dsk.zip OK
+tiebreak.dsk.zip OK
+tigerroad.dsk.zip OK
+tigre.dsk.zip OK
+timelord.dsk.zip OK
+timesoflore_1.dsk.zip KO (vibre)
+timesoflore_2.dsk.zip KO (vibre)
+timetrax.dsk.zip OK
+tintinonthemoon.dsk.zip KO (3 layers)
+tinyskweekstheb.zip KO (sound lag)
+tirnanog.dsk.zip OK
+titan.dsk.zip OK
+titanic.dsk.zip OK
+titusthefox.dsk.zip KO (slow)
+tnzs.dsk.zip OK
+toiacid.dsk.zip 0011
+tomahawk.dsk.zip KO (strange keys)
+tomandjerry.dsk.zip OK
+tomandjerry2.dsk.zip OK
+toobin.dsk.zip OK
+toplevel.dsk.zip OK
+tornadolowlevel.dsk.zip KO (infinite loop)
+totalrecall.dsk.zip OK
+totems_amstradcpc_dsk.zip OK
+tour91.dsk.zip KO
+toyotac.dsk.zip OK
+tracer.dsk.zip KO (no key)
+trail64.dsk.zip OK
+traintheb.zip 0011
+trakers.dsk.zip OK (some small raster at top but playable)
+transatlantictheb.zip KO
+transx.dsk.zip KO (strange key)
+trantor.dsk.zip OK
+trap.dsk.zip OK
+trapdoortheb.zip OK
+triaxos.dsk.zip OK
+triplecomando.dsk.zip OK
+trivialpursuitnewbeginning1.dsk.zip OK
+trivialpursuitnewbeginning2.dsk.zip OK
+troll.dsk.zip OK
+tuareg.dsk.zip OK
+tubaruba.dsk.zip OK
+tuma7.dsk.zip KO (too fast bubbles)
+turboboat.dsk.zip OK
+turbochopper.dsk.zip OK
+turboesprit.dsk.zip OK
+turbogirl.dsk.zip OK
+turbooutrun_1.dsk.zip OK (DISC224A et B)
+turbooutrun_2.dsk.zip OK (DISC224A et B)
+turbotortoise.dsk.zip OK
+turrican1_1.dsk.zip OK
+turrican1_2.dsk.zip OK
+turrican2_1.dsk.zip KO (no key)
+turrican2_2.dsk.zip KO (no key)
+turtles2a.zip KO
+turtles2b.zip KO
+tusker.dsk.zip OK
+twinturbov8.dsk.zip KO (no key)
+twinworld1.dsk.zip KO (always key)
+twinworld2.dsk.zip KO (always key)
+uchib.zip KO (no key)
+uchimata.dsk.zip KO (no key)
+ulises.dsk.zip OK
+ultimaratiob.zip OK
+unitraxb.zip OK
+unsquadron1.zip KO
+unsquadron2.zip OK
+untouchablestheb.zip OK
+uridium.dsk.zip 0111
+Usagi_Yojimbo.zip KO
+uwol2.dsk.zip OK
+vectorballb.zip KO (lag)
+vendetta1.zip OK
+vendetta2.zip OK
+venomsbb.zip OK
+vermeer.dsk.zip OK
+viaje_al_centro_de_la_tierra__v.e._dsk.zip OK
+viajeb.zip KO (reset)
+victoryroadb.zip OK
+videopoker.dsk.zip OK
+viewtoakill.dsk.zip OK
+vigilanteb.zip OK
+vikingstheb.zip OK
+vindic.dsk.zip OK
+vindicator_the.dsk.zip OK
+virginatlantic.dsk.zip OK
+vixen.dsk.zip OK
+vizb.zip OK
+volleyballb.zip OK
+vthevisitorsb.zip OK
+vulcan.dsk.zip OK
+wackydartsb.zip OK
+wackyraces.dsk.zip KO
+wandererb.zip KO
+war.dsk.zip OK
+warinmiddleearth.dsk.zip KO
+warlockb.zip OK
+warlord.dsk.zip OK
+warmachineb.zip KO (locked in stupid walls)
+warrior.dsk.zip KO (cant fight or be fight by monsters)
+warriorplus1.dsk.zip OK
+warriorplus2.dsk.zip OK
+wayoftheexploding.dsk.zip OK
+wayoftheexplodingp.dsk.zip KO (no key)
+wayofthetigertheb.zip KO
+wcchallengeb.zip OK
+wcsoccerb.zip KO (always key)
+weclemans.dsk.zip OK
+wells.dsk.zip OK
+welltrisb.zip OK
+werewolves.zip OK
+werner1.zip KO (no key)
+werner2.zip KO (no key)
+westbank.dsk.zip OK
+westerngames1.zip OK
+westerngames2.zip OK
+wgames.dsk.zip KO (subgame "barrel jumping" not launched)
+whodareswinsiib.zip KO (reset)
+whopperchase.dsk.zip OK
+wildstreets.dsk.zip 0011 (DISC066A)
+wildwestseymourb.zip OK
+willowpb.zip OK
+winchester.dsk.zip OK
+windsurfwilly.dsk.zip KO (reset)
+wingsoffuryb.zip 0111
+winterg2.dsk.zip KO
+winterolympics.dsk.zip OK
+wintersports1.dsk.zip OK
+wintersports2.dsk.zip OK
+winterwonderland.dsk.zip OK
+witchcraft.dsk.zip OK
+wizardslairb.zip OK
+wizardwarz.dsk.zip KO
+wizardwillyb.zip OK
+wizball.dsk.zip OK
+wonderboyb.zip OK
+wordhangb.zip OK
+worldchampionshipsoccer.zip KO
+worldclassleaderboard1.zip OK
+worldclassleaderboard2.zip OK
+worldcupb.zip OK
+worldseriesbaseball.dsk.zip OK
+wrestlingsuperstarsb.zip 0111
+wwfb.zip OK
+xanagramsb.zip OK
+xarqb.zip OK
+xcelb.zip OK
+xenob.zip OK
+xenonb.zip KO (sound lag)
+xenophobeb.zip KO
+xevious.dsk.zip OK
+xor.dsk.zip 0111
+x-out.dsk.zip OK
+xybotsb.zip OK
+xyphoesfantasy1.zip KO
+xyphoesfantasy2.zip KO
+xyphoesfantasy3.zip KO
+yabbab.zip OK
+yespmb1.zip OK
+yespmb2.zip OK
+yiear.dsk.zip 0111
+yiear2.dsk.zip OK
+yogi.dsk.zip OK
+yogi2.dsk.zip OK
+yogi3.dsk.zip OK
+z.zip OK
+z1.zip OK
+zampabolasb.zip OK
+zampalosb.zip OK
+zaptballsadvancedb.zip KO
+zaptballsb.zip KO
+zarbigolfb.zip OK
+zarebab.zip OK
+zarkonb.zip 0111
+zarxasb.zip OK
+zaxonb.zip OK
+zaxxb.zip 0111
+zblastsdb.zip 0111
+zeda.zip OK
+zeldab.zip OK
+zentusb.zip OK
+ziggurat.dsk.zip OK
+zipiyzapeb.zip OK
+zoderab.zip OK
+zoidsb.zip OK
+zolyxb.zip OK
+zombifacea.zip KO (goto east glinch)
+zombifaceb.zip KO (goto east glinch)
+zona0b.zip OK
+zoneb.zip OK
+zonetroo.dsk.zip OK
+zorakkb.zip OK
+zorgosb.zip OK
+zorkib.zip OK
+zorkiib.zip OK
+zorkiiib.zip OK
+ZorroB.zip OK
+zox2099b.zip OK
+zub.dsk.zip OK
+zyclonsb.zip OK
+zygyb.zip OK
+zynaps.zip OK

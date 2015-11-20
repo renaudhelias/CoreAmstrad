@@ -120,7 +120,7 @@ bat_disk_3.dsk.zip OK
 bat_disk_4.dsk.zip OK
 batman.dsk.zip OK
 batmanthecaped.dsk.zip KO
-batmanthemovie.dsk.zip OK
+batmanthemovie.dsk.zip 0111
 Battle_Command_A.zip KO (no joystick/mouse)
 Battle_Command_B.zip KO (no joystick/mouse)
 battleships.dsk.zip OK
@@ -1373,3 +1373,6 @@ zub.dsk.zip OK
 zyclonsb.zip OK
 zygyb.zip OK
 zynaps.zip OK
+runcpc.dsk.zip OK
+spherical_disk_a.dsk.zip OK
+spherical_disk_b.dsk.zip OK

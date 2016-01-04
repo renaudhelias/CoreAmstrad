@@ -565,7 +565,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
   -- signal XLXN_918      : std_logic;
    signal XLXN_940      : std_logic;
    signal xram_A        : std_logic_vector (22 downto 0);
-   signal zero          : std_logic;
    signal ROMbank_DUMMY : std_logic_vector (7 downto 0);
    signal ram_W_DUMMY   : std_logic;
    signal RAMBank_DUMMY : std_logic_vector (2 downto 0);
@@ -1051,9 +1050,6 @@ port map ( reset=>XLXN_907,
 			  vram_A_isValid=>XLXN_872
 			  );
 
---   XLXI_253 : GND
---      port map (G=>zero);
-zero<='0';
    
 --   XLXI_256 : VCC
 --      port map (P=>un);

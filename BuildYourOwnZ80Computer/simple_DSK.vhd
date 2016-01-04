@@ -234,7 +234,7 @@ change<='1';-- "out &cafe,3" does need reset key pressed ("page up" key)
 block_Din<=block_Din_megashark when not(memshark_done) else block_Din_cortex;
 block_A<=block_A_megashark when not(memshark_done) else block_A_cortex;
 block_W<=block_W_megashark when not(memshark_done) else block_W_cortex;
-megashark:process(nCLK4_1,reset)
+megashark:process(reset,nCLK4_1)
 	--variable newDskInserted : boolean := true;
 	variable chrn_mem:STD_LOGIC_VECTOR(4*8-1 downto 0):=(others=>'0');
 	variable memshark_counter:integer range 0 to 511; --std_logic_vector(8 downto 0):=(others=>'0');
@@ -384,7 +384,7 @@ end process megashark;
 
 
 
-cortex:process(nCLK4_1,reset)
+cortex:process(reset,nCLK4_1)
 	variable current_byte:integer range 0 to 511;
 	--type sector_size_type is array(0 to 4) of integer;
 	--constant SECTOR_SIZES:sector_size_type:=(128,256,512,1024,2048);--(x"80",x"100",x"200",x"400",x"800",x"1000",x"1800");
@@ -424,7 +424,6 @@ cortex:process(nCLK4_1,reset)
 	variable is_multitrack:boolean:=false;
 	
 	variable data:std_logic_vector(7 downto 0);
-	variable was_concerned:boolean:=false;
 	variable do_update:boolean;
 
 	variable DSK_select_mem:std_logic_vector(7 downto 0);
@@ -510,7 +509,6 @@ begin
 		etat:=ETAT_OSEF;
 		data:=(others=>'0');
 		
-		was_concerned:=false;
 		do_update:=false;
 		phase<=PHASE_ATTENTE_COMMANDE;
 		etat_wait:=false;

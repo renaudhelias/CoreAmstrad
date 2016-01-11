@@ -645,26 +645,43 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              ROMbank : out   std_logic_vector (7 downto 0));
    end component;
    
-   component I82C55
-      port ( I_CS_L    : in    std_logic; 
-             I_RD_L    : in    std_logic; 
-             I_WR_L    : in    std_logic; 
-             RESET     : in    std_logic; 
-             ENA       : in    std_logic; 
-             CLK       : in    std_logic; 
-             I_ADDR    : in    std_logic_vector (1 downto 0); 
-             I_DATA    : in    std_logic_vector (7 downto 0); 
-             I_PA      : in    std_logic_vector (7 downto 0); 
-             I_PB      : in    std_logic_vector (7 downto 0); 
-             I_PC      : in    std_logic_vector (7 downto 0); 
-             IO_DATA   : inout std_logic_vector (7 downto 0); 
-             O_PA      : out   std_logic_vector (7 downto 0); 
-             O_PA_OE_L : out   std_logic_vector (7 downto 0); 
-             O_PB      : out   std_logic_vector (7 downto 0); 
-             O_PB_OE_L : out   std_logic_vector (7 downto 0); 
-             O_PC      : out   std_logic_vector (7 downto 0); 
-             O_PC_OE_L : out   std_logic_vector (7 downto 0));
-   end component;
+--   component I82C55
+--      port ( I_CS_L    : in    std_logic; 
+--             I_RD_L    : in    std_logic; 
+--             I_WR_L    : in    std_logic; 
+--             RESET     : in    std_logic; 
+--             ENA       : in    std_logic; 
+--             CLK       : in    std_logic; 
+--             I_ADDR    : in    std_logic_vector (1 downto 0); 
+--             I_DATA    : in    std_logic_vector (7 downto 0); 
+--             I_PA      : in    std_logic_vector (7 downto 0); 
+--             I_PB      : in    std_logic_vector (7 downto 0); 
+--             I_PC      : in    std_logic_vector (7 downto 0); 
+--             IO_DATA   : inout std_logic_vector (7 downto 0); 
+--             O_PA      : out   std_logic_vector (7 downto 0); 
+--             O_PA_OE_L : out   std_logic_vector (7 downto 0); 
+--             O_PB      : out   std_logic_vector (7 downto 0); 
+--             O_PB_OE_L : out   std_logic_vector (7 downto 0); 
+--             O_PC      : out   std_logic_vector (7 downto 0); 
+--             O_PC_OE_L : out   std_logic_vector (7 downto 0));
+--   end component;
+	
+	component pio
+    port (
+	addr			: in STD_LOGIC_VECTOR (1 downto 0);
+	datain			: in STD_LOGIC_VECTOR (7 downto 0);
+	cs				: in STD_LOGIC;
+	iowr			: in STD_LOGIC;
+	iord			: in STD_LOGIC;
+	cpuclk			: in STD_LOGIC;
+	
+	PBI				: in STD_LOGIC_VECTOR (7 downto 0);
+	PAI				: in STD_LOGIC_VECTOR (7 downto 0);		--Keyboarddaten
+	PAO     		: buffer STD_LOGIC_VECTOR (7 downto 0);		--sounddaten
+	PCO     		: out STD_LOGIC_VECTOR (7 downto 0);		--tastatur und steuerung
+	DO		     	: out STD_LOGIC_VECTOR (7 downto 0)
+    );
+	end component;
    
    component VCC
       port ( P : out   std_logic);
@@ -935,40 +952,65 @@ begin
    
 	-- print inp(&0000)
 	-- 255 (Caprice32) 0 (JavaCPC)
-   PPI : I82C55
-      port map (CLK=>nCLK4MHz,
-                ENA=>XLXN_303,
-                I_ADDR(1 downto 0)=>A(9 downto 8),
-                I_CS_L=>A(11),
-                I_DATA(7 downto 0)=>D(7 downto 0),
-                I_PA(7 downto 0)=>XLXN_519(7 downto 0),
-                I_PB(7)=>un, -- pull up (default)
-                I_PB(6)=>un, -- pull up (default)
-                I_PB(5)=>un, -- pull up (default)
-                I_PB(4)=>ppi_jumpers(3), --un, --50Hz
-                I_PB(3)=>ppi_jumpers(2), --un,
-                I_PB(2)=>ppi_jumpers(1), --zero,
-                I_PB(1)=>ppi_jumpers(0), --un,
-                I_PB(0)=>n_crtc_vsync,
-                I_PC(7)=>un, -- pull up (default)
-                I_PC(6)=>un, -- pull up (default)
-                I_PC(5)=>un, -- pull up (default)
-                I_PC(4)=>un, -- pull up (default)
-                I_PC(3)=>un, -- pull up (default)
-                I_PC(2)=>un, -- pull up (default)
-                I_PC(1)=>un, -- pull up (default)
-                I_PC(0)=>un, -- pull up (default)
-                I_RD_L=>XLXN_180,
-                I_WR_L=>XLXN_904,
-                RESET=>XLXN_907,
-                O_PA(7 downto 0)=>XLXN_462(7 downto 0),
-                O_PA_OE_L=>open,
-                O_PB=>open,
-                O_PB_OE_L=>open,
-                O_PC(7 downto 0)=>portC(7 downto 0),
-                O_PC_OE_L=>open,
-                IO_DATA(7 downto 0)=>MIX_DOUT1(7 downto 0)); -- inout
-   
+--   PPI : I82C55
+--      port map (CLK=>nCLK4MHz,
+--                ENA=>XLXN_303,
+--                I_ADDR(1 downto 0)=>A(9 downto 8),
+--                I_CS_L=>A(11),
+--                I_DATA(7 downto 0)=>D(7 downto 0),
+--                I_PA(7 downto 0)=>XLXN_519(7 downto 0),
+--                I_PB(7)=>un, -- pull up (default)
+--                I_PB(6)=>un, -- pull up (default)
+--                I_PB(5)=>un, -- pull up (default)
+--                I_PB(4)=>ppi_jumpers(3), --un, --50Hz
+--                I_PB(3)=>ppi_jumpers(2), --un,
+--                I_PB(2)=>ppi_jumpers(1), --zero,
+--                I_PB(1)=>ppi_jumpers(0), --un,
+--                I_PB(0)=>n_crtc_vsync,
+--                I_PC(7)=>un, -- pull up (default)
+--                I_PC(6)=>un, -- pull up (default)
+--                I_PC(5)=>un, -- pull up (default)
+--                I_PC(4)=>un, -- pull up (default)
+--                I_PC(3)=>un, -- pull up (default)
+--                I_PC(2)=>un, -- pull up (default)
+--                I_PC(1)=>un, -- pull up (default)
+--                I_PC(0)=>un, -- pull up (default)
+--                I_RD_L=>XLXN_180,
+--                I_WR_L=>XLXN_904,
+--                RESET=>XLXN_907,
+--                O_PA(7 downto 0)=>XLXN_462(7 downto 0),
+--                O_PA_OE_L=>open,
+--                O_PB=>open,
+--                O_PB_OE_L=>open,
+--                O_PC(7 downto 0)=>portC(7 downto 0),
+--                O_PC_OE_L=>open,
+--                IO_DATA(7 downto 0)=>MIX_DOUT1(7 downto 0)); -- inout
+					 
+	PPI : pio		 
+		 port map (
+	addr(1 downto 0)=>A(9 downto 8),
+	datain(7 downto 0)=>D(7 downto 0),
+	cs=>A(11),
+	iowr=>XLXN_904,
+	iord=>XLXN_180,
+	cpuclk=>nCLK4MHz,
+	
+	PBI(7)=>un, -- pull up (default)
+	PBI(6)=>un, -- pull up (default)
+	PBI(5)=>un, -- pull up (default)
+	PBI(4)=>ppi_jumpers(3), --un, --50Hz
+	PBI(3)=>ppi_jumpers(2), --un,
+	PBI(2)=>ppi_jumpers(1), --zero,
+	PBI(1)=>ppi_jumpers(0), --un,
+	PBI(0)=>n_crtc_vsync,
+	
+	PAI(7 downto 0)=>XLXN_519(7 downto 0),
+	PAO(7 downto 0)=>XLXN_462(7 downto 0),
+	PCO(7 downto 0)=>portC(7 downto 0),
+	DO(7 downto 0)=>MIX_DOUT1(7 downto 0)
+    );
+
+	 
 --   XLXI_168 : VCC
 --      port map (P=>XLXN_16);
 XLXN_16<='1';

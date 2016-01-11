@@ -33,9 +33,9 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 -- speed ink 1,1
 entity simple_GateArrayInterrupt is
 	Generic (
-	--HD6845S 	Hitachi 	0
+	--HD6845S 	Hitachi 	0 HD6845S_WriteMaskTable type 0 in JavaCPC
 	--UM6845 	UMC 		0
-	--UM6845R 	UMC 		1
+	--UM6845R 	UMC 		1 UM6845R_WriteMaskTable type 1 in JavaCPC <==
 	--MC6845 	Motorola	2 
 	--CRTC_TYPE:integer   :=0;
 	LATENCE_MEM_WR:integer:=1;
@@ -111,6 +111,8 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	
 	signal maScreen:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
 
+	signal LineCounter:std_logic:='1';
+	
 	signal vsync:std_logic:=DO_NOTHING;
 	signal hsync:std_logic:=DO_NOTHING;
 	
@@ -201,7 +203,7 @@ ctrcConfig_process:process(reset,nCLK4_1) is
 	variable reg_select : integer range 0 to 17;
 	-- normally 0..17 but 0..31 in JavaCPC
 	type registres_type is array(0 to 17) of std_logic_vector(7 downto 0);
-	variable registres:registres_type;
+	variable registres:registres_type := (others=>(others=>'0'));
 		
 	variable ink:STD_LOGIC_VECTOR(3 downto 0);
 	variable border_ink:STD_LOGIC;
@@ -281,30 +283,31 @@ begin
 							--RVwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111"; -- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
 							RVwidth<=registres(3)(7 downto 4); -- JavaCPC 2015 puis Renaud
 						when 4=>
-							RVtot<=registres(4);
+							RVtot<=registres(4) and x"7f";
 						when 5=>
-							RVtotAdjust<=registres(5);
+							RVtotAdjust<=registres(5) and x"1f";
 						when 6=>
-							RVdisp<=registres(6);
+							RVdisp<=registres(6) and x"7f";
 						when 7=>
-							RVsyncpos<=registres(7);
-						when 8=>NULL;
+							RVsyncpos<=registres(7) and x"7f";
+						when 8=>NULL; -- and x"f3"; and x"03" (type 1)
 							-- interlace & skew
 						when 9=> -- max raster adress
-							RRmax<=registres(9);
-						when 10=>NULL;
+							RRmax<=registres(9) and x"1f";
+						when 10=>NULL; -- and x"7f";
 							-- cursor start raster 
-						when 11=>NULL;
+						when 11=>NULL; -- and x"1f";
 							-- cursor end raster
 						when 12=> --NULL;  (read/write type 0) (write only type 1)
 							-- start adress H
 							--maScreen = (reg[13] + (reg[12] << 8)) & 0x3fff;
+							-- and x"3f" donc (5 downto 0)
 							maScreen<=registres(12)(5 downto 0) & registres(13);
 						when 13=> --NULL;  (read/write type 0) (write only type 1)
 							-- start adress L
 							--maScreen = (reg[13] + (reg[12] << 8)) & 0x3fff;
 							maScreen<=registres(12)(5 downto 0) & registres(13);
-						when 14=>NULL;
+						when 14=>NULL; -- and x"3f"
 							-- cursor H (read/write)
 						when 15=>NULL;
 							-- cursor L (read/write)
@@ -314,22 +317,39 @@ begin
 							--light pen L (read only)
 					end case;
 				end if;
---			elsif A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='1' then-- A9_READ
---				-- type 0 : status is not implemented
---				Dout<=x"00"; 
---				if A15_A14_A9_A8(0)='1' then
---					-- type 0 : nothing (return x"00")
---					-- type 1 : read status
---					if reg_select32 = x"0C" then -- R12
---						Dout<=registres(12); -- type 0
---					elsif reg_select32 = x"0D" then -- R13
---						Dout<=registres(13); -- type 0
---					elsif reg_select32 = x"0E" then -- R14
---						Dout<=registres(14);
---					elsif reg_select32 = x"0F" then -- R15	
---						Dout<=registres(15);
---					end if;
---				end if;
+			elsif A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='1' then-- A9_READ
+				-- type 0 : status is not implemented
+				if A15_A14_A9_A8(0)='0' then
+					--if (LineCounter == 0) {
+					--  return (1 << 5); x"20"
+					if LineCounter='0' then
+						Dout<=x"20";
+					else
+						Dout<=x"00"; 
+					end if;
+				else
+					-- type 0 : nothing (return x"00")
+					-- type 1 : read status
+					if reg_select32 = x"0A" then -- R10
+						Dout<=registres(10); --type1 and x"1f"; -- type 0
+					elsif reg_select32 = x"0B" then -- R11
+						Dout<=registres(11) and x"1f"; -- type 0 & 1
+					elsif reg_select32 = x"0C" then -- R12
+						Dout<=x"00"; -- type 1 registres(12) and x"3f"; -- type 0
+					elsif reg_select32 = x"0D" then -- R13
+						Dout<=x"00"; -- type 1 registres(13); -- type 0
+					elsif reg_select32 = x"0E" then -- R14
+						Dout<=registres(14); --registres(14) and x"3f";
+					elsif reg_select32 = x"0F" then -- R15	
+						Dout<=registres(15); --registres(15);
+					elsif reg_select32 = x"0F" then -- R16
+						Dout<=registres(16) and x"3f";
+					elsif reg_select32 = x"0F" then -- R17
+						Dout<=registres(17);
+					else
+						Dout<=x"00";
+					end if;
+				end if;
 			else
 				--JavaCPC readPort() not implemented
 			
@@ -703,6 +723,11 @@ last_etat_hsync:=etat_hsync;
 					--protected int hCCMask = 0x7f;
 					--hCC = (hCC + 1) & hCCMask;
 					horizontal_counter_hCC:=horizontal_counter_hCC+1;
+				end if;
+				if vertical_counter_vCC = 0 then
+					LineCounter<='0';
+				else
+					LineCounter<='1';
 				end if;
 			when 1=>
 				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '0';

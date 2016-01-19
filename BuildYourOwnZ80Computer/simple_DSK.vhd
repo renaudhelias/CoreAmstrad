@@ -46,9 +46,7 @@ entity simple_DSK is
            D_command : in  STD_LOGIC_VECTOR (7 downto 0);
            D_result : out  STD_LOGIC_VECTOR (7 downto 0) := (others=>'1');
 
-			  cafe:in std_logic;
-			  DSK_select : out STD_LOGIC_VECTOR (7 downto 0) := (others=>'0');
-			  change : out std_logic := '1';
+			 
 
 			  is_dskReady : in std_logic_vector(1 downto 0);
 			  
@@ -210,9 +208,6 @@ status <= REQ_MASTER when phase = PHASE_ATTENTE_COMMANDE
 	else REQ_MASTER or COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_RESULT
 	else               COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_WAIT_ATTENTE_COMMANDE
 	else REQ_MASTER;
-
--- cafe purpose is about selecting a dsk in root folder without using OSD, is for development purpose.
-change<='1';-- "out &cafe,3" does need reset key pressed ("page up" key)
 
 
 
@@ -426,8 +421,6 @@ cortex:process(reset,nCLK4_1)
 	variable data:std_logic_vector(7 downto 0);
 	variable do_update:boolean;
 
-	variable DSK_select_mem:std_logic_vector(7 downto 0);
-	
 	variable wasIO_RD:std_logic:='0';
 	variable wasIO_WR:std_logic:='0';
 	
@@ -599,11 +592,6 @@ begin
 				ST3:=ST3_READY or ST3_2SIDES or current_HUS;
 			end if;
 	
-			if cafe='1' and (wasIO_WR='0' and IO_WR='1') then
-				-- out &cafe,dskNumber
-				DSK_select_mem:=D_command;
-				DSK_select<=DSK_select_mem;
-			end if;
 			if ((wasIO_RD='0' and IO_RD='1') or (wasIO_WR='0' and IO_WR='1')) and A10_A8_A7=b"010"  then
 				-- I am concerned
 				do_update:=true;
@@ -614,12 +602,7 @@ begin
 				-- I am not concerned : unbind
 				
 				
-				if cafe='1' and (IO_RD='1') then --wasIO_RD='0' and 
-					-- print INP(&cafe)
-					D_result<= DSK_select_mem;--"0000" & "000" & change_state;
-				else
-					D_result<=(others=>'1');
-				end if;
+				D_result<=(others=>'1');
 				
 				do_update:=false;
 			end if;

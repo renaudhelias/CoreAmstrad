@@ -46,8 +46,17 @@ entity simple_GateArrayInterrupt is
 	-- 39*8=312   /40=7.8 /52=6 /32=9.75
   VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
   VRAM_VDsp:integer:=600/2;
-  VRAM_Hoffset:integer:=63-46-5; -- 63*16-46*16
-  VRAM_Voffset:integer:=38*8-30*8-4*8+4  +0 -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
+  VRAM_Hoffset:integer:=10 ; -- 63*16-46*16
+  
+  -- le raster palette arrive au moment où l'encre est en face du stylo.
+  -- si on a un décalage raster palette alors on lis au mauvais moment, donc au mauvais endroit
+  -- hors nous on lit via MA, et on écrit n'importe où via VRAM_Voffset
+  -- donc VRAM_Voffset n'a pas d'influence sur le raster palette
+  -- ça veut dire que l'adresse mémoire dessous la palette n'est pas bonne
+  
+  
+  -- plus je grandi cette valeur plus l'image va vers le haut.
+  VRAM_Voffset:integer:=48  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
   
 	);
     Port ( nCLK4_1 : in  STD_LOGIC;
@@ -377,18 +386,19 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 	-- "In the CPC the Gate Array generates maskable interrupts, to do this it uses the HSYNC and VSYNC signals from CRTC, a 6-bit internal counter and monitors..."
 -- perhaps useful also : http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display 
 		-- following http://cpcrulez.fr/coding_amslive04-z80.htm
-		-- protected int hCCMask = 0x7f;
+		-- protected int hCCMask = 0x7f; "char_counter256 HMAX n'est pas une valeur en dur, mais un label comme VT et VS..."
 		variable horizontal_counter_hCC : std_logic_vector(7 downto 0):=(others=>'0'); --640/16
 		variable vertical_counter_vCC : std_logic_vector(6 downto 0):=(others=>'0'); --600
 		variable etat_rgb : STD_LOGIC:=DO_NOTHING;
 		variable etat_hsync : STD_LOGIC:=DO_NOTHING;
+		variable etat_monitor_hsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		variable etat_vsync : STD_LOGIC:=DO_NOTHING;
-		variable last_etat_hsync : STD_LOGIC:=DO_NOTHING;
-		variable last_etat_vsync : STD_LOGIC:=DO_NOTHING;
-		variable MA:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		variable etat_monitor_vsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
+		--idem ADRESSE_MA_mem variable MA:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable RA:STD_LOGIC_VECTOR(4 downto 0):=(others=>'0'); -- buggy boy has value RRmax=5
-		variable ADRESSE_maBase_mem:integer range 0 to 16*1024-1;
-		variable ADRESSE_hCC_mem:integer range 0 to 16*1024-1;
+		variable ADRESSE_maBase_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		variable ADRESSE_MA_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		--variable ADRESSE_hCC_mem:integer range 0 to 16*1024-1;
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 
@@ -413,22 +423,28 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable palette_color:integer range 0 to 16-1;
 		
 		--variable in_800x600:boolean:=false;
-		variable last_CENTER:boolean:=false; -- not in left BORDER, in right BORDER if disp=0, in CENTER if disp=1
+		--variable last_CENTER:boolean:=false; -- not in left BORDER, in right BORDER if disp=0, in CENTER if disp=1
 		
 		variable RVtotAdjust_mem:std_logic_vector(7 downto 0):=(others=>'0');
 		variable RVtotAdjust_do:boolean:=false;
 		
 		variable hSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
+		-- 01 : do nothing 2345 : do VSYNC, 6 : end of VSYNC : 7 : nothing.
+		--variable monitor_vsync_counter:integer range 0 to 2+4+1;
+		
+		
+		
 	begin
 		if reset='1' then
 			hsync<=DO_NOTHING;
 			vsync<=DO_NOTHING;
 			crtc_VSYNC<=DO_NOTHING;
 			etat_hsync:=DO_NOTHING;
+			etat_monitor_hsync:=(others=>DO_NOTHING);
 			etat_vsync:=DO_NOTHING;
-			last_etat_hsync:=DO_NOTHING;
-			last_etat_vsync:=DO_NOTHING;
+			--last_etat_vsync:=DO_NOTHING;
+			etat_monitor_vsync:=(others=>DO_NOTHING);
 	--it's Z80 time !
 		elsif rising_edge(nCLK4_1) then
 		
@@ -445,17 +461,22 @@ palette_W_tictac<='0';
 			when 0=>
 
 				--setEvents() HSync strange behaviour : part 1
-				
+				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
+
 				if horizontal_counter_hCC=RHsyncpos then
 					etat_hsync:=DO_HSYNC;
 					hSyncCount:= x"0";
+					etat_monitor_hsync(0):=DO_HSYNC;
 hsync<=DO_HSYNC; -- following javacpc,grimware and arnold
 				-- if (inHSync) {
 				elsif etat_hsync=DO_HSYNC then
 					hSyncCount:=hSyncCount+1;
 					if	hSyncCount=RHwidth then
 						etat_hsync:=DO_NOTHING;
+						etat_monitor_hsync:="0000";
 hsync<=DO_NOTHING;
+					elsif hSyncCount=2+4 then
+						etat_monitor_hsync:="0000";
 					end if;
 				end if;
 				
@@ -465,6 +486,8 @@ hsync<=DO_NOTHING;
 				--PPI read CRTC.isVSYnc bool
 				--if (inVSync && (vSyncCount = (vSyncCount + 1) & 0x0f) == vSyncWidth) {
 				if horizontal_counter_hCC = 0 then
+					etat_monitor_vsync:=etat_monitor_vsync(2 downto 0) & etat_monitor_vsync(0);
+
 					-- checkVSync() : if (vCC == reg[7] && !inVSync) {
 					if RA=0 and vertical_counter_vCC=RVsyncpos then
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
@@ -472,14 +495,19 @@ hsync<=DO_NOTHING;
 						-- CRTC datasheet : if 0000 is programmed for VSync, then 16 raster period is generated.
 						vSyncCount:= x"1"; -- pulse ?
 						etat_vsync:=DO_VSYNC;
+						etat_monitor_vsync(0):=DO_VSYNC;
 crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
 vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then
 						if vSyncCount=RVwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
+							etat_monitor_vsync:="0000";
 	crtc_VSYNC<=DO_NOTHING;
 	vsync<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 						else
+							if vSyncCount=2+4 then
+								etat_monitor_vsync:="0000";
+							end if;
 							vSyncCount:=vSyncCount+1;
 						end if;
 					end if;
@@ -505,12 +533,12 @@ vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interru
 					-- newFrame() :  ma = maBase = maScreen;
 					
 					-- je suis relatif ÃƒÂ  RHdisp, alors qu'ÃƒÂ  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
-					ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
+					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
 					
 					-- ma = (maBase + hCC) & 0x3fff;
-					MA:=conv_std_logic_vector(ADRESSE_maBase_mem+ADRESSE_hCC_mem,14);
+					--MA:=conv_std_logic_vector(ADRESSE_maBase_mem+ADRESSE_hCC_mem,14);
 					--RA:=ligne_carac_v_RA;
-					crtc_A_mem(14 downto 0):=MA(13 downto 12) & RA(2 downto 0) & MA(9 downto 0);
+					crtc_A_mem(14 downto 0):=ADRESSE_MA_mem(13 downto 12) & RA(2 downto 0) & ADRESSE_MA_mem(9 downto 0);
 					--http://cpcrulez.fr/coding_amslive02-balayage_video.htm dit :
 					--MA(13 downto 12) & RA(2 downto 0) & MA(9 downto 0) & CCLK
 				else
@@ -520,22 +548,57 @@ vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interru
 				-- it's not really 16MHz, but we don't care
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
 
+--if etat_vsync=DO_VSYNC and last_etat_vsync=DO_NOTHING then
+--	monitor_vsync_counter:=0;
+--elsif monitor_vsync_counter<2 and etat_vsync=DO_NOTHING then
+--	-- bye bye
+--elsif monitor_vsync_counter<2+4 and etat_vsync=DO_NOTHING then
+--	-- cut
+--	monitor_vsync_counter:=2+4; -- failing_edge
+--elsif monitor_vsync_counter<2+4 then
+--	monitor_vsync_counter:=monitor_vsync_counter+1;
+--else 
+--	-- sleeping
+--	monitor_vsync_counter:=2+4+1;  -- sleeping
+--end if;
+
 -- VRAM_HDsp VRAM_VDsp
 -- it's just the begin, do relax...
-if etat_vsync=DO_VSYNC and last_etat_vsync=DO_NOTHING then
+if etat_monitor_vsync(2)=DO_VSYNC and etat_monitor_vsync(3)=DO_NOTHING then
+--vsync (gerald confirmed this to me):
+--1. vsync to monitor is 2 HSYNC after the start of vsync from crtc. (2 scanlines delay)
+--	=> interrupt wait et wait_wait.
+--2. vsync to monitor is max 4 lines
+--3. vsync to monitor is cut if crtc vsync length is less than 6.
+--	=> vSyncCount = 25; 24|0 donc 4*6
+--
+--	So VSYNC (@raster-line) :
+--	* CRTC 1000000 1100000 1110000 1111000 1111100 1111110 1111111
+--	* TV   0000000 0000000 0010000 0011000 0011100 0011110 0011110
+
+
 	vram_vertical_offset_counter:=0;
 	vram_vertical_counter:=0;
 end if;
-if etat_hsync=DO_HSYNC and last_etat_hsync=DO_NOTHING then
+if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	if vram_vertical_offset_counter<=VRAM_Voffset then
 		vram_vertical_offset_counter:=vram_vertical_offset_counter+1;
 	elsif vram_vertical_counter<VRAM_VDsp then
 		vram_vertical_counter:=vram_vertical_counter+1;
 	end if;
+	
+--hsync:
+--1. hsync to monitor starts 2 us after the hsync from crtc.
+--2. hsync to monitor is max 4us
+--3. if hsync programmed into crtc is less than 6, hsync to monitor is shorter. (e.g. if you write 4 into hsync length in crtc, hsync to monitor is 2us long).
+--	So HSYNC (@1MHz)
+--	* CRTC 1000000 1100000 1110000 1111000 1111100 1111110 1111111
+--	* TV   0000000 0000000 0010000 0011000 0011100 0011110 0011110
+	
 	vram_horizontal_offset_counter:=0;
 	vram_horizontal_counter:=0;
 	--in_800x600:=false;
-	last_CENTER:=false;
+	--last_CENTER:=false;
 end if;
 
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
@@ -549,14 +612,13 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 			end if;
 			
 			
-			if dispH='0' and not(last_CENTER) then
-				-- in BORDER LEFT
-			elsif dispH='1' and disp='0' then
+			if dispH='1' and disp='0' then
 				-- full VERTICAL BORDER
-				last_CENTER:=true;
+				--last_CENTER:=true;
 				-- filling palette (PRAM)
 				if last_dispH='0' then
 					palette_horizontal_counter:=0;
+					last_dispH:='1';
 				else
 					palette_horizontal_counter:=palette_horizontal_counter+1;
 				end if;
@@ -597,15 +659,17 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 				end if;
 			elsif dispH='1' and disp='1' then
 				-- DISPLAY
-				last_CENTER:=true;
+				--last_CENTER:=true;
 				-- filling palette (PRAM)
 				if last_dispH='0' then
 					palette_horizontal_counter:=0;
+					last_dispH:='1';
 				else
 					palette_horizontal_counter:=palette_horizontal_counter+1;
 				end if;
 				if palette_horizontal_counter<1 then
 					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					-- compute LEFT BORDER
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
 					palette_D_tictac<=palette_D_tictac_mem;
 					palette_W_tictac<='1';
@@ -630,6 +694,7 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 				elsif palette_horizontal_counter<2+16+1 then
 					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
+					-- compute RIGHT BORDER
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
 					palette_D_tictac<=palette_D_tictac_mem;
 					palette_W_tictac<='1';
@@ -639,10 +704,6 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 					palette_D_tictac<=(others=>'0');
 					palette_W_tictac<='0';
 				end if;
-				
-			elsif dispH='0' and last_CENTER then
-				-- in BORDER RIGHT
-				last_CENTER:=false;
 			end if;
 			
 			bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
@@ -653,9 +714,10 @@ else
 	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
 end if;
 
-last_dispH:=dispH;
-last_etat_vsync:=etat_vsync;
-last_etat_hsync:=etat_hsync;
+if dispH='0' then
+	-- allow last_dispH to go back to '0'.
+	last_dispH:='0';
+end if;
 
 				--cycle()
 
@@ -690,7 +752,8 @@ last_etat_hsync:=etat_hsync;
 							
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 							--ma = maBase = maScreen;
-							ADRESSE_maBase_mem:=conv_integer(maScreen(13 downto 0)) mod (16*1024);
+							ADRESSE_maBase_mem:=maScreen(13 downto 0);
+							ADRESSE_MA_mem:=ADRESSE_maBase_mem;
 							vertical_counter_vCC:=(others=>'0');
 
 							-- RVtot vs RVtotAdjust ? RVtotAdjust ne serait-il pas dynamique par hazard ? NON selon JavaCPC c'est meme le contraire
@@ -705,8 +768,10 @@ last_etat_hsync:=etat_hsync;
 						elsif RVtotAdjust_do then
 							RVtotAdjust_mem:=RVtotAdjust_mem-1;
 						end if;
-
-						ADRESSE_maBase_mem:=(ADRESSE_maBase_mem+conv_integer(RHdisp)) mod (16*1024);
+						-- Linear Address Generator
+						-- Nhd+0
+						ADRESSE_maBase_mem:=ADRESSE_maBase_mem+RHdisp;
+						ADRESSE_MA_mem:=ADRESSE_maBase_mem;
 						-- vCC = (vCC + 1) & 0x7f;
 						vertical_counter_vCC:=vertical_counter_vCC+1;
 
@@ -716,6 +781,8 @@ last_etat_hsync:=etat_hsync;
 						if RVtotAdjust_do then
 							RVtotAdjust_mem:=RVtotAdjust_mem-1;
 						end if;
+						
+						ADRESSE_MA_mem:=ADRESSE_maBase_mem;
 					end if;
 					
 				else
@@ -723,6 +790,8 @@ last_etat_hsync:=etat_hsync;
 					--protected int hCCMask = 0x7f;
 					--hCC = (hCC + 1) & hCCMask;
 					horizontal_counter_hCC:=horizontal_counter_hCC+1;
+					
+					ADRESSE_MA_mem:=ADRESSE_MA_mem+1;
 				end if;
 				if vertical_counter_vCC = 0 then
 					LineCounter<='0';

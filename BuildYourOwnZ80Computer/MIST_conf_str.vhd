@@ -24,7 +24,7 @@ end MIST_conf_str;
 
 architecture Behavioral of MIST_conf_str is
   --constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,1X,0X;O5,Brand name,Schneider,Amstrad;O6,Drive,A,B;O7,Output,VGA,TV";
-  constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,1X,0X;O5,Brand name,Schneider,Amstrad;O6,Drive,A,B";
+  constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,X1,X0;O5,Brand name,Schneider,Amstrad;O6,Drive,A,B";
 
  function to_slv(s: string) return std_logic_vector is 
     constant ss: string(1 to s'length) := s; 

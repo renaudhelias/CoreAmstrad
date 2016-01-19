@@ -43,8 +43,8 @@ entity FPGAmstrad_bootloader_sd is
    port ( CLK8MHz     : in    std_logic; 
          dump        : in    std_logic_vector (1 downto 0); -- plug to buttons(1:0)...
           --FDC_input   : in    std_logic_vector (6 downto 0); 
-          file_change : in    std_logic; 
-          FILE_SELECT : in    std_logic_vector (7 downto 0); 
+          --file_change : in    std_logic; 
+          --FILE_SELECT : in    std_logic_vector (7 downto 0); 
           key_reset   : in    std_logic; 
           --leds_select : in    std_logic_vector (4 downto 0):="00000"; 
           MISO        : in    std_logic; 
@@ -147,8 +147,8 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
              dump_button    : in    std_logic; 
              --stop           : in    std_logic; 
              key_reset      : in    std_logic; 
-             changeDSK      : in    std_logic; 
-             file_select    : in    std_logic_vector (7 downto 0); 
+             --changeDSK      : in    std_logic; 
+             --file_select    : in    std_logic_vector (7 downto 0); 
              spi_Din        : in    std_logic_vector (7 downto 0); 
              --leds_select    : in    std_logic_vector (2 downto 0); 
              --FDC_input      : in    std_logic_vector (6 downto 0); 
@@ -254,11 +254,11 @@ begin
    
 	dump_button <= dump(0) and dump(1); -- do press the 2 buttons at the same time to create a RAM dump.
    XLXI_7 : SDRAM_FAT32_LOADER
-      port map (changeDSK=>file_change,
+      port map (--changeDSK=>'1',
                 CLK=>CLK8MHz,
                 dump_button=>dump_button,
                 --FDC_input(6 downto 0)=>FDC_input(6 downto 0),
-                file_select(7 downto 0)=>FILE_SELECT(7 downto 0),
+                --file_select(7 downto 0)=>"00000000",
                 key_reset=>key_reset,
                 --leds_select(2 downto 0)=>leds_select(2 downto 0),
                 ram_Din(7 downto 0)=>ram_Din(7 downto 0),

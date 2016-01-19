@@ -38,7 +38,7 @@ entity SDRAM_FAT32_LOADER is
 
 	);
     Port ( CLK:in STD_LOGIC;
-           file_select:in std_logic_vector(7 downto 0);
+           --file_select:in std_logic_vector(7 downto 0);
            ram_A : out  STD_LOGIC_VECTOR (22 downto 0):=(others=>'0');
            ram_Din : in  STD_LOGIC_VECTOR (7 downto 0):=(others=>'Z'); -- for sim
 			  ram_Dout : out  STD_LOGIC_VECTOR (7 downto 0):=(others=>'Z'); -- for sim
@@ -58,7 +58,7 @@ entity SDRAM_FAT32_LOADER is
 			  load_init_done:out std_logic;
 			  is_dskReady:out std_logic_vector(1 downto 0):="00";
 			  key_reset:in std_logic;
-			  changeDSK : in std_logic;
+			  --changeDSK : in std_logic;
 			  
 			  -- MiST OSD dir_entry (file selected)
 			  dir_entry_clk:out std_logic;
@@ -85,8 +85,8 @@ entity SDRAM_FAT32_LOADER is
 			  megashark_select : in std_logic; -- from OSD
 			  megashark_face : in std_logic -- from simpleDSK
 			  );
-			  	attribute keep : string;
-				attribute keep of file_select : signal is "TRUE";
+			  	--attribute keep : string;
+				--attribute keep of file_select : signal is "TRUE";
 
 			  
 end SDRAM_FAT32_LOADER;
@@ -1074,7 +1074,7 @@ end function;
 		variable folder_sector_pointer:std_logic_vector(40 downto 0);
 		variable file_sector_pointer:std_logic_vector(40 downto 0);
 		
-		variable dsk_number:std_logic_vector(7 downto 0):=(others=>'0');
+		--variable dsk_number:std_logic_vector(7 downto 0):=(others=>'0');
 		
 		variable file_address:std_logic_vector(40 downto 0);
 		variable folder_DirStruct_number:integer;
@@ -1100,7 +1100,7 @@ end function;
 	-- MiST OSD menu select file
 	variable old_downloading:std_logic:='1';
 	variable dsk_mist:boolean:=false;
-	variable file_name:name_type:=x"4946455F44454D4F44534B"; --IFE_DEMODSK; -- 11*8-1..0
+	--variable file_name:name_type:=x"4946455F44454D4F44534B"; --IFE_DEMODSK; -- 11*8-1..0
 	variable dir_entry_counter:integer range 0 to 32-1:=0;
 	variable file_size_mist:std_logic_vector(31 downto 0):=(others=>'0');
 	variable file_cluster_pointer_mist:std_logic_vector(31 downto 0):=(others=>'0');
@@ -1253,11 +1253,11 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							compare12(x"000000000000000000000000",10+folder_sector_pointer+(folder_DirStruct_number-1)*32,false);
 							step_var:=63;
 						else
-							if file_select=x"FF" then
-								step_var:=55;
-							else
-								step_var:=10;
-							end if;
+							--if file_select=x"FF" then
+							--	step_var:=55;
+							--else
+							step_var:=10;
+							--end if;
 						end if;
 					when 63=>
 						if compare_result then
@@ -1316,14 +1316,14 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 								step_var:=8;
 							else
 								-- same file name/extension founded
-								if dsk_number>=file_select then
+								--if dsk_number>=file_select then
 									
-									get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
-									step_var:=14;
-								else
-									dsk_number:=dsk_number+1;
-									step_var:=8;
-								end if;
+								get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
+								step_var:=14;
+								--else
+								--	dsk_number:=dsk_number+1;
+								--	step_var:=8;
+								--end if;
 							end if;
 						else
 							doDSK:=false;
@@ -1444,7 +1444,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 										end if;
 										files_loaded(3):='0'; -- ce n'est plus une lecture de dump
 										files_loaded(2):='0'; -- reload also ROM
-										dsk_number:=(others=>'0');
+										--dsk_number:=(others=>'0');
 										changeDSK_mem:='0';
 										dump_button_mem:='1';
 										dump_counter_before_reset:=0;
@@ -1459,9 +1459,9 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 								dump_counter_before_reset:=dump_counter_before_reset+1;
 							end if;
 						elsif key_reset='1' then
-							if changeDSK='1' then -- always true
-								changeDSK_mem:='1';
-							end if;
+							--if changeDSK='1' then -- always true
+							changeDSK_mem:='1';
+							--end if;
 							load_done:='0';
 							dump_counter_before_reset:=0;
 							dump_button_mem:='1';
@@ -1497,17 +1497,17 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						--======================================
 						if dir_entry_ack='1' then
 							case dir_entry_counter is
-								when 0=> file_name(87 downto 80):=dir_entry_d(7 downto 0);
-								when 1=> file_name(79 downto 72):=dir_entry_d(7 downto 0);
-								when 2=> file_name(71 downto 64):=dir_entry_d(7 downto 0);
-								when 3=> file_name(63 downto 56):=dir_entry_d(7 downto 0);
-								when 4=> file_name(55 downto 48):=dir_entry_d(7 downto 0);
-								when 5=> file_name(47 downto 40):=dir_entry_d(7 downto 0);
-								when 6=> file_name(39 downto 32):=dir_entry_d(7 downto 0);
-								when 7=> file_name(31 downto 24):=dir_entry_d(7 downto 0);
-								when 8=> file_name(23 downto 16):=dir_entry_d(7 downto 0);
-								when 9=> file_name(15 downto 8):=dir_entry_d(7 downto 0);
-								when 10=> file_name(7 downto 0):=dir_entry_d(7 downto 0);
+--								when 0=> file_name(87 downto 80):=dir_entry_d(7 downto 0);
+--								when 1=> file_name(79 downto 72):=dir_entry_d(7 downto 0);
+--								when 2=> file_name(71 downto 64):=dir_entry_d(7 downto 0);
+--								when 3=> file_name(63 downto 56):=dir_entry_d(7 downto 0);
+--								when 4=> file_name(55 downto 48):=dir_entry_d(7 downto 0);
+--								when 5=> file_name(47 downto 40):=dir_entry_d(7 downto 0);
+--								when 6=> file_name(39 downto 32):=dir_entry_d(7 downto 0);
+--								when 7=> file_name(31 downto 24):=dir_entry_d(7 downto 0);
+--								when 8=> file_name(23 downto 16):=dir_entry_d(7 downto 0);
+--								when 9=> file_name(15 downto 8):=dir_entry_d(7 downto 0);
+--								when 10=> file_name(7 downto 0):=dir_entry_d(7 downto 0);
 							
 								when 20=> --get_var2 file_cluster_pointer_H
 									file_cluster_pointer_mist(23 downto 16):=dir_entry_d(7 downto 0);
@@ -1694,28 +1694,28 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						
 						
 						
-					when 55=>
-						--========================================
-						--== LOOKING AFTER A EXISTING DUMP FILE ==
-						--========================================
-						switch_transmit_dump<=SWITCH_TRANSMIT;
-						if files_loaded(3)='1' then
-							switch_transmit_dump<=SWITCH_NONE;
-							step_var:=8; -- next DIRStruct
-						else
-							file_address:=PREFIX & x"00000000";
-							compare12(file_dump_name & ATTR_ARCHIVE,folder_sector_pointer+(folder_DirStruct_number-1)*32,true);
-							step_var:=56;
-						end if;
-					when 56=> -- search DUMP
-						if compare_result then
-							-- same name/extension file
-							files_loaded(3):='1';
-							get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
-							step_var:=14;
-						else
-							step_var:=8; -- next DIRStruct
-						end if;
+					when 55=>NULL;
+--						--========================================
+--						--== LOOKING AFTER A EXISTING DUMP FILE ==
+--						--========================================
+--						switch_transmit_dump<=SWITCH_TRANSMIT;
+--						if files_loaded(3)='1' then
+--							switch_transmit_dump<=SWITCH_NONE;
+--							step_var:=8; -- next DIRStruct
+--						else
+--							file_address:=PREFIX & x"00000000";
+--							compare12(file_dump_name & ATTR_ARCHIVE,folder_sector_pointer+(folder_DirStruct_number-1)*32,true);
+--							step_var:=56;
+--						end if;
+					when 56=>NULL; -- search DUMP
+--						if compare_result then
+--							-- same name/extension file
+--							files_loaded(3):='1';
+--							get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
+--							step_var:=14;
+--						else
+--							step_var:=8; -- next DIRStruct
+--						end if;
 				end case;
 				
 				old_downloading:=dir_entry_downloading;

@@ -458,8 +458,6 @@ entity FPGAmstrad_amstrad_motherboard is
 			 is_dskReady : in std_logic_vector(1 downto 0);
           audio_AB      : out   std_logic; 
 			 audio_BC      : out   std_logic; 
-          change     : out   std_logic; 
-          DSK_select : out   std_logic_vector (7 downto 0); 
           --FDD_output : out   std_logic_vector (6 downto 0); 
           init_Dout  : out   std_logic_vector (7 downto 0); 
           key_reset  : out   std_logic; 
@@ -527,7 +525,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 	signal MIX_DOUT23 : std_logic_vector (7 downto 0):=(others=>'1');
 	
 	
-   signal XLXN_303      : std_logic;
+   --signal XLXN_303      : std_logic;
    signal XLXN_462      : std_logic_vector (7 downto 0);
    signal XLXN_464      : std_logic;
    signal XLXN_470      : std_logic;
@@ -561,7 +559,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_884      : std_logic;
    signal XLXN_904      : std_logic;
    signal XLXN_907      : std_logic;
-   signal XLXN_916      : std_logic;
+   --signal XLXN_916      : std_logic;
   -- signal XLXN_918      : std_logic;
    signal XLXN_940      : std_logic;
    signal xram_A        : std_logic_vector (22 downto 0);
@@ -605,7 +603,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    end component;
    
    component simple_GateArrayInterrupt
-		generic (VRAM_Voffset:integer:=38*8-30*8-4*8+4  +0);
       port ( IO_REQ_W      : in    std_logic; 
              IO_REQ_R      : in    std_logic; 
              IO_ACK        : in    std_logic; 
@@ -725,15 +722,11 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              A0             : in    std_logic; 
              IO_RD          : in    std_logic; 
              IO_WR          : in    std_logic; 
-             cafe           : in    std_logic; 
-             --cafePifHercule : in    std_logic;
 				 is_dskReady    : in    std_logic_vector (1 downto 0);
              A10_A8_A7      : in    std_logic_vector (2 downto 0); 
              D_command      : in    std_logic_vector (7 downto 0); 
             -- FDD_input      : in    std_logic_vector (5 downto 0); 
              D_result       : inout std_logic_vector (7 downto 0); 
-             change         : out   std_logic; 
-             DSK_select     : out   std_logic_vector (7 downto 0); 
             -- FDD_output     : out   std_logic_vector (6 downto 0)
 				  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
@@ -852,12 +845,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              vga_D    : out   std_logic_vector (7 downto 0));
    end component;
    
-   component detect_CAFE
-      port ( A              : in    std_logic_vector (15 downto 0); 
-             cafe           : out   std_logic
-             --cafePifHercule : out   std_logic
-				 );
-   end component;
    
    attribute KEEP_HIERARCHY of GA : label is "TRUE";
    attribute KEEP_HIERARCHY of GA_interrupt : label is "TRUE";
@@ -910,7 +897,6 @@ begin
                 upperROMen=>LED2);
    
    GA_interrupt : simple_GateArrayInterrupt
-		generic map (VRAM_Voffset=>38*8-30*8-4*8+4  +0      +15) -- MiST +15 ?
       port map (A15_A14_A9_A8(3)=>A(15),
                 A15_A14_A9_A8(2)=>A(14),
                 A15_A14_A9_A8(1)=>A(9),
@@ -1109,7 +1095,7 @@ XLXN_904<=not(IO_WR);
    
 --   XLXI_306 : VCC
 --      port map (P=>XLXN_303);
-XLXN_303<='1';
+--XLXN_303<='1';
    
 --   XLXI_307 : INV
 --      port map (I=>RESET_n,
@@ -1126,8 +1112,6 @@ XLXN_814<=not(XLXN_835);
                 A10_A8_A7(2)=>A(10),
                 A10_A8_A7(1)=>A(8),
                 A10_A8_A7(0)=>A(7),
-                cafe=>XLXN_916,
-                --cafePifHercule=>XLXN_918,
                 D_command(7 downto 0)=>D(7 downto 0),
                 --FDD_input(5 downto 0)=>FDD_input(5 downto 0),
                 IO_RD=>IO_RD,
@@ -1135,8 +1119,6 @@ XLXN_814<=not(XLXN_835);
 					 is_dskReady=>is_dskReady,
                 nCLK4_1=>nCLK4MHz,
                 reset=>XLXN_907,
-                change=>change,
-                DSK_select(7 downto 0)=>DSK_select(7 downto 0),
                 --FDD_output(6 downto 0)=>FDD_output(6 downto 0),
                 D_result(7 downto 0)=>MIX_DOUT3(7 downto 0), -- inout
 			  megashark_CHRNresult=>megashark_CHRNresult,
@@ -1283,12 +1265,6 @@ XLXN_830<=XLXN_807 and XLXN_806; -- MEM_WR and M1
 --                I1=>XLXN_872,
 --                O=>XLXN_884);
 XLXN_884<=ram_W_DUMMY and XLXN_872;
-   
-   XLXI_592 : detect_CAFE
-      port map (A(15 downto 0)=>A(15 downto 0),
-                cafe=>XLXN_916
-                --cafePifHercule=>XLXN_918
-					 );
    
 end BEHAVIORAL;
 

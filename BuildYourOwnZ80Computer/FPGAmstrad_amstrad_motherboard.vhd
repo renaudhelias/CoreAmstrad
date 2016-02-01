@@ -443,8 +443,8 @@ entity FPGAmstrad_amstrad_motherboard is
           init_Din   : in    std_logic_vector (7 downto 0); 
           init_R_n   : in    std_logic; 
           init_W_n   : in    std_logic;
-          JOYSTICK1  : in    std_logic_vector (5 downto 0); 
-          JOYSTICK2  : in    std_logic_vector (5 downto 0); 
+          JOYSTICK1  : in    std_logic_vector (7 downto 0); 
+          JOYSTICK2  : in    std_logic_vector (7 downto 0); 
           nCLK4MHz   : in    std_logic; 
           PS2_CLK    : in    std_logic; 
           PS2_DATA   : in    std_logic; 

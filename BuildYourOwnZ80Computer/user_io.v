@@ -44,8 +44,8 @@ module user_io #(parameter STRLEN=0) (
 	output     		reg SPI_MISO,
 	input      		SPI_MOSI,
 	
-	output reg [5:0] 	joystick_0,
-	output reg [5:0] 	joystick_1,
+	output reg [7:0] 	joystick_0,
+	output reg [7:0] 	joystick_1,
 	//output reg [15:0] joystick_analog_0,
 	//output reg [15:0] joystick_analog_1,
 	output [1:0] 		buttons,
@@ -78,14 +78,25 @@ module user_io #(parameter STRLEN=0) (
 	//input				serial_strobe
 );
 
+// serial com port MOCK
+reg [7:0]			serial_data;
+reg					serial_strobe;
+// analog joystick MOCK
+reg [15:0]			joystick_analog_0;
+reg [15:0]			joystick_analog_1;
+// mouse MOCK
+//reg 					ps2_mouse_clk;
+reg 					ps2_mouse_data;
+
+
 reg [6:0]         sbuf;
 reg [7:0]         cmd;
 reg [2:0] 	      bit_cnt;    // counts bits 0-7 0-7 ...
 reg [7:0]         byte_cnt;   // counts bytes
-reg [5:0]         joystick0;
-reg [5:0]         joystick1;
-reg [3:0] 	      but_sw;
-//reg [2:0]         stick_idx;
+reg [7:0]         joystick0;
+reg [7:0]         joystick1;
+reg [4:0] 	      but_sw;
+reg [2:0]         stick_idx;
 
 assign buttons = but_sw[1:0];
 //assign switches = but_sw[3:2];
@@ -112,16 +123,15 @@ always@(negedge spi_sck or posedge SPI_SS_IO) begin
 		  SPI_MISO <= core_type[~bit_cnt];
 
 		end else begin
-//			// reading serial fifo
-//		   if(cmd == 8'h1b) begin
-//				// send alternating flag byte and data
-//				if(byte_cnt[0]) 	SPI_MISO <= serial_out_status[~bit_cnt];
-//				else					SPI_MISO <= serial_out_byte[~bit_cnt];
-//			end
+			// reading serial fifo
+		   if(cmd == 8'h1b) begin
+				// send alternating flag byte and data
+				if(byte_cnt[0]) 	SPI_MISO <= serial_out_status[~bit_cnt];
+				else					SPI_MISO <= serial_out_byte[~bit_cnt];
+			end
 			
 			// reading config string
-		   //else 
-			if(cmd == 8'h14) begin
+		   else if(cmd == 8'h14) begin
 				// returning a byte from string
 				if(byte_cnt < STRLEN + 1)
 					SPI_MISO <= conf_str[{STRLEN - byte_cnt,~bit_cnt}];
@@ -225,99 +235,99 @@ reg [PS2_FIFO_BITS-1:0] ps2_mouse_wptr;
 reg [PS2_FIFO_BITS-1:0] ps2_mouse_rptr;
 
 // ps2 transmitter state machine
-//reg [3:0] ps2_mouse_tx_state;
-//reg [7:0] ps2_mouse_tx_byte;
-//reg ps2_mouse_parity;
-//
+reg [3:0] ps2_mouse_tx_state;
+reg [7:0] ps2_mouse_tx_byte;
+reg ps2_mouse_parity;
+
 //assign ps2_mouse_clk = ps2_clk || (ps2_mouse_tx_state == 0);
 
 // ps2 transmitter
 // Takes a byte from the FIFO and sends it in a ps2 compliant serial format.
-//reg ps2_mouse_r_inc;
-//always@(posedge ps2_clk) begin
-//	ps2_mouse_r_inc <= 1'b0;
-//	
-//	if(ps2_mouse_r_inc)
-//		ps2_mouse_rptr <= ps2_mouse_rptr + 1;
-//
-//	// transmitter is idle?
-//	if(ps2_mouse_tx_state == 0) begin
-//		// data in fifo present?
-//		if(ps2_mouse_wptr != ps2_mouse_rptr) begin
-//			// load tx register from fifo
-//			ps2_mouse_tx_byte <= ps2_mouse_fifo[ps2_mouse_rptr];
-//			ps2_mouse_r_inc <= 1'b1;
-//			
-//			// reset parity
-//			ps2_mouse_parity <= 1'b1;
-//			
-//			// start transmitter
-//			ps2_mouse_tx_state <= 4'd1;
-//
-//			// put start bit on data line
-//			ps2_mouse_data <= 1'b0;			// start bit is 0
-//		end
-//	end else begin
-//	
-//		// transmission of 8 data bits
-//		if((ps2_mouse_tx_state >= 1)&&(ps2_mouse_tx_state < 9)) begin
-//			ps2_mouse_data <= ps2_mouse_tx_byte[0];			  // data bits
-//			ps2_mouse_tx_byte[6:0] <= ps2_mouse_tx_byte[7:1]; // shift down
-//			if(ps2_mouse_tx_byte[0]) 
-//				ps2_mouse_parity <= !ps2_mouse_parity;
-//		end
-//
-//		// transmission of parity
-//		if(ps2_mouse_tx_state == 9)
-//			ps2_mouse_data <= ps2_mouse_parity;
-//			
-//		// transmission of stop bit
-//		if(ps2_mouse_tx_state == 10)
-//			ps2_mouse_data <= 1'b1;			// stop bit is 1
-//
-//		// advance state machine
-//		if(ps2_mouse_tx_state < 11)
-//			ps2_mouse_tx_state <= ps2_mouse_tx_state + 4'd1;
-//		else	
-//			ps2_mouse_tx_state <= 4'd0;
-//	
-//	end
-//end
+reg ps2_mouse_r_inc;
+always@(posedge ps2_clk) begin
+	ps2_mouse_r_inc <= 1'b0;
+	
+	if(ps2_mouse_r_inc)
+		ps2_mouse_rptr <= ps2_mouse_rptr + 1;
+
+	// transmitter is idle?
+	if(ps2_mouse_tx_state == 0) begin
+		// data in fifo present?
+		if(ps2_mouse_wptr != ps2_mouse_rptr) begin
+			// load tx register from fifo
+			ps2_mouse_tx_byte <= ps2_mouse_fifo[ps2_mouse_rptr];
+			ps2_mouse_r_inc <= 1'b1;
+			
+			// reset parity
+			ps2_mouse_parity <= 1'b1;
+			
+			// start transmitter
+			ps2_mouse_tx_state <= 4'd1;
+
+			// put start bit on data line
+			ps2_mouse_data <= 1'b0;			// start bit is 0
+		end
+	end else begin
+	
+		// transmission of 8 data bits
+		if((ps2_mouse_tx_state >= 1)&&(ps2_mouse_tx_state < 9)) begin
+			ps2_mouse_data <= ps2_mouse_tx_byte[0];			  // data bits
+			ps2_mouse_tx_byte[6:0] <= ps2_mouse_tx_byte[7:1]; // shift down
+			if(ps2_mouse_tx_byte[0]) 
+				ps2_mouse_parity <= !ps2_mouse_parity;
+		end
+
+		// transmission of parity
+		if(ps2_mouse_tx_state == 9)
+			ps2_mouse_data <= ps2_mouse_parity;
+			
+		// transmission of stop bit
+		if(ps2_mouse_tx_state == 10)
+			ps2_mouse_data <= 1'b1;			// stop bit is 1
+
+		// advance state machine
+		if(ps2_mouse_tx_state < 11)
+			ps2_mouse_tx_state <= ps2_mouse_tx_state + 4'd1;
+		else	
+			ps2_mouse_tx_state <= 4'd0;
+	
+	end
+end
 
 // fifo to receive serial data from core to be forwarded to io controller
-//
-//// 16 byte fifo to store serial bytes
-//localparam SERIAL_OUT_FIFO_BITS = 6;
-//reg [7:0] serial_out_fifo [(2**SERIAL_OUT_FIFO_BITS)-1:0];
-//reg [SERIAL_OUT_FIFO_BITS-1:0] serial_out_wptr;
-//reg [SERIAL_OUT_FIFO_BITS-1:0] serial_out_rptr;
-// 
-//wire serial_out_data_available = serial_out_wptr != serial_out_rptr;
-//wire [7:0] serial_out_byte = serial_out_fifo[serial_out_rptr] /* synthesis keep */;
-//wire [7:0] serial_out_status = { 7'b1000000, serial_out_data_available};
-//
-//// status[0] is reset signal from io controller and is thus used to flush
-//// the fifo
-//always @(posedge serial_strobe or posedge status[0]) begin
-//	if(status[0] == 1) begin
-//		serial_out_wptr <= 0;
-//	end else begin 
-//		serial_out_fifo[serial_out_wptr] <= serial_data;
-//		serial_out_wptr <= serial_out_wptr + 1;
-//	end
-//end 
-//
-//always@(negedge spi_sck or posedge status[0]) begin
-//	if(status[0] == 1) begin
-//		serial_out_rptr <= 0;
-//	end else begin
-//		if((byte_cnt != 0) && (cmd == 8'h1b)) begin
-//			// read last bit -> advance read pointer
-//			if((bit_cnt == 7) && !byte_cnt[0] && serial_out_data_available)
-//				serial_out_rptr <= serial_out_rptr + 1;
-//		end
-//	end
-//end
+
+// 16 byte fifo to store serial bytes
+localparam SERIAL_OUT_FIFO_BITS = 6;
+reg [7:0] serial_out_fifo [(2**SERIAL_OUT_FIFO_BITS)-1:0];
+reg [SERIAL_OUT_FIFO_BITS-1:0] serial_out_wptr;
+reg [SERIAL_OUT_FIFO_BITS-1:0] serial_out_rptr;
+ 
+wire serial_out_data_available = serial_out_wptr != serial_out_rptr;
+wire [7:0] serial_out_byte = serial_out_fifo[serial_out_rptr] /* synthesis keep */;
+wire [7:0] serial_out_status = { 7'b1000000, serial_out_data_available};
+
+// status[0] is reset signal from io controller and is thus used to flush
+// the fifo
+always @(posedge serial_strobe or posedge status[0]) begin
+	if(status[0] == 1) begin
+		serial_out_wptr <= 0;
+	end else begin 
+		serial_out_fifo[serial_out_wptr] <= serial_data;
+		serial_out_wptr <= serial_out_wptr + 1;
+	end
+end 
+
+always@(negedge spi_sck or posedge status[0]) begin
+	if(status[0] == 1) begin
+		serial_out_rptr <= 0;
+	end else begin
+		if((byte_cnt != 0) && (cmd == 8'h1b)) begin
+			// read last bit -> advance read pointer
+			if((bit_cnt == 7) && !byte_cnt[0] && serial_out_data_available)
+				serial_out_rptr <= serial_out_rptr + 1;
+		end
+	end
+end
 
 // SPI receiver
 always@(posedge spi_sck or posedge SPI_SS_IO) begin
@@ -353,19 +363,19 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 			
 				// buttons and switches
 				if(cmd == 8'h01)
-					but_sw <= { sbuf[2:0], SPI_MOSI }; 
+					but_sw <= { sbuf[3:0], SPI_MOSI }; 
 
 				if(cmd == 8'h02)
-					joystick_0 <= { sbuf[4:0], SPI_MOSI };
+					joystick_0 <= { sbuf, SPI_MOSI };
 				 
 				if(cmd == 8'h03)
-					joystick_1 <= { sbuf[4:0], SPI_MOSI };
+					joystick_1 <= { sbuf, SPI_MOSI };
 				 
-//				if(cmd == 8'h04) begin
-//					// store incoming ps2 mouse bytes 
-//					ps2_mouse_fifo[ps2_mouse_wptr] <= { sbuf, SPI_MOSI }; 
-//					ps2_mouse_wptr <= ps2_mouse_wptr + 1;
-//				end
+				if(cmd == 8'h04) begin
+					// store incoming ps2 mouse bytes 
+					ps2_mouse_fifo[ps2_mouse_wptr] <= { sbuf, SPI_MOSI }; 
+					ps2_mouse_wptr <= ps2_mouse_wptr + 1;
+				end
 
 				if(cmd == 8'h05) begin
 					// store incoming ps2 keyboard bytes 
@@ -396,25 +406,25 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 					sd_dout_strobe <= 1'b1;
 				end
 				
-//				// joystick analog
-//				if(cmd == 8'h1a) begin
-//					// first byte is joystick indes
-//					if(byte_cnt == 1)
-//						stick_idx <= { sbuf[1:0], SPI_MOSI };
-//					else if(byte_cnt == 2) begin
-//						// second byte is x axis
-//						if(stick_idx == 0)
-//							joystick_analog_0[15:8] <= { sbuf, SPI_MOSI };
-//						else if(stick_idx == 1)
-//							joystick_analog_1[15:8] <= { sbuf, SPI_MOSI };
-//					end else if(byte_cnt == 3) begin
-//						// third byte is y axis
-//						if(stick_idx == 0)
-//							joystick_analog_0[7:0] <= { sbuf, SPI_MOSI };
-//						else if(stick_idx == 1)
-//							joystick_analog_1[7:0] <= { sbuf, SPI_MOSI };
-//					end
-//				end
+				// joystick analog
+				if(cmd == 8'h1a) begin
+					// first byte is joystick indes
+					if(byte_cnt == 1)
+						stick_idx <= { sbuf[1:0], SPI_MOSI };
+					else if(byte_cnt == 2) begin
+						// second byte is x axis
+						if(stick_idx == 0)
+							joystick_analog_0[15:8] <= { sbuf, SPI_MOSI };
+						else if(stick_idx == 1)
+							joystick_analog_1[15:8] <= { sbuf, SPI_MOSI };
+					end else if(byte_cnt == 3) begin
+						// third byte is y axis
+						if(stick_idx == 0)
+							joystick_analog_0[7:0] <= { sbuf, SPI_MOSI };
+						else if(stick_idx == 1)
+							joystick_analog_1[7:0] <= { sbuf, SPI_MOSI };
+					end
+				end
 
 			end
 		end

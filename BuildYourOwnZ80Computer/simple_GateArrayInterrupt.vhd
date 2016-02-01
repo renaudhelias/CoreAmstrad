@@ -44,20 +44,21 @@ entity simple_GateArrayInterrupt is
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
 	-- 39*8=312   /40=7.8 /52=6 /32=9.75
-  VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
-  VRAM_VDsp:integer:=600/2;
-  VRAM_Hoffset:integer:=10 ; -- 63*16-46*16
+  VRAM_HDsp:integer:=768/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
+  VRAM_VDsp:integer:=560/2;
+  VRAM_Hoffset:integer:=11 ; -- 63*16-46*16
   
-  -- le raster palette arrive au moment où l'encre est en face du stylo.
-  -- si on a un décalage raster palette alors on lis au mauvais moment, donc au mauvais endroit
-  -- hors nous on lit via MA, et on écrit n'importe où via VRAM_Voffset
+  -- le raster palette arrive au moment oÃ¹ l'encre est en face du stylo.
+  -- si on a un dÃ©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
+  -- hors nous on lit via MA, et on Ã©crit n'importe oÃ¹ via VRAM_Voffset
   -- donc VRAM_Voffset n'a pas d'influence sur le raster palette
-  -- ça veut dire que l'adresse mémoire dessous la palette n'est pas bonne
+  -- Ã§a veut dire que l'adresse mÃ©moire dessous la palette n'est pas bonne
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
-  VRAM_Voffset:integer:=48  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
-  
+  --VRAM_Voffset:integer:=48-6-4  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
+  -- 3.LittleOne : on recentre la donnÃ©e :
+  VRAM_Voffset:integer:=48-6-4-6-4
 	);
     Port ( nCLK4_1 : in  STD_LOGIC;
            IO_REQ_W : in  STD_LOGIC;
@@ -379,7 +380,7 @@ end process ctrcConfig_process;
 simple_GateArray_process : process(reset,nCLK4_1) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
-	variable disp:std_logic:='0';
+	variable dispV:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
 	-- following Quazar legends, 300 times per second
 	-- Following a lost trace in Google about www.cepece.info/amstrad/docs/garray.html I have
@@ -418,9 +419,12 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable palette_A_tictac_mem:std_logic_vector(13 downto 0):=(others=>'0');
 		variable palette_D_tictac_mem:std_logic_vector(7 downto 0):=(others=>'0');
+		variable palette_W_tictac_mem:std_logic;
+		--variable palette_W_MASK_tictac_mem:std_logic;
 		variable last_dispH:std_logic:='0';
 		variable palette_horizontal_counter:integer range 0 to 256-1:=0; --640/16
 		variable palette_color:integer range 0 to 16-1;
+		variable in_640x480:boolean:=false;
 		
 		--variable in_800x600:boolean:=false;
 		--variable last_CENTER:boolean:=false; -- not in left BORDER, in right BORDER if disp=0, in CENTER if disp=1
@@ -489,7 +493,7 @@ hsync<=DO_NOTHING;
 					etat_monitor_vsync:=etat_monitor_vsync(2 downto 0) & etat_monitor_vsync(0);
 
 					-- checkVSync() : if (vCC == reg[7] && !inVSync) {
-					if RA=0 and vertical_counter_vCC=RVsyncpos then
+					if RA=0 and "0" & vertical_counter_vCC=RVsyncpos then
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
 						-- Batman city towers does like RA=0 filter here...
 						-- CRTC datasheet : if 0000 is programmed for VSync, then 16 raster period is generated.
@@ -525,14 +529,20 @@ vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interru
 					dispH:='0';
 				end if;
 				
-				if dispH='1' and "0" & vertical_counter_vCC<RVDisp then
-					disp:='1';
+				if zap_scan then
+					dispV:='0';
+				elsif "0" & vertical_counter_vCC<RVDisp then
+					dispV:='1';
+				else
+					dispV:='0';
+				end if;
+				if dispH='1' and dispV='1' then
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
 					-- Have to respect address cut ADRESSE_CONSTANT_mem:=conv_integer(maScreen(13 downto 0)) mod (16*1024);
 					
 					-- newFrame() :  ma = maBase = maScreen;
 					
-					-- je suis relatif ÃƒÂ  RHdisp, alors qu'ÃƒÂ  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
+					-- je suis relatif ÃƒÆ’Ã‚Â  RHdisp, alors qu'ÃƒÆ’Ã‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
 					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
 					
 					-- ma = (maBase + hCC) & 0x3fff;
@@ -542,7 +552,6 @@ vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interru
 					--http://cpcrulez.fr/coding_amslive02-balayage_video.htm dit :
 					--MA(13 downto 12) & RA(2 downto 0) & MA(9 downto 0) & CCLK
 				else
-					disp:='0';
 					crtc_A_mem:=(others=>'0');
 				end if;
 				-- it's not really 16MHz, but we don't care
@@ -583,6 +592,13 @@ end if;
 if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	if vram_vertical_offset_counter<=VRAM_Voffset then
 		vram_vertical_offset_counter:=vram_vertical_offset_counter+1;
+		if vram_vertical_offset_counter = VRAM_Voffset then
+			-- I'm just before Vertical DISPLAY
+			palette_A_tictac_mem:=(others=>'1');
+			--palette_horizontal_counter:=0;
+			palette_W_tictac_mem:='0';
+			--last_dispH:='0';
+		end if;
 	elsif vram_vertical_counter<VRAM_VDsp then
 		vram_vertical_counter:=vram_vertical_counter+1;
 	end if;
@@ -601,18 +617,18 @@ if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	--last_CENTER:=false;
 end if;
 
+
+
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
 if vram_horizontal_offset_counter>VRAM_Hoffset then
 	if vram_horizontal_counter<VRAM_HDsp then
 		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
-			--in_800x600:=true;
-			
-			if vram_horizontal_counter=0 and vram_vertical_counter= 0 then
-				palette_A_tictac_mem:=(others=>'0');
-			end if;
+
+--optim PRAM en haut dans VGA
+			in_640x480:=(vram_vertical_counter >= ((560-480)/2)/2 and vram_vertical_counter < 480/2+((560-480)/2)/2);
 			
 			
-			if dispH='1' and disp='0' then
+			if in_640x480 and dispH='1' and dispV='0' then
 				-- full VERTICAL BORDER
 				--last_CENTER:=true;
 				-- filling palette (PRAM)
@@ -622,42 +638,33 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 				else
 					palette_horizontal_counter:=palette_horizontal_counter+1;
 				end if;
+				
 				if palette_horizontal_counter<1 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 					palette_D_tictac_mem:="00" & conv_std_logic_vector(vram_horizontal_counter,6);
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_W_tictac_mem:='1';
 				elsif palette_horizontal_counter<2 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
+					palette_W_tictac_mem:='1';
 				elsif palette_horizontal_counter<2+16 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 					if palette_horizontal_counter = 2 then
 						palette_color:=0;
 					else
 						palette_color:=palette_color+1;
 					end if;
 					palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_W_tictac_mem:='1';
 				elsif palette_horizontal_counter<2+16+1 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_W_tictac_mem:='1';
 				else
-					palette_A_tictac<=(others=>'0');
-					palette_D_tictac<=(others=>'0');
-					palette_W_tictac<='0';
+					palette_W_tictac_mem:='0';
 				end if;
-			elsif dispH='1' and disp='1' then
+			elsif in_640x480 and dispH='1' and dispV='1' then
 				-- DISPLAY
 				--last_CENTER:=true;
 				-- filling palette (PRAM)
@@ -668,41 +675,31 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 					palette_horizontal_counter:=palette_horizontal_counter+1;
 				end if;
 				if palette_horizontal_counter<1 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 					-- compute LEFT BORDER
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_W_tictac_mem:='1';
 				elsif palette_horizontal_counter<2 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
+					palette_W_tictac_mem:='1';
 				elsif palette_horizontal_counter<2+16 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 					if palette_horizontal_counter = 2 then
 						palette_color:=0;
 					else
 						palette_color:=palette_color+1;
 					end if;
 					palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_W_tictac_mem:='1';
 				elsif palette_horizontal_counter<2+16+1 then
-					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
 					-- compute RIGHT BORDER
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					palette_D_tictac<=palette_D_tictac_mem;
-					palette_W_tictac<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_W_tictac_mem:='1';
 				else
-					palette_A_tictac<=(others=>'0');
-					palette_D_tictac<=(others=>'0');
-					palette_W_tictac<='0';
+					palette_W_tictac_mem:='0';
 				end if;
 			end if;
 			
@@ -713,6 +710,10 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 else
 	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
 end if;
+
+palette_A_tictac<=palette_A_tictac_mem;
+palette_D_tictac<=palette_D_tictac_mem;
+palette_W_tictac<=palette_W_tictac_mem;
 
 if dispH='0' then
 	-- allow last_dispH to go back to '0'.
@@ -806,7 +807,7 @@ end if;
 				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '1';
 			end case;
 			
-			crtc_DISP<=disp;
+			crtc_DISP<=dispV and dispH;
 			
 			if was_MEMWR_0 and MEM_WR='1' then
 				waiting_MEMWR:=0;

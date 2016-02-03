@@ -28,6 +28,9 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity aZRaEL_vram2vgaAmstradMiaow is
     Generic(
+	 VOFFSET_NEGATIF:integer:=(600/2-480/2)/2;
+	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
+	 HardHZoom : integer:=1; -- do remember to divide clock entry by HardHZoom, and also HZoom by HardHZoom, if changing this parameter
 	 -- Amstrad
 	 -- 
 	 --OFFSET:STD_LOGIC_VECTOR(15 downto 0):=x"C000";
@@ -124,10 +127,13 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 				  nhsync:std_logic:='1'; --flags  +hsync -hsync
               --flags  interlace interlaced
               --       doublescan Sync polarity, interlace mode
+				  SQRT_VRAM_SIZE:integer:=16;
+
+				  HZoom:integer:=1;
 				  VZoom:integer:=2;
 				  
-				  VRAM_HDsp:integer:=768; --changing mode doesn't affect number of pixel finally outputted
-				  VRAM_VDsp:integer:=280 --560/2
+				  VRAM_HDsp:integer:=800; --changing mode doesn't affect number of pixel finally outputted
+				  VRAM_VDsp:integer:=300 --600/2
 		  );
     Port ( DATA : in  STD_LOGIC_VECTOR (7 downto 0); -- buffer
            ADDRESS : out  STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
@@ -151,8 +157,8 @@ architecture Behavioral of aZRaEL_vram2vgaAmstradMiaow is
 	constant DO_HSYNC : STD_LOGIC:='1';
 	constant DO_VSYNC : STD_LOGIC:='1';
 
-	constant VDecal_negatif:integer:=(560-480)/2;
-	constant HDecal_negatif:integer:=(768-640)/2;
+	constant VDecal_negatif:integer:=VOFFSET_NEGATIF; --(600/2-480/2)/2;
+	constant HDecal_negatif:integer:=(800-640)/2;
 	constant HDecal:integer:=0;
 	constant VDecal:integer:=0;
 	
@@ -200,13 +206,8 @@ begin
 aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 
 	constant PALETTE_H_OFFSET:integer:=32-1;--16+1  +1;
-	-- l'effet de la palette est une ligne sur deux, mais ces lignes avancent bien à la même vitesse que vertical_counter...
-	constant PALETTE_V_OFFSET:integer:=0;-- optim PRAM au debut VGA --(560-480)/2;
-	-- 1.LittleOne OK, border/couleur decale :
-	--constant PALETTE_V_OFFSET:integer:=0;
-	-- 2.LittleOne OK, DISP pas bon
-	--constant PALETTE_V_OFFSET:integer:=((560-480)/2)/2;
-	constant HMax:integer:=HTot-1;
+	constant PALETTE_V_OFFSET:integer:=VOFFSET_PALETTE; --((600-480)/2)/2;
+	constant HMax:integer:=(HTot/HardHZoom)-1;
 	constant VMax:integer:=VTot-1;
 	
 	variable horizontal_counter : integer range 0 to 1024-1 :=0;
@@ -348,7 +349,7 @@ begin
 		etat_vsync_retard:=etat_vsync;
 		
 		
---beware : PRAM is PRAM of VRAM768x560, not PRAM of VGA640x480
+--beware : PRAM is PRAM of VRAM800x600, not PRAM of VGA640x480
 --Number of RAMB16s: 18 out of      20   90%
 --reality : some memory area are mocked, do to problem of space, so when you are out of screen, generally you are in mocked ram areas.
 --brain garbage : PRAM 60 lines/33bits, PRAM 100 lines/32*5bit+2bit.
@@ -386,7 +387,7 @@ begin
 		elsif palette_action_retard=DO_HEND then
 			palette_D_mem:=palette_D;
 			horizontal_counter_RIGHT_BORDER:=conv_integer(palette_D_mem(7 downto 0));
-			if horizontal_counter_RIGHT_BORDER<HDsp/16 + ((HDecal_negatif-HDecal)/16) then
+			if horizontal_counter_RIGHT_BORDER<(HDsp/HardHZoom)/16 + ((HDecal_negatif-HDecal)/16) then
 				--horizontal_counter_RIGHT_BORDER:=480-1;
 				--horizontal_counter_RIGHT_BORDER:=35;--conv_integer(palette_D_mem(7 downto 0));
 				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER*16;
@@ -395,7 +396,7 @@ begin
 				--horizontal_counter_RIGHT_BORDER:=(16*(conv_integer(palette_D_mem(7 downto 0))-((HDecal_negatif-HDecal)/16)))-1;
 				has_RIGHT_BORDER:=true;
 			else
-				horizontal_counter_RIGHT_BORDER:=HDsp;
+				horizontal_counter_RIGHT_BORDER:=HDsp/HardHZoom;
 				has_RIGHT_BORDER:=false; -- HEURISTIC :p
 			end if;
 		end if;
@@ -437,8 +438,8 @@ begin
 		
 		
 		
-		if horizontal_counter<HDsp and vertical_counter<VDsp then
-			if horizontal_counter+HDecal_negatif<HDecal or vertical_counter+VDecal_negatif<VDecal or horizontal_counter+HDecal_negatif>=HDecal+VRAM_HDsp or vertical_counter+VDecal_negatif>=VDecal+VZoom*VRAM_VDsp then
+		if horizontal_counter<HDsp/HardHZoom and vertical_counter<VDsp then
+			if horizontal_counter+HDecal_negatif<HDecal or vertical_counter+VDecal_negatif<VDecal or horizontal_counter+HDecal_negatif>=HDecal+HZoom*VRAM_HDsp or vertical_counter+VDecal_negatif>=VDecal+VZoom*VRAM_VDsp then
 				ADDRESS<= (others=>'0');
 				-- OUT OF VRAM800x600
 				etat_rgb:=DO_BORDER;
@@ -456,7 +457,7 @@ begin
 				etat_rgb:=DO_BORDER;
 			else
 				v:=(vertical_counter+VDecal_negatif-VDecal)/(VZoom);
-				h:=horizontal_counter+HDecal_negatif-HDecal;
+				h:=(horizontal_counter+HDecal_negatif-HDecal)/(HZoom);
 				no_char:=(h / 8) mod (CHAR_WIDTH/8);
 				-- 640x200 pixels with 2 colours ("Mode 2", 80 text columns) so it is really 8 physicals pixels per bytes
 				if NB_PIXEL_PER_OCTET=2 then
@@ -482,7 +483,7 @@ begin
 			ADDRESS<= (others=>'0');
 			etat_rgb:=DO_NOTHING_OUT;
 		end if;
-		if horizontal_counter>=HSS and horizontal_counter<HSE then
+		if horizontal_counter>=HSS/HardHZoom and horizontal_counter<HSE/HardHZoom then
 			etat_hsync:=DO_HSYNC;
 		else
 			etat_hsync:=DO_NOTHING;

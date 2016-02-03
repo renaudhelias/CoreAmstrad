@@ -1,5 +1,5 @@
 --    {@{@{@{@{@{@
---  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r005
 --  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
 --  {@{@{@{@{@{@{@{@
 --  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
@@ -44,9 +44,9 @@ entity simple_GateArrayInterrupt is
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
 	-- 39*8=312   /40=7.8 /52=6 /32=9.75
-  VRAM_HDsp:integer:=768/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
-  VRAM_VDsp:integer:=560/2;
-  VRAM_Hoffset:integer:=11 ; -- 63*16-46*16
+  VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
+  VRAM_VDsp:integer:=600/2;
+  VRAM_Hoffset:integer:=10 ; -- 63*16-46*16
   
   -- le raster palette arrive au moment oÃ¹ l'encre est en face du stylo.
   -- si on a un dÃ©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
@@ -56,11 +56,54 @@ entity simple_GateArrayInterrupt is
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
-  --VRAM_Voffset:integer:=48-6-4  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
-  -- 3.LittleOne : on recentre la donnÃ©e :
-  VRAM_Voffset:integer:=48-6-4-6-4
+  VRAM_Voffset:integer:=48;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
+ -- output pixels
+	-- Amstrad
+	 -- 
+	 --OFFSET:STD_LOGIC_VECTOR(15 downto 0):=x"C000";
+	 -- screen.bas
+	 -- CLS
+	 -- FOR A=&C000 TO &FFFF
+	 -- POKE A,&FF
+	 -- NEXT A
+	 -- 
+	 -- line.bas
+	 -- CLS
+	 -- FOR A=&C000 TO &C050
+	 -- POKE A,&FF
+	 -- NEXT A
+	 -- 
+	 -- lines.bas
+	 -- CLS
+	 -- FOR A=&C000 TO &C7FF
+	 -- POKE A,&FF
+	 -- NEXT A
+	 -- 
+	 -- byte pixels structure :
+	 -- mode 1 :
+	 --   1 byte <=> 4 pixels
+	 --   [AAAA][BBBB] : layering colors [AAAA] and [BBBB]
+	 --   A+B=0+0=dark blue (default Amstrad background color)
+	 --   A+B=0+1=light blue
+	 --   A+B=1+0=yellow
+	 --   A+B=1+1=red
+	 --  for example [1100][0011] with give 2 yellow pixels followed by 2 light blue pixels &C3
+	 -- mode 0 : 
+	 --   1 byte <=> 2 pixels
+	 --   [AA][BB][CC][DD] : layering colors of AA, BB, CC, DD
+	 --   Because it results too many equations for a simple RGB output, they do switch the last equation (alternating at a certain low frequency (INK SPEED))
+	 -- mode 2 :
+	 --   1 byte <=> 8 pixels
+	 --   [AAAAAAAA] : so only 2 colors xD
+	 MODE_MAX:integer:=2;
+--	 NB_PIXEL_PER_OCTET:integer:=4;--2**(MODE+1);
+  	NB_PIXEL_PER_OCTET_MAX:integer:=8;
+	NB_PIXEL_PER_OCTET_MIN:integer:=2
+
+  
 	);
     Port ( nCLK4_1 : in  STD_LOGIC;
+           CLK16MHz : in STD_LOGIC;
            IO_REQ_W : in  STD_LOGIC;
 			  IO_REQ_R : in  STD_LOGIC;
            A15_A14_A9_A8 : in  STD_LOGIC_VECTOR (3 downto 0);
@@ -84,9 +127,13 @@ entity simple_GateArrayInterrupt is
 			  palette_A: out STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
 			  palette_D: out std_logic_vector(7 downto 0);
 			  palette_W: out std_logic;
-			  reset:in  STD_LOGIC
-			  --pixel_vsync:out std_logic;
-			  --pixel_hsync:out std_logic
+			  reset:in  STD_LOGIC;
+			  
+			  RED_out : out  STD_LOGIC_VECTOR (5 downto 0);
+           GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
+           BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
+			  HSYNC_out : out STD_logic;
+			  VSYNC_out : out STD_logic
 			  );
 end simple_GateArrayInterrupt;
 
@@ -122,17 +169,71 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal maScreen:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
 
 	signal LineCounter:std_logic:='1';
-	
+	signal RED : STD_LOGIC_VECTOR(1 downto 0);
+   signal GREEN : STD_LOGIC_VECTOR(1 downto 0);
+   signal BLUE : STD_LOGIC_VECTOR(1 downto 0);
 	signal vsync:std_logic:=DO_NOTHING;
 	signal hsync:std_logic:=DO_NOTHING;
+	signal vsync_int:std_logic;
+	signal hsync_int:std_logic;
 	
 	signal CLK4MHz : STD_LOGIC;
 
 	signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
 
+	
+	type palette_type is array(31 downto 0) of std_logic_vector(5 downto 0); -- RRVVBB
+	constant palette:palette_type:=(
+		20=>"000000",
+		 4=>"000001",
+		21=>"000011",
+		28=>"010000",
+		24=>"010001",
+			29=>"010011",
+		12=>"110000",
+			5=>"110001",
+		13=>"110011",
+		22=>"000100",
+		6=>"000101",
+		23=>"000111",
+		30=>"010100",
+		 0=>"010101",
+		31=>"010111",
+		14=>"110100",
+		 7=>"110101",
+		15=>"110111",
+		18=>"001100",
+		 2=>"001101",
+		19=>"001111",
+		26=>"011100",
+		25=>"011101",
+		27=>"011111",
+		10=>"111100",
+		 3=>"111101",
+		11=>"111111",
+		
+		-- others color >=27
+		1=>"010101",
+		8=>"110001",
+		9=>"111101",
+		16=>"000001",
+		17=>"001101"
+		);
+	
+	
 	type pen_type is array(15 downto 0) of integer range 0 to 31;
 	signal pen:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
 	signal border:integer range 0 to 31;
+	
+	-- action aZRaEL : disp !
+	constant DO_NOTHING_OUT : integer range 0 to 2:=0;
+	constant DO_READ : integer range 0 to 2:=1;
+	constant DO_BORDER: integer range 0 to 2:=2;
+	signal etat_rgb : integer range 0 to 2:=DO_NOTHING_OUT;
+	signal DATA_action : std_logic:='0'; -- if rising_edge then DATA just is filled.
+	signal DATA : std_logic_vector(7 downto 0):=(others=>'0');
+	--signal vsync_delay:std_logic:=DO_NOTHING;
+	--signal hsync_delay:std_logic:=DO_NOTHING;
 	
 	-- wtf solver
 	signal palette_A_tictac: STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
@@ -140,8 +241,12 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal palette_W_tictac: std_logic;
 begin
 
---pixel_vsync<=vsync;
---pixel_hsync<=hsync;
+---- without scandoubler
+RED_out<= RED & "0000";
+GREEN_out<= GREEN & "0000";
+BLUE_out<= BLUE & "0000";
+HSYNC_out<= HSYNC;
+VSYNC_out<= VSYNC;
 -- do scan mirror VRAM (underground way (no way)) via CRTC, and then send data to VRAM buffer
 --
 -- Z80=>RAM         (read/write at 4MHz)
@@ -380,7 +485,7 @@ end process ctrcConfig_process;
 simple_GateArray_process : process(reset,nCLK4_1) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
-	variable dispV:std_logic:='0';
+	variable disp:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
 	-- following Quazar legends, 300 times per second
 	-- Following a lost trace in Google about www.cepece.info/amstrad/docs/garray.html I have
@@ -390,7 +495,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		-- protected int hCCMask = 0x7f; "char_counter256 HMAX n'est pas une valeur en dur, mais un label comme VT et VS..."
 		variable horizontal_counter_hCC : std_logic_vector(7 downto 0):=(others=>'0'); --640/16
 		variable vertical_counter_vCC : std_logic_vector(6 downto 0):=(others=>'0'); --600
-		variable etat_rgb : STD_LOGIC:=DO_NOTHING;
+		--variable etat_rgb : STD_LOGIC:=DO_NOTHING;
 		variable etat_hsync : STD_LOGIC:=DO_NOTHING;
 		variable etat_monitor_hsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		variable etat_vsync : STD_LOGIC:=DO_NOTHING;
@@ -419,12 +524,9 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable palette_A_tictac_mem:std_logic_vector(13 downto 0):=(others=>'0');
 		variable palette_D_tictac_mem:std_logic_vector(7 downto 0):=(others=>'0');
-		variable palette_W_tictac_mem:std_logic;
-		--variable palette_W_MASK_tictac_mem:std_logic;
 		variable last_dispH:std_logic:='0';
 		variable palette_horizontal_counter:integer range 0 to 256-1:=0; --640/16
 		variable palette_color:integer range 0 to 16-1;
-		variable in_640x480:boolean:=false;
 		
 		--variable in_800x600:boolean:=false;
 		--variable last_CENTER:boolean:=false; -- not in left BORDER, in right BORDER if disp=0, in CENTER if disp=1
@@ -438,11 +540,12 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		--variable monitor_vsync_counter:integer range 0 to 2+4+1;
 		
 		
+		variable DATA_mem:std_logic_vector(7 downto 0);
 		
 	begin
 		if reset='1' then
-			hsync<=DO_NOTHING;
-			vsync<=DO_NOTHING;
+			hsync_int<=DO_NOTHING;
+			vsync_int<=DO_NOTHING;
 			crtc_VSYNC<=DO_NOTHING;
 			etat_hsync:=DO_NOTHING;
 			etat_monitor_hsync:=(others=>DO_NOTHING);
@@ -471,14 +574,14 @@ palette_W_tictac<='0';
 					etat_hsync:=DO_HSYNC;
 					hSyncCount:= x"0";
 					etat_monitor_hsync(0):=DO_HSYNC;
-hsync<=DO_HSYNC; -- following javacpc,grimware and arnold
+hsync_int<=DO_HSYNC; -- following javacpc,grimware and arnold
 				-- if (inHSync) {
 				elsif etat_hsync=DO_HSYNC then
 					hSyncCount:=hSyncCount+1;
 					if	hSyncCount=RHwidth then
 						etat_hsync:=DO_NOTHING;
 						etat_monitor_hsync:="0000";
-hsync<=DO_NOTHING;
+hsync_int<=DO_NOTHING;
 					elsif hSyncCount=2+4 then
 						etat_monitor_hsync:="0000";
 					end if;
@@ -493,7 +596,7 @@ hsync<=DO_NOTHING;
 					etat_monitor_vsync:=etat_monitor_vsync(2 downto 0) & etat_monitor_vsync(0);
 
 					-- checkVSync() : if (vCC == reg[7] && !inVSync) {
-					if RA=0 and "0" & vertical_counter_vCC=RVsyncpos then
+					if RA=0 and vertical_counter_vCC=RVsyncpos then
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
 						-- Batman city towers does like RA=0 filter here...
 						-- CRTC datasheet : if 0000 is programmed for VSync, then 16 raster period is generated.
@@ -501,13 +604,13 @@ hsync<=DO_NOTHING;
 						etat_vsync:=DO_VSYNC;
 						etat_monitor_vsync(0):=DO_VSYNC;
 crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
-vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
+vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then
 						if vSyncCount=RVwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
 	crtc_VSYNC<=DO_NOTHING;
-	vsync<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+	vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 						else
 							if vSyncCount=2+4 then
 								etat_monitor_vsync:="0000";
@@ -529,14 +632,9 @@ vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interru
 					dispH:='0';
 				end if;
 				
-				if zap_scan then
-					dispV:='0';
-				elsif "0" & vertical_counter_vCC<RVDisp then
-					dispV:='1';
-				else
-					dispV:='0';
-				end if;
-				if dispH='1' and dispV='1' then
+				if dispH='1' and "0" & vertical_counter_vCC<RVDisp then
+					disp:='1';
+					etat_rgb<=DO_READ;
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
 					-- Have to respect address cut ADRESSE_CONSTANT_mem:=conv_integer(maScreen(13 downto 0)) mod (16*1024);
 					
@@ -552,6 +650,8 @@ vsync<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interru
 					--http://cpcrulez.fr/coding_amslive02-balayage_video.htm dit :
 					--MA(13 downto 12) & RA(2 downto 0) & MA(9 downto 0) & CCLK
 				else
+					etat_rgb<=DO_NOTHING_OUT;
+					disp:='0';
 					crtc_A_mem:=(others=>'0');
 				end if;
 				-- it's not really 16MHz, but we don't care
@@ -592,13 +692,6 @@ end if;
 if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	if vram_vertical_offset_counter<=VRAM_Voffset then
 		vram_vertical_offset_counter:=vram_vertical_offset_counter+1;
-		if vram_vertical_offset_counter = VRAM_Voffset then
-			-- I'm just before Vertical DISPLAY
-			palette_A_tictac_mem:=(others=>'1');
-			--palette_horizontal_counter:=0;
-			palette_W_tictac_mem:='0';
-			--last_dispH:='0';
-		end if;
 	elsif vram_vertical_counter<VRAM_VDsp then
 		vram_vertical_counter:=vram_vertical_counter+1;
 	end if;
@@ -617,18 +710,18 @@ if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	--last_CENTER:=false;
 end if;
 
-
-
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
 if vram_horizontal_offset_counter>VRAM_Hoffset then
 	if vram_horizontal_counter<VRAM_HDsp then
 		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
-
---optim PRAM en haut dans VGA
-			in_640x480:=(vram_vertical_counter >= ((560-480)/2)/2 and vram_vertical_counter < 480/2+((560-480)/2)/2);
+			--in_800x600:=true;
+			
+			if vram_horizontal_counter=0 and vram_vertical_counter= 0 then
+				palette_A_tictac_mem:=(others=>'0');
+			end if;
 			
 			
-			if in_640x480 and dispH='1' and dispV='0' then
+			if dispH='1' and disp='0' then
 				-- full VERTICAL BORDER
 				--last_CENTER:=true;
 				-- filling palette (PRAM)
@@ -638,33 +731,42 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 				else
 					palette_horizontal_counter:=palette_horizontal_counter+1;
 				end if;
-				
 				if palette_horizontal_counter<1 then
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:="00" & conv_std_logic_vector(vram_horizontal_counter,6);
-					palette_W_tictac_mem:='1';
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 				elsif palette_horizontal_counter<2 then
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
-					palette_W_tictac_mem:='1';
-				elsif palette_horizontal_counter<2+16 then
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+				elsif palette_horizontal_counter<2+16 then
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					if palette_horizontal_counter = 2 then
 						palette_color:=0;
 					else
 						palette_color:=palette_color+1;
 					end if;
 					palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
-					palette_W_tictac_mem:='1';
-				elsif palette_horizontal_counter<2+16+1 then
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+				elsif palette_horizontal_counter<2+16+1 then
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					palette_W_tictac_mem:='1';
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 				else
-					palette_W_tictac_mem:='0';
+					palette_A_tictac<=(others=>'0');
+					palette_D_tictac<=(others=>'0');
+					palette_W_tictac<='0';
 				end if;
-			elsif in_640x480 and dispH='1' and dispV='1' then
+			elsif dispH='1' and disp='1' then
 				-- DISPLAY
 				--last_CENTER:=true;
 				-- filling palette (PRAM)
@@ -675,31 +777,41 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 					palette_horizontal_counter:=palette_horizontal_counter+1;
 				end if;
 				if palette_horizontal_counter<1 then
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					-- compute LEFT BORDER
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
-					palette_W_tictac_mem:='1';
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 				elsif palette_horizontal_counter<2 then
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
-					palette_W_tictac_mem:='1';
-				elsif palette_horizontal_counter<2+16 then
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+				elsif palette_horizontal_counter<2+16 then
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					if palette_horizontal_counter = 2 then
 						palette_color:=0;
 					else
 						palette_color:=palette_color+1;
 					end if;
 					palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
-					palette_W_tictac_mem:='1';
-				elsif palette_horizontal_counter<2+16+1 then
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
 					palette_A_tictac_mem:=palette_A_tictac_mem+1;
+				elsif palette_horizontal_counter<2+16+1 then
+					palette_A_tictac<=palette_A_tictac_mem(13 downto 0);
 					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
 					-- compute RIGHT BORDER
 					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					palette_W_tictac_mem:='1';
+					palette_D_tictac<=palette_D_tictac_mem;
+					palette_W_tictac<='1';
+					palette_A_tictac_mem:=palette_A_tictac_mem+1;
 				else
-					palette_W_tictac_mem:='0';
+					palette_A_tictac<=(others=>'0');
+					palette_D_tictac<=(others=>'0');
+					palette_W_tictac<='0';
 				end if;
 			end if;
 			
@@ -710,10 +822,6 @@ if vram_horizontal_offset_counter>VRAM_Hoffset then
 else
 	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
 end if;
-
-palette_A_tictac<=palette_A_tictac_mem;
-palette_D_tictac<=palette_D_tictac_mem;
-palette_W_tictac<=palette_W_tictac_mem;
 
 if dispH='0' then
 	-- allow last_dispH to go back to '0'.
@@ -799,15 +907,23 @@ end if;
 				else
 					LineCounter<='1';
 				end if;
+				DATA_action<='0';
 			when 1=>
 				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '0';
+				DATA_mem:=crtc_D;
+				DATA<=DATA_mem;
+				DATA_action<='1';
 			when 2=>
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
+				DATA_action<='0';
 			when 3=>
 				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '1';
+				DATA_mem:=crtc_D;
+				DATA_action<='1';
+				DATA<=DATA_mem;
 			end case;
 			
-			crtc_DISP<=dispV and dispH;
+			crtc_DISP<=disp;
 			
 			if was_MEMWR_0 and MEM_WR='1' then
 				waiting_MEMWR:=0;
@@ -874,6 +990,123 @@ end if;
 		end if;
 	end process simple_GateArray_process;
 
+	aZRaEL_process : process(CLK16MHz) is
+		 --variable compteur1MHz : integer range 0 to 3:=0;
+		 variable compteur1MHz_16 : integer range 0 to 7:=0;
+		 variable old_DATA_action : std_logic:='0';
+
+		 -- aZRaEL
+--		type pen2_type is array(15 downto 0) of std_logic_vector(5 downto 0);
+--		variable pen2:pen2_type:=(
+--			palette(4),palette(12),palette(21),palette(28),
+--			palette(24),palette(29),palette(12),palette(5),
+--			palette(13),palette(22),palette(6),palette(23),
+--			palette(30),palette(0),palette(31),palette(14)
+--		);
+--		variable border2:std_logic_vector(5 downto 0);
+		
+		variable DATA_mem:std_logic_vector(7 downto 0);
+		
+		
+		variable NB_PIXEL_PER_OCTET:integer range NB_PIXEL_PER_OCTET_MIN to NB_PIXEL_PER_OCTET_MAX;
+		
+		variable cursor_pixel_ref : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
+		variable cursor_pixel : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
+		--variable cursor_pixel_retard : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
+
+		
+
+		
+		variable etat_rgb_mem : integer range 0 to 2:=DO_NOTHING_OUT;
+		
+		variable color : STD_LOGIC_VECTOR(2**(MODE_MAX)-1 downto 0);
+		variable color_patch : STD_LOGIC_VECTOR(2**(MODE_MAX)-1 downto 0);
+		 
+		variable vsync_mem:std_logic;
+		variable hsync_mem:std_logic;
+	begin
+		if rising_edge(CLK16MHz) then
+			-- rising_edge
+			compteur1MHz_16:=(compteur1MHz_16+1) mod 8;
+			
+			--compteur1MHz:=(compteur1MHz+1) mod 4;
+		
+			if DATA_action='1' and old_DATA_action='0' then
+				compteur1MHz_16:=0;
+				DATA_mem:=DATA;
+				vsync_mem:=not(vsync_int);
+				hsync_mem:=not(hsync_int);
+				etat_rgb_mem:=etat_rgb;
+			end if;
+			vsync<=vsync_mem;
+			hsync<=hsync_mem;
+
+			-- aZRaEL display pixels
+			--no_char:=(h / 8) mod (CHAR_WIDTH/8);
+			-- 640x200 pixels with 2 colours ("Mode 2", 80 text columns) so it is really 8 physicals pixels per bytes
+			
+			--new_h:=h/CHAR_WIDTH; -- really 8 physicals pixels per bytes
+			--etat_rgb:=DO_READ;
+			
+			-- more stable
+			--cursor_pixel_retard:=cursor_pixel;
+			if etat_rgb_mem = DO_READ then
+			
+				if MODE_select="10" then
+					NB_PIXEL_PER_OCTET:=8;
+					cursor_pixel_ref:=(compteur1MHz_16 / 1) mod 8;
+					cursor_pixel:=cursor_pixel_ref; -- hide one pixel on both
+				elsif MODE_select="01" then
+					NB_PIXEL_PER_OCTET:=4;
+					cursor_pixel_ref:=(compteur1MHz_16 / 2) mod 8; -- ok
+					cursor_pixel:=cursor_pixel_ref; -- target correction... data more slow than address coming : one tic
+				else --if MODE_select="00" or MODE_select="11" then
+					NB_PIXEL_PER_OCTET:=2;
+					cursor_pixel_ref:=(compteur1MHz_16 / 4) mod 8;
+					cursor_pixel:=cursor_pixel_ref;
+				end if;
+			
+				color:=(others=>'0');
+				for i in 2**(MODE_MAX)-1 downto 0 loop
+					if (NB_PIXEL_PER_OCTET=2 and i<=3)
+					or (NB_PIXEL_PER_OCTET=4 and i<=1)
+					or (NB_PIXEL_PER_OCTET=8 and i<=0) then
+						color(3-i):=DATA_mem(i*NB_PIXEL_PER_OCTET+(NB_PIXEL_PER_OCTET-1-cursor_pixel));
+					end if;
+				end loop;
+				if NB_PIXEL_PER_OCTET=8 then
+					RED<=palette(pen(conv_integer(color(3))))(5 downto 4);
+					GREEN<=palette(pen(conv_integer(color(3))))(3 downto 2);
+					BLUE<=palette(pen(conv_integer(color(3))))(1 downto 0);
+				elsif NB_PIXEL_PER_OCTET=4 then
+					RED<=palette(pen(conv_integer(color(3 downto 2))))(5 downto 4);
+					GREEN<=palette(pen(conv_integer(color(3 downto 2))))(3 downto 2);
+					BLUE<=palette(pen(conv_integer(color(3 downto 2))))(1 downto 0);
+				else --if MODE_select="00" then
+					color_patch:=color(3) & color(1) & color(2) & color(0); -- wtf xD
+					RED<=palette(pen(conv_integer(color_patch)))(5 downto 4);
+					GREEN<=palette(pen(conv_integer(color_patch)))(3 downto 2);
+					BLUE<=palette(pen(conv_integer(color_patch)))(1 downto 0);
+				--else -- MODE 11
+				--	RED<="01";
+				--	GREEN<="11";
+				--	BLUE<="01";
+				end if;
+			elsif etat_rgb_mem = DO_BORDER then
+				RED<=palette(border)(5 downto 4);
+				GREEN<=palette(border)(3 downto 2);
+				BLUE<=palette(border)(1 downto 0);
+			else
+				RED<="00";
+				GREEN<="00";
+				BLUE<="00";
+			end if;
+			--etat_rgb_retard:=etat_rgb;
+			old_DATA_action:=DATA_action;
+		end if;
+	end process aZRaEL_process;
+	
+	
 --http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display
 --	di                      ;; disable maskable interrupts
 --	im 1                    ;; interrupt mode 0 (jump to interrupt handler at &0038)
@@ -906,7 +1139,7 @@ end if;
 --	.
 --	.
 
-
+-- 51/3=17 => @4MHz not a 17 counter instead ?
 
 --Interrupt Generation Facility of the Amstrad Gate Array
 --The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal. Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
@@ -1011,20 +1244,20 @@ begin
 		
 		
 		--vSyncStart()
-		if vsync_old=DO_NOTHING and vsync=DO_VSYNC then
+		if vsync_old=DO_NOTHING and vsync_int=DO_VSYNC then
 			--A VSYNC triggers a delay action of 2 HSYNCs in the GA
 			--In both cases the following interrupt requests are synchronised with the VSYNC. 
 			-- JavaCPC
 			vSyncInt := 0;
 			vsync_old:=DO_VSYNC;
-		elsif vsync_old=DO_VSYNC and vsync=DO_NOTHING then
+		elsif vsync_old=DO_VSYNC and vsync_int=DO_NOTHING then
 			vsync_old:=DO_NOTHING;
 		end if;
 		
 		
 		--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
 		--hSyncEnd()
-		if hsync=DO_NOTHING and hsync_old=DO_HSYNC then
+		if hsync_int=DO_NOTHING and hsync_old=DO_HSYNC then
 		-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
 		
 			-- JavaCPC interrupt style...
@@ -1050,7 +1283,7 @@ begin
 				end if;
 			end if;
 			hsync_old:=DO_NOTHING;
-		elsif hsync=DO_HSYNC and hsync_old=DO_NOTHING then
+		elsif hsync_int=DO_HSYNC and hsync_old=DO_NOTHING then
 			hsync_old:=DO_HSYNC;
 		end if;
 

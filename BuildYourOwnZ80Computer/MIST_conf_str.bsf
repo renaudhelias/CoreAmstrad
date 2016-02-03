@@ -20,17 +20,17 @@ applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 208 96)
+	(rect 16 16 200 96)
 	(text "MIST_conf_str" (rect 5 0 67 12)(font "Arial" ))
 	(text "inst" (rect 8 64 20 76)(font "Arial" ))
 	(port
-		(pt 192 32)
+		(pt 184 32)
 		(output)
-		(text "CONF_STR[1055..0]" (rect 0 0 86 12)(font "Arial" ))
-		(text "CONF_STR[1055..0]" (rect 85 27 171 39)(font "Arial" ))
-		(line (pt 192 32)(pt 176 32)(line_width 3))
+		(text "CONF_STR[1191..0]" (rect 0 0 83 12)(font "Arial" ))
+		(text "CONF_STR[1191..0]" (rect 80 27 163 39)(font "Arial" ))
+		(line (pt 184 32)(pt 168 32)(line_width 3))
 	)
 	(drawing
-		(rectangle (rect 16 16 176 64)(line_width 1))
+		(rectangle (rect 16 16 168 64)(line_width 1))
 	)
 )

@@ -27,21 +27,28 @@ entity MIST_SCART is
 			  HSYNC_out : out STD_logic;
 			  VSYNC_out : out STD_logic;
 			  
-			  PIXEL_HSYNC : in std_logic;
-			  PIXEL_VSYNC : in std_logic;
-			  PIXEL_DATA : in STD_LOGIC_VECTOR (7 downto 0);
+			  RED_TV_in : in  STD_LOGIC_VECTOR (5 downto 0);
+           GREEN_TV_in : in  STD_LOGIC_VECTOR (5 downto 0);
+           BLUE_TV_in : in  STD_LOGIC_VECTOR (5 downto 0);
+			  HSYNC_TV_in : in STD_logic;
+			  VSYNC_TV_in : in STD_logic;
 			  
-			  mode : in std_logic
+			  mode : in std_logic;
+  			  pclk_in : in std_logic;
+			  pclk_TV_in : in std_logic;
+			  pclk_out : out std_logic
+
 			  );
 end MIST_SCART;
 
 architecture Behavioral of MIST_SCART is
 
 begin
-RED_out<= RED_in when mode='0' else PIXEL_DATA(7 downto 4) & "00";
-GREEN_out<= GREEN_in when mode='0' else PIXEL_DATA(3 downto 0) & "00";
-BLUE_out<= BLUE_in when mode='0' else PIXEL_DATA(7 downto 4) & "00";
-HSYNC_out<=HSYNC_in when mode='0' else PIXEL_HSYNC;
-VSYNC_out<=VSYNC_in when mode='0' else PIXEL_VSYNC;
+RED_out<= RED_in when mode='0' else RED_TV_in;
+GREEN_out<= GREEN_in when mode='0' else GREEN_TV_in;
+BLUE_out<= BLUE_in when mode='0' else BLUE_TV_in;
+HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
+VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
+pclk_out<=pclk_in when mode='0' else pclk_TV_in;
 end Behavioral;
 

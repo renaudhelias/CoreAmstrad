@@ -1042,6 +1042,8 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_video is
    end component;
    
    component aZRaEL_vram2vgaAmstradMiaow
+		generic (VOFFSET_NEGATIF : integer:=0;
+		VOFFSET_PALETTE:integer:=0);
       port ( CLK_25MHz : in    std_logic; 
              DATA      : in    std_logic_vector (7 downto 0); 
              PALETTE_D : in    std_logic_vector (7 downto 0); 
@@ -1097,6 +1099,8 @@ begin
                 vga_D(7 downto 0)=>XLXN_713(7 downto 0));
    
    XLXI_476 : aZRaEL_vram2vgaAmstradMiaow
+		generic map (VOFFSET_NEGATIF =>0, -- MiST 0
+		VOFFSET_PALETTE=>0) -- MiST 0
       port map (CLK_25MHz=>CLK25MHz,
                 DATA(7 downto 0)=>XLXN_743(7 downto 0),
                 PALETTE_D(7 downto 0)=>XLXN_744(7 downto 0),

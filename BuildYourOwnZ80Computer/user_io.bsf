@@ -110,15 +110,15 @@ applicable agreement for further details.
 	(port
 		(pt 264 48)
 		(output)
-		(text "joystick_0[7..0]" (rect 0 0 60 12)(font "Arial" ))
-		(text "joystick_0[7..0]" (rect 183 43 243 55)(font "Arial" ))
+		(text "joystick_0[5..0]" (rect 0 0 60 12)(font "Arial" ))
+		(text "joystick_0[5..0]" (rect 183 43 243 55)(font "Arial" ))
 		(line (pt 264 48)(pt 248 48)(line_width 3))
 	)
 	(port
 		(pt 264 64)
 		(output)
-		(text "joystick_1[7..0]" (rect 0 0 59 12)(font "Arial" ))
-		(text "joystick_1[7..0]" (rect 184 59 243 71)(font "Arial" ))
+		(text "joystick_1[5..0]" (rect 0 0 59 12)(font "Arial" ))
+		(text "joystick_1[5..0]" (rect 184 59 243 71)(font "Arial" ))
 		(line (pt 264 64)(pt 248 64)(line_width 3))
 	)
 	(port

@@ -443,8 +443,8 @@ entity FPGAmstrad_amstrad_motherboard is
           init_Din   : in    std_logic_vector (7 downto 0); 
           init_R_n   : in    std_logic; 
           init_W_n   : in    std_logic;
-          JOYSTICK1  : in    std_logic_vector (7 downto 0); 
-          JOYSTICK2  : in    std_logic_vector (7 downto 0); 
+          JOYSTICK1  : in    std_logic_vector (5 downto 0); 
+          JOYSTICK2  : in    std_logic_vector (5 downto 0); 
           nCLK4MHz   : in    std_logic; 
           PS2_CLK    : in    std_logic; 
           PS2_DATA   : in    std_logic; 
@@ -474,7 +474,6 @@ entity FPGAmstrad_amstrad_motherboard is
           vram_A     : out   std_logic_vector (14 downto 0); 
           vram_D     : out   std_logic_vector (7 downto 0); -- pixel_DATA
           vram_W     : out   std_logic;
-			 
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
@@ -487,9 +486,16 @@ entity FPGAmstrad_amstrad_motherboard is
 			  megashark_face : out std_logic;
 			  megashark_INFO_2SIDES : in std_logic;
 			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0);
-			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0)
-			  --pixel_hsync:out std_logic;
-			  --pixel_vsync:out std_logic
+			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0);
+			  CLK16MHz : in std_logic;
+			 
+			 
+			 RED_out : out  STD_LOGIC_VECTOR (5 downto 0);
+           GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
+           BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
+			  HSYNC_out : out STD_logic;
+			  VSYNC_out : out STD_logic
+			 
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -627,9 +633,13 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              bvram_D       : out   std_logic_vector (7 downto 0); 
              palette_A     : out   std_logic_vector (13 downto 0); 
              palette_D     : out   std_logic_vector (7 downto 0); 
-             nCLK4_1       : in    std_logic
-				 --pixel_vsync:out std_logic;
-				 --pixel_hsync:out std_logic
+             nCLK4_1       : in    std_logic;
+				 CLK16MHz       : in    std_logic;
+				 RED_out : out  STD_LOGIC_VECTOR (5 downto 0);
+				 GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
+				 BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
+				 HSYNC_out : out STD_logic;
+				 VSYNC_out : out STD_logic
 				 );
    end component;
    
@@ -910,6 +920,7 @@ begin
                 MODE_select(1 downto 0)=>XLXN_857(1 downto 0),
                 M1_n=>XLXN_845,
                 nCLK4_1=>nCLK4MHz,
+					 CLK16MHz=>CLK16MHz,
 					 --ecoleFix=>ecoleFix,
                 reset=>XLXN_907,
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
@@ -926,7 +937,13 @@ begin
                 palette_W=>palette_W,
                 WAIT_MEM_n=>XLXN_807,
                 WAIT_n=>XLXN_806,
-                Dout(7 downto 0)=>MIX_DOUT0(7 downto 0)); --inout
+                Dout(7 downto 0)=>MIX_DOUT0(7 downto 0), --inout
+					 RED_out=>RED_out,
+					 GREEN_out=>GREEN_out,
+					 BLUE_out=>BLUE_out,
+					 HSYNC_out=>HSYNC_out,
+					 VSYNC_out=>VSYNC_out
+					 );
    
    MyROMSelect : ROMselect
       port map (A13=>A(13),

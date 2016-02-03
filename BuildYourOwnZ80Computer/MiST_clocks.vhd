@@ -26,7 +26,7 @@ entity MIST_clocks is
     Port ( CLOCK_27 : in  STD_LOGIC_VECTOR (1 downto 0); --CLOCK_27(0)
            reset : in std_logic:='0'; -- '0'
            --SPI_SCK : in  STD_LOGIC; -- useless here ? 24MHz
-           ps2_clk : out  STD_LOGIC;
+           ps2_clk : out  STD_LOGIC; -- 12-16khz provided by core
 			  CLK4MHz : out  STD_LOGIC; -- Z80 (don't care about Time Constraints)
 			  nCLK4MHz : out  STD_LOGIC; -- not Z80 (under Time Constraints)
            CLK8MHz : out  STD_LOGIC; -- Bootloader (nCLK4MHz)
@@ -40,18 +40,22 @@ entity MIST_clocks is
 			  sdram_v_clk : out STD_LOGIC;
 			  sdram_v_clkref : out STD_LOGIC;
 			  --sdram_v_init : out STD_LOGIC;
-			  CLK_PWM: out STD_lOGIC
+			  CLK_PWM: out STD_lOGIC;
+			  CLK16MHz : out STD_LOGIC -- TV mode
            );
 end MIST_clocks;
 
 architecture Behavioral of MIST_clocks is
 
 	-- from OneChipMSX-master/Board/mist/PLL4X2.vhd
-	
+	--c0:4.007067MHz
+	--c1:25.2MHz
+	--c2:114.428571MHz
+	--c3:16.020000MHz
 	signal c0 : std_logic;--27MHz 20/135 =4MHz     Z80/bootloader
 	signal c1 : std_logic;--27MHz 125/135=25MHz    VGA
 	signal c2 : std_logic;--27MHz 572/135=114.4MHz SDRAM
-	signal c3 : std_logic;--27MHz 1/2250 =12kHz    keyboard
+	signal c3 : std_logic;--27MHz 1/2250 =12kHz    TV mode 16MHz - (not keyboard finally)
 	signal pll_locked : std_logic;
 	
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (4 DOWNTO 0);
@@ -139,11 +143,28 @@ begin
 	c0    <= sub_wire0(0);--27MHz 20/135 =4MHz     Z80/bootloader
 	c1    <= sub_wire0(1);--27MHz 125/135=25MHz    VGA
 	c2    <= sub_wire0(2);--27MHz 572/135=114.4MHz SDRAM
-	c3    <= sub_wire0(3);--27MHz 1/2250 =12kHz    keyboard
+	c3    <= sub_wire0(3);--27MHz 1/2250 =12kHz    TV mode 16MHz - (not keyboard finally)
 	inclk0(1) <= '0';
 	inclk0(0) <= CLOCK_27(0);
 
-	ps2_clk <=c3;
+	
+	--c0 4MHz
+	--ps2_clk	12-16kHz ratio 256 ok !
+	process (c0)
+		variable n:integer range 0 to 256-1;
+	begin
+		if rising_edge(c0) then
+			n:=(n+1) mod 256;
+			if n>=128 then
+				ps2_clk<='1';
+			else
+				ps2_clk<='0';
+			end if;
+		end if;
+	end process;
+	--ps2_clk <=c3;
+	CLK16MHz <=c3;
+	
 	CLK4MHz<=not(c0);
 	nCLK4MHz<=c0; -- not Z80 (under Time Contraints) / synchro 25MHz
    CLK8MHz<=c0; -- Bootloader (nCLK4MHz)
@@ -186,9 +207,9 @@ begin
 		clk2_duty_cycle => 50,
 		clk2_multiply_by => 89,
 		clk2_phase_shift => "0",
-		clk3_divide_by => 2250,
+		clk3_divide_by => 150,
 		clk3_duty_cycle => 50,
-		clk3_multiply_by => 1,
+		clk3_multiply_by => 89,
 		clk3_phase_shift => "0",
 		compensate_clock => "CLK0",
 		inclk0_input_frequency => 37037, -- I'm lying here, so that I can use lower frequencies equation, it's great :)

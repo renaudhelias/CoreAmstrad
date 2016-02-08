@@ -763,20 +763,26 @@ begin
 								etat:=ETAT_OSEF;
 								--chrn:=getCHRN(megashark_CHRNresult); -- result of a previous seek/recalibrate
 								if is_issue then
-									results(1):=ST0 or ST0_INVALID_COMMAND_ISSUE; -- generaly just after a failing "read command"
+									-- JavaCPC result[rindex = 0] = ST0_INVALID;
+									results(0):=ST0_INVALID_COMMAND_ISSUE; -- generaly just after a failing "read command"
 									is_issue:=false;
 									is_seeking_FACE_A:=false;
 									is_seeking_FACE_B:=false;
+									-- JavaCPC rcount = 1;
+									result_restant:=1;
 								elsif current_HUS(0)='0' and is_seeking_FACE_A then
 									results(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									results(0):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_A:=false;
 								elsif current_HUS(0)='1' and is_seeking_FACE_B then
 									results(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									results(0):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_B:=false;
 								else
-									results(1):=ST0;
+									results(0):=ST0_INVALID_COMMAND_ISSUE;
+									-- Cpc Aventure : "Please insert disk 2" message ?
+									result_restant:=1;
 								end if;
-								results(0):=chrn(3); -- C -- PCN : Present Cylinder Number
 							end if;
 							
 							if result_restant>0 then

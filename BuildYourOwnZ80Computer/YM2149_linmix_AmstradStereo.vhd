@@ -189,14 +189,18 @@ dont_mock:if not(MOCK) generate
       cs := '1';
     end if;
 
+--  protected static final int[] STATES = {
+--    INACTIVE, LATCH, INACTIVE, READ, LATCH, INACTIVE, WRITE, LATCH
+--  };
+	 
     sel := (I_BDIR & I_BC2 & I_BC1);
     case sel is
-      when "000" => null;
-      when "001" => busctrl_addr <= '1';
+      when "000" => null;						--IGNORED
+      when "001" => busctrl_addr <= '1';	--IGNORED
       when "010" => null;
       when "011" => busctrl_re   <= cs;
-      when "100" => busctrl_addr <= '1';
-      when "101" => null;
+      when "100" => busctrl_addr <= '1';	--IGNORED
+      when "101" => null;						--IGNORED
       when "110" => busctrl_we   <= cs;
       when "111" => busctrl_addr <= '1';
       when others => null;
@@ -264,13 +268,15 @@ dont_mock:if not(MOCK) generate
   --
   -- LATCHED, useful when emulating a real chip in circuit. Nasty as gated clock.
   --
-  p_waddr                : process(reset_l, busctrl_addr)
+  p_waddr                : process(reset_l, clk) --busctrl_addr)
   begin
     -- looks like registers are latches in real chip, but the address is caught at the end of the address state.
     if (RESET_L = '0') then
       addr <= (others => '0');
-    elsif falling_edge(busctrl_addr) then -- yuk
-      addr <= I_DA;
+    elsif rising_edge(clk) then --falling_edge(busctrl_addr) then -- yuk
+      if busctrl_addr='1' then
+			addr <= I_DA;
+		end if;
     end if;
   end process;
 

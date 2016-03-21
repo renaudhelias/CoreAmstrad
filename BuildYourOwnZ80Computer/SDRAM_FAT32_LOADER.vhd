@@ -33,8 +33,8 @@ entity SDRAM_FAT32_LOADER is
 		--FAT32_SECTOR0_OFFSET:STD_LOGIC_VECTOR (31 downto 0):=x"00400C00" -- in byte
 		--FAT32_SECTOR0_OFFSET:STD_LOGIC_VECTOR (31 downto 0):=x"00400000" -- in byte
 		-- CLK : @4MHz
-		RAM_INIT_PERIOD:integer:=4000; -- wait 1ms (32 8Mhz cycles) after FPGA config is done before going
-		RAM_REFRESH_PERIOD:integer:=8 -- into normal operation. Initialize the ram in the last 16 reset cycles (cycles 15-0)
+		RAM_INIT_PERIOD:integer:=16; -- wait 1ms (32 8Mhz cycles) after FPGA config is done before going
+		RAM_REFRESH_PERIOD:integer:=16 -- into normal operation. Initialize the ram in the last 16 reset cycles (cycles 15-0)
 
 	);
     Port ( CLK:in STD_LOGIC;

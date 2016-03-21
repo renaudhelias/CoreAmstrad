@@ -78,70 +78,51 @@ localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, B
 
 localparam STATE_IDLE      = 3'd0;   // first state in cycle
 localparam STATE_CMD_START = 3'd1;   // state in which a new command can be started
-localparam STATE_2         = 3'd2;   // 2
-localparam STATE_3         = 3'd3;   // 3
-localparam STATE_4         = 3'd4;   // 4
-localparam STATE_5         = 3'd5;   // 5
-localparam STATE_6         = 3'd6;   // 6
-localparam STATE_LAST      = 3'd7;   // last state in cycle
 localparam STATE_CMD_CONT  = STATE_CMD_START  + RASCAS_DELAY; // 4 command can be continued
+localparam STATE_LAST      = 3'd7;   // last state in cycle
 
-localparam DELTA_ASYNC = 2;
-reg [DELTA_ASYNC:0] rd_delta_i=0;
-reg [DELTA_ASYNC:0] wr_delta_i=0;
-wire rd_i=rd_delta_i[DELTA_ASYNC]; // oe at 114MHz
-wire wr_i=wr_delta_i[DELTA_ASYNC]; // wr at 114MHz
-
-//wire rd_before_i=rd_delta_i[DELTA_ASYNC-1];
-//wire wr_before_i=wr_delta_i[DELTA_ASYNC-1];
-
-//localparam IDLE_TOO_LONG = 31; // 15*X X=6
-//reg [7:0] idle_time_out = 8'd0;
-
-reg [DELTA_ASYNC:0] clkref_delta_i=0;
-reg [2:0] clkref14MHz_counter=3'd0; // 114MHz is 8x more quicker than 14MHz
-wire clkref14MHz_i=!clkref14MHz_counter[2];
+localparam DELTA_ASYNC = 2'd2;
+reg rd_i=1'b0; // oe at 114MHz
+reg wr_i=1'b0; // wr at 114MHz
+reg clkref_i=1'b0; // clkref at 114MHz
+reg init_i=1'b0; // init at 114MHz
 always @(posedge clk) begin
-	clkref_delta_i[DELTA_ASYNC:0] <= {clkref_delta_i[DELTA_ASYNC-1:0],clkref};
-	clkref14MHz_counter<=clkref14MHz_counter+3'd1;
-	// clk event
-	if (clkref_delta_i[DELTA_ASYNC]!=clkref_delta_i[DELTA_ASYNC-1]) begin
-		if (clkref_delta_i[DELTA_ASYNC-1]==1'b1) begin
-			// rising edge clkref at 114MHz
-			clkref14MHz_counter<=3'd0;
-		end
-	end;
-
-end
-
-always @(posedge clk) begin
-	rd_delta_i[DELTA_ASYNC:0] <= {rd_delta_i[DELTA_ASYNC-1:0],oe};
-	wr_delta_i[DELTA_ASYNC:0] <= {wr_delta_i[DELTA_ASYNC-1:0],we};
+	rd_i<=oe;
+	wr_i<=we;
+	clkref_i<=clkref;
+	init_i<=init;
 end
 
 reg [2:0] q /* synthesis noprune */;
-//reg work_to_do=1'b0;
+reg [2:0] delay;
+reg clkref_i_old=1'b0;
+reg [1:0] operation_wait=0;
+reg operation_launch=1'b0;
 always @(posedge clk) begin
-	// 112Mhz counter synchronous to 14 Mhz clock
-   // force counter to pass state 5->6 exactly after the rising edge of clkref
-	// since clkref is two clocks early
-//   if ((q == STATE_IDLE) && (reset!=0)) begin
-//		if ((rd_before_i==1'b0 && rd_i==1'b1) || (wr_before_i==1'b0 && wr_i==1'b1)) begin
-//			//if (work_to_do)
-//			//	work_to_do<=1'b0;
-//			q <= q + 3'd1;
-//			//idle_time_out <= 8'd0;
-//		end //else begin
-//			//idle_time_out<=idle_time_out+1;
-//		//end
-//	end else begin/
-//		//idle_time_out <= 8'd0;
-//		q <= q + 3'd1;
-//	end
-	if(((q == STATE_5) && ( clkref14MHz_i == 0)) ||
-		((q == STATE_6) && ( clkref14MHz_i == 1)) ||
-      ((q != STATE_5) && (q != STATE_6)))
-			q <= q + 3'd1;
+	// 112Mhz counter synchronous to <whatever> Mhz clock (here 4MHz)
+   // does insert STATE_IDLE when needed
+	// operation_wait=2 : do ignore next 2 operations before running one operation (only one)
+	// operations not covered are simply running "REFRESH" operation
+	if ((clkref_i_old==0) && (clkref_i==1))
+		operation_wait<=DELTA_ASYNC;
+	else if (operation_wait!=0 && (q == STATE_LAST))
+		begin
+			operation_wait<=operation_wait-2'd1;
+			if (operation_wait==2'd1)
+				operation_launch<=1;
+		end
+	else if (operation_launch && (q == STATE_LAST))
+		operation_launch<=0;
+	
+	if ((clkref_i_old==0) && (clkref_i==1) && (q != STATE_IDLE))
+		// some synchro by here
+		//delay <= ((q+4'd7)%4'd8);
+		delay <= q;
+	else if ((q == STATE_IDLE) && (delay!=0))
+		delay <= delay - 3'd1;
+	else
+		q <= q + 3'd1;
+	clkref_i_old<=clkref_i;
 end
 
 // ---------------------------------------------------------------------
@@ -150,11 +131,15 @@ end
 
 // wait 1ms (32 8Mhz cycles) after FPGA config is done before going
 // into normal operation. Initialize the ram in the last 16 reset cycles (cycles 15-0)
-reg [4:0] reset;
+reg [4:0] reset=5'h1f; // do reset also at boot time (please do not sleep !)
+reg init_old=1'b0;
 always @(posedge clk) begin
-	if(init)	reset <= 5'h1f;
+	if(init_old && !init_i)
+		// do reset also at end of inits.
+		reset <= 5'h1f;
 	else if((q == STATE_LAST) && (reset != 0))
 		reset <= reset - 5'd1;
+	init_old <= init_i;
 end
 
 // ---------------------------------------------------------------------
@@ -198,10 +183,10 @@ wire [3:0] reset_cmd =
 	CMD_INHIBIT;
 
 wire [3:0] run_cmd =
-	((wr_i || rd_i) && (q == STATE_CMD_START))?CMD_ACTIVE:
-	( wr_i && 			 (q == STATE_CMD_CONT ))?CMD_WRITE:
-	(!wr_i &&  rd_i && (q == STATE_CMD_CONT ))?CMD_READ:
-	(!wr_i && !rd_i && (q == STATE_CMD_START))?CMD_AUTO_REFRESH:
+	(operation_launch && (wr_i || rd_i) && (q == STATE_CMD_START))?CMD_ACTIVE:
+	(operation_launch &&  wr_i && 			 (q == STATE_CMD_CONT ))?CMD_WRITE:
+	(operation_launch && !wr_i &&  rd_i && (q == STATE_CMD_CONT ))?CMD_READ:
+	((!operation_launch || (!wr_i && !rd_i)) && (q == STATE_CMD_START))?CMD_AUTO_REFRESH:
 	CMD_INHIBIT;
 	
 assign sd_cmd = (reset != 0)?reset_cmd:run_cmd;

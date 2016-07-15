@@ -57,7 +57,7 @@ entity SDRAM_FAT32_LOADER is
 			  dump_button: in std_logic:='0';
 			  load_init_done:out std_logic;
 			  is_dskReady:out std_logic_vector(1 downto 0):="00";
-			  key_reset:in std_logic;
+			  key_reset:in std_logic_vector(1 downto 0); -- key_reset : 1, key_reset_space : 0
 			  --changeDSK : in std_logic;
 			  
 			  -- MiST OSD dir_entry (file selected)
@@ -196,6 +196,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal meca_spi_Wblock:std_logic:='0';
 	signal megashark_done_s:std_logic:='1';
 	
+	signal key_reset_space:std_logic:='0';
 begin
 
 	-- MiST dir entry (menu select)
@@ -476,11 +477,12 @@ begin
 
 		
 		-- check if it is ascii EFF (upper ROM)
-		function checkEFF(ff : std_logic_vector(23 downto 0)) return boolean is
+		function checkEFF(ff : std_logic_vector(23 downto 0); space : std_logic) return boolean is
 		begin
 			--  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
 			-- 30 31 32 33 34 35 36 37 38 39 41 42 43 44 45 46
-			if ff(23 downto 16) /= x"45" then return false; end if;
+			if space='0' and ff(23 downto 16) /= x"45" then return false; end if;
+			if space='1' and ff(23 downto 16) /= x"46" then return false; end if;
 			if ff(15 downto 8) > x"39" and ff(15 downto 8) < x"41" then return false; end if;
 			if ff(7 downto 0)  > x"39" and ff(7 downto 0)  < x"41" then return false; end if;
 			if ff(15 downto 8) < x"30" then return false; end if;
@@ -512,6 +514,7 @@ begin
 			return result;
 		end function;
 		variable extFifo:std_logic_vector(3*8-1 downto 0);
+		variable key_reset_space_mem : std_logic :='0';
 		variable compare_resultFF_mem:std_logic_vector(7 downto 0);
 	begin
 		if rising_edge(CLK) then
@@ -533,6 +536,7 @@ begin
 							compare_spi_Rdo<='1';
 							compare_spi_A<=compare_address+cursor;
 							compare_step:=1;
+							key_reset_space_mem:=key_reset_space;
 						when 1=>
 							if cursor=compare_length-1 then
 								if compare_extention then
@@ -546,7 +550,7 @@ begin
 											compare_resultDSK<=false;
 											compare_resultEZZ<=true;
 											compare_result<=true;
-										elsif compare_extentionEZZorEFF and checkEFF(extFifo) then
+										elsif compare_extentionEZZorEFF and checkEFF(extFifo,key_reset_space_mem) then
 											compare_resultFF_mem:=extractEFF(extFifo);
 											compare_resultFF<=compare_resultFF_mem;
 											compare_resultDSK<=false;
@@ -1090,7 +1094,7 @@ end function;
 	constant DUMP_COUNT_BEFORE_RESET_MAX : integer := 15;
 	variable dump_counter_before_reset : integer range 0 to DUMP_COUNT_BEFORE_RESET_MAX:=0;
 	variable changeDSK_mem : std_logic :='0'; -- do change disk at next key_reset.
-
+	variable key_reset_space_mem : std_logic :='0';
 
 
 
@@ -1126,6 +1130,8 @@ end function;
 				transmit_do<=false;
 				dump_do<=false;
 				mecashark_changeDSK_do<=false;
+				
+				key_reset_space<=key_reset_space_mem;
 				
 if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and transmit_done and not(compare_do) and compare_done and not(dump_do) and dump_done and not(mecashark_changeDSK_do) and mecashark_changeDSK_done then
 				
@@ -1458,9 +1464,10 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							else
 								dump_counter_before_reset:=dump_counter_before_reset+1;
 							end if;
-						elsif key_reset='1' then
+						elsif key_reset(1)='1' then
 							--if changeDSK='1' then -- always true
 							changeDSK_mem:='1';
+							key_reset_space_mem:=key_reset(0);
 							--end if;
 							load_done:='0';
 							dump_counter_before_reset:=0;

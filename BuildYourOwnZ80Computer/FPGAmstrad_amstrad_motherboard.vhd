@@ -335,7 +335,7 @@ entity joykeyb_MUSER_amstrad_motherboard is
           PPI_portC : in    std_logic_vector (3 downto 0); 
           PS2_CLK   : in    std_logic; 
           PS2_DATA  : in    std_logic; 
-          key_reset : out   std_logic; 
+          key_reset : out   std_logic_vector(1 downto 0); 
           PPI_portA : out   std_logic_vector (7 downto 0));
 end joykeyb_MUSER_amstrad_motherboard;
 
@@ -357,7 +357,8 @@ architecture BEHAVIORAL of joykeyb_MUSER_amstrad_motherboard is
              joystick1 : in    std_logic_vector (5 downto 0); 
              joystick2 : in    std_logic_vector (5 downto 0); 
              keycode   : in    std_logic_vector (9 downto 0); 
-             key_reset : out   std_logic; 
+             key_reset : out   std_logic;
+				 key_reset_space : out std_logic;
              portA     : out   std_logic_vector (7 downto 0));
    end component;
    
@@ -399,7 +400,8 @@ begin
                 portC(3 downto 0)=>PPI_portC(3 downto 0),
                 press=>XLXN_30,
                 unpress=>XLXN_31,
-                key_reset=>key_reset,
+                key_reset=>key_reset(1),
+					 key_reset_space=>key_reset(0),
                 portA(7 downto 0)=>PPI_portA(7 downto 0));
    
    XLXI_3 : KEYBOARD_controller
@@ -460,7 +462,7 @@ entity FPGAmstrad_amstrad_motherboard is
 			 audio_BC      : out   std_logic; 
           --FDD_output : out   std_logic_vector (6 downto 0); 
           init_Dout  : out   std_logic_vector (7 downto 0); 
-          key_reset  : out   std_logic; 
+          key_reset  : out   std_logic_vector (1 downto 0); 
           palette_A  : out   std_logic_vector (13 downto 0); 
           palette_D  : out   std_logic_vector (7 downto 0); 
           palette_W  : out   std_logic; 
@@ -826,7 +828,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              PS2_DATA  : in    std_logic; 
              PS2_CLK   : in    std_logic; 
              PPI_portA : out   std_logic_vector (7 downto 0); 
-             key_reset : out   std_logic);
+             key_reset : out   std_logic_vector(1 downto 0));
    end component;
    
    component please_wait

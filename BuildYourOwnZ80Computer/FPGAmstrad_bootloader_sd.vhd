@@ -45,7 +45,7 @@ entity FPGAmstrad_bootloader_sd is
           --FDC_input   : in    std_logic_vector (6 downto 0); 
           --file_change : in    std_logic; 
           --FILE_SELECT : in    std_logic_vector (7 downto 0); 
-          key_reset   : in    std_logic; 
+          key_reset   : in    std_logic_vector(1 downto 0); -- key_reset : 1, key_reset_space : 0
           --leds_select : in    std_logic_vector (4 downto 0):="00000"; 
           MISO        : in    std_logic; 
           nCLK8MHz    : in    std_logic; 
@@ -146,7 +146,7 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
              spi_init_done  : in    std_logic; 
              dump_button    : in    std_logic; 
              --stop           : in    std_logic; 
-             key_reset      : in    std_logic; 
+             key_reset      : in    std_logic_vector(1 downto 0); 
              --changeDSK      : in    std_logic; 
              --file_select    : in    std_logic_vector (7 downto 0); 
              spi_Din        : in    std_logic_vector (7 downto 0); 

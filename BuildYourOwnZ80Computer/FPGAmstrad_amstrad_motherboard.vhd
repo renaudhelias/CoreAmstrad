@@ -41,48 +41,48 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-entity CB4CE_HXILINX_amstrad_motherboard is
-  
-port (
-    CEO  : out STD_LOGIC;
-    Q0   : out STD_LOGIC;
-    Q1   : out STD_LOGIC;
-    Q2   : out STD_LOGIC;
-    Q3   : out STD_LOGIC;
-    TC   : out STD_LOGIC;
-    C    : in STD_LOGIC;
-    CE   : in STD_LOGIC;
-    CLR  : in STD_LOGIC
-    );
-end CB4CE_HXILINX_amstrad_motherboard;
-
-architecture Behavioral of CB4CE_HXILINX_amstrad_motherboard is
-
-  signal COUNT : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
-  constant TERMINAL_COUNT : STD_LOGIC_VECTOR(3 downto 0) := (others => '1');
-  
-begin
-
-process(C, CLR)
-begin
-  if (CLR='1') then
-    COUNT <= (others => '0');
-  elsif (C'event and C = '1') then
-    if (CE='1') then 
-      COUNT <= COUNT+1;
-    end if;
-  end if;
-end process;
-
-TC   <= '1' when (COUNT = TERMINAL_COUNT) else '0';
-CEO  <= '1' when ((COUNT = TERMINAL_COUNT) and CE='1') else '0';
-
-Q3 <= COUNT(3);
-Q2 <= COUNT(2);
-Q1 <= COUNT(1);
-Q0 <= COUNT(0);
-
-end Behavioral;
+--entity CB4CE_HXILINX_amstrad_motherboard is
+--  
+--port (
+--    CEO  : out STD_LOGIC;
+--    Q0   : out STD_LOGIC;
+--    Q1   : out STD_LOGIC;
+--    Q2   : out STD_LOGIC;
+--    Q3   : out STD_LOGIC;
+--    TC   : out STD_LOGIC;
+--    C    : in STD_LOGIC;
+--    CE   : in STD_LOGIC;
+--    CLR  : in STD_LOGIC
+--    );
+--end CB4CE_HXILINX_amstrad_motherboard;
+--
+--architecture Behavioral of CB4CE_HXILINX_amstrad_motherboard is
+--
+--  signal COUNT : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
+--  constant TERMINAL_COUNT : STD_LOGIC_VECTOR(3 downto 0) := (others => '1');
+--  
+--begin
+--
+--process(C, CLR)
+--begin
+--  if (CLR='1') then
+--    COUNT <= (others => '0');
+--  elsif (C'event and C = '1') then
+--    if (CE='1') then 
+--      COUNT <= COUNT+1;
+--    end if;
+--  end if;
+--end process;
+--
+--TC   <= '1' when (COUNT = TERMINAL_COUNT) else '0';
+--CEO  <= '1' when ((COUNT = TERMINAL_COUNT) and CE='1') else '0';
+--
+--Q3 <= COUNT(3);
+--Q2 <= COUNT(2);
+--Q1 <= COUNT(1);
+--Q0 <= COUNT(0);
+--
+--end Behavioral;
 
 
 library ieee;
@@ -542,8 +542,8 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_475      : std_logic;
    signal XLXN_486_AB      : std_logic_vector (7 downto 0);
 	signal XLXN_486_BC      : std_logic_vector (7 downto 0);
-   signal XLXN_498      : std_logic;
-   signal XLXN_499      : std_logic;
+   --signal XLXN_498      : std_logic;
+   --signal XLXN_499      : std_logic;
    signal XLXN_518      : std_logic_vector (7 downto 0);
    signal XLXN_519      : std_logic_vector (7 downto 0);
    signal XLXN_551      : std_logic;
@@ -570,6 +570,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    --signal XLXN_916      : std_logic;
   -- signal XLXN_918      : std_logic;
    signal XLXN_940      : std_logic;
+	signal SOUND_CLK     : std_logic;
    signal xram_A        : std_logic_vector (22 downto 0);
    signal ROMbank_DUMMY : std_logic_vector (7 downto 0);
    signal ram_W_DUMMY   : std_logic;
@@ -626,9 +627,10 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              crtc_VSYNC    : out   std_logic; 
              bvram_W       : out   std_logic; 
              crtc_R        : out   std_logic; 
-             int           : out   std_logic; 
-             WAIT_MEM_n    : out   std_logic; 
-             WAIT_n        : out   std_logic; 
+             int           : out   std_logic;
+             WAIT_MEM_n    : out   std_logic;
+             WAIT_n        : out   std_logic;
+				 SOUND_CLK     : out   std_logic;
              palette_W     : out   std_logic; 
              crtc_A        : out   std_logic_vector (15 downto 0); 
              bvram_A       : out   std_logic_vector (14 downto 0); 
@@ -808,17 +810,17 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              clk_ref : in    std_logic);
    end component;
    
-   component CB4CE_HXILINX_amstrad_motherboard
-      port ( C   : in    std_logic; 
-             CE  : in    std_logic; 
-             CLR : in    std_logic; 
-             CEO : out   std_logic; 
-             Q0  : out   std_logic; 
-             Q1  : out   std_logic; 
-             Q2  : out   std_logic; 
-             Q3  : out   std_logic; 
-             TC  : out   std_logic);
-   end component;
+--   component CB4CE_HXILINX_amstrad_motherboard
+--      port ( C   : in    std_logic; 
+--             CE  : in    std_logic; 
+--             CLR : in    std_logic; 
+--             CEO : out   std_logic; 
+--             Q0  : out   std_logic; 
+--             Q1  : out   std_logic; 
+--             Q2  : out   std_logic; 
+--             Q3  : out   std_logic; 
+--             TC  : out   std_logic);
+--   end component;
    
    component joykeyb_MUSER_amstrad_motherboard
       port ( CLK4MHz   : in    std_logic; 
@@ -861,7 +863,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    attribute KEEP_HIERARCHY of GA : label is "TRUE";
    attribute KEEP_HIERARCHY of GA_interrupt : label is "TRUE";
    attribute KEEP_HIERARCHY of MyROMSelect : label is "TRUE";
-   attribute HU_SET of XLXI_399 : label is "XLXI_399_0";
+   --attribute HU_SET of XLXI_399 : label is "XLXI_399_0";
 	
 	
 	--signal ROMarea: std_logic;
@@ -939,6 +941,7 @@ begin
                 palette_W=>palette_W,
                 WAIT_MEM_n=>XLXN_807,
                 WAIT_n=>XLXN_806,
+					 SOUND_CLK=>SOUND_CLK,
                 Dout(7 downto 0)=>MIX_DOUT0(7 downto 0), --inout
 					 RED_out=>RED_out,
 					 GREEN_out=>GREEN_out,
@@ -1158,7 +1161,7 @@ XLXN_814<=not(XLXN_835);
 
    
    XLXI_349 : YM2149
-      port map (CLK=>XLXN_940,
+      port map (CLK=>SOUND_CLK,
                 ENA=>XLXN_473,
                 I_A8=>XLXN_464,
                 I_A9_L=>XLXN_475,
@@ -1188,12 +1191,12 @@ XLXN_475<='0';
    
    XLXI_367_AB : PWM
       port map (clk=>CLK_PWM,--nCLK4MHz,
-                clk_ref=>XLXN_940,
+                clk_ref=>SOUND_CLK,
                 PWM_in(7 downto 0)=>XLXN_486_AB(7 downto 0),
                 PWM_out=>audio_AB);
 	XLXI_367_BC : PWM
       port map (clk=>CLK_PWM,--nCLK4MHz,
-                clk_ref=>XLXN_940,
+                clk_ref=>SOUND_CLK,
                 PWM_in(7 downto 0)=>XLXN_486_BC(7 downto 0),
                 PWM_out=>audio_BC);
    
@@ -1203,26 +1206,26 @@ XLXN_473<='1';
    
 --   XLXI_383 : VCC
 --      port map (P=>XLXN_498);
-XLXN_498<='1';
+--XLXN_498<='1';
    
 --   XLXI_384 : GND
 --      port map (G=>XLXN_499);
-XLXN_499<='0';
+--XLXN_499<='0';
    
 --   XLXI_385 : VCC
 --      port map (P=>XLXN_474);
 XLXN_474<='1';
    
-   XLXI_399 : CB4CE_HXILINX_amstrad_motherboard
-      port map (C=>nCLK4MHz,
-                CE=>XLXN_498,
-                CLR=>XLXN_499,
-                CEO=>open,
-                Q0=>open,
-                Q1=>XLXN_940,
-                Q2=>open,
-                Q3=>open,
-                TC=>open);
+   --XLXI_399 : CB4CE_HXILINX_amstrad_motherboard
+     -- port map (C=>nCLK4MHz,
+     --           CE=>XLXN_498,
+     --           CLR=>XLXN_499,
+     --           CEO=>open,
+      --          Q0=>open,
+      --          Q1=>XLXN_940,
+      --          Q2=>open,
+      --          Q3=>open,
+      --          TC=>open);
    
 --   XLXI_475 : AND2
 --      port map (I0=>XLXN_824,

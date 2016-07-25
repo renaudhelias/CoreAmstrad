@@ -120,8 +120,15 @@ entity simple_GateArrayInterrupt is
            int : out  STD_LOGIC:='0'; -- JavaCPC reset init
 			  M1_n : in  STD_LOGIC;
 			  MEM_WR:in std_logic;
+			  
+			  -- Z80 4MHz and CRTC 1MHz are produced by GATE_ARRAY normally
+			  -- MA0/CCLK is produced by GATE_ARRAY and does feed Yamaha sound chip.
+			  -- WAIT<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
+			  -- please_wait(4MHz,WAIT)=>4MHz is a clock hack as Z80 does not implement correclty the WAIT purpose (Z80 is encapsulating a Z8080 and so corrupt this purpose)
 			  WAIT_MEM_n : out  STD_LOGIC:='1';
            WAIT_n : out  STD_LOGIC:='1';
+			  -- YM2149 is using rising_edge(CLK)
+			  SOUND_CLK : out  STD_LOGIC; -- calibrated with Sim City/Abracadabra et les voleurs du temps/CPCRulez -CIRCLES demo
 			  
 			  crtc_D : in  STD_LOGIC_VECTOR (7 downto 0);
 			  palette_A: out STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
@@ -178,6 +185,8 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal hsync_int:std_logic;
 	
 	signal CLK4MHz : STD_LOGIC;
+	
+	signal SOUND_CLK_i : STD_LOGIC;
 
 	signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
 
@@ -481,6 +490,14 @@ begin
 	end if;
 end process ctrcConfig_process;
 
+
+delta_sound_clk : process(nCLK4_1) is
+begin
+	if falling_edge(nCLK4_1) then
+		SOUND_CLK<=SOUND_CLK_i;
+	end if;
+end process delta_sound_clk;
+	
 	-- DANGEROUS WARNING : CRTC PART WAS TESTED AND VALIDATED USING TESTBENCH
 simple_GateArray_process : process(reset,nCLK4_1) is
  
@@ -908,19 +925,36 @@ end if;
 					LineCounter<='1';
 				end if;
 				DATA_action<='0';
+				
+				-- SOUND_CLK : random : 1/4 Sim City OK (1/8 ?)
+				-- SOUND_CLK : 1100 et 1001 : 3/4 Sim City OK
+				-- SOUND_CLK : 0110 et 0011 : 1/4 Sim City OK
+				-- SOUND_CLK_i : 1100i : beep too high frequency
+				-- SOUND_CLK_i : 0011i : random sound frequency
+				-- SOUND_CLK_i : 1001i : Volume change but frequency sound seems fine
+				
+				-- Sim City's welcome demo is in VRAM 0011 zone in fact.
+				
+				-- SOUND_CLK : demo CPCrulez "-CIRCLES" KO
+				-- SOUND_CLK : demo CPCrulez "-CIRCLES" OK with 0011pi <= Candidate r005.5, KO with all others
+				
+				SOUND_CLK_i<='0';
 			when 1=>
 				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '0';
 				DATA_mem:=crtc_D;
 				DATA<=DATA_mem;
 				DATA_action<='1';
+				SOUND_CLK_i<='0';
 			when 2=>
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
 				DATA_action<='0';
+				SOUND_CLK_i<='1';
 			when 3=>
 				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '1';
 				DATA_mem:=crtc_D;
 				DATA_action<='1';
 				DATA<=DATA_mem;
+				SOUND_CLK_i<='1';
 			end case;
 			
 			crtc_DISP<=disp;

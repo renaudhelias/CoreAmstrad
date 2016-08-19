@@ -56,7 +56,7 @@ entity simple_DSK is
 			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection : 512B block
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out std_logic;
+			  megashark_doREAD : out STD_LOGIC_VECTOR(2 downto 0);
 			  megashark_doWRITE : out std_logic;
 			  megashark_done : in std_logic;
 			  megashark_face : out std_logic:='0';
@@ -73,8 +73,8 @@ architecture Behavioral of simple_DSK is
 
 	constant REQ_MASTER : STD_LOGIC_VECTOR (7 downto 0):=x"80";
 	constant DATA_IN_OUT : STD_LOGIC_VECTOR (7 downto 0):=x"40";
-	constant COMMAND_BUSY : STD_LOGIC_VECTOR (7 downto 0):=x"10";
 	constant EXEC_MODE : STD_LOGIC_VECTOR (7 downto 0):=x"20";
+	constant COMMAND_BUSY : STD_LOGIC_VECTOR (7 downto 0):=x"10";
 	constant FDD_BUSY : STD_LOGIC_VECTOR (7 downto 0):=x"0F";
 
 	signal status:STD_LOGIC_VECTOR (7 downto 0):=REQ_MASTER;
@@ -148,6 +148,8 @@ architecture Behavioral of simple_DSK is
 	signal memshark_doGOTO_T:boolean:=false;
 	signal memshark_doGOTO_MT:boolean:=false;
 	signal memshark_doREAD:boolean:=false;
+	signal memshark_doREAD_DEL:boolean:=false;
+	signal memshark_doREAD_SK:boolean:=false;
 	signal memshark_doWRITE:boolean:=false;
 	signal memshark_DTL:integer range 0 to SECTOR_SIZE-1:=0;
 	signal memshark_is_DTL:boolean:=false;
@@ -165,7 +167,7 @@ architecture Behavioral of simple_DSK is
 	signal block_W_cortex:std_ulogic:='0';
 
 	signal megashark_doGOTO_s:std_logic_vector(2 downto 0):="000";
-	signal megashark_doREAD_s:std_logic:='0';
+	signal megashark_doREAD_s:std_logic_vector(2 downto 0):="000";
 	signal megashark_doWRITE_s:std_logic:='0';
 	
 begin
@@ -197,19 +199,25 @@ megashark_doWRITE<=megashark_doWRITE_s;
 
 
 -- "Because of this multibyte interchange of information between the uPD765A/uPD765B and the processor, it is convenient to consider each command as consisting of three phases"
+	-- JavaCPC comparison in comments : checked OK
+	-- writePort: if REQ_MASTER and then not(COMMAND_BUSY) then can start a command
 status <= REQ_MASTER when phase = PHASE_ATTENTE_COMMANDE
+   -- writePort: if REQ_MASTER and COMMAND_BUSY then command is started : push param[]
 	else REQ_MASTER or COMMAND_BUSY when phase = PHASE_COMMAND
+	-- readPort:reads : if REQ_MASTER then do slow remove REQ_MASTER
+	-- getNextSector:read : add DATA_IN_OUT and EXEC_MODE, do remove REQ_MASTER
 	else               COMMAND_BUSY or EXEC_MODE or DATA_IN_OUT when phase = PHASE_WAIT_EXECUTION_READ
 	else REQ_MASTER or COMMAND_BUSY or EXEC_MODE or DATA_IN_OUT when phase = PHASE_EXECUTION_READ
+	-- getNextSector:write : do remove DATA_IN_OUT, add REQ_MASTER and EXEC_MODE
 	else               COMMAND_BUSY or EXEC_MODE when phase = PHASE_WAIT_EXECUTION_WRITE
 	else REQ_MASTER or COMMAND_BUSY or EXEC_MODE when phase = PHASE_EXECUTION_WRITE
 	else               COMMAND_BUSY or EXEC_MODE when phase = PHASE_AFTER_EXECUTION_WRITE
+	-- readPort:results : if REQ_MASTER then pop result[],
+	--                         if last pop then remove COMMAND_BUSY and DATA_IN_OUT
 	else               COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_WAIT_RESULT
 	else REQ_MASTER or COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_RESULT
 	else               COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_WAIT_ATTENTE_COMMANDE
 	else REQ_MASTER;
-
-
 
 
 
@@ -240,6 +248,7 @@ megashark:process(reset,nCLK4_1)
 	variable megashark_A_mem:std_logic_vector(megashark_A'range):=(others=>'0');
 	variable megashark_Dout_mem:std_logic_vector(megashark_Dout'range):=(others=>'0');
 	variable doGOTO_mem:std_logic_vector(2 downto 0):="000";
+	variable doREAD_mem:std_logic_vector(2 downto 0):="000";
 begin
 	if reset='1' then
 	elsif rising_edge(nCLK4_1) then --CLK4
@@ -263,6 +272,13 @@ begin
 		elsif memshark_doREAD then
 			-- READ CHRN : here R is sector id (x"C1"...), READ_DIAGNOSTIC do use EOT parameter, that is a sector id, so I doREAD when READ_DIAGNOSTIC command is called, instead of launching doGOTO.
 			memshark_done<=false;
+			doREAD_mem:="001";
+			if memshark_doREAD_SK then
+				doREAD_mem(1):='1';
+			elsif memshark_doREAD_DEL then
+				doREAD_mem(2):='1';
+			end if;
+			
 			memshark_step:=3;
 		elsif memshark_doWRITE then
 			memshark_done<=false;
@@ -270,12 +286,12 @@ begin
 		end if;
 		
 		megashark_doGOTO_s<="000";
-		megashark_doREAD_s<='0';
+		megashark_doREAD_s<="000";
 		megashark_doWRITE_s<='0';
 		
 		block_W_megashark_mem:='0'; -- we write only one time
 		if not(memshark_done) then
-			if megashark_done='1' and megashark_doGOTO_s(0)='0' and megashark_doREAD_s='0' and megashark_doWRITE_s='0' then
+			if megashark_done='1' and megashark_doGOTO_s(0)='0' and megashark_doREAD_s(0)='0' and megashark_doWRITE_s='0' then
 				case memshark_step is
 					when 0=> -- GOTO memshark_chrn
 						chrn_mem:=memshark_chrn;
@@ -293,7 +309,7 @@ begin
 						megashark_CHRN<=chrn_mem;
 						memshark_counter:=0;
 						megashark_A<=conv_std_logic_vector(memshark_counter,9);
-						megashark_doREAD_s<='1';
+						megashark_doREAD_s<=doREAD_mem;
 						memshark_step:=4;
 					when 4=>
 						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,9);
@@ -310,7 +326,7 @@ begin
 							megashark_CHRN<=chrn_mem;
 							memshark_counter:=memshark_counter+1;
 							megashark_A<=conv_std_logic_vector(memshark_counter,9);
-							megashark_doREAD_s<='1';
+							megashark_doREAD_s<=doREAD_mem;
 						end if;
 					when 5=>
 						chrn_mem:=megashark_CHRNresult;
@@ -418,6 +434,9 @@ cortex:process(reset,nCLK4_1)
 	variable command:std_logic_vector(7 downto 0);
 	variable is_multitrack:boolean:=false;
 	
+	variable is_del:boolean:=false;
+	variable is_sk:boolean:=false;
+	
 	variable data:std_logic_vector(7 downto 0);
 	variable do_update:boolean;
 
@@ -469,9 +488,9 @@ cortex:process(reset,nCLK4_1)
 	variable ST1:std_logic_vector(7 downto 0):=(others=>'0');
 	variable ST2:std_logic_vector(7 downto 0):=(others=>'0');
 	variable ST3:std_logic_vector(7 downto 0):=(others=>'0');
-	variable ONE_BLOCK:std_logic_vector(7 downto 0):=x"01";
-	variable BLOCK_SIZE:std_logic_vector(7 downto 0):=x"02";
-	variable TRACK_00:std_logic_vector(7 downto 0):=x"00";
+	constant ONE_BLOCK:std_logic_vector(7 downto 0):=x"01";
+	constant BLOCK_SIZE:std_logic_vector(7 downto 0):=x"02";
+	constant TRACK_00:std_logic_vector(7 downto 0):=x"00";
 	variable EOT:std_logic_vector(7 downto 0):=(others=>'0');
 	variable EOT_DTL:integer range 0 to SECTOR_SIZE-1:=0;
 	variable is_EOT_DTL:boolean:=false; -- FIXME
@@ -490,6 +509,8 @@ cortex:process(reset,nCLK4_1)
 	variable is_seeking_FACE_A:boolean:=false;
 	variable is_seeking_FACE_B:boolean:=false;
 	variable is_issue:boolean:=false; -- not is_seeking but bad command result
+	
+	variable seek_failed:boolean:=false; -- seek/recalibrate result
 begin
 
 	if reset='1' then
@@ -511,6 +532,8 @@ begin
 			memshark_doGOTO_T<=false;
 			memshark_doGOTO_MT<=false;
 			memshark_doREAD<=false;
+			memshark_doREAD_DEL<=false;
+			memshark_doREAD_SK<=false;
 			memshark_doWRITE<=false;
 			
 	
@@ -534,6 +557,8 @@ begin
 					-- that's all folks !
 					current_HUS(2):=megashark_CHRNresult(16); -- side (one side only ?)
 					chrn:=getCHRN(megashark_CHRNresult); -- C (from SEEK command ask)
+					-- ST1_NO_DATA or ST1_MISSING_ADDR
+					seek_failed:=(megashark_INFO_ST1(2)='1' or megashark_INFO_ST1(0)='1');
 					etat_wait:=false;
 					phase <= PHASE_ATTENTE_COMMANDE;
 				elsif phase = PHASE_WAIT_EXECUTION_READ and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
@@ -718,6 +743,8 @@ begin
 											-- on lance une tentative de lecture du block en parallele
 											memshark_chrn<=setCHRN(chrn);
 											memshark_doREAD<=true;
+											memshark_doREAD_DEL<=is_del;
+											memshark_doREAD_SK<=is_sk;
 										end if;
 									end if;
 								end if;
@@ -759,27 +786,35 @@ begin
 --								results(2):=chrn(2);
 --								results(1):=ONE_BLOCK; --chrn(1);
 --								results(0):=chrn(0);
-							elsif etat=ETAT_SENSE_INTERRUPT_STATUS  and result_restant=2 then
+							elsif etat=ETAT_SENSE_INTERRUPT_STATUS  and result_restant=3 then
 								etat:=ETAT_OSEF;
+								-- JavaCPC result[rindex = 0] = ST0_INVALID;
+								results(0):=ST0_INVALID_COMMAND_ISSUE;
 								--chrn:=getCHRN(megashark_CHRNresult); -- result of a previous seek/recalibrate
 								if is_issue then
-									-- JavaCPC result[rindex = 0] = ST0_INVALID;
-									results(0):=ST0_INVALID_COMMAND_ISSUE; -- generaly just after a failing "read command"
+									 -- generaly just after a failing "read command"
 									is_issue:=false;
 									is_seeking_FACE_A:=false;
 									is_seeking_FACE_B:=false;
 									-- JavaCPC rcount = 1;
 									result_restant:=1;
 								elsif current_HUS(0)='0' and is_seeking_FACE_A then
-									results(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
-									results(0):=chrn(3); -- C -- PCN : Present Cylinder Number
+									if seek_failed then
+										results(2):=ST0 or ST0_ABNORMAL or ST0_SEEK_END or ST0_EQUIPMENT_CHECK; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									else
+										results(2):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									end if;
+									results(1):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_A:=false;
 								elsif current_HUS(0)='1' and is_seeking_FACE_B then
-									results(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
-									results(0):=chrn(3); -- C -- PCN : Present Cylinder Number
+									if seek_failed then
+										results(2):=ST0 or ST0_ABNORMAL or ST0_SEEK_END or ST0_EQUIPMENT_CHECK; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									else
+										results(2):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									end if;
+									results(1):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_B:=false;
 								else
-									results(0):=ST0_INVALID_COMMAND_ISSUE;
 									-- Cpc Aventure : "Please insert disk 2" message ?
 									result_restant:=1;
 								end if;
@@ -921,7 +956,9 @@ begin
 										if memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 											-- on lance une tentative de lecture du block en parallele
 											memshark_chrn<=setCHRN(chrn);
-											memshark_doREAD<=true;											
+											memshark_doREAD<=true;
+											memshark_doREAD_DEL<=is_del;
+											memshark_doREAD_SK<=is_sk;
 											-- pointer charger le premier octet (tout de suite ou apres la sortie d'un PHASE_WAIT_*)
 											block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 											block_W_cortex_mem:='0';
@@ -950,6 +987,9 @@ begin
 							-- MT MF et SK (we don't care about theses 3 first bits)
 							command:=D_command and x"1f";
 							is_multitrack:=(D_command(7)='1');
+							is_del:=false;
+							is_sk:=(D_command(5)='1');
+
 							compare_OK:=false;
 							case command is
 								when x"03" => -- specify
@@ -962,7 +1002,7 @@ begin
 									check_dsk_face:=true;
 									--is_seeking:=true;
 								when x"08" => -- sense interrupt status : status information about the FDC at the end of operation
-									result_restant:=2;
+									result_restant:=3;
 									if etat_wait then
 										phase<=PHASE_WAIT_RESULT;
 									else
@@ -996,6 +1036,7 @@ begin
 									command_restant:=8;
 									etat:=ETAT_READ;
 									phase<=PHASE_COMMAND;
+									is_del:=true;
 									check_dsk_face:=true;
 								when x"0f" => -- seek : changing track C
 									phase<=PHASE_COMMAND;
@@ -1012,6 +1053,7 @@ begin
 									command_restant:=8;
 									phase<=PHASE_COMMAND;
 									etat:=ETAT_WRITE;
+									-- is_del:=true
 									check_dsk_face:=true;
 									
 								when x"11" => -- SCAN EQUAL
@@ -1177,6 +1219,8 @@ begin
 										-- on lance une tentative de lecture du block en parallele
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doREAD<=true;
+										memshark_doREAD_DEL<=is_del;
+										memshark_doREAD_SK<=is_sk;
 										etat_wait := true;
 										etat_zap := false;
 										compare_OK:=true;
@@ -1219,6 +1263,8 @@ begin
 										-- on lance une tentative de lecture du block en parallele
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doREAD<=true;
+										memshark_doREAD_DEL<=is_del;
+										memshark_doREAD_SK<=is_sk;
 										etat_wait := true;
 										etat_zap := false;
 									else

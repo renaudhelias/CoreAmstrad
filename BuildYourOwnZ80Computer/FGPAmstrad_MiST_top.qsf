@@ -295,16 +295,12 @@ set_global_assignment -name VERILOG_FILE data_io.v
 set_global_assignment -name VHDL_FILE mem_altera_gen.vhd
 set_global_assignment -name VHDL_FILE SDRAM_FAT32_LOADER.vhd
 set_global_assignment -name VHDL_FILE SDRAM_SPIMASTER.vhd
-set_global_assignment -name VHDL_FILE PPI.vhd
 set_global_assignment -name VHDL_FILE T80.vhd
 set_global_assignment -name VHDL_FILE T80_ALU.vhd
 set_global_assignment -name VHDL_FILE T80_MCode.vhd
 set_global_assignment -name VHDL_FILE T80_Pack.vhd
 set_global_assignment -name VHDL_FILE T80_Reg.vhd
-set_global_assignment -name VHDL_FILE T80configurator.vhd
-set_global_assignment -name VHDL_FILE T80s.vhd
 set_global_assignment -name VHDL_FILE T80se.vhd
-set_global_assignment -name VHDL_FILE T8080se.vhd
 set_global_assignment -name VHDL_FILE FPGAmstrad_amstrad_motherboard.vhd
 set_global_assignment -name VHDL_FILE FPGAmstrad_amstrad_video.vhd
 set_global_assignment -name VHDL_FILE FPGAmstrad_bootloader_sd.vhd
@@ -320,7 +316,6 @@ set_global_assignment -name VHDL_FILE MIST_conf_str.vhd
 set_global_assignment -name VHDL_FILE MiST_status.vhd
 set_global_assignment -name VHDL_FILE osd_7SEG.vhd
 set_global_assignment -name VHDL_FILE osd_HEXA_7SEG.vhd
-set_global_assignment -name VHDL_FILE MiST_FILESELECT.vhd
 set_global_assignment -name VERILOG_FILE asdram.v
 set_global_assignment -name VHDL_FILE SELECT8tris.vhd
 set_global_assignment -name VHDL_FILE T80se_p.vhd

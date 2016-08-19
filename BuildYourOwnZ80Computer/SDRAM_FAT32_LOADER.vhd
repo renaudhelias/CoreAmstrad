@@ -79,7 +79,7 @@ entity SDRAM_FAT32_LOADER is
 			  megashark_INFO_2SIDES : out std_logic:='0';
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic;
+			  megashark_doREAD : in std_logic_vector(2 downto 0);
 			  megashark_doWRITE : in std_logic;
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic; -- from OSD
@@ -1782,6 +1782,9 @@ end if;
 		constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
 		constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
 
+		variable is_Del:boolean:=false; --injected via H of CHRN (operation "DELETED")
+		variable is_Sk:boolean:=false; --injected via H of CHRN (SK skip)
+		
 	begin
 		if rising_edge(CLK) then
 			if mecashark_changeDSK_do then
@@ -1791,13 +1794,17 @@ end if;
 			elsif megashark_doGOTO(0)='1' then
 				is_searching_track:=( megashark_doGOTO(1)='1');
 				is_multitrack:=(megashark_doGOTO(2)='1');
+				is_Del:=false;
+				is_Sk:=false;
 				megashark_done_s<='0';
 				mecashark_step:=25;
 				doGOTO:=true;
 				doWRITE:=false;
-			elsif megashark_doREAD='1' then
+			elsif megashark_doREAD(0)='1' then
 				is_searching_track:=false;
 				is_multitrack:=(megashark_doGOTO(2)='1');
+				is_Del:=(megashark_doREAD(2)='1');
+				is_Sk:=(megashark_doREAD(1)='1');
 				megashark_done_s<='0';
 				doGOTO:=false;
 				doWRITE:=false;
@@ -1805,6 +1812,8 @@ end if;
 			elsif megashark_doWRITE='1' then
 				is_searching_track:=false;
 				is_multitrack:=(megashark_doGOTO(2)='1');
+				is_Del:=false;
+				is_Sk:=false;
 				megashark_done_s<='0';
 				doGOTO:=false;
 				doWRITE:=true;
@@ -2103,6 +2112,7 @@ end if;
 									mecashark_step:=12;
 								end if;
 							else
+								-- on passe au suivant.
 								no_sect:=no_sect+1;
 								is_first_sector_of_track:=false;
 								if no_sect>=nb_sects then
@@ -2143,7 +2153,6 @@ end if;
 							else
 								megashark_INFO_ST1_mem:=spi_Din;
 							end if;
-							megashark_INFO_ST1<=megashark_INFO_ST1_mem;
 							-- FDC ST2
 							output_A:=output_A+(PREFIX & x"00000001");
 							meca_spi_A<=output_A;
@@ -2155,10 +2164,41 @@ end if;
 							else
 								megashark_INFO_ST2_mem:=spi_Din;
 							end if;
-							megashark_INFO_ST2<=megashark_INFO_ST2_mem;
-							-- go to start of sector list of this track
-							input_A:=input_A + (PREFIX & x"00000100");
-							mecashark_step:=24;
+							
+							-- megashark_INFO_ST2_mem(6) : CONTROL MASK
+							if (is_del and (megashark_INFO_ST2_mem(6)='0'))
+								or (not(is_del) and is_sk and (megashark_INFO_ST2_mem(6)='1')) then
+								-- je suis en READ_DELETED, et je suis sur un DATA !DELETED, donc je zap
+								-- je suis en READ+SK, et je suis sur un DATA DELETED, donc je le SKIP.
+								-- Niger Mansell, Orion x46/x66 (commande read avec et sans sk)
+								-- on passe au suivant.
+								no_sect:=no_sect+1;
+								is_first_sector_of_track:=false;
+								if no_sect>=nb_sects then
+									-- sector not found
+									is_sector_or_track_not_found:=true;
+									no_sect := nb_sects-1;
+									chrn(15 downto 8):=spi_Din; -- R
+									mecashark_step:=12;
+								else
+									-- goto next sector info
+									-- sizeof(SectorInfo) = 8
+									-- output_A:=output_A+(PREFIX & x"00000008");
+									-- output_A:=output_A+(PREFIX & x"00000001");
+									-- output_A:=output_A+(PREFIX & x"00000001");
+									-- output_A:=output_A+(PREFIX & x"00000001");
+									-- 8-1-1-1=5
+									output_A:=output_A+(PREFIX & x"00000005");
+									meca_spi_A<=output_A;
+									meca_spi_Rdo<='1';
+								end if;
+							else
+								megashark_INFO_ST1<=megashark_INFO_ST1_mem;
+								megashark_INFO_ST2<=megashark_INFO_ST2_mem;
+								-- go to start of sector list of this track
+								input_A:=input_A + (PREFIX & x"00000100");
+								mecashark_step:=24;
+							end if;
 						when 24=>
 							if no_sect>0 then
 								no_sect:=no_sect-1;

@@ -79,7 +79,7 @@ entity FPGAmstrad_bootloader_sd is
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic;
+			  megashark_doREAD : in std_logic_vector(2 downto 0);
 			  megashark_doWRITE : in std_logic;
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
@@ -180,7 +180,7 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic;
+			  megashark_doREAD : in std_logic_vector(2 downto 0);
 			  megashark_doWRITE : in std_logic;
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
@@ -189,42 +189,6 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0));
    end component;
-   
-   component INV
-      port ( I : in    std_logic; 
-             O : out   std_logic);
-   end component;
-   attribute BOX_TYPE of INV : component is "BLACK_BOX";
-   
-   component VCC
-      port ( P : out   std_logic);
-   end component;
-   attribute BOX_TYPE of VCC : component is "BLACK_BOX";
-   
-   component GND
-      port ( G : out   std_logic);
-   end component;
-   attribute BOX_TYPE of GND : component is "BLACK_BOX";
-   
-   component BUF
-      port ( I : in    std_logic; 
-             O : out   std_logic);
-   end component;
-   attribute BOX_TYPE of BUF : component is "BLACK_BOX";
-   
-   component AND2
-      port ( I0 : in    std_logic; 
-             I1 : in    std_logic; 
-             O  : out   std_logic);
-   end component;
-   attribute BOX_TYPE of AND2 : component is "BLACK_BOX";
-   
---   component LEDS_SWITCH2
---      port ( select_leds : in    std_logic; 
---             leds1       : in    std_logic_vector (7 downto 0); 
---             leds2       : in    std_logic_vector (7 downto 0); 
---             leds        : out   std_logic_vector (7 downto 0));
---   end component;
    
 	signal dump_button : std_logic:='0';
 begin
@@ -257,38 +221,31 @@ begin
       port map (--changeDSK=>'1',
                 CLK=>CLK8MHz,
                 dump_button=>dump_button,
-                --FDC_input(6 downto 0)=>FDC_input(6 downto 0),
-                --file_select(7 downto 0)=>"00000000",
                 key_reset=>key_reset,
-                --leds_select(2 downto 0)=>leds_select(2 downto 0),
                 ram_Din(7 downto 0)=>ram_Din(7 downto 0),
                 spi_Din(7 downto 0)=>XLXN_52(7 downto 0),
                 spi_init_done=>INIT_DONE,
                 spi_Rdone=>XLXN_98,
                 spi_Wdone=>XLXN_99,
-                --stop=>DO_STOP,
-                --FDC_output(5 downto 0)=>FDC_output(5 downto 0),
-					 is_dskReady=>is_dskReady,
-                --leds(7 downto 0)=>XLXN_114(7 downto 0),
-					 --first_BR_leds(7 downto 0)=>first_BR_leds(7 downto 0),
+                is_dskReady=>is_dskReady,
                 load_init_done=>FILE_LOADED_DUMMY,
                 ram_A(22 downto 0)=>ram_A(22 downto 0),
                 ram_Dout(7 downto 0)=>ram_Dout(7 downto 0),
                 ram_R=>XLXN_126,
                 ram_W=>ram_W,
                 spi_A(31 downto 0)=>XLXN_55(31 downto 0),
-					 spi_A_block(8 downto 0)=>XLXN_55b(8 downto 0),
+                spi_A_block(8 downto 0)=>XLXN_55b(8 downto 0),
                 spi_Dout(7 downto 0)=>XLXN_103(7 downto 0),
                 spi_Rdo=>XLXN_100,
                 spi_Wblock=>XLXN_129,
                 spi_Wdo=>XLXN_101,
-					 dir_entry_ack=>dir_entry_ack,
-					 dir_entry_downloading=>dir_entry_downloading,
+                dir_entry_ack=>dir_entry_ack,
+                dir_entry_downloading=>dir_entry_downloading,
                 dir_entry_clk=>dir_entry_clk,
-					 dir_entry_r=>dir_entry_r,
-					 dir_entry_d=>dir_entry_d,
-					 init_RAM=>init_RAM,
-					 -- simpleDSK interface
+                dir_entry_r=>dir_entry_r,
+                dir_entry_d=>dir_entry_d,
+                init_RAM=>init_RAM,
+			  -- simpleDSK interface
 			  megashark_CHRNresult=>megashark_CHRNresult,
 			  megashark_doGOTO=>megashark_doGOTO,
 			  megashark_CHRN=>megashark_CHRN,
@@ -305,63 +262,12 @@ begin
 			  megashark_INFO_ST2=>megashark_INFO_ST2
 					 );
    
---   XLXI_26 : INV
---      port map (I=>XLXN_94,
---                O=>ram_W_n);
 ram_W_n<=not(XLXN_94);
-   
---   XLXI_40 : INV
---      port map (I=>XLXN_76,
---                O=>SS_n);
---SS_n<=not(XLXN_76);
-   
---   XLXI_41 : VCC
---      port map (P=>XLXN_76);
---XLXN_76<='1';
-   
---   XLXI_43 : GND
---      port map (G=>DO_STOP);
---DO_STOP<='0';
-   
---   XLXI_46 : BUF
---      port map (I=>CLK8MHz,
---                O=>SCLK);
 SCLK<=CLK8MHz;
-   
---   XLXI_52 : GND
---      port map (G=>XLXN_89);
 XLXN_89<='0';
-   
---   XLXI_54 : GND
---      port map (G=>XLXN_91);
---XLXN_91<='0';
-   
---   XLXI_57 : AND2
---      port map (I0=>XLXN_127,
---                I1=>ram_W,
---                O=>XLXN_94);
 XLXN_94<=XLXN_127 and ram_W;
-   
---   XLXI_59 : INV
---      port map (I=>FILE_LOADED_DUMMY,
---                O=>XLXN_127);
 XLXN_127<=not(FILE_LOADED_DUMMY);
-   
---   XLXI_60 : LEDS_SWITCH2
---      port map (leds1(7 downto 0)=>XLXN_107(7 downto 0),
---                leds2(7 downto 0)=>XLXN_114(7 downto 0),
---                select_leds=>leds_select(3),
---                leds(7 downto 0)=>LEDS(7 downto 0));
-   
---   XLXI_63 : AND2
---      port map (I0=>XLXN_126,
---                I1=>XLXN_127,
---                O=>XLXN_128);
 XLXN_128<=XLXN_126 and XLXN_127;
-   
---   XLXI_64 : INV
---      port map (I=>XLXN_128,
---                O=>ram_R_n);
 ram_R_n<=not(XLXN_128);
    
 end BEHAVIORAL;

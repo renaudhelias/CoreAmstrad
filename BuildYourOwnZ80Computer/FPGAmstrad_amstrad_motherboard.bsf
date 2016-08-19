@@ -320,9 +320,9 @@ applicable agreement for further details.
 	(port
 		(pt 336 320)
 		(output)
-		(text "megashark_doREAD" (rect 0 0 90 12)(font "Arial" ))
-		(text "megashark_doREAD" (rect 225 315 315 327)(font "Arial" ))
-		(line (pt 336 320)(pt 320 320)(line_width 1))
+		(text "megashark_doREAD[2..0]" (rect 0 0 110 12)(font "Arial" ))
+		(text "megashark_doREAD[2..0]" (rect 205 315 315 327)(font "Arial" ))
+		(line (pt 336 320)(pt 320 320)(line_width 3))
 	)
 	(port
 		(pt 336 336)

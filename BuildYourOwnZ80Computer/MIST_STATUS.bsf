@@ -65,13 +65,6 @@ applicable agreement for further details.
 		(text "ppi_jumpers[3..0]" (rect 127 91 195 103)(font "Arial" ))
 		(line (pt 216 96)(pt 200 96)(line_width 3))
 	)
-	(port
-		(pt 216 112)
-		(output)
-		(text "tv" (rect 0 0 8 12)(font "Arial" ))
-		(text "tv" (rect 187 107 195 119)(font "Arial" ))
-		(line (pt 216 112)(pt 200 112)(line_width 1))
-	)
 	(drawing
 		(rectangle (rect 16 16 200 128)(line_width 1))
 	)

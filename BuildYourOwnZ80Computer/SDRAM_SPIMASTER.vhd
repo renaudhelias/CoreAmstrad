@@ -87,7 +87,8 @@ architecture Behavioral of SDRAM_SPIMASTER is
 	signal data_block_w:std_logic:='0';
 	signal data_block_address:std_logic_vector(BLOCK_SQRT-1 downto 0):=(others=>'0');
 	signal RAMB16_S9_address:std_logic_vector(10 downto 0);
-	signal parity:std_logic_vector(0 downto 0);
+	--NEXYS4
+	--signal parity:std_logic_vector(0 downto 0);
 	
 	signal check_crc16:boolean:=false;
 	
@@ -166,7 +167,8 @@ SS_n<='0';
 
 data_out<=data_block_out;
 
-parity(0)<=data_block_in(0) xor data_block_in(1) xor data_block_in(2) xor data_block_in(3) xor data_block_in(4) xor data_block_in(5) xor data_block_in(6) xor data_block_in(7);
+--NEXYS4
+--parity(0)<=data_block_in(0) xor data_block_in(1) xor data_block_in(2) xor data_block_in(3) xor data_block_in(4) xor data_block_in(5) xor data_block_in(6) xor data_block_in(7);
 	
 	native_send_cmd : process(SCLK) is
 		variable step_cmd:integer range 0 to 22:=0;

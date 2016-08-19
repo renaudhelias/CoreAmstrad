@@ -28,8 +28,10 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity aZRaEL_vram2vgaAmstradMiaow is
     Generic(
-	 VOFFSET_NEGATIF:integer:=(600/2-480/2)/2;
-	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
+--	 VOFFSET_NEGATIF:integer:=(600/2-480/2)/2;
+--	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
+	 VOFFSET_NEGATIF:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
+	 VOFFSET_PALETTE:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
 	 HardHZoom : integer:=1; -- do remember to divide clock entry by HardHZoom, and also HZoom by HardHZoom, if changing this parameter
 	 -- Amstrad
 	 -- 
@@ -110,6 +112,89 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 	 -- If I do scroll screen placing cursor at bottom, "poke &C000,&ff" does not target any more the top-left pixel,
 	 -- and in certain time it disappear : in this case it is just on a forgotten byte.
 	 -- 
+
+--"custom15khz.txt"
+--# -= 15KHz Progressive =-
+--modeline '768x224-15,75kHz-60,577Hz' 16,632 768 840 912 1056 224 227 230 260 -hsync -vsync
+
+--"TAITO 57.5HZ DOUBLE DRAGON SERIE MAME32v92"
+--Modeline "240x224 15,6KHz 57,5Hz" 5.111 240 257 274 328 224 244 247 271  -hsync -vsync
+--"256x224 59.94Hz 15.71KHz KONAMI, TAITO, TECHNOS DOUBLE DRAGON 60HZ mame0.62b, SUPER NES 60HZ"
+--Modeline "256x224"   4.900   256 257 280 312   224 236 239 262  -hsync -vsync
+--"256x224 16.6 50.0hz SUPER NINTENDO PAL-50Hz"
+--Modeline "256x224"   4.867   256 256 280 312   224 257 260 312  -hsync -vsync
+--"256x239 57.41Hz 15.73Khz DATA EAST 256x240@57.4Hz DRAGON NINJA,SECRET AGENT ETC)"
+--Modeline "256x239" 4.908 256 265 288 312 239 249 252 274  -hsync -vsync
+--"256x240 60.00Hz 15.6Khz KEGA FUSION SEGA MD SMS 256x224, 256x240 60HZ JAP-NTSC"
+--Modeline "256x240"   5.242   256 272 288 336   240 242 246 260  -hsync -vsync
+--"256x240 50.0Hz 15.6Khz KEGA SEGA MD SMS 256x224, NINTENDO NES 256x240 PAL-50HZ"
+--Modeline "256x240"   5.366   256 272 288 344   240 268 272 312  -hsync -vsync
+--"256x248 58.00Hz 15.7Khz DATA EAST 256x240 58HZ CRUDES BUSTER, TWO CRUDES ETC"
+--Modeline "256x248" 4.904 256 265 288 312 248 252 255 271  -hsync -vsync
+--"264x264 54.9Hz 15.81Khz VIGILANTE"
+--Modeline "264x264"   5.566   264 280 304 352   264 271 274 288  -hsync -vsync
+--"288x224 59.8Hz 15.67Khz KONAMI ALIENS... 60hz"
+--Modeline "288x224"   5.766   288 296 320 368   224 234 237 262  -hsync -vsync
+--"296x224 60.6Hz 15.09Khz NAMCO 288x224 60.606060hz"
+--Modeline "296x224"   5.794   296 320 336 384   224 234 237 249  -hsync -vsync
+--"304x224 59.18Hz 15.74Khz NEOGEO 59,2HZ"
+--Modeline "304x224"   6.0452   304 312 336 384   224 238 241 266  -hsync -vsync
+--"320x224 60.00Hz 15.72Khz SEGA, SEGA SYSTEM 16, TAITO 60hz"
+--Modeline "320x224"   6.414   320 336 360 408   224 236 240 262  -hsync -vsync
+--"320x240 59.94Hz 15.703Khz SEGA MEGADRIVE, 32X, MASTER SYSTEM KEGA, TAITO 60hz"
+--Modeline "320x240"   6.407   320 328 352 408   240 245 249 262  -hsync -vsync
+--"320x240 50.00HZ 15.599Khz SEGA MEGADRIVE MASTER SYSTEM 32X PAL 320x240 50HZ"
+--Modeline "320x240"   5.99   320 320 344 384   240 264 267 312  -hsync -vsync
+--"320x256 50.74Hz 14.61Khz PSX PAL 50hz"
+--Modeline "320x256"   6.78   320 360 384 464   256 269 272 288  -hsync -vsync
+--"321x224 59.18Hz 15.74Khz SNK NEO GEO PLAYMORE 320x224 59.2Hz"
+--"Modeline "321x224"   6.061   321 329 353 385   224 238 241 266  -hsync -vsync"
+--Modeline "321x224"   6.171   321 321 350 392   224 238 241 266  -hsync -vsync
+--"321x240 58.54Hz Taito MAME0.92"
+--Modeline "321x240"   6.43   321 361 385 417   240 250 253 262  -hsync -vsync
+--"352x240 59.94Hz 15.7khz SIF NTSC-60Hz, NEC PC ENGINE TURBOGRAFX-16"
+--Modeline "352x240"   6.91   352 360 392 440   240 244 247 262  -hsync -vsync
+--"352x288 15,6KHZ 50,0HZ CIF PAL-50hz"
+--Modeline "352x288"   6.739   352 360 392 432   288 290 293 312  -hsync -vsync
+--"384x224 60.0000000Hz 15.72Khz CAPCOM CPS1 CPS2 60HZ"
+--"Modeline "384x224"   7.640   384 400 432 488   224 234 237 262  -hsync -vsync"
+--Modeline "384x224"   7.6707208   384 400 432 488   224 234 237 262  -hsync -vsync
+--"384x240 60Hz 15.3Khz REZON, Allumer 60HZ"
+--Modeline "384x240"   7.25   384 400 424 472   240 247 251 256  -hsync -vsync
+--"392x224 59.63Hz 15.44Khz CAPCOM CPS2 59.6HZ"
+--Modeline "392x224"   7.660   392 408 432 496   224 238 241 259  -hsync -vsync
+--"424x264 MORTAL KOMBAT SERIES, MIDWAY 53.14Hz 15Khz"
+--Modeline "424x264"   8.081   424 432 456 528   264 265 268 288  -hsync -vsync
+--Modeline "400x254 15,6KHz 53,2Hz" 7.758 400 412 448 496 254 264 266 294  -hsync -vsync
+--"424x280 54.9Hz 15.97Khz IREM GAMES 55HZ, R-Type Serie.."
+--Modeline "424x280"   8.179   424 432 456 512   280 281 284 291  -hsync -vsync
+--"520x224 60.02Hz 15.49Khz BATTLETOAD"
+--Modeline "520x224"   10.530   520 552 600 680   224 238 241 258  -hsync -vsync
+
+
+--src/mame/drivers/amstrad.cpp 
+--MCFG_SCREEN_RAW_PARAMS( XTAL_16MHz, 1024, 32, 32 + 640 + 64, 312, 56 + 15, 200 + 15 )
+--#define MCFG_SCREEN_RAW_PARAMS(_pixclock, _htotal, _hbend, _hbstart, _vtotal, _vbend, _vbstart)
+--pixclock	16MHz
+--htotal	1024
+--hbend		32
+--hbstart	32+640+64
+--vtotal	312
+--vbend		56+15	
+--vbstart	200+15
+
+
+
+--Mock NES Nintendo VSync @50Hz
+--Modeline "256×240 PAL (50Hz)" 5.320 256 269 294 341 240 270 273 312 -hsync -vsync
+--On multiplie tout par 3, et on obtient du 16MHz 768×240 pixels un peu comme l’Amstrad, donc c’est un bon Mock
+
+
+
+
+
+
+
 -- "modeline" is a Unix command, it's a helper command, listing VGA screen parameters on Unix.
 --   --modeline label pxcl HDsp HSS HSE HTot VDsp VSS VSE VTot flags
 --   --modeline "640x480@60" 25.2 640 656 752 800 480 490 492 525 -vsync -hsync

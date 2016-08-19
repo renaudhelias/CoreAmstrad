@@ -248,8 +248,6 @@ architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_Mi
 --	signal dOut4000_7 : std_logic_vector(0 downto 0);
 --	signal w4000 : std_logic;
 	
-	signal dInNothing : std_logic_vector(0 downto 0):=(others=>'0');
-	
 	function vectorize(s: std_logic) return std_logic_vector is
 variable v: std_logic_vector(0 downto 0);
 begin
@@ -292,7 +290,7 @@ dOut8000<=dOut8000_7(0) & dOut8000_6(0) & dOut8000_5(0) & dOut8000_4(0) & dOut80
                 dataout2=>dOut8000_0,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -307,7 +305,7 @@ write2=>'0');
                 dataout2=>dOut8000_1,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -322,7 +320,7 @@ write2=>'0');
                 dataout2=>dOut8000_2,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -337,7 +335,7 @@ write2=>'0');
                 dataout2=>dOut8000_3,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -352,7 +350,7 @@ write2=>'0');
                 dataout2=>dOut8000_4,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -367,7 +365,7 @@ write2=>'0');
                 dataout2=>dOut8000_5,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -382,7 +380,7 @@ write2=>'0');
                 dataout2=>dOut8000_6,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -397,7 +395,7 @@ write2=>'0');
                 dataout2=>dOut8000_7,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
 					 
@@ -414,7 +412,7 @@ write2=>'0');
 --                dataout2=>dOut4000_0,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -429,7 +427,7 @@ write2=>'0');
 --                dataout2=>dOut4000_1,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -444,7 +442,7 @@ write2=>'0');
 --                dataout2=>dOut4000_2,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -459,7 +457,7 @@ write2=>'0');
 --                dataout2=>dOut4000_3,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -474,7 +472,7 @@ write2=>'0');
 --                dataout2=>dOut4000_4,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -489,7 +487,7 @@ write2=>'0');
 --                dataout2=>dOut4000_5,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -504,7 +502,7 @@ write2=>'0');
 --                dataout2=>dOut4000_6,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
@@ -519,7 +517,7 @@ write2=>'0');
 --                dataout2=>dOut4000_7,
 --dataout1=>open,
 --enable1=>'1',
---datain2=>dInNothing,
+--datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 
@@ -600,8 +598,6 @@ architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video is
 	signal dOut4000_7 : std_logic_vector(0 downto 0);
 	signal w4000 : std_logic;
 	
-	signal dInNothing : std_logic_vector(0 downto 0):=(others=>'0');
-	
 	function vectorize(s: std_logic) return std_logic_vector is
 variable v: std_logic_vector(0 downto 0);
 begin
@@ -644,7 +640,7 @@ dOut4000<=dOut4000_7(0) & dOut4000_6(0) & dOut4000_5(0) & dOut4000_4(0) & dOut40
                 dataout2=>dOut8000_0,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -659,7 +655,7 @@ write2=>'0');
                 dataout2=>dOut8000_1,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -674,7 +670,7 @@ write2=>'0');
                 dataout2=>dOut8000_2,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -689,7 +685,7 @@ write2=>'0');
                 dataout2=>dOut8000_3,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -704,7 +700,7 @@ write2=>'0');
                 dataout2=>dOut8000_4,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -719,7 +715,7 @@ write2=>'0');
                 dataout2=>dOut8000_5,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -734,7 +730,7 @@ write2=>'0');
                 dataout2=>dOut8000_6,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -749,7 +745,7 @@ write2=>'0');
                 dataout2=>dOut8000_7,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
 					 
@@ -766,7 +762,7 @@ write2=>'0');
                 dataout2=>dOut4000_0,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -781,7 +777,7 @@ write2=>'0');
                 dataout2=>dOut4000_1,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -796,7 +792,7 @@ write2=>'0');
                 dataout2=>dOut4000_2,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -811,7 +807,7 @@ write2=>'0');
                 dataout2=>dOut4000_3,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -826,7 +822,7 @@ write2=>'0');
                 dataout2=>dOut4000_4,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -841,7 +837,7 @@ write2=>'0');
                 dataout2=>dOut4000_5,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -856,7 +852,7 @@ write2=>'0');
                 dataout2=>dOut4000_6,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -871,7 +867,7 @@ write2=>'0');
                 dataout2=>dOut4000_7,
 dataout1=>open,
 enable1=>'1',
-datain2=>dInNothing,
+datain2=>"0",
 enable2=>'1',
 write2=>'0');
    
@@ -909,12 +905,6 @@ architecture BEHAVIORAL of VRAM32Ko_Amstrad_MUSER_amstrad_video is
              B : in    std_logic; 
              C : out   std_logic);
    end component;
-   
-   component INV
-      port ( I : in    std_logic; 
-             O : out   std_logic);
-   end component;
-   attribute BOX_TYPE of INV : component is "BLACK_BOX";
    
    component SELECT8
       port ( s1    : in    std_logic; 
@@ -1074,20 +1064,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_video is
              Q   : out   std_logic_vector (7 downto 0));
    end component;
    
-   component GND
-      port ( G : out   std_logic);
-   end component;
-   attribute BOX_TYPE of GND : component is "BLACK_BOX";
-   
-   component VCC
-      port ( P : out   std_logic);
-   end component;
-   attribute BOX_TYPE of VCC : component is "BLACK_BOX";
-   
-   attribute HU_SET of XLXI_482 : label is "XLXI_482_1";
-   attribute HU_SET of XLXI_483 : label is "XLXI_483_2";
-   attribute HU_SET of XLXI_488 : label is "XLXI_488_3";
-   attribute HU_SET of XLXI_492 : label is "XLXI_492_4";
 begin
    XLXI_474 : VRAM32Ko_Amstrad_MUSER_amstrad_video
       port map (vga_A(14 downto 0)=>XLXN_693(14 downto 0),

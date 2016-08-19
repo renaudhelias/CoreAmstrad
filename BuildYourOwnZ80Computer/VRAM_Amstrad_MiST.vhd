@@ -129,7 +129,6 @@ end component;
 --			clock1	: IN STD_LOGIC 
 --	);
 --	END COMPONENT;
-signal dgnd : std_logic_vector(0 downto 0):=(others=>'0');
 signal dIn : std_logic_vector(0 downto 0):=(others=>'0');
 signal dOut : std_logic_vector(0 downto 0):=(others=>'0');
 BEGIN
@@ -148,7 +147,7 @@ vga_D<=dOut(0);
 	 write1 => vram_W,
     clk2 => vga_CLK,
 	 address2 => vga_A,
-	 datain2 => dgnd,
+	 datain2 => "0",
     dataout2 => dOut,
 	 enable2 => '1',
 	 write2 => '0');

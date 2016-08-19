@@ -24,8 +24,8 @@ entity MIST_STATUS is
 			  megashark_select : out std_logic;
 			  lowerVRAM : out std_logic_vector(1 downto 0);
 			  upperVRAM : out std_logic_vector(1 downto 0);
-			  ppi_jumpers : out std_logic_vector(3 downto 0);
-			  tv : out std_logic
+			  ppi_jumpers : out std_logic_vector(3 downto 0)
+			  --tv : out std_logic
 			  
 			 -- leds_select : out  STD_LOGIC_VECTOR (4 downto 0)
 			 );
@@ -43,6 +43,6 @@ upperVRAM(0)<=not(status(4));
 upperVRAM(1)<=not(status(3));
 ppi_jumpers<='1' & '1' & status(5) & '1';
 megashark_select<=status(6);
-tv<=status(7);
+--tv<=status(7);
 end Behavioral;
 

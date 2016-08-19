@@ -109,9 +109,7 @@ entity YM2149 is
 end;
 
 architecture RTL of YM2149 is
-  --type  array_16x8   is array (0 to 15) of std_logic_vector(7 downto 0);
-  --type  array_16x8   is array (0 to 14) of std_logic_vector(7 downto 0);
-  type  array_16x8   is array (0 to 13) of std_logic_vector(7 downto 0);
+  type  array_16x8   is array (0 to 15) of std_logic_vector(7 downto 0);
   type  array_3x12   is array (1 to 3) of std_logic_vector(11 downto 0);
 
   signal cnt_div              : std_logic_vector(3 downto 0) := (others => '0');
@@ -207,63 +205,12 @@ dont_mock:if not(MOCK) generate
     end case;
   end process;
 
+	-- OSEF : pas branché...
   p_oe                   : process(busctrl_re)
   begin
     -- if we are emulating a real chip, maybe clock this to fake up the tristate typ delay of 100ns
     O_DA_OE_L <= not (busctrl_re);
   end process;
-
-  --
-  -- CLOCKED
-  --
-  --p_waddr                : process
-  --begin
-    ---- looks like registers are latches in real chip, but the address is caught at the end of the address state.
-    --wait until rising_edge(CLK);
-
-    --if (RESET_L = '0') then
-      --addr <= (others => '0');
-    --else
-      --if (busctrl_addr = '1') then
-        --addr <= I_DA;
-      --end if;
-    --end if;
-  --end process;
-
-  --p_wdata                : process
-  --begin
-    ---- looks like registers are latches in real chip, but the address is caught at the end of the address state.
-    --wait until rising_edge(CLK);
-    --env_reset <= '0';
-
-    --if (RESET_L = '0') then
-      --reg <= (others => (others => '0'));
-      --env_reset <= '1';
-    --else
-      --env_reset <= '0';
-      --if (busctrl_we = '1') then
-        --case addr(3 downto 0) is
-          --when x"0" => reg(0)  <= I_DA;
-          --when x"1" => reg(1)  <= I_DA;
-          --when x"2" => reg(2)  <= I_DA;
-          --when x"3" => reg(3)  <= I_DA;
-          --when x"4" => reg(4)  <= I_DA;
-          --when x"5" => reg(5)  <= I_DA;
-          --when x"6" => reg(6)  <= I_DA;
-          --when x"7" => reg(7)  <= I_DA;
-          --when x"8" => reg(8)  <= I_DA;
-          --when x"9" => reg(9)  <= I_DA;
-          --when x"A" => reg(10) <= I_DA;
-          --when x"B" => reg(11) <= I_DA;
-          --when x"C" => reg(12) <= I_DA;
-          --when x"D" => reg(13) <= I_DA; env_reset <= '1';
-          --when x"E" => reg(14) <= I_DA;
-          --when x"F" => reg(15) <= I_DA;
-          --when others => null;
-        --end case;
-      --end if;
-    --end if;
-  --end process;
 
   --
   -- LATCHED, useful when emulating a real chip in circuit. Nasty as gated clock.
@@ -273,7 +220,7 @@ dont_mock:if not(MOCK) generate
     -- looks like registers are latches in real chip, but the address is caught at the end of the address state.
     if (RESET_L = '0') then
       addr <= (others => '0');
-    elsif rising_edge(clk) then --falling_edge(busctrl_addr) then -- yuk
+    elsif falling_edge(clk) then
       if busctrl_addr='1' then
 			addr <= I_DA;
 		end if;
@@ -284,8 +231,8 @@ dont_mock:if not(MOCK) generate
   begin
     if (RESET_L = '0') then
       reg <= (others => (others => '0'));
-    elsif rising_edge(clk) then
-		if busctrl_we='1' then --falling_edge(busctrl_we) then
+    elsif falling_edge(clk) then
+		if busctrl_we='1' then
         case addr(3 downto 0) is
           when x"0" => reg(0)  <= I_DA;
           when x"1" => reg(1)  <= I_DA;
@@ -301,50 +248,57 @@ dont_mock:if not(MOCK) generate
           when x"B" => reg(11) <= I_DA;
           when x"C" => reg(12) <= I_DA;
           when x"D" => reg(13) <= I_DA;
- --         when x"E" => reg(14) <= I_DA;
---          when x"F" => reg(15) <= I_DA;
+          when x"E" => reg(14) <= I_DA;
+          when x"F" => reg(15) <= I_DA;
           when others => null;
         end case;
 		  end if;
     end if;
-
-    env_reset <= '0';
+  end process;
+  
+  p_wdata_env_reset                : process(busctrl_we, addr)
+  begin
+	 env_reset <= '0';
     if (busctrl_we = '1') and (addr(3 downto 0) = x"D") then
       env_reset <= '1';
     end if;
   end process;
-
+    
   p_rdata                : process(busctrl_re, addr, reg)
   begin
-    O_DA <= (others => '0'); -- 'X'
+    O_DA <= (others => '1'); -- 'X'
     if (busctrl_re = '1') then -- not necessary, but useful for putting 'X's in the simulator
-      case addr(3 downto 0) is
-        when x"0" => O_DA <= reg(0) ;
-        when x"1" => O_DA <= "0000" & reg(1)(3 downto 0) ;
-        when x"2" => O_DA <= reg(2) ;
-        when x"3" => O_DA <= "0000" & reg(3)(3 downto 0) ;
-        when x"4" => O_DA <= reg(4) ;
-        when x"5" => O_DA <= "0000" & reg(5)(3 downto 0) ;
-        when x"6" => O_DA <= "000"  & reg(6)(4 downto 0) ;
-        when x"7" => O_DA <= reg(7) ;
-        when x"8" => O_DA <= "000"  & reg(8)(4 downto 0) ;
-        when x"9" => O_DA <= "000"  & reg(9)(4 downto 0) ;
-        when x"A" => O_DA <= "000"  & reg(10)(4 downto 0) ;
-        when x"B" => O_DA <= reg(11);
-        when x"C" => O_DA <= reg(12);
-        when x"D" => O_DA <= "0000" & reg(13)(3 downto 0);
-        when x"E" => if (reg(7)(6) = '0') then -- input
-                       O_DA <= ioa_inreg;
-                     else
-                       O_DA <= ioa_inreg; -- freemac hack reg(14); -- read output reg
-                     end if;
---        when x"F" => if (Reg(7)(7) = '0') then
---                       O_DA <= iob_inreg;
---                     else
---                       O_DA <= reg(15);
---                     end if;
-        when others => null;
-      end case;
+		if addr(7 downto 4)=x"0" then
+			case addr(3 downto 0) is
+			  when x"0" => O_DA <= reg(0) ;
+			  when x"1" => O_DA <= "0000" & reg(1)(3 downto 0) ;
+			  when x"2" => O_DA <= reg(2) ;
+			  when x"3" => O_DA <= "0000" & reg(3)(3 downto 0) ;
+			  when x"4" => O_DA <= reg(4) ;
+			  when x"5" => O_DA <= "0000" & reg(5)(3 downto 0) ;
+			  when x"6" => O_DA <= "000"  & reg(6)(4 downto 0) ;
+			  when x"7" => O_DA <= reg(7) ;
+			  when x"8" => O_DA <= "000"  & reg(8)(4 downto 0) ;
+			  when x"9" => O_DA <= "000"  & reg(9)(4 downto 0) ;
+			  when x"A" => O_DA <= "000"  & reg(10)(4 downto 0) ;
+			  when x"B" => O_DA <= reg(11);
+			  when x"C" => O_DA <= reg(12);
+			  when x"D" => O_DA <= "0000" & reg(13)(3 downto 0);
+			  when x"E" => if (reg(7)(6) = '0') then -- input
+								  O_DA <= ioa_inreg;
+								else
+								  O_DA <= reg(14); -- read output reg
+								end if;
+			  when x"F" => if (Reg(7)(7) = '0') then
+								  O_DA <= x"FF";
+								else
+								  O_DA <= reg(15);
+								end if;
+			  when others => null;
+			end case;
+		else
+			O_DA <= (others => '1'); -- 'X'
+		end if;
     end if;
   end process;
   --
@@ -459,7 +413,7 @@ dont_mock:if not(MOCK) generate
     end if;
   end process;
 
-  p_envelope_shape       : process(env_reset, CLK)
+  p_envelope_shape       : process(env_reset, reg, CLK)
     variable is_bot    : boolean;
     variable is_bot_p1 : boolean;
     variable is_top_m1 : boolean;

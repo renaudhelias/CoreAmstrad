@@ -41,198 +41,198 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-library ieee;
-use ieee.std_logic_1164.ALL;
-use ieee.numeric_std.ALL;
+--library ieee;
+--use ieee.std_logic_1164.ALL;
+--use ieee.numeric_std.ALL;
+--
+--entity VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard is
+--   port ( vga_A    : in    std_logic_vector (13 downto 0); 
+--          vga_CLK  : in    std_logic; 
+--          vram_A   : in    std_logic_vector (13 downto 0); 
+--          vram_CLK : in    std_logic; 
+--          vram_D   : in    std_logic_vector (7 downto 0); 
+--          vram_W   : in    std_logic; 
+--          vga_D    : out   std_logic_vector (7 downto 0));
+--end VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard;
+--
+--architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard is
+--   component VRAM_Amstrad_MiST
+--      port ( vram_A   : in    std_logic_vector (13 downto 0); 
+--             vga_A    : in    std_logic_vector (13 downto 0); 
+--             vram_CLK : in    std_logic; 
+--             vga_CLK  : in    std_logic; 
+--             vram_W   : in    std_logic; 
+--             vram_D   : in    std_logic; 
+--             vga_D    : out   std_logic);
+--   end component;
+--   
+--begin
+--   XLXI_30 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(0),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(0));
+--   
+--   XLXI_31 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(1),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(1));
+--   
+--   XLXI_32 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(2),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(2));
+--   
+--   XLXI_33 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(3),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(3));
+--   
+--   XLXI_34 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(4),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(4));
+--   
+--   XLXI_35 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(5),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(5));
+--   
+--   XLXI_36 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(6),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(6));
+--   
+--   XLXI_37 : VRAM_Amstrad_MiST
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D=>vram_D(7),
+--                vram_W=>vram_W,
+--                vga_D=>vga_D(7));
+--   
+--end BEHAVIORAL;
 
-entity VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard is
-   port ( vga_A    : in    std_logic_vector (13 downto 0); 
-          vga_CLK  : in    std_logic; 
-          vram_A   : in    std_logic_vector (13 downto 0); 
-          vram_CLK : in    std_logic; 
-          vram_D   : in    std_logic_vector (7 downto 0); 
-          vram_W   : in    std_logic; 
-          vga_D    : out   std_logic_vector (7 downto 0));
-end VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard;
-
-architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard is
-   component VRAM_Amstrad_MiST
-      port ( vram_A   : in    std_logic_vector (13 downto 0); 
-             vga_A    : in    std_logic_vector (13 downto 0); 
-             vram_CLK : in    std_logic; 
-             vga_CLK  : in    std_logic; 
-             vram_W   : in    std_logic; 
-             vram_D   : in    std_logic; 
-             vga_D    : out   std_logic);
-   end component;
-   
-begin
-   XLXI_30 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(0),
-                vram_W=>vram_W,
-                vga_D=>vga_D(0));
-   
-   XLXI_31 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(1),
-                vram_W=>vram_W,
-                vga_D=>vga_D(1));
-   
-   XLXI_32 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(2),
-                vram_W=>vram_W,
-                vga_D=>vga_D(2));
-   
-   XLXI_33 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(3),
-                vram_W=>vram_W,
-                vga_D=>vga_D(3));
-   
-   XLXI_34 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(4),
-                vram_W=>vram_W,
-                vga_D=>vga_D(4));
-   
-   XLXI_35 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(5),
-                vram_W=>vram_W,
-                vga_D=>vga_D(5));
-   
-   XLXI_36 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(6),
-                vram_W=>vram_W,
-                vga_D=>vga_D(6));
-   
-   XLXI_37 : VRAM_Amstrad_MiST
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D=>vram_D(7),
-                vram_W=>vram_W,
-                vga_D=>vga_D(7));
-   
-end BEHAVIORAL;
 
 
+--library ieee;
+--use ieee.std_logic_1164.ALL;
+--use ieee.numeric_std.ALL;
 
-library ieee;
-use ieee.std_logic_1164.ALL;
-use ieee.numeric_std.ALL;
-
-entity VRAM32Ko_Amstrad_MUSER_amstrad_motherboard is
-   port ( vga_A    : in    std_logic_vector (15 downto 0); 
-          vga_CLK  : in    std_logic; 
-          vram_A   : in    std_logic_vector (15 downto 0); 
-          vram_CLK : in    std_logic; 
-          vram_D   : in    std_logic_vector (7 downto 0); 
-          vram_W   : in    std_logic;
-			 lowerVRAM : in std_logic_vector(1 downto 0);
-			 upperVRAM : in std_logic_vector(1 downto 0);
-          vga_D    : out   std_logic_vector (7 downto 0));
-end VRAM32Ko_Amstrad_MUSER_amstrad_motherboard;
-
-architecture BEHAVIORAL of VRAM32Ko_Amstrad_MUSER_amstrad_motherboard is
-   attribute BOX_TYPE   : string ;
-   signal wLower  : std_logic;
-   signal wUpper  : std_logic;
-   signal dLower  : std_logic_vector (7 downto 0):="00000000"; 
-   signal dUpper  : std_logic_vector (7 downto 0):=(others=>'0');
-   component and_then
-      port ( A : in    std_logic; 
-             B : in    std_logic; 
-             C : out   std_logic);
-   end component;
-   
-   component SELECT8tris
-      port ( s1    : in    std_logic;
-				 s2    : in    std_logic; 
-             DATA1 : in    std_logic_vector (7 downto 0); 
-             DATA2 : in    std_logic_vector (7 downto 0); 
-             DATA3 : in    std_logic_vector (7 downto 0); 
-             DATA0 : out   std_logic_vector (7 downto 0));
-   end component;
-   
-   component VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard
-      port ( vram_CLK : in    std_logic; 
-             vga_CLK  : in    std_logic; 
-             vram_A   : in    std_logic_vector (13 downto 0); 
-             vga_A    : in    std_logic_vector (13 downto 0); 
-             vram_W   : in    std_logic; 
-             vram_D   : in    std_logic_vector (7 downto 0); 
-             vga_D    : out   std_logic_vector (7 downto 0));
-   end component;
-   
-begin
-
-   XLXI_2 : and_then
-      port map (A=>vram_W,
-                --B=>vram_A(15) and not(vram_A(14)),
-					 B=>(lowerVRAM(1) xor not(vram_A(15))) and (lowerVRAM(0) xor not(vram_A(14))),
-                C=>wLower);
-   
-   XLXI_4 : SELECT8tris
-      port map (DATA1(7 downto 0)=>dUpper(7 downto 0), --&C000-FFFF
-                DATA2(7 downto 0)=>dLower(7 downto 0), --&8000-BFFF ?
-					 DATA3(7 downto 0)=>x"FF",
-                s1=>(upperVRAM(1) xor not(vga_A(15))) and (upperVRAM(0) xor not(vga_A(14))),
-                --s2=>vga_A(15) and not(vga_A(14)),
-					 s2=>(lowerVRAM(1) xor not(vga_A(15))) and (lowerVRAM(0) xor not(vga_A(14))),
-					 DATA0(7 downto 0)=>vga_D(7 downto 0));
-   
-   XLXI_7 : and_then
-      port map (A=>vram_W,
-                B=>(upperVRAM(1) xor not(vram_A(15))) and (upperVRAM(0) xor not(vram_A(14))), --&C000-FFFF
-                C=>wUpper);
-   
-	--&8000-BFFF
-   XLXI_8 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D(7 downto 0)=>vram_D(7 downto 0),
-                vram_W=>wLower,
-                vga_D(7 downto 0)=>dLower(7 downto 0));
-   
-	--&C000-FFFF
-   XLXI_9 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard
-      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
-                vga_CLK=>vga_CLK,
-                vram_A(13 downto 0)=>vram_A(13 downto 0),
-                vram_CLK=>vram_CLK,
-                vram_D(7 downto 0)=>vram_D(7 downto 0),
-                vram_W=>wUpper,
-                vga_D(7 downto 0)=>dUpper(7 downto 0));
-   
-end BEHAVIORAL;
+--entity VRAM32Ko_Amstrad_MUSER_amstrad_motherboard is
+--   port ( vga_A    : in    std_logic_vector (15 downto 0); 
+--          vga_CLK  : in    std_logic; 
+--          vram_A   : in    std_logic_vector (15 downto 0); 
+--          vram_CLK : in    std_logic; 
+--          vram_D   : in    std_logic_vector (7 downto 0); 
+--          vram_W   : in    std_logic;
+--			 --lowerVRAM : in std_logic_vector(1 downto 0);
+--			 --upperVRAM : in std_logic_vector(1 downto 0);
+--          vga_D    : out   std_logic_vector (7 downto 0));
+--end VRAM32Ko_Amstrad_MUSER_amstrad_motherboard;
+--
+--architecture BEHAVIORAL of VRAM32Ko_Amstrad_MUSER_amstrad_motherboard is
+--   attribute BOX_TYPE   : string ;
+--   signal wLower  : std_logic;
+--   signal wUpper  : std_logic;
+--   signal dLower  : std_logic_vector (7 downto 0):="00000000"; 
+--   signal dUpper  : std_logic_vector (7 downto 0):=(others=>'0');
+--   component and_then
+--      port ( A : in    std_logic; 
+--             B : in    std_logic; 
+--             C : out   std_logic);
+--   end component;
+--   
+--   component SELECT8tris
+--      port ( s1    : in    std_logic;
+--				 s2    : in    std_logic; 
+--             DATA1 : in    std_logic_vector (7 downto 0); 
+--             DATA2 : in    std_logic_vector (7 downto 0); 
+--             DATA3 : in    std_logic_vector (7 downto 0); 
+--             DATA0 : out   std_logic_vector (7 downto 0));
+--   end component;
+--   
+--   component VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard
+--      port ( vram_CLK : in    std_logic; 
+--             vga_CLK  : in    std_logic; 
+--             vram_A   : in    std_logic_vector (13 downto 0); 
+--             vga_A    : in    std_logic_vector (13 downto 0); 
+--             vram_W   : in    std_logic; 
+--             vram_D   : in    std_logic_vector (7 downto 0); 
+--             vga_D    : out   std_logic_vector (7 downto 0));
+--   end component;
+--   
+--begin
+--
+--   XLXI_2 : and_then
+--      port map (A=>vram_W,
+--                --B=>vram_A(15) and not(vram_A(14)),
+--					 B=>('1' xor not(vram_A(15))) and ('0' xor not(vram_A(14))),
+--                C=>wLower);
+--   
+--   XLXI_4 : SELECT8tris
+--      port map (DATA1(7 downto 0)=>dUpper(7 downto 0), --&C000-FFFF
+--                DATA2(7 downto 0)=>dLower(7 downto 0), --&8000-BFFF ?
+--					 DATA3(7 downto 0)=>x"FF",
+--                s1=>('1' xor not(vga_A(15))) and ('1' xor not(vga_A(14))),
+--                --s2=>vga_A(15) and not(vga_A(14)),
+--					 s2=>('1' xor not(vga_A(15))) and ('0' xor not(vga_A(14))),
+--					 DATA0(7 downto 0)=>vga_D(7 downto 0));
+--   
+--   XLXI_7 : and_then
+--      port map (A=>vram_W,
+--                B=>('1' xor not(vram_A(15))) and ('1' xor not(vram_A(14))), --&C000-FFFF
+--                C=>wUpper);
+--   
+--	--&8000-BFFF
+--   XLXI_8 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D(7 downto 0)=>vram_D(7 downto 0),
+--                vram_W=>wLower,
+--                vga_D(7 downto 0)=>dLower(7 downto 0));
+--   
+--	--&C000-FFFF
+--   XLXI_9 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_motherboard
+--      port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
+--                vga_CLK=>vga_CLK,
+--                vram_A(13 downto 0)=>vram_A(13 downto 0),
+--                vram_CLK=>vram_CLK,
+--                vram_D(7 downto 0)=>vram_D(7 downto 0),
+--                vram_W=>wUpper,
+--                vga_D(7 downto 0)=>dUpper(7 downto 0));
+--   
+--end BEHAVIORAL;
 
 
 
@@ -343,8 +343,8 @@ entity FPGAmstrad_amstrad_motherboard is
           ram_Din    : in    std_logic_vector (7 downto 0); 
           RESET_n    : in    std_logic;
 			 CLK_PWM    : in    std_logic;
-			 lowerVRAM : in std_logic_vector(1 downto 0);
-			 upperVRAM : in std_logic_vector(1 downto 0);
+			 --lowerVRAM : in std_logic_vector(1 downto 0);
+			 --upperVRAM : in std_logic_vector(1 downto 0);
 			 ppi_jumpers : in std_logic_vector(3 downto 0);
 			 is_dskReady : in std_logic_vector(1 downto 0);
           audio_AB      : out   std_logic; 
@@ -380,7 +380,13 @@ entity FPGAmstrad_amstrad_motherboard is
            GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
            BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 			  HSYNC_out : out STD_logic;
-			  VSYNC_out : out STD_logic
+			  VSYNC_out : out STD_logic;
+			  
+			  zram_din : in std_logic_vector(7 downto 0); 
+			  zram_addr : out std_logic_vector(15 downto 0);
+			  zram_rd : out std_logic
+
+			  
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -431,18 +437,18 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_835      : std_logic;
    signal XLXN_845      : std_logic;
    signal XLXN_857      : std_logic_vector (1 downto 0);
-   signal XLXN_868      : std_logic_vector (15 downto 0);
-   signal XLXN_869      : std_logic_vector (7 downto 0);
-   signal XLXN_872      : std_logic;
-   signal XLXN_874      : std_logic_vector (15 downto 0);
-   signal XLXN_884      : std_logic;
+   --signal XLXN_868      : std_logic_vector (15 downto 0);
+   --signal XLXN_869      : std_logic_vector (7 downto 0);
+   --signal XLXN_872      : std_logic;
+   --signal XLXN_874      : std_logic_vector (15 downto 0);
+   --signal XLXN_884      : std_logic;
    signal XLXN_904      : std_logic;
    signal XLXN_907      : std_logic;
    signal XLXN_940      : std_logic;
 	signal SOUND_CLK     : std_logic;
    signal xram_A        : std_logic_vector (22 downto 0);
    signal ROMbank_DUMMY : std_logic_vector (7 downto 0);
-   signal ram_W_DUMMY   : std_logic;
+   --signal ram_W_DUMMY   : std_logic;
    signal RAMBank_DUMMY : std_logic_vector (2 downto 0);
    signal RAMBank_DUMMY512 : std_logic_vector (2 downto 0);
    component T80se_p
@@ -598,10 +604,10 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  ram_W : out  STD_LOGIC:='0'; -- sim
            ram_R : out  STD_LOGIC:='0'; -- sim
            ram_Din : in  STD_LOGIC_VECTOR (7 downto 0);
-			  ram_Dout : out STD_LOGIC_VECTOR (7 downto 0);
+			  ram_Dout : out STD_LOGIC_VECTOR (7 downto 0)
 			  
-			  vram_A:out STD_LOGIC_VECTOR (15 downto 0);
-			  vram_A_isValid:out std_logic
+			  --vram_A:out STD_LOGIC_VECTOR (15 downto 0);
+			  --vram_A_isValid:out std_logic
 			  );
    end component;
 
@@ -662,14 +668,14 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              vga_A    : in    std_logic_vector (15 downto 0); 
              vram_W   : in    std_logic; 
              vram_D   : in    std_logic_vector (7 downto 0);
-				 lowerVRAM : in std_logic_vector(1 downto 0);
-			 upperVRAM : in std_logic_vector(1 downto 0);
+				 --lowerVRAM : in std_logic_vector(1 downto 0);
+			 --upperVRAM : in std_logic_vector(1 downto 0);
              vga_D    : out   std_logic_vector (7 downto 0));
    end component;
    
 begin
 
-   ram_W <= ram_W_DUMMY;
+   --ram_W <= ram_W_DUMMY;
    AmstradT80 : T80se_p
       port map (BUSRQ_n=>'1',
                 CLKEN=>'1',
@@ -713,7 +719,7 @@ begin
                 A15_A14_A9_A8(2)=>A(14),
                 A15_A14_A9_A8(1)=>A(9),
                 A15_A14_A9_A8(0)=>A(8),
-                crtc_D(7 downto 0)=>XLXN_869(7 downto 0),
+                crtc_D(7 downto 0)=>zram_din(7 downto 0),
                 D(7 downto 0)=>D(7 downto 0),
                 IO_ACK=>XLXN_826,
                 IO_REQ_R=>IO_RD,
@@ -727,8 +733,8 @@ begin
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
                 bvram_D(7 downto 0)=>vram_D(7 downto 0),
                 bvram_W=>vram_W,
-                crtc_A(15 downto 0)=>XLXN_868(15 downto 0),
-                crtc_R=>open,
+                crtc_A(15 downto 0)=>zram_addr(15 downto 0),
+                crtc_R=>zram_rd,
                 crtc_VSYNC=>n_crtc_vsync,
                 int=>XLXN_835,
                 palette_A(13 downto 0)=>palette_A(13 downto 0),
@@ -814,13 +820,13 @@ port map ( reset=>XLXN_907,
 			  Dout(7 downto 0)=>MIX_DOUT2(7 downto 0), -- against I82C55.IO_DATA inout
 			  
 			  ram_A(22 downto 0)=>ram_A(22 downto 0),
-			  ram_W=>ram_W_DUMMY,
+			  ram_W=>ram_W,
            ram_R=>ram_R,
            ram_Din(7 downto 0)=>ram_Din(7 downto 0),
-			  ram_Dout(7 downto 0)=>ram_Dout(7 downto 0),
+			  ram_Dout(7 downto 0)=>ram_Dout(7 downto 0)
 			  
-			  vram_A(15 downto 0)=>XLXN_874(15 downto 0),
-			  vram_A_isValid=>XLXN_872
+			  --vram_A(15 downto 0)=>XLXN_874(15 downto 0),
+			  --vram_A_isValid=>XLXN_872
 			  );
 
 XLXN_180<=not(IO_RD);
@@ -905,20 +911,20 @@ XLXN_785<=not(XLXN_38);
    
 XLXN_830<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
    
-	
-	-- MIRROR VRAM
-   XLXI_589 : VRAM32Ko_Amstrad_MUSER_amstrad_motherboard
-      port map (vga_A(15 downto 0)=>XLXN_868(15 downto 0),
-                vga_CLK=>nCLK4MHz, --CLK4MHz,
-                vram_A(15 downto 0)=>XLXN_874(15 downto 0),
-                vram_CLK=>nCLK4MHz,
-                vram_D(7 downto 0)=>D(7 downto 0),
-                vram_W=>XLXN_884,
-					 lowerVRAM=>lowerVRAM,
-					 upperVRAM=>upperVRAM,
-                vga_D(7 downto 0)=>XLXN_869(7 downto 0));
-   
-XLXN_884<=ram_W_DUMMY and XLXN_872;
+--	
+--	-- MIRROR VRAM
+--   XLXI_589 : VRAM32Ko_Amstrad_MUSER_amstrad_motherboard
+--      port map (vga_A(15 downto 0)=>--XLXN_868(15 downto 0),
+--                vga_CLK=>nCLK4MHz, --CLK4MHz,
+--                vram_A(15 downto 0)=>--XLXN_874(15 downto 0),
+--                vram_CLK=>nCLK4MHz,
+--                vram_D(7 downto 0)=>D(7 downto 0),
+--                vram_W=>--XLXN_884,
+--					 --lowerVRAM=>lowerVRAM,
+--					 --upperVRAM=>upperVRAM,
+--                vga_D(7 downto 0)=>--XLXN_869(7 downto 0));
+--   
+----XLXN_884<=ram_W_DUMMY and XLXN_872;
    
 end BEHAVIORAL;
 

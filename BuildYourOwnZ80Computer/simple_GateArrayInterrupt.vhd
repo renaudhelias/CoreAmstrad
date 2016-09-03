@@ -516,6 +516,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
 	variable disp:std_logic:='0';
+	variable disp_delta:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
 	-- following Quazar legends, 300 times per second
 	-- Following a lost trace in Google about www.cepece.info/amstrad/docs/garray.html I have
@@ -534,7 +535,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable ADRESSE_maBase_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable ADRESSE_MA_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
-		variable bvram_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
+		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
+		variable bvram_A_mem_delta:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 
 		variable was_M1_1:boolean:=false;
 		variable waiting:boolean:=false;
@@ -608,7 +610,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 crtc_DISP<='0';
 palette_W<='0';
 --bvram
-crtc_R<='1'; -- directly solve external ram_A for CRTC read
+crtc_R<='0'; -- directly solve external ram_A for CRTC read
+bvram_W<='0';
 
 -- Crazy Car II doesn't like little_reset
 			-- Asphalt IACK without test in int_mem
@@ -921,24 +924,39 @@ end if;
 				else
 					LineCounter<='1';
 				end if;
-				DATA_action<='0';
+
+				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '1';
+				DATA_mem:=crtc_D;
+				DATA_action<='1';
+				DATA<=DATA_mem;
+				bvram_W<=disp_delta;
+				bvram_D<=DATA_mem;
+				
+				crtc_R<=disp;
 			when 1=>
-				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '0';
-				DATA_mem:=crtc_D;
-				DATA<=DATA_mem;
-				DATA_action<='1';
-				bvram_W<=disp;
-				bvram_D<=DATA_mem;
-			when 2=>
-				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
+				-- Daisy relaxing (zsdram.v)
+				bvram_A_mem_delta:=bvram_A_mem;
+				disp_delta:=disp;
+			
+				--Daisy relaxing (zsdram.v)
+				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
+				crtc_R<=disp;
 				DATA_action<='0';
-			when 3=>
-				bvram_A(14 downto 0)<=bvram_A_mem(13 downto 0) & '1';
+			when 2=>
+				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '0';
 				DATA_mem:=crtc_D;
-				DATA_action<='1';
 				DATA<=DATA_mem;
-				bvram_W<=disp;
+				DATA_action<='1';
+				bvram_W<=disp_delta;
 				bvram_D<=DATA_mem;
+
+				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
+				crtc_R<=disp;
+			when 3=>
+				--Daisy relaxing (zsdram.v)
+				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
+				crtc_R<=disp;
+				DATA_action<='0';
 			end case;
 			
 			crtc_DISP<=disp;

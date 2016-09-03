@@ -36,10 +36,10 @@ entity AmstradRAM is
 			  ram_W : out  STD_LOGIC:='0';
            ram_R : out  STD_LOGIC:='0';
            ram_Din : in  STD_LOGIC_VECTOR (7 downto 0);
-			  ram_Dout : out STD_LOGIC_VECTOR (7 downto 0);
+			  ram_Dout : out STD_LOGIC_VECTOR (7 downto 0)
 			  
-			  vram_A:out STD_LOGIC_VECTOR (15 downto 0);
-			  vram_A_isValid:out std_logic
+			  --vram_A:out STD_LOGIC_VECTOR (15 downto 0);
+			  --vram_A_isValid:out std_logic
 			  );
 end AmstradRAM;
 
@@ -47,8 +47,8 @@ architecture Behavioral of AmstradRAM is
 
 begin
 
-	vram_A(15 downto 0)<=A(15 downto 0);
-	vram_A_isValid<= init_done and not(A(22)) and not(A(21)) and not(A(20)) and not(A(19)) and not(A(18)) and A(17) and not(A(16));
+	--vram_A(15 downto 0)<=A(15 downto 0);
+	--vram_A_isValid<= init_done and not(A(22)) and not(A(21)) and not(A(20)) and not(A(19)) and not(A(18)) and A(17) and not(A(16));
 
 	ram_A(19 downto 0)<= init_A(19 downto 0) when init_done='0' else A(19 downto 0); -- address is solving
 	ram_A(22 downto 20)<=init_A(22 downto 20) when init_done='0' else A(22 downto 20);

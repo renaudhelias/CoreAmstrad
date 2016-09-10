@@ -50,11 +50,11 @@ entity simple_GateArrayInterrupt is
   VRAM_VDsp:integer:=600/2;
   VRAM_Hoffset:integer:=10 ; -- 63*16-46*16
   
-  -- le raster palette arrive au moment oÃƒÂ¹ l'encre est en face du stylo.
-  -- si on a un dÃƒÂ©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
-  -- hors nous on lit via MA, et on ÃƒÂ©crit n'importe oÃƒÂ¹ via VRAM_Voffset
+  -- le raster palette arrive au moment oÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ l'encre est en face du stylo.
+  -- si on a un dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
+  -- hors nous on lit via MA, et on ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©crit n'importe oÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ via VRAM_Voffset
   -- donc VRAM_Voffset n'a pas d'influence sur le raster palette
-  -- ÃƒÂ§a veut dire que l'adresse mÃƒÂ©moire dessous la palette n'est pas bonne
+  -- ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§a veut dire que l'adresse mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©moire dessous la palette n'est pas bonne
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
@@ -165,15 +165,15 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	
 	-- Grimware A PAL 50Hz video-frame on the Amstrad is 312 rasterlines. 
 	-- Grimware screenshoot R0 RHtot     =63 : 0..63                            (donc 64 pas)
-	-- Grimware screenshoot R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃ© passÃ©)
-	-- Grimware screenshoot R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃ© passÃ©)
-	-- Grimware screenshoot R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃ© passÃ©)
+	-- Grimware screenshoot R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
+	-- Grimware screenshoot R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
+	-- Grimware screenshoot R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
 	-- Grimware screenshoot R4 RVtot     =38 : 0..38                            (donc 39 pas)
-	-- Grimware screenshoot R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃ© passÃ©)
-	-- Grimware screenshoot R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃ© passÃ©)
-	-- Grimware screenshoot R3 RVwidth   =8  : VSYNC=OFF aprÃ¨s un certain temps...
+	-- Grimware screenshoot R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
+	-- Grimware screenshoot R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
+	-- Grimware screenshoot R3 RVwidth   =8  : VSYNC=OFF aprÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s un certain temps...
 	-- Grimware screenshoot R9 RRmax     =7  : 0..7                             (donc  8 pas)
-	-- Grimware screenshoot : caractÃ¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
+	-- Grimware screenshoot : caractÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
 	
 	-- arnold cpctest.asm :
 	-- crtc_default_values:
@@ -550,11 +550,16 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 
 		variable vram_vertical_offset_counter:integer:=0;
 		variable vram_vertical_counter:integer:=0;
+		variable in_V:boolean:=false;
 		variable vram_horizontal_offset_counter:integer:=0;
 		variable vram_horizontal_counter:integer:=0;
+		variable is_H_middle:boolean:=false;
 		
 		variable palette_A_tictac_mem:std_logic_vector(13 downto 0):=(others=>'0');
 		variable palette_D_tictac_mem:std_logic_vector(7 downto 0):=(others=>'0');
+		variable border_begin_mem:std_logic_vector(7 downto 0):=(others=>'0');
+		variable RHdisp_mem:std_logic_vector(7 downto 0):="00101000";
+		
 		variable last_dispH:std_logic:='0';
 		variable palette_horizontal_counter:integer range 0 to 256-1:=0; --640/16
 		variable palette_color:integer range 0 to 16-1;
@@ -715,7 +720,7 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					
 					-- newFrame() :  ma = maBase = maScreen;
 					
-					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
+					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
 					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
 					
 					-- ma = (maBase + hCC) & 0x3fff;
@@ -766,107 +771,36 @@ if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	vram_horizontal_counter:=0;
 end if;
 
+is_H_middle:=false;
+-- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
+if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
+	in_V:=true;
+	if vram_horizontal_counter=0 and vram_vertical_counter= 0 then
+		palette_A_tictac_mem:=(others=>'0');
+	end if;
+	
+	if vram_horizontal_counter=VRAM_HDsp/2 then
+		is_H_middle:=true;
+	end if;
+	
+	if dispH='1' and last_dispH='0' then
+		-- big capture.
+		border_begin_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
+		RHdisp_mem:=RHdisp;
+		last_dispH:='1';
+	end if;
+else
+	in_V:=false;
+end if;
+
+
+
+
+
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
 if vram_horizontal_offset_counter>VRAM_Hoffset then
 	if vram_horizontal_counter<VRAM_HDsp then
 		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
-			
-			if vram_horizontal_counter=0 and vram_vertical_counter= 0 then
-				palette_A_tictac_mem:=(others=>'0');
-			end if;
-			
-			if dispH='1' and disp='0' then
-				-- full VERTICAL BORDER
-				-- filling palette (PRAM)
-				if last_dispH='0' then
-					palette_horizontal_counter:=0;
-					last_dispH:='1';
-				else
-					palette_horizontal_counter:=palette_horizontal_counter+1;
-				end if;
-				if palette_horizontal_counter<1 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:="00" & conv_std_logic_vector(vram_horizontal_counter,6);
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				elsif palette_horizontal_counter<2 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				elsif palette_horizontal_counter<2+16 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					if palette_horizontal_counter = 2 then
-						palette_color:=0;
-					else
-						palette_color:=palette_color+1;
-					end if;
-					palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				elsif palette_horizontal_counter<2+16+1 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
-					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				else
-					palette_A<=(others=>'0');
-					palette_D<=(others=>'0');
-					palette_W<='0';
-				end if;
-			elsif dispH='1' and disp='1' then
-				-- DISPLAY
-				-- filling palette (PRAM)
-				if last_dispH='0' then
-					palette_horizontal_counter:=0;
-					last_dispH:='1';
-				else
-					palette_horizontal_counter:=palette_horizontal_counter+1;
-				end if;
-				if palette_horizontal_counter<1 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					-- compute LEFT BORDER
-					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				elsif palette_horizontal_counter<2 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				elsif palette_horizontal_counter<2+16 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					if palette_horizontal_counter = 2 then
-						palette_color:=0;
-					else
-						palette_color:=palette_color+1;
-					end if;
-					palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				elsif palette_horizontal_counter<2+16+1 then
-					palette_A<=palette_A_tictac_mem(13 downto 0);
-					palette_D_tictac_mem:=conv_std_logic_vector(vram_horizontal_counter-(2+16),8);
-					-- compute RIGHT BORDER
-					palette_D_tictac_mem:=palette_D_tictac_mem+RHdisp;
-					palette_D<=palette_D_tictac_mem;
-					palette_W<='1';
-					palette_A_tictac_mem:=palette_A_tictac_mem+1;
-				else
-					palette_A<=(others=>'0');
-					palette_D<=(others=>'0');
-					palette_W<='0';
-				end if;
-			end if;
-			
 			bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
 		end if;
 		vram_horizontal_counter:=vram_horizontal_counter+1;
@@ -981,6 +915,115 @@ end if;
 				crtc_R<=disp;
 				DATA_action<='0';
 			end case;
+			
+			
+if in_V then
+	if is_H_middle and compteur1MHz=0 then
+		palette_horizontal_counter:=0;
+	elsif palette_horizontal_counter<2+16+1 then
+		palette_horizontal_counter:=palette_horizontal_counter+1;
+	end if;
+	
+	if disp='0' then
+		-- full VERTICAL BORDER
+		-- filling palette (PRAM)
+		
+		if palette_horizontal_counter<1 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			palette_D_tictac_mem:=border_begin_mem;
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		elsif palette_horizontal_counter<2 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		elsif palette_horizontal_counter<2+16 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			if palette_horizontal_counter = 2 then
+				palette_color:=0;
+			else
+				palette_color:=palette_color+1;
+			end if;
+			palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		elsif palette_horizontal_counter<2+16+1 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			palette_D_tictac_mem:=border_begin_mem+RHdisp_mem;
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		else
+			palette_A<=(others=>'0');
+			palette_D<=(others=>'0');
+			palette_W<='0';
+		end if;
+	elsif disp='1' then
+		-- DISPLAY
+		-- filling palette (PRAM)
+		if palette_horizontal_counter<1 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			-- compute LEFT BORDER
+			palette_D_tictac_mem:=border_begin_mem;
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		elsif palette_horizontal_counter<2 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		elsif palette_horizontal_counter<2+16 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			if palette_horizontal_counter = 2 then
+				palette_color:=0;
+			else
+				palette_color:=palette_color+1;
+			end if;
+			palette_D_tictac_mem:=conv_std_logic_vector(pen(palette_color),8);
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		elsif palette_horizontal_counter<2+16+1 then
+			palette_A<=palette_A_tictac_mem(13 downto 0);
+			-- compute RIGHT BORDER
+			palette_D_tictac_mem:=border_begin_mem+RHdisp_mem;
+			palette_D<=palette_D_tictac_mem;
+			palette_W<='1';
+			palette_A_tictac_mem:=palette_A_tictac_mem+1;
+		else
+			palette_A<=(others=>'0');
+			palette_D<=(others=>'0');
+			palette_W<='0';
+		end if;
+	end if;
+end if;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 			
 			crtc_DISP<=disp;
 			

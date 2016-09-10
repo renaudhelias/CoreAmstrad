@@ -527,8 +527,10 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable horizontal_counter_hCC : std_logic_vector(7 downto 0):=(others=>'0'); --640/16
 		variable vertical_counter_vCC : std_logic_vector(7 downto 0):=(others=>'0'); --600
 		variable etat_hsync : STD_LOGIC:=DO_NOTHING;
+		variable etat_hsync_old : STD_LOGIC:=DO_NOTHING;
 		variable etat_monitor_hsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		variable etat_vsync : STD_LOGIC:=DO_NOTHING;
+		variable etat_vsync_old : STD_LOGIC:=DO_NOTHING;
 		variable etat_monitor_vsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		--idem ADRESSE_MA_mem variable MA:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable RA:STD_LOGIC_VECTOR(7 downto 0):=(others=>'0'); -- buggy boy has value RRmax=5
@@ -566,11 +568,20 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		
 		variable crtc_VSYNC_mem:std_logic:=DO_NOTHING;
+		
+		variable r52 : std_logic_vector(5 downto 0):=(others=>'0'); -- a 6-bit counter, reset state is 0
+		variable vSyncInt:integer range 0 to 2:=2;
+
 	begin
 		if reset='1' then
 			hsync_int<=DO_NOTHING;
 			vsync_int<=DO_NOTHING;
-			--crtc_VSYNC<=DO_NOTHING;
+			
+			r52:=(others=>'0');
+			vSyncInt:=2;
+			int<='0';
+			crtc_VSYNC<=DO_NOTHING;
+			
 			etat_hsync:=DO_NOTHING;
 			etat_monitor_hsync:=(others=>DO_NOTHING);
 			etat_vsync:=DO_NOTHING;
@@ -606,6 +617,18 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 --			when 3=>
 --				SOUND_CLK<='1';
 --		end case;
+		
+		if IO_ACK='1' then
+--the Gate Array will reset bit5 of the counter
+--Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
+-- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
+			r52(5):= '0';
+-- following Grimware legends : When the CPU acknowledge the interrupt (eg. it is going to jump to the interrupt vector), the Gate Array will reset bit5 of the counter, so the next interrupt can't occur closer than 32 HSync.
+			--compteur52(5 downto 1):= (others=>'0'); -- following JavaCPC 2015
+-- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
+			int<='0'; -- following JavaCPC 2015
+		end if;
+		
 		
 crtc_DISP<='0';
 palette_W<='0';
@@ -658,13 +681,13 @@ hsync_int<=DO_NOTHING;
 						vSyncCount:= x"1"; -- pulse ?
 						etat_vsync:=DO_VSYNC;
 						etat_monitor_vsync(0):=DO_VSYNC;
---crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
+crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
 vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then
 						if vSyncCount=RVwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
---crtc_VSYNC<=DO_NOTHING;
+crtc_VSYNC<=DO_NOTHING;
 vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 						else
 							if vSyncCount=2+4 then
@@ -961,6 +984,66 @@ end if;
 			
 			crtc_DISP<=disp;
 			
+			-- r52 begin
+			if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
+				if D(7) ='0' then
+					-- ink -- osef
+				else
+					if D(6) = '0' then
+						-- It only applies once
+						if D(4) = '1' then
+							r52:=(others=>'0');
+	--Grimware : if set (1), this will (only) reset the interrupt counter. --int<='0'; -- JavaCPC 2015
+	--the interrupt request is cleared and the 6-bit counter is reset to "0".  -- http://cpctech.cpc-live.com/docs/ints.html
+							int<='0';
+						end if;
+	-- JavaCPC 2015 : always old_delay_feature:=D(4); -- It only applies once ????
+					else 
+						-- rambank -- osef pour 464
+					end if;
+				end if;
+			end if;
+			crtc_VSYNC<=vsync_int;
+			--vSyncStart()
+			if etat_vsync=DO_VSYNC and etat_vsync_old=DO_NOTHING then
+				--A VSYNC triggers a delay action of 2 HSYNCs in the GA
+				--In both cases the following interrupt requests are synchronised with the VSYNC. 
+				-- JavaCPC
+				vSyncInt := 0;
+			end if;
+			
+			--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
+			--hSyncEnd()
+			if etat_hsync_old=DO_HSYNC and etat_hsync=DO_NOTHING then
+			-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
+				-- JavaCPC interrupt style...
+				r52:=r52+1;
+				if conv_integer(r52)=NB_HSYNC_BY_INTERRUPT then -- Asphalt ? -- 52="110100"
+					--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
+					r52:=(others=>'0');
+					int<='1';
+				end if;
+			
+				if vSyncInt < 2 then
+					vSyncInt := vSyncInt + 1;
+					if vSyncInt = 2 then
+						if conv_integer(r52)>=32 then
+							int<='1';
+						--else
+							--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
+						end if;
+						r52:=(others=>'0');
+					end if;
+				end if;
+			end if;
+			-- r52 end
+			
+			etat_hsync_old:=etat_hsync;
+			etat_vsync_old:=etat_vsync;
+			
+			
+			
+			
 			if was_MEMWR_0 and MEM_WR='1' then
 				waiting_MEMWR:=0;
 			end if;
@@ -1153,141 +1236,141 @@ end if;
 --A VSYNC triggers a delay action of 2 HSYNCs in the GA, at the completion of which the scan line count in the GA is compared to 32. If the counter is below 32, the interrupt generation is suppressed. If it is greater than or equal to 32, an interrupt is issued. Regardless of whether or not an interrupt is raised, the scan line counter is reset to 0.
 --The GA has a software controlled interrupt delay feature. The GA scan line counter will be cleared immediately upon enabling this option (bit 4 of ROM/mode control). It only applies once and has to be reissued if more than one interrupt needs to be delayed.
 --Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter. 
-GAinterrupt : process(reset,nCLK4_1)
-	variable r52 : std_logic_vector(5 downto 0):=(others=>'0'); -- a 6-bit counter, reset state is 0
-	variable hsync_old:std_logic:=DO_NOTHING;
-	variable vsync_old:std_logic:=DO_NOTHING;
-	variable vSyncInt:integer range 0 to 2:=2;
-begin
-	
---http://cpctech.cpc-live.com/docs/ints2.html  (asm code)
---	Furthur details of interrupt timing
---Here is some information I got from Richard about the interrupt timing:
---"Just when I finally thought I had the interrupt timing sorted out (from real tests on a 6128 and 6128+), I decided to look at the Arnold V diagnostic cartridge in WinAPE, and the Interrupt Timing test failed.
---After pulling my hair out for a few hours, I checked out some info I found on the Z80 which states something like:
---The Z80 forces 2 wait-cycles (2 T-States) at the start of an interrupt.
---The code I had forced a 1us wait state for an interrupt acknowledge. For the most part this is correct, but it's not necessarily so. Seems the instruction currently being executed when an interrupt occurs can cause the extra CPC forced wait-state to be removed.
---Those instructions are:
+--GAinterrupt : process(reset,nCLK4_1)
+--	variable r52 : std_logic_vector(5 downto 0):=(others=>'0'); -- a 6-bit counter, reset state is 0
+--	variable vSyncInt:integer range 0 to 2:=2;
+--	variable hsync_old:std_logic:=DO_NOTHING;
+--	variable vsync_old:std_logic:=DO_NOTHING;
+--begin
+--	
+----http://cpctech.cpc-live.com/docs/ints2.html  (asm code)
+----	Furthur details of interrupt timing
+----Here is some information I got from Richard about the interrupt timing:
+----"Just when I finally thought I had the interrupt timing sorted out (from real tests on a 6128 and 6128+), I decided to look at the Arnold V diagnostic cartridge in WinAPE, and the Interrupt Timing test failed.
+----After pulling my hair out for a few hours, I checked out some info I found on the Z80 which states something like:
+----The Z80 forces 2 wait-cycles (2 T-States) at the start of an interrupt.
+----The code I had forced a 1us wait state for an interrupt acknowledge. For the most part this is correct, but it's not necessarily so. Seems the instruction currently being executed when an interrupt occurs can cause the extra CPC forced wait-state to be removed.
+----Those instructions are:
+----
+----INC ss (ss = HL, BC, DE or SP)
+----INC IX
+----INC IY
+----DEC ss
+----DEC IX
+----DEC IY
+----RET cc  (condition not met)
+----EX (SP),HL
+----EX (SP),IX
+----EX (SP),IY
+----LD SP,HL
+----LD SP,IX
+----LD SP,IY
+----LD A,I
+----LD I,A
+----LD A,R
+----LD R,A
+----LDI      (and both states of LDIR)
+----LDD     (and both states of LDDR)
+----CPIR    (when looping)
+----CPDR   (when looping)
+----
+----This seems to be related to a combination of the T-States of the instruction, the M-Cycles, and the wait states imposed by the CPC hardware to force each instruction to the 1us boundary.
+----Richard" 
+--	
+--	
+----	Interrupt Generation Facility of the Amstrad Gate Array
+----The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
+----Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
+----A VSYNC triggers a delay action of 2 HSYNCs in the GA, at the completion of which the scan line
+----count in the GA is compared to 32. If the counter is below 32, the interrupt generation is
+----suppressed. If it is greater than or equal to 32, an interrupt is issued. Regardless of whether
+----or not an interrupt is raised, the scan line counter is reset to 0.
+----The GA has a software controlled interrupt delay feature. The GA scan line counter will be
+----cleared immediately upon enabling this option (bit 4 of ROM/mode control). It only applies once
+----and has to be reissued if more than one interrupt needs to be delayed.
+----Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
 --
---INC ss (ss = HL, BC, DE or SP)
---INC IX
---INC IY
---DEC ss
---DEC IX
---DEC IY
---RET cc  (condition not met)
---EX (SP),HL
---EX (SP),IX
---EX (SP),IY
---LD SP,HL
---LD SP,IX
---LD SP,IY
---LD A,I
---LD I,A
---LD A,R
---LD R,A
---LDI      (and both states of LDIR)
---LDD     (and both states of LDDR)
---CPIR    (when looping)
---CPDR   (when looping)
---
---This seems to be related to a combination of the T-States of the instruction, the M-Cycles, and the wait states imposed by the CPC hardware to force each instruction to the 1us boundary.
---Richard" 
-	
-	
---	Interrupt Generation Facility of the Amstrad Gate Array
---The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
---Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
---A VSYNC triggers a delay action of 2 HSYNCs in the GA, at the completion of which the scan line
---count in the GA is compared to 32. If the counter is below 32, the interrupt generation is
---suppressed. If it is greater than or equal to 32, an interrupt is issued. Regardless of whether
---or not an interrupt is raised, the scan line counter is reset to 0.
---The GA has a software controlled interrupt delay feature. The GA scan line counter will be
---cleared immediately upon enabling this option (bit 4 of ROM/mode control). It only applies once
---and has to be reissued if more than one interrupt needs to be delayed.
---Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
-
---I think that "suppressed" is falling_edge the INTERRUPT signal (to 0), and I think that "raises" is rising_edge the INTERRUPT signal (to 1)
---At IO_ACK signal certainly we shut down the INTERRUPT signal (to 0)
---INTERRUPT
-	
---Following my refactoring of Space Invaders during my MameVHDL project, in fact an IO_ACK do event when an interrupt finally want to start, and during IO_ACK, the DATA_BUS is read (warning several instruction, several consequences...)
-	if reset='1' then
-		r52:=(others=>'0');
-		vSyncInt:=2;
-		hsync_old:=DO_NOTHING;
-		vsync_old:=DO_NOTHING;
-		int<='0';
-		crtc_VSYNC<=DO_NOTHING;
-	elsif rising_edge(nCLK4_1) then
-		if IO_ACK='1' then
---the Gate Array will reset bit5 of the counter
---Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
--- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
-			r52(5):= '0';
--- following Grimware legends : When the CPU acknowledge the interrupt (eg. it is going to jump to the interrupt vector), the Gate Array will reset bit5 of the counter, so the next interrupt can't occur closer than 32 HSync.
-			--compteur52(5 downto 1):= (others=>'0'); -- following JavaCPC 2015
--- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
-			int<='0'; -- following JavaCPC 2015
-		end if;
-		
-		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
-			if D(7) ='0' then
-				-- ink -- osef
-			else
-				if D(6) = '0' then
-					-- It only applies once
-					if D(4) = '1' then
-						r52:=(others=>'0');
---Grimware : if set (1), this will (only) reset the interrupt counter. --int<='0'; -- JavaCPC 2015
---the interrupt request is cleared and the 6-bit counter is reset to "0".  -- http://cpctech.cpc-live.com/docs/ints.html
-						int<='0';
-					end if;
--- JavaCPC 2015 : always old_delay_feature:=D(4); -- It only applies once ????
-				else 
-					-- rambank -- osef pour 464
-				end if;
-			end if;
-		end if;
-		crtc_VSYNC<=vsync_int;
-		--vSyncStart()
-		if vsync_old=DO_NOTHING and vsync_int=DO_VSYNC then
-			--A VSYNC triggers a delay action of 2 HSYNCs in the GA
-			--In both cases the following interrupt requests are synchronised with the VSYNC. 
-			-- JavaCPC
-			vSyncInt := 0;
-			vsync_old:=DO_VSYNC;
-		elsif vsync_old=DO_VSYNC and vsync_int=DO_NOTHING then
-			vsync_old:=DO_NOTHING;
-		end if;
-		
-		--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
-		--hSyncEnd()
-		if hsync_int=DO_NOTHING and hsync_old=DO_HSYNC then
-		-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
-			-- JavaCPC interrupt style...
-			r52:=r52+1;
-			if conv_integer(r52)=NB_HSYNC_BY_INTERRUPT then -- Asphalt ? -- 52="110100"
-				--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
-				r52:=(others=>'0');
-				int<='1';
-			end if;
-		
-			if vSyncInt < 2 then
-				vSyncInt := vSyncInt + 1;
-				if vSyncInt = 2 then
-					if conv_integer(r52)>=32 then
-						int<='1';
-					--else
-						--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
-					end if;
-					r52:=(others=>'0');
-				end if;
-			end if;
-			hsync_old:=DO_NOTHING;
-		elsif hsync_int=DO_HSYNC and hsync_old=DO_NOTHING then
-			hsync_old:=DO_HSYNC;
-		end if;
-	end if;
-end process;
+----I think that "suppressed" is falling_edge the INTERRUPT signal (to 0), and I think that "raises" is rising_edge the INTERRUPT signal (to 1)
+----At IO_ACK signal certainly we shut down the INTERRUPT signal (to 0)
+----INTERRUPT
+--	
+----Following my refactoring of Space Invaders during my MameVHDL project, in fact an IO_ACK do event when an interrupt finally want to start, and during IO_ACK, the DATA_BUS is read (warning several instruction, several consequences...)
+--	if reset='1' then
+--		r52:=(others=>'0');
+--		vSyncInt:=2;
+--		hsync_old:=DO_NOTHING;
+--		vsync_old:=DO_NOTHING;
+--		int<='0';
+--		crtc_VSYNC<=DO_NOTHING;
+--	elsif rising_edge(nCLK4_1) then
+--		if IO_ACK='1' then
+----the Gate Array will reset bit5 of the counter
+----Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
+---- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
+--			r52(5):= '0';
+---- following Grimware legends : When the CPU acknowledge the interrupt (eg. it is going to jump to the interrupt vector), the Gate Array will reset bit5 of the counter, so the next interrupt can't occur closer than 32 HSync.
+--			--compteur52(5 downto 1):= (others=>'0'); -- following JavaCPC 2015
+---- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
+--			int<='0'; -- following JavaCPC 2015
+--		end if;
+--		
+--		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
+--			if D(7) ='0' then
+--				-- ink -- osef
+--			else
+--				if D(6) = '0' then
+--					-- It only applies once
+--					if D(4) = '1' then
+--						r52:=(others=>'0');
+----Grimware : if set (1), this will (only) reset the interrupt counter. --int<='0'; -- JavaCPC 2015
+----the interrupt request is cleared and the 6-bit counter is reset to "0".  -- http://cpctech.cpc-live.com/docs/ints.html
+--						int<='0';
+--					end if;
+---- JavaCPC 2015 : always old_delay_feature:=D(4); -- It only applies once ????
+--				else 
+--					-- rambank -- osef pour 464
+--				end if;
+--			end if;
+--		end if;
+--		crtc_VSYNC<=vsync_int;
+--		--vSyncStart()
+--		if vsync_old=DO_NOTHING and vsync_int=DO_VSYNC then
+--			--A VSYNC triggers a delay action of 2 HSYNCs in the GA
+--			--In both cases the following interrupt requests are synchronised with the VSYNC. 
+--			-- JavaCPC
+--			vSyncInt := 0;
+--			vsync_old:=DO_VSYNC;
+--		elsif vsync_old=DO_VSYNC and vsync_int=DO_NOTHING then
+--			vsync_old:=DO_NOTHING;
+--		end if;
+--		
+--		--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
+--		--hSyncEnd()
+--		if hsync_int=DO_NOTHING and hsync_old=DO_HSYNC then
+--		-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
+--			-- JavaCPC interrupt style...
+--			r52:=r52+1;
+--			if conv_integer(r52)=NB_HSYNC_BY_INTERRUPT then -- Asphalt ? -- 52="110100"
+--				--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
+--				r52:=(others=>'0');
+--				int<='1';
+--			end if;
+--		
+--			if vSyncInt < 2 then
+--				vSyncInt := vSyncInt + 1;
+--				if vSyncInt = 2 then
+--					if conv_integer(r52)>=32 then
+--						int<='1';
+--					--else
+--						--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
+--					end if;
+--					r52:=(others=>'0');
+--				end if;
+--			end if;
+--			hsync_old:=DO_NOTHING;
+--		elsif hsync_int=DO_HSYNC and hsync_old=DO_NOTHING then
+--			hsync_old:=DO_HSYNC;
+--		end if;
+--	end if;
+--end process;
 end Behavioral;

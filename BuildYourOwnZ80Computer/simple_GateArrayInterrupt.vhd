@@ -48,17 +48,18 @@ entity simple_GateArrayInterrupt is
 	-- 39*8=312   /40=7.8 /52=6 /32=9.75
   VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
   VRAM_VDsp:integer:=600/2;
-  VRAM_Hoffset:integer:=10 ; -- 63*16-46*16
+  -- plus je grandi cette valeur plus l'image va vers la gauche.
+  VRAM_Hoffset:integer:=10; -- 63*16-46*16
   
-  -- le raster palette arrive au moment oÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ l'encre est en face du stylo.
-  -- si on a un dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
-  -- hors nous on lit via MA, et on ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©crit n'importe oÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ via VRAM_Voffset
+  -- le raster palette arrive au moment oÃƒÆ’Ã‚Â¹ l'encre est en face du stylo.
+  -- si on a un dÃƒÆ’Ã‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
+  -- hors nous on lit via MA, et on ÃƒÆ’Ã‚Â©crit n'importe oÃƒÆ’Ã‚Â¹ via VRAM_Voffset
   -- donc VRAM_Voffset n'a pas d'influence sur le raster palette
-  -- ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§a veut dire que l'adresse mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©moire dessous la palette n'est pas bonne
+  -- ÃƒÆ’Ã‚Â§a veut dire que l'adresse mÃƒÆ’Ã‚Â©moire dessous la palette n'est pas bonne
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
-  VRAM_Voffset:integer:=48;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
+  VRAM_Voffset:integer:=11;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
  -- output pixels
 	-- Amstrad
 	 -- 
@@ -165,15 +166,15 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	
 	-- Grimware A PAL 50Hz video-frame on the Amstrad is 312 rasterlines. 
 	-- Grimware screenshoot R0 RHtot     =63 : 0..63                            (donc 64 pas)
-	-- Grimware screenshoot R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
-	-- Grimware screenshoot R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
-	-- Grimware screenshoot R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
+	-- Grimware screenshoot R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃƒÂ© passÃƒÂ©)
+	-- Grimware screenshoot R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃƒÂ© passÃƒÂ©)
+	-- Grimware screenshoot R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃƒÂ© passÃƒÂ©)
 	-- Grimware screenshoot R4 RVtot     =38 : 0..38                            (donc 39 pas)
-	-- Grimware screenshoot R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
-	-- Grimware screenshoot R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© passÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©)
-	-- Grimware screenshoot R3 RVwidth   =8  : VSYNC=OFF aprÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s un certain temps...
+	-- Grimware screenshoot R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃƒÂ© passÃƒÂ©)
+	-- Grimware screenshoot R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃƒÂ© passÃƒÂ©)
+	-- Grimware screenshoot R3 RVwidth   =8  : VSYNC=OFF aprÃƒÂ¨s un certain temps...
 	-- Grimware screenshoot R9 RRmax     =7  : 0..7                             (donc  8 pas)
-	-- Grimware screenshoot : caractÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
+	-- Grimware screenshoot : caractÃƒÂ¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
 	
 	-- arnold cpctest.asm :
 	-- crtc_default_values:
@@ -720,7 +721,7 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					
 					-- newFrame() :  ma = maBase = maScreen;
 					
-					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
+					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
 					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
 					
 					-- ma = (maBase + hCC) & 0x3fff;
@@ -751,13 +752,17 @@ if etat_monitor_vsync(2)=DO_VSYNC and etat_monitor_vsync(3)=DO_NOTHING then
 --	* CRTC 1000000 1100000 1110000 1111000 1111100 1111110 1111111
 --	* TV   0000000 0000000 0010000 0011000 0011100 0011110 0011110
 	vram_vertical_offset_counter:=0;
-	vram_vertical_counter:=0;
+	--vram_vertical_counter:=0;
 end if;
 if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
-	if vram_vertical_offset_counter<=VRAM_Voffset then
-		vram_vertical_offset_counter:=vram_vertical_offset_counter+1;
-	elsif vram_vertical_counter<VRAM_VDsp then
+	if vram_vertical_counter<VRAM_VDsp then
 		vram_vertical_counter:=vram_vertical_counter+1;
+	end if;
+	if vram_vertical_offset_counter<VRAM_Voffset then
+		vram_vertical_offset_counter:=vram_vertical_offset_counter+1;
+	elsif vram_vertical_offset_counter=VRAM_Voffset then
+		vram_vertical_offset_counter:=vram_vertical_offset_counter+1;
+		vram_vertical_counter:=0;
 	end if;
 	
 --hsync:
@@ -768,8 +773,25 @@ if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 --	* CRTC 1000000 1100000 1110000 1111000 1111100 1111110 1111111
 --	* TV   0000000 0000000 0010000 0011000 0011100 0011110 0011110
 	vram_horizontal_offset_counter:=0;
+	--vram_horizontal_counter:=0;
+end if;
+
+
+
+-- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
+if vram_horizontal_counter<VRAM_HDsp then
+	vram_horizontal_counter:=vram_horizontal_counter+1;
+end if;
+if vram_horizontal_offset_counter<VRAM_Hoffset then
+	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
+elsif vram_horizontal_offset_counter=VRAM_Hoffset then
+	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
 	vram_horizontal_counter:=0;
 end if;
+
+
+
+
 
 is_H_middle:=false;
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
@@ -797,17 +819,20 @@ end if;
 
 
 
--- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
-if vram_horizontal_offset_counter>VRAM_Hoffset then
-	if vram_horizontal_counter<VRAM_HDsp then
-		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
-			bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
-		end if;
-		vram_horizontal_counter:=vram_horizontal_counter+1;
-	end if;
-else
-	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
+if vram_vertical_counter<VRAM_VDsp then
+	bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
 end if;
+	
+--if vram_horizontal_offset_counter>VRAM_Hoffset then
+--	if vram_horizontal_counter<VRAM_HDsp then
+--		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
+--			bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
+--		end if;
+--		vram_horizontal_counter:=vram_horizontal_counter+1;
+--	end if;
+--else
+--	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
+--end if;
 
 if dispH='0' then
 	-- allow last_dispH to go back to '0'.
@@ -936,7 +961,7 @@ if in_V then
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
 		elsif palette_horizontal_counter<2 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
-			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
+			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
 			palette_D<=palette_D_tictac_mem;
 			palette_W<='1';
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -953,7 +978,7 @@ if in_V then
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
 		elsif palette_horizontal_counter<2+16+1 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
-			palette_D_tictac_mem:=border_begin_mem+RHdisp_mem;
+			palette_D_tictac_mem:=RHdisp_mem;
 			palette_D<=palette_D_tictac_mem;
 			palette_W<='1';
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -974,7 +999,7 @@ if in_V then
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
 		elsif palette_horizontal_counter<2 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
-			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
+			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
 			palette_D<=palette_D_tictac_mem;
 			palette_W<='1';
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -992,7 +1017,7 @@ if in_V then
 		elsif palette_horizontal_counter<2+16+1 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
 			-- compute RIGHT BORDER
-			palette_D_tictac_mem:=border_begin_mem+RHdisp_mem;
+			palette_D_tictac_mem:=RHdisp_mem;
 			palette_D<=palette_D_tictac_mem;
 			palette_W<='1';
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;

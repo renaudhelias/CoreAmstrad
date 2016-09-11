@@ -199,7 +199,7 @@ begin
 		clk0_duty_cycle => 50,
 		clk0_multiply_by => 89,
 		clk0_phase_shift => "0",
-		clk1_divide_by => 96,
+		clk1_divide_by => 48, --96,
 		clk1_duty_cycle => 50,
 		clk1_multiply_by => 89,
 		clk1_phase_shift => "0",

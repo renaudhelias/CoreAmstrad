@@ -176,330 +176,330 @@ end BEHAVIORAL;
 
 
 
-library ieee;
-use ieee.std_logic_1164.ALL;
-use ieee.numeric_std.ALL;
+--library ieee;
+--use ieee.std_logic_1164.ALL;
+--use ieee.numeric_std.ALL;
 --library UNISIM;
 --use UNISIM.Vcomponents.ALL;
 -- light weight memory entre 11000 et 14000 = 8000+4000
-entity VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST is
-   port ( vga_A    : in    std_logic_vector (13 downto 0); 
-          vga_CLK  : in    std_logic; 
-          vram_A   : in    std_logic_vector (13 downto 0); 
-          vram_CLK : in    std_logic; 
-          vram_D   : in    std_logic_vector (7 downto 0); 
-          vram_W   : in    std_logic; 
-          vga_D    : out   std_logic_vector (7 downto 0));
-end VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST;
-
-architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST is
-  
-	
-	 component SELECT8
-      port ( s1    : in    std_logic; 
-             DATA1 : in    std_logic_vector (7 downto 0); 
-             DATA2 : in    std_logic_vector (7 downto 0); 
-             DATA0 : out   std_logic_vector (7 downto 0));
-   end component;
-	
-	  component and_then
-      port ( A : in    std_logic; 
-             B : in    std_logic; 
-             C : out   std_logic);
-   end component;
-	
-	component altera_syncram_dp is
-	  generic ( 
-		 abits : integer := 4; dbits : integer := 32
-	  );
-	  port (
-		 clk1     : in std_ulogic;
-		 address1 : in std_logic_vector((abits -1) downto 0);
-		 datain1  : in std_logic_vector((dbits -1) downto 0);
-		 dataout1 : out std_logic_vector((dbits -1) downto 0);
-		 enable1  : in std_ulogic;
-		 write1   : in std_ulogic;
-		 clk2     : in std_ulogic;
-		 address2 : in std_logic_vector((abits -1) downto 0);
-		 datain2  : in std_logic_vector((dbits -1) downto 0);
-		 dataout2 : out std_logic_vector((dbits -1) downto 0);
-		 enable2  : in std_ulogic;
-		 write2   : in std_ulogic);
-	end component;
-	
-	signal dOut8000 : std_logic_vector(7 downto 0);
-	signal dOut8000_0 : std_logic_vector(0 downto 0);
-	signal dOut8000_1 : std_logic_vector(0 downto 0);
-	signal dOut8000_2 : std_logic_vector(0 downto 0);
-	signal dOut8000_3 : std_logic_vector(0 downto 0);
-	signal dOut8000_4 : std_logic_vector(0 downto 0);
-	signal dOut8000_5 : std_logic_vector(0 downto 0);
-	signal dOut8000_6 : std_logic_vector(0 downto 0);
-	signal dOut8000_7 : std_logic_vector(0 downto 0);
-	signal w8000 : std_logic;
---	signal dOut4000 : std_logic_vector(7 downto 0);
---	signal dOut4000_0 : std_logic_vector(0 downto 0);
---	signal dOut4000_1 : std_logic_vector(0 downto 0);
---	signal dOut4000_2 : std_logic_vector(0 downto 0);
---	signal dOut4000_3 : std_logic_vector(0 downto 0);
---	signal dOut4000_4 : std_logic_vector(0 downto 0);
---	signal dOut4000_5 : std_logic_vector(0 downto 0);
---	signal dOut4000_6 : std_logic_vector(0 downto 0);
---	signal dOut4000_7 : std_logic_vector(0 downto 0);
---	signal w4000 : std_logic;
-	
-	function vectorize(s: std_logic) return std_logic_vector is
-variable v: std_logic_vector(0 downto 0);
-begin
-v(0) := s;
-return v;
-end;
-	
-begin
-
-dOut8000<=dOut8000_7(0) & dOut8000_6(0) & dOut8000_5(0) & dOut8000_4(0) & dOut8000_3(0) & dOut8000_2(0) & dOut8000_1(0) & dOut8000_0(0);
-
---dOut4000<=dOut4000_7(0) & dOut4000_6(0) & dOut4000_5(0) & dOut4000_4(0) & dOut4000_3(0) & dOut4000_2(0) & dOut4000_1(0) & dOut4000_0(0);
-
-  inst_w8000 : and_then
-      port map (A=>not(vram_A(13)),
-                B=>vram_W,
-                C=>w8000);
-					 
-  XLXI_4 : SELECT8
-      port map (DATA1(7 downto 0)=>dOut8000,
-                DATA2(7 downto 0)=>x"00",--dOut4000,
-                s1=>not(vga_A(13)),
-                DATA0(7 downto 0)=>vga_D);
-
-
---  inst_w4000 : and_then
---      port map (A=>(vram_A(13) and not(vram_A(12))),
+--entity VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST is
+--   port ( vga_A    : in    std_logic_vector (13 downto 0); 
+--          vga_CLK  : in    std_logic; 
+--          vram_A   : in    std_logic_vector (13 downto 0); 
+--          vram_CLK : in    std_logic; 
+--          vram_D   : in    std_logic_vector (7 downto 0); 
+--          vram_W   : in    std_logic; 
+--          vga_D    : out   std_logic_vector (7 downto 0));
+--end VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST;
+--
+--architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST is
+--  
+--	
+--	 component SELECT8
+--      port ( s1    : in    std_logic; 
+--             DATA1 : in    std_logic_vector (7 downto 0); 
+--             DATA2 : in    std_logic_vector (7 downto 0); 
+--             DATA0 : out   std_logic_vector (7 downto 0));
+--   end component;
+--	
+--	  component and_then
+--      port ( A : in    std_logic; 
+--             B : in    std_logic; 
+--             C : out   std_logic);
+--   end component;
+--	
+--	component altera_syncram_dp is
+--	  generic ( 
+--		 abits : integer := 4; dbits : integer := 32
+--	  );
+--	  port (
+--		 clk1     : in std_ulogic;
+--		 address1 : in std_logic_vector((abits -1) downto 0);
+--		 datain1  : in std_logic_vector((dbits -1) downto 0);
+--		 dataout1 : out std_logic_vector((dbits -1) downto 0);
+--		 enable1  : in std_ulogic;
+--		 write1   : in std_ulogic;
+--		 clk2     : in std_ulogic;
+--		 address2 : in std_logic_vector((abits -1) downto 0);
+--		 datain2  : in std_logic_vector((dbits -1) downto 0);
+--		 dataout2 : out std_logic_vector((dbits -1) downto 0);
+--		 enable2  : in std_ulogic;
+--		 write2   : in std_ulogic);
+--	end component;
+--	
+--	signal dOut8000 : std_logic_vector(7 downto 0);
+--	signal dOut8000_0 : std_logic_vector(0 downto 0);
+--	signal dOut8000_1 : std_logic_vector(0 downto 0);
+--	signal dOut8000_2 : std_logic_vector(0 downto 0);
+--	signal dOut8000_3 : std_logic_vector(0 downto 0);
+--	signal dOut8000_4 : std_logic_vector(0 downto 0);
+--	signal dOut8000_5 : std_logic_vector(0 downto 0);
+--	signal dOut8000_6 : std_logic_vector(0 downto 0);
+--	signal dOut8000_7 : std_logic_vector(0 downto 0);
+--	signal w8000 : std_logic;
+--	signal dOut2_8000 : std_logic_vector(7 downto 0);
+--	signal dOut2_8000_0 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_1 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_2 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_3 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_4 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_5 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_6 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_7 : std_logic_vector(0 downto 0);
+--	signal w2_8000 : std_logic;
+--	
+--	function vectorize(s: std_logic) return std_logic_vector is
+--variable v: std_logic_vector(0 downto 0);
+--begin
+--v(0) := s;
+--return v;
+--end;
+--	
+--begin
+--
+--dOut8000<=dOut8000_7(0) & dOut8000_6(0) & dOut8000_5(0) & dOut8000_4(0) & dOut8000_3(0) & dOut8000_2(0) & dOut8000_1(0) & dOut8000_0(0);
+--
+--dOut2_8000<=dOut2_8000_7(0) & dOut2_8000_6(0) & dOut2_8000_5(0) & dOut2_8000_4(0) & dOut2_8000_3(0) & dOut2_8000_2(0) & dOut2_8000_1(0) & dOut2_8000_0(0);
+--
+--  inst_w8000 : and_then
+--      port map (A=>not(vram_A(13)),
 --                B=>vram_W,
---                C=>w4000);
-
-					  --8000
-   XLXI_30 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(0)),
-                write1=>w8000,
-                dataout2=>dOut8000_0,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_31 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(1)),
-                write1=>w8000,
-                dataout2=>dOut8000_1,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_32 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(2)),
-                write1=>w8000,
-                dataout2=>dOut8000_2,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_33 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(3)),
-                write1=>w8000,
-                dataout2=>dOut8000_3,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_34 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(4)),
-                write1=>w8000,
-                dataout2=>dOut8000_4,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_35 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(5)),
-                write1=>w8000,
-                dataout2=>dOut8000_5,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_36 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(6)),
-                write1=>w8000,
-                dataout2=>dOut8000_6,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_37 : altera_syncram_dp
-		generic map(abits=>13,dbits=>1)
-      port map (address2(12 downto 0)=>vga_A(12 downto 0),
-                clk2=>vga_CLK,
-                address1(12 downto 0)=>vram_A(12 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(7)),
-                write1=>w8000,
-                dataout2=>dOut8000_7,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-					 
-					 
---	-- 4000
---	 XLXI_30_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                C=>w8000);
+--					 
+--  XLXI_4 : SELECT8
+--      port map (DATA1(7 downto 0)=>dOut8000,
+--                DATA2(7 downto 0)=>x"00",--dOut4000,
+--                s1=>not(vga_A(13)),
+--                DATA0(7 downto 0)=>vga_D);
+--
+--
+--  inst_w2_8000 : and_then
+--      port map (A=>(vram_A(13)),
+--                B=>vram_W,
+--                C=>w2_8000);
+--
+--					  --8000
+--   XLXI_30 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(0)),
---                write1=>w4000,
---                dataout2=>dOut4000_0,
+--                write1=>w8000,
+--                dataout2=>dOut8000_0,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
---   XLXI_31_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--   XLXI_31 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(1)),
---                write1=>w4000,
---                dataout2=>dOut4000_1,
+--                write1=>w8000,
+--                dataout2=>dOut8000_1,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
---   XLXI_32_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--   XLXI_32 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(2)),
---                write1=>w4000,
---                dataout2=>dOut4000_2,
+--                write1=>w8000,
+--                dataout2=>dOut8000_2,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
---   XLXI_33_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--   XLXI_33 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(3)),
---                write1=>w4000,
---                dataout2=>dOut4000_3,
+--                write1=>w8000,
+--                dataout2=>dOut8000_3,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
---   XLXI_34_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--   XLXI_34 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(4)),
---                write1=>w4000,
---                dataout2=>dOut4000_4,
+--                write1=>w8000,
+--                dataout2=>dOut8000_4,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
---   XLXI_35_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--   XLXI_35 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(5)),
---                write1=>w4000,
---                dataout2=>dOut4000_5,
+--                write1=>w8000,
+--                dataout2=>dOut8000_5,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
 --   
---   XLXI_36_4000 : altera_syncram_dp
---		generic map(abits=>12,dbits=>1)
---      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--   XLXI_36 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
 --                clk2=>vga_CLK,
---                address1(11 downto 0)=>vram_A(11 downto 0),
+--                address1(12 downto 0)=>vram_A(12 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(6)),
---                write1=>w4000,
---                dataout2=>dOut4000_6,
+--                write1=>w8000,
+--                dataout2=>dOut8000_6,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_37 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(7)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_7,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--					 
+--					 
+--	-- 4000
+--	 XLXI_30_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(0)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_0,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_31_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(1)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_1,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_32_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(2)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_2,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_33_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(3)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_3,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_34_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(4)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_4,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_35_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(5)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_5,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_36_2_8000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(6)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_6,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
@@ -507,373 +507,373 @@ write2=>'0');
 --write2=>'0');
 --   
 --   XLXI_37_4000 : altera_syncram_dp
+--		generic map(abits=>13,dbits=>1)
+--      port map (address2(12 downto 0)=>vga_A(12 downto 0),
+--                clk2=>vga_CLK,
+--                address1(12 downto 0)=>vram_A(12 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(7)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_7,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--
+--  
+--end BEHAVIORAL;
+
+
+--
+--library ieee;
+--use ieee.std_logic_1164.ALL;
+--use ieee.numeric_std.ALL;
+----library UNISIM;
+----use UNISIM.Vcomponents.ALL;
+---- light weight memory entre 11000 et 14000 = 8000+4000
+--entity VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video is
+--   port ( vga_A    : in    std_logic_vector (12 downto 0); 
+--          vga_CLK  : in    std_logic; 
+--          vram_A   : in    std_logic_vector (12 downto 0); 
+--          vram_CLK : in    std_logic; 
+--          vram_D   : in    std_logic_vector (7 downto 0); 
+--          vram_W   : in    std_logic; 
+--          vga_D    : out   std_logic_vector (7 downto 0));
+--end VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video;
+--
+--architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video is
+--  
+--	
+--	 component SELECT8
+--      port ( s1    : in    std_logic; 
+--             DATA1 : in    std_logic_vector (7 downto 0); 
+--             DATA2 : in    std_logic_vector (7 downto 0); 
+--             DATA0 : out   std_logic_vector (7 downto 0));
+--   end component;
+--	
+--	  component and_then
+--      port ( A : in    std_logic; 
+--             B : in    std_logic; 
+--             C : out   std_logic);
+--   end component;
+--	
+--	component altera_syncram_dp is
+--	  generic ( 
+--		 abits : integer := 4; dbits : integer := 32
+--	  );
+--	  port (
+--		 clk1     : in std_ulogic;
+--		 address1 : in std_logic_vector((abits -1) downto 0);
+--		 datain1  : in std_logic_vector((dbits -1) downto 0);
+--		 dataout1 : out std_logic_vector((dbits -1) downto 0);
+--		 enable1  : in std_ulogic;
+--		 write1   : in std_ulogic;
+--		 clk2     : in std_ulogic;
+--		 address2 : in std_logic_vector((abits -1) downto 0);
+--		 datain2  : in std_logic_vector((dbits -1) downto 0);
+--		 dataout2 : out std_logic_vector((dbits -1) downto 0);
+--		 enable2  : in std_ulogic;
+--		 write2   : in std_ulogic);
+--	end component;
+--	
+--	signal dOut8000 : std_logic_vector(7 downto 0);
+--	signal dOut8000_0 : std_logic_vector(0 downto 0);
+--	signal dOut8000_1 : std_logic_vector(0 downto 0);
+--	signal dOut8000_2 : std_logic_vector(0 downto 0);
+--	signal dOut8000_3 : std_logic_vector(0 downto 0);
+--	signal dOut8000_4 : std_logic_vector(0 downto 0);
+--	signal dOut8000_5 : std_logic_vector(0 downto 0);
+--	signal dOut8000_6 : std_logic_vector(0 downto 0);
+--	signal dOut8000_7 : std_logic_vector(0 downto 0);
+--	signal w8000 : std_logic;
+--	signal dOut2_8000 : std_logic_vector(7 downto 0);
+--	signal dOut2_8000_0 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_1 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_2 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_3 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_4 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_5 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_6 : std_logic_vector(0 downto 0);
+--	signal dOut2_8000_7 : std_logic_vector(0 downto 0);
+--	signal w2_8000 : std_logic;
+--	
+--	function vectorize(s: std_logic) return std_logic_vector is
+--variable v: std_logic_vector(0 downto 0);
+--begin
+--v(0) := s;
+--return v;
+--end;
+--	
+--begin
+--
+--dOut8000<=dOut8000_7(0) & dOut8000_6(0) & dOut8000_5(0) & dOut8000_4(0) & dOut8000_3(0) & dOut8000_2(0) & dOut8000_1(0) & dOut8000_0(0);
+--
+--dOut2_8000<=dOut2_8000_7(0) & dOut2_8000_6(0) & dOut2_8000_5(0) & dOut2_8000_4(0) & dOut2_8000_3(0) & dOut2_8000_2(0) & dOut2_8000_1(0) & dOut2_8000_0(0);
+--
+--  inst_w8000 : and_then
+--      port map (A=>not(vram_A(12)),
+--                B=>vram_W,
+--                C=>w8000);
+--					 
+--  XLXI_4 : SELECT8
+--      port map (DATA1(7 downto 0)=>dOut8000,
+--                DATA2(7 downto 0)=>dOut2_8000,
+--                s1=>not(vga_A(12)),
+--                DATA0(7 downto 0)=>vga_D);
+--
+--
+--  inst_w4000 : and_then
+--      port map (A=>(vram_A(12) and not(vram_A(11))),
+--                B=>vram_W,
+--                C=>w2_8000);
+--
+--					  --8000
+--   XLXI_30 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(0)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_0,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_31 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(1)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_1,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_32 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(2)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_2,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_33 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(3)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_3,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_34 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(4)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_4,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_35 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(5)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_5,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_36 : altera_syncram_dp
+--		generic map(abits=>12,dbits=>1)
+--      port map (address2(11 downto 0)=>vga_A(11 downto 0),
+--                clk2=>vga_CLK,
+--                address1(11 downto 0)=>vram_A(11 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(6)),
+--                write1=>w8000,
+--                dataout2=>dOut8000_6,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_37 : altera_syncram_dp
 --		generic map(abits=>12,dbits=>1)
 --      port map (address2(11 downto 0)=>vga_A(11 downto 0),
 --                clk2=>vga_CLK,
 --                address1(11 downto 0)=>vram_A(11 downto 0),
 --                clk1=>vram_CLK,
 --                datain1=>vectorize(vram_D(7)),
---                write1=>w4000,
---                dataout2=>dOut4000_7,
+--                write1=>w8000,
+--                dataout2=>dOut8000_7,
 --dataout1=>open,
 --enable1=>'1',
 --datain2=>"0",
 --enable2=>'1',
 --write2=>'0');
-
-  
-end BEHAVIORAL;
-
-
-
-library ieee;
-use ieee.std_logic_1164.ALL;
-use ieee.numeric_std.ALL;
---library UNISIM;
---use UNISIM.Vcomponents.ALL;
--- light weight memory entre 11000 et 14000 = 8000+4000
-entity VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video is
-   port ( vga_A    : in    std_logic_vector (12 downto 0); 
-          vga_CLK  : in    std_logic; 
-          vram_A   : in    std_logic_vector (12 downto 0); 
-          vram_CLK : in    std_logic; 
-          vram_D   : in    std_logic_vector (7 downto 0); 
-          vram_W   : in    std_logic; 
-          vga_D    : out   std_logic_vector (7 downto 0));
-end VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video;
-
-architecture BEHAVIORAL of VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video is
-  
-	
-	 component SELECT8
-      port ( s1    : in    std_logic; 
-             DATA1 : in    std_logic_vector (7 downto 0); 
-             DATA2 : in    std_logic_vector (7 downto 0); 
-             DATA0 : out   std_logic_vector (7 downto 0));
-   end component;
-	
-	  component and_then
-      port ( A : in    std_logic; 
-             B : in    std_logic; 
-             C : out   std_logic);
-   end component;
-	
-	component altera_syncram_dp is
-	  generic ( 
-		 abits : integer := 4; dbits : integer := 32
-	  );
-	  port (
-		 clk1     : in std_ulogic;
-		 address1 : in std_logic_vector((abits -1) downto 0);
-		 datain1  : in std_logic_vector((dbits -1) downto 0);
-		 dataout1 : out std_logic_vector((dbits -1) downto 0);
-		 enable1  : in std_ulogic;
-		 write1   : in std_ulogic;
-		 clk2     : in std_ulogic;
-		 address2 : in std_logic_vector((abits -1) downto 0);
-		 datain2  : in std_logic_vector((dbits -1) downto 0);
-		 dataout2 : out std_logic_vector((dbits -1) downto 0);
-		 enable2  : in std_ulogic;
-		 write2   : in std_ulogic);
-	end component;
-	
-	signal dOut8000 : std_logic_vector(7 downto 0);
-	signal dOut8000_0 : std_logic_vector(0 downto 0);
-	signal dOut8000_1 : std_logic_vector(0 downto 0);
-	signal dOut8000_2 : std_logic_vector(0 downto 0);
-	signal dOut8000_3 : std_logic_vector(0 downto 0);
-	signal dOut8000_4 : std_logic_vector(0 downto 0);
-	signal dOut8000_5 : std_logic_vector(0 downto 0);
-	signal dOut8000_6 : std_logic_vector(0 downto 0);
-	signal dOut8000_7 : std_logic_vector(0 downto 0);
-	signal w8000 : std_logic;
-	signal dOut4000 : std_logic_vector(7 downto 0);
-	signal dOut4000_0 : std_logic_vector(0 downto 0);
-	signal dOut4000_1 : std_logic_vector(0 downto 0);
-	signal dOut4000_2 : std_logic_vector(0 downto 0);
-	signal dOut4000_3 : std_logic_vector(0 downto 0);
-	signal dOut4000_4 : std_logic_vector(0 downto 0);
-	signal dOut4000_5 : std_logic_vector(0 downto 0);
-	signal dOut4000_6 : std_logic_vector(0 downto 0);
-	signal dOut4000_7 : std_logic_vector(0 downto 0);
-	signal w4000 : std_logic;
-	
-	function vectorize(s: std_logic) return std_logic_vector is
-variable v: std_logic_vector(0 downto 0);
-begin
-v(0) := s;
-return v;
-end;
-	
-begin
-
-dOut8000<=dOut8000_7(0) & dOut8000_6(0) & dOut8000_5(0) & dOut8000_4(0) & dOut8000_3(0) & dOut8000_2(0) & dOut8000_1(0) & dOut8000_0(0);
-
-dOut4000<=dOut4000_7(0) & dOut4000_6(0) & dOut4000_5(0) & dOut4000_4(0) & dOut4000_3(0) & dOut4000_2(0) & dOut4000_1(0) & dOut4000_0(0);
-
-  inst_w8000 : and_then
-      port map (A=>not(vram_A(12)),
-                B=>vram_W,
-                C=>w8000);
-					 
-  XLXI_4 : SELECT8
-      port map (DATA1(7 downto 0)=>dOut8000,
-                DATA2(7 downto 0)=>dOut4000,
-                s1=>not(vga_A(12)),
-                DATA0(7 downto 0)=>vga_D);
-
-
-  inst_w4000 : and_then
-      port map (A=>(vram_A(12) and not(vram_A(11))),
-                B=>vram_W,
-                C=>w4000);
-
-					  --8000
-   XLXI_30 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(0)),
-                write1=>w8000,
-                dataout2=>dOut8000_0,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_31 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(1)),
-                write1=>w8000,
-                dataout2=>dOut8000_1,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_32 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(2)),
-                write1=>w8000,
-                dataout2=>dOut8000_2,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_33 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(3)),
-                write1=>w8000,
-                dataout2=>dOut8000_3,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_34 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(4)),
-                write1=>w8000,
-                dataout2=>dOut8000_4,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_35 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(5)),
-                write1=>w8000,
-                dataout2=>dOut8000_5,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_36 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(6)),
-                write1=>w8000,
-                dataout2=>dOut8000_6,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_37 : altera_syncram_dp
-		generic map(abits=>12,dbits=>1)
-      port map (address2(11 downto 0)=>vga_A(11 downto 0),
-                clk2=>vga_CLK,
-                address1(11 downto 0)=>vram_A(11 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(7)),
-                write1=>w8000,
-                dataout2=>dOut8000_7,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-					 
-					 
-	-- 4000
-	 XLXI_30_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(0)),
-                write1=>w4000,
-                dataout2=>dOut4000_0,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_31_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(1)),
-                write1=>w4000,
-                dataout2=>dOut4000_1,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_32_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(2)),
-                write1=>w4000,
-                dataout2=>dOut4000_2,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_33_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(3)),
-                write1=>w4000,
-                dataout2=>dOut4000_3,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_34_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(4)),
-                write1=>w4000,
-                dataout2=>dOut4000_4,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_35_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(5)),
-                write1=>w4000,
-                dataout2=>dOut4000_5,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_36_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(6)),
-                write1=>w4000,
-                dataout2=>dOut4000_6,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-   XLXI_37_4000 : altera_syncram_dp
-		generic map(abits=>11,dbits=>1)
-      port map (address2(10 downto 0)=>vga_A(10 downto 0),
-                clk2=>vga_CLK,
-                address1(10 downto 0)=>vram_A(10 downto 0),
-                clk1=>vram_CLK,
-                datain1=>vectorize(vram_D(7)),
-                write1=>w4000,
-                dataout2=>dOut4000_7,
-dataout1=>open,
-enable1=>'1',
-datain2=>"0",
-enable2=>'1',
-write2=>'0');
-   
-  
-  
-end BEHAVIORAL;
+--					 
+--					 
+--	-- 4000
+--	 XLXI_30_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(0)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_0,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_31_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(1)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_1,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_32_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(2)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_2,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_33_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(3)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_3,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_34_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(4)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_4,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_35_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(5)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_5,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_36_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(6)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_6,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--   XLXI_37_4000 : altera_syncram_dp
+--		generic map(abits=>11,dbits=>1)
+--      port map (address2(10 downto 0)=>vga_A(10 downto 0),
+--                clk2=>vga_CLK,
+--                address1(10 downto 0)=>vram_A(10 downto 0),
+--                clk1=>vram_CLK,
+--                datain1=>vectorize(vram_D(7)),
+--                write1=>w2_8000,
+--                dataout2=>dOut2_8000_7,
+--dataout1=>open,
+--enable1=>'1',
+--datain2=>"0",
+--enable2=>'1',
+--write2=>'0');
+--   
+--  
+--  
+--end BEHAVIORAL;
 
 
 library ieee;
@@ -923,15 +923,15 @@ architecture BEHAVIORAL of VRAM32Ko_Amstrad_MUSER_amstrad_video is
              vga_D    : out   std_logic_vector (7 downto 0));
    end component;
    
-	component VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST
-      port ( vram_CLK : in    std_logic; 
-             vga_CLK  : in    std_logic; 
-             vram_A   : in    std_logic_vector (13 downto 0); 
-             vga_A    : in    std_logic_vector (13 downto 0); 
-             vram_W   : in    std_logic; 
-             vram_D   : in    std_logic_vector (7 downto 0); 
-             vga_D    : out   std_logic_vector (7 downto 0));
-   end component;
+--	component VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST
+--      port ( vram_CLK : in    std_logic; 
+--             vga_CLK  : in    std_logic; 
+--             vram_A   : in    std_logic_vector (13 downto 0); 
+--             vga_A    : in    std_logic_vector (13 downto 0); 
+--             vram_W   : in    std_logic; 
+--             vram_D   : in    std_logic_vector (7 downto 0); 
+--             vga_D    : out   std_logic_vector (7 downto 0));
+--   end component;
 	
 begin
    XLXI_2 : and_then
@@ -969,7 +969,7 @@ XLXN_23<=not(vga_A(14));
                 vram_W=>XLXN_19,
                 vga_D(7 downto 0)=>XLXN_40(7 downto 0));
    
-   XLXI_9 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video_LOWER_MiST
+   XLXI_9 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video
       port map (vga_A(13 downto 0)=>vga_A(13 downto 0),
                 vga_CLK=>vga_CLK,
                 vram_A(13 downto 0)=>vram_A(13 downto 0),
@@ -1032,7 +1032,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_video is
    end component;
    
    component aZRaEL_vram2vgaAmstradMiaow
-		generic (VOFFSET_NEGATIF : integer:=0;
+		generic (--VOFFSET_NEGATIF : integer:=0;
 		VOFFSET_PALETTE:integer:=0);
       port ( CLK_25MHz : in    std_logic; 
              DATA      : in    std_logic_vector (7 downto 0); 
@@ -1046,11 +1046,21 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_video is
              BLUE      : out   std_logic_vector (1 downto 0));
    end component;
    
-   component VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video
+--   component VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video
+--      port ( vram_CLK : in    std_logic; 
+--             vga_CLK  : in    std_logic; 
+--             vram_A   : in    std_logic_vector (12 downto 0); 
+--             vga_A    : in    std_logic_vector (12 downto 0); 
+--             vram_W   : in    std_logic; 
+--             vram_D   : in    std_logic_vector (7 downto 0); 
+--             vga_D    : out   std_logic_vector (7 downto 0));
+--   end component;
+
+	component VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video
       port ( vram_CLK : in    std_logic; 
              vga_CLK  : in    std_logic; 
-             vram_A   : in    std_logic_vector (12 downto 0); 
-             vga_A    : in    std_logic_vector (12 downto 0); 
+             vram_A   : in    std_logic_vector (13 downto 0); 
+             vga_A    : in    std_logic_vector (13 downto 0); 
              vram_W   : in    std_logic; 
              vram_D   : in    std_logic_vector (7 downto 0); 
              vga_D    : out   std_logic_vector (7 downto 0));
@@ -1075,7 +1085,7 @@ begin
                 vga_D(7 downto 0)=>XLXN_713(7 downto 0));
    
    XLXI_476 : aZRaEL_vram2vgaAmstradMiaow
-		generic map (VOFFSET_NEGATIF =>0, -- MiST 0
+		generic map (--VOFFSET_NEGATIF =>0, -- MiST 0
 		VOFFSET_PALETTE=>0) -- MiST 0
       port map (CLK_25MHz=>CLK25MHz,
                 DATA(7 downto 0)=>XLXN_743(7 downto 0),
@@ -1088,10 +1098,10 @@ begin
                 RED(1 downto 0)=>RED2(1 downto 0),
                 VSYNC=>VSYNC);
    
-   XLXI_478 : VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video
-      port map (vga_A(12 downto 0)=>XLXN_694(12 downto 0),
+   XLXI_478 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video
+      port map (vga_A(13 downto 0)=>XLXN_694(13 downto 0),
                 vga_CLK=>nCLK25MHz,
-                vram_A(12 downto 0)=>palette_A(12 downto 0),
+                vram_A(13 downto 0)=>palette_A(13 downto 0),
                 vram_CLK=>palette_CLK,
                 vram_D(7 downto 0)=>palette_D(7 downto 0),
                 vram_W=>palette_W,

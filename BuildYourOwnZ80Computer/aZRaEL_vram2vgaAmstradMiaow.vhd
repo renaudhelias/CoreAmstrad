@@ -30,7 +30,7 @@ entity aZRaEL_vram2vgaAmstradMiaow is
     Generic(
 --	 VOFFSET_NEGATIF:integer:=(600/2-480/2)/2;
 --	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
-	 VOFFSET_NEGATIF:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
+	 --VOFFSET_NEGATIF:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
 	 VOFFSET_PALETTE:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
 	 HardHZoom : integer:=1; -- do remember to divide clock entry by HardHZoom, and also HZoom by HardHZoom, if changing this parameter
 	 -- Amstrad
@@ -192,24 +192,39 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 
 
 
+--   --Fakeline "800x600@75" 50.00 800 860 940 1070 600 601 604 623 +HSync +Vsync
+--   --Fakeline "800x600@75" 50.00 800 875 955 1070 600 593 596 623 +HSync +Vsync -- noir en haut et à droite
+--   --Fakeline "800x600@75" 50.00 800 815 895 1070 600 631 634 623 +HSync +Vsync -- KO
+--   --Fakeline "800x600@75" 50.00 800 815 895 1070 600 631 011 623 +HSync +Vsync -- noir en bas et à gauche
+--   --Fakeline "800x600@75" 50.00 800 845 925 1070 600 616 619 623 +HSync +Vsync
 
 
 
 -- "modeline" is a Unix command, it's a helper command, listing VGA screen parameters on Unix.
 --   --modeline label pxcl HDsp HSS HSE HTot VDsp VSS VSE VTot flags
 --   --modeline "640x480@60" 25.2 640 656 752 800 480 490 492 525 -vsync -hsync
-              label_modeline  :string:="640x480@60";--(ignored  by  svgalib) mainly there to be compatible with XF86Config.   I  use  the  format  "Width  x   Height   @   Vert.Refresh", but that's just personal taste...
-              pxcl:string:="25.2"; -- the pixel clock in MHz
-              HDsp:integer:=640; -- size of the visible area (horizontal/vertical)
-              HSS:integer:=656; -- Sync start (horizontal/vertical)
-              HSE:integer:=752; -- Sync end (horizontal/vertical)
-              HTot:integer:=800; -- Total width/height (end of back porch)
-              VDsp:integer:=480; -- size of the visible area (horizontal/vertical)
-              VSS:integer:=490; -- Sync start (horizontal/vertical)
-              VSE:integer:=492; -- Sync end (horizontal/vertical)
-              VTot:integer:=525; -- Total width/height (end of back porch)
-				  nvsync:std_logic:='1';--flags  +vsync -vsync
-				  nhsync:std_logic:='1'; --flags  +hsync -hsync
+--   --ModeLine "800x600@75" 49.50 800 816 896 1056 600 601 604 625 +HSync +VSync
+--   --Modeline "800x600@75" 48.91 800 840 920 1040 600 601 604 627 -HSync +Vsync
+
+--   --Fakeline "800x600@75" 50.00 800 840 920 1040 600 ??? ??? AAA +HSync +Vsync
+-- 1040*627->B  1040*AAA->B
+--    48.91->1        50->1 donc AAA=640.97
+--   --Fakeline "800x600@75" 50.00 800 840 920 1040 600 601 604 641 +HSync +Vsync
+
+--   --ModeLine "800x600@72" 50.00 800 856 976 1040 600 637 643 666 +HSync +VSync
+
+              label_modeline  :string:="800x600@72";--(ignored  by  svgalib) mainly there to be compatible with XF86Config.   I  use  the  format  "Width  x   Height   @   Vert.Refresh", but that's just personal taste...
+              pxcl:string:="50.00"; -- the pixel clock in MHz
+              HDsp:integer:=800; -- size of the visible area (horizontal/vertical)
+              HSS:integer:=856; -- Sync start (horizontal/vertical)
+              HSE:integer:=976; -- Sync end (horizontal/vertical)
+              HTot:integer:=1040; -- Total width/height (end of back porch)
+              VDsp:integer:=600; -- size of the visible area (horizontal/vertical)
+              VSS:integer:=637; -- Sync start (horizontal/vertical)
+              VSE:integer:=643; -- Sync end (horizontal/vertical)
+              VTot:integer:=666; -- Total width/height (end of back porch)
+				  nvsync:std_logic:='0';--flags  +vsync -vsync
+				  nhsync:std_logic:='0'; --flags  +hsync -hsync
               --flags  interlace interlaced
               --       doublescan Sync polarity, interlace mode
 				  SQRT_VRAM_SIZE:integer:=16;
@@ -242,10 +257,10 @@ architecture Behavioral of aZRaEL_vram2vgaAmstradMiaow is
 	constant DO_HSYNC : STD_LOGIC:='1';
 	constant DO_VSYNC : STD_LOGIC:='1';
 
-	constant VDecal_negatif:integer:=VOFFSET_NEGATIF; --(600/2-480/2)/2;
-	constant HDecal_negatif:integer:=(800-640)/2;
-	constant HDecal:integer:=0;
-	constant VDecal:integer:=0;
+	--constant VDecal_negatif:integer:=VOFFSET_NEGATIF; --(600/2-480/2)/2;
+	--constant HDecal_negatif:integer:=(800-640)/2;
+	--constant HDecal:integer:=0;
+	--constant VDecal:integer:=0;
 	
 	type palette_type is array(31 downto 0) of std_logic_vector(5 downto 0); -- RRVVBB
 	constant palette:palette_type:=(
@@ -323,9 +338,9 @@ aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 	variable cursor_pixel_ref : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
 	variable cursor_pixel : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
 	variable cursor_pixel_retard : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
-	variable v:integer range 0 to 256-1;
-	variable h:integer range 0 to CHAR_WIDTH*128*8-1;
-	variable new_h:integer range 0 to 128*8-1;
+	variable v:integer range 0 to 512-1;
+	variable h:integer range 0 to 1024-1;
+	variable new_h:integer range 0 to 1024/CHAR_WIDTH-1;
 	variable NB_PIXEL_PER_OCTET:integer range NB_PIXEL_PER_OCTET_MIN to NB_PIXEL_PER_OCTET_MAX;
 	--variable ADRESSE_CONSTANT_mem:integer range 0 to 16*1024-1;
 	--variable ADRESSE_INC_mem:integer range 0 to 16*1024-1;
@@ -443,7 +458,7 @@ begin
 			palette_D_mem:=palette_D;
 			MODE_select<=palette_D_mem(1 downto 0);
 			border:=palette(conv_integer(palette_D_mem(7 downto 3)));
-			if palette_D_mem(2)='1' then
+			if palette_D_mem(2)='0' then
 				is_full_vertical_BORDER:=true;
 			else
 				is_full_vertical_BORDER:=false;
@@ -458,11 +473,11 @@ begin
 		elsif palette_action_retard=DO_HBEGIN then
 			palette_D_mem:=palette_D;
 			horizontal_counter_LEFT_BORDER:=conv_integer(palette_D_mem(7 downto 0));
-			if horizontal_counter_LEFT_BORDER>((HDecal_negatif-HDecal)/16) then
+			horizontal_counter_LEFT_BORDER:=horizontal_counter_LEFT_BORDER*16;
+			--horizontal_counter_LEFT_BORDER:=horizontal_counter_LEFT_BORDER-HDecal_negatif+HDecal;
+			if horizontal_counter_LEFT_BORDER>0 then
 				--horizontal_counter_LEFT_BORDER:=160;
 				--horizontal_counter_LEFT_BORDER:=15;--conv_integer(palette_D_mem(7 downto 0));
-				horizontal_counter_LEFT_BORDER:=horizontal_counter_LEFT_BORDER*16;
-				horizontal_counter_LEFT_BORDER:=horizontal_counter_LEFT_BORDER-HDecal_negatif+HDecal;
 				--horizontal_counter_LEFT_BORDER:=16*(conv_integer(palette_D_mem(7 downto 0))-((HDecal_negatif-HDecal)/16));
 				has_LEFT_BORDER:=true;
 			else
@@ -472,17 +487,23 @@ begin
 		elsif palette_action_retard=DO_HEND then
 			palette_D_mem:=palette_D;
 			horizontal_counter_RIGHT_BORDER:=conv_integer(palette_D_mem(7 downto 0));
-			if horizontal_counter_RIGHT_BORDER<(HDsp/HardHZoom)/16 + ((HDecal_negatif-HDecal)/16) then
-				--horizontal_counter_RIGHT_BORDER:=480-1;
-				--horizontal_counter_RIGHT_BORDER:=35;--conv_integer(palette_D_mem(7 downto 0));
-				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER*16;
-				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER-HDecal_negatif+HDecal;
-				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER-1;
-				--horizontal_counter_RIGHT_BORDER:=(16*(conv_integer(palette_D_mem(7 downto 0))-((HDecal_negatif-HDecal)/16)))-1;
-				has_RIGHT_BORDER:=true;
-			else
+			if horizontal_counter_RIGHT_BORDER>(HDsp/HardHZoom)/16 then
+				--overwidth
 				horizontal_counter_RIGHT_BORDER:=HDsp/HardHZoom;
 				has_RIGHT_BORDER:=false; -- HEURISTIC :p
+			else
+				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER*16;
+				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER+horizontal_counter_LEFT_BORDER;
+				if horizontal_counter_RIGHT_BORDER<(HDsp/HardHZoom) then
+					--horizontal_counter_RIGHT_BORDER:=480-1;
+					--horizontal_counter_RIGHT_BORDER:=35;--conv_integer(palette_D_mem(7 downto 0));
+					--horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER-1;
+					--horizontal_counter_RIGHT_BORDER:=(16*(conv_integer(palette_D_mem(7 downto 0))-((HDecal_negatif-HDecal)/16)))-1;
+					has_RIGHT_BORDER:=true;
+				else
+					horizontal_counter_RIGHT_BORDER:=HDsp/HardHZoom;
+					has_RIGHT_BORDER:=false; -- HEURISTIC :p
+				end if;
 			end if;
 		end if;
 		palette_action_retard:=palette_action;
@@ -524,7 +545,7 @@ begin
 		
 		
 		if horizontal_counter<HDsp/HardHZoom and vertical_counter<VDsp then
-			if horizontal_counter+HDecal_negatif<HDecal or vertical_counter+VDecal_negatif<VDecal or horizontal_counter+HDecal_negatif>=HDecal+HZoom*VRAM_HDsp or vertical_counter+VDecal_negatif>=VDecal+VZoom*VRAM_VDsp then
+			if horizontal_counter>=HZoom*VRAM_HDsp or vertical_counter>=VZoom*VRAM_VDsp then
 				ADDRESS<= (others=>'0');
 				-- OUT OF VRAM800x600
 				etat_rgb:=DO_BORDER;
@@ -536,13 +557,14 @@ begin
 				-- LEFT BORDER
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;
-			elsif has_RIGHT_BORDER and horizontal_counter>horizontal_counter_RIGHT_BORDER then
+			elsif has_RIGHT_BORDER and horizontal_counter>=horizontal_counter_RIGHT_BORDER then
+			--elsif has_RIGHT_BORDER and horizontal_counter>horizontal_counter_RIGHT_BORDER then
 				-- RIGHT BORDER
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;
 			else
-				v:=(vertical_counter+VDecal_negatif-VDecal)/(VZoom);
-				h:=(horizontal_counter+HDecal_negatif-HDecal)/(HZoom);
+				v:=(vertical_counter)/(VZoom);
+				h:=(horizontal_counter)/(HZoom);
 				no_char:=(h / 8) mod (CHAR_WIDTH/8);
 				-- 640x200 pixels with 2 colours ("Mode 2", 80 text columns) so it is really 8 physicals pixels per bytes
 				if NB_PIXEL_PER_OCTET=2 then

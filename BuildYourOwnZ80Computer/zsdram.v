@@ -128,7 +128,7 @@ always @(posedge clk) begin
 				begin
 					operation_wait<=operation_wait-2'd1;
 					if (operation_wait==2'd1)
-						operation_launch<=1;
+						operation_launch<=(wr_i || rd_i);
 					//Daisy VALIDATED
 					else operation_launch<=0;
 				end
@@ -138,7 +138,7 @@ always @(posedge clk) begin
 				begin
 					zram_operation_wait<=zram_operation_wait-2'd1;
 					if (zram_operation_wait==2'd1)
-						zram_operation_launch<=1;
+						zram_operation_launch<=zram_rd_i;
 					//Daisy VALIDATED
 					else zram_operation_launch<=0;
 				end
@@ -248,7 +248,7 @@ wire [3:0] run_cmd =
 	//Daisy
 	//(zram_operation_launch && (q == STATE_CMD_CONT ))?CMD_READ:
 	(zram_operation_launch && zram_rd_i && (q == STATE_CMD_CONT ))?CMD_READ:
-	((!(operation_launch || zram_operation_launch) || (!wr_i && !rd_i && !zram_rd_i)) && (q == STATE_CMD_START))?CMD_AUTO_REFRESH:
+	(!(operation_launch || zram_operation_launch) && (q == STATE_CMD_START))?CMD_AUTO_REFRESH:
 	CMD_INHIBIT;
 	
 assign sd_cmd = (reset != 0)?reset_cmd:run_cmd;

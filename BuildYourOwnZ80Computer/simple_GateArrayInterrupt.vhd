@@ -49,7 +49,7 @@ entity simple_GateArrayInterrupt is
   VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
   VRAM_VDsp:integer:=600/2;
   -- plus je grandi cette valeur plus l'image va vers la gauche.
-  VRAM_Hoffset:integer:=10; -- 63*16-46*16
+  VRAM_Hoffset:integer:=11; -- 63*16-46*16
   
   -- le raster palette arrive au moment oÃƒÆ’Ã‚Â¹ l'encre est en face du stylo.
   -- si on a un dÃƒÆ’Ã‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
@@ -59,7 +59,7 @@ entity simple_GateArrayInterrupt is
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
-  VRAM_Voffset:integer:=11;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
+  VRAM_Voffset:integer:=18;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
  -- output pixels
 	-- Amstrad
 	 -- 
@@ -795,7 +795,7 @@ end if;
 
 is_H_middle:=false;
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
-if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
+if vram_vertical_counter<VRAM_VDsp then
 	in_V:=true;
 	if vram_horizontal_counter=0 and vram_vertical_counter= 0 then
 		palette_A_tictac_mem:=(others=>'0');

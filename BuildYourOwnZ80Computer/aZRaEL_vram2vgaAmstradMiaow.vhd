@@ -32,7 +32,6 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 --	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
 	 --VOFFSET_NEGATIF:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
 	 VOFFSET_PALETTE:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
-	 HardHZoom : integer:=1; -- do remember to divide clock entry by HardHZoom, and also HZoom by HardHZoom, if changing this parameter
 	 -- Amstrad
 	 -- 
 	 --OFFSET:STD_LOGIC_VECTOR(15 downto 0):=x"C000";
@@ -249,18 +248,24 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 end aZRaEL_vram2vgaAmstradMiaow;
 
 architecture Behavioral of aZRaEL_vram2vgaAmstradMiaow is
-	constant DO_NOTHING_OUT : integer range 0 to 2:=0;
-	constant DO_READ : integer range 0 to 2:=1;
-	constant DO_BORDER: integer range 0 to 2:=2;
+	constant DO_NOTHING_OUT : integer range 0 to 4:=0;
+	constant DO_READ : integer range 0 to 4:=1;
+	constant DO_BORDER: integer range 0 to 4:=2;
+	constant DO_BORDER2: integer range 0 to 4:=3;
+	constant DO_BORDER3: integer range 0 to 4:=4;
 	
 	constant DO_NOTHING : STD_LOGIC:='0';
 	constant DO_HSYNC : STD_LOGIC:='1';
 	constant DO_VSYNC : STD_LOGIC:='1';
 
-	--constant VDecal_negatif:integer:=VOFFSET_NEGATIF; --(600/2-480/2)/2;
-	--constant HDecal_negatif:integer:=(800-640)/2;
-	--constant HDecal:integer:=0;
-	--constant VDecal:integer:=0;
+	constant H_BEGIN:integer:=(800-768)/2;
+	constant V_BEGIN:integer:=(600-576)/2;
+	constant V_BEGIN2:integer:=(600-544)/2; -- 546
+	constant H_END:integer:=(800-768)/2+768;
+	constant V_END:integer:=(600-576)/2+576;
+	constant V_END2:integer:=(600-544)/2+544;
+	
+	
 	
 	type palette_type is array(31 downto 0) of std_logic_vector(5 downto 0); -- RRVVBB
 	constant palette:palette_type:=(
@@ -307,7 +312,7 @@ aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 
 	constant PALETTE_H_OFFSET:integer:=32-1;--16+1  +1;
 	constant PALETTE_V_OFFSET:integer:=VOFFSET_PALETTE; --((600-480)/2)/2;
-	constant HMax:integer:=(HTot/HardHZoom)-1;
+	constant HMax:integer:=HTot-1;
 	constant VMax:integer:=VTot-1;
 	
 	variable horizontal_counter : integer range 0 to 1024-1 :=0;
@@ -327,8 +332,8 @@ aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 	variable palette_A_mem:std_logic_vector(palette_A'range):=(others=>'0');
 	variable palette_D_mem:std_logic_vector(7 downto 0);
 	
-	variable etat_rgb : integer range 0 to 2:=DO_NOTHING_OUT;
-	variable etat_rgb_retard : integer range 0 to 2:=DO_NOTHING_OUT;
+	variable etat_rgb : integer range 0 to 4:=DO_NOTHING_OUT;
+	variable etat_rgb_retard : integer range 0 to 4:=DO_NOTHING_OUT;
 	variable etat_hsync : STD_LOGIC:=DO_NOTHING;
 	variable etat_hsync_retard : STD_LOGIC:=DO_NOTHING;
 	variable etat_vsync : STD_LOGIC:=DO_NOTHING;
@@ -424,6 +429,14 @@ begin
 			RED<=border(5 downto 4);
 			GREEN<=border(3 downto 2);
 			BLUE<=border(1 downto 0);
+		elsif etat_rgb_retard = DO_BORDER2 then
+			RED<="10";
+			GREEN<="00";
+			BLUE<="00";
+		elsif etat_rgb_retard = DO_BORDER3 then
+			RED<="11";
+			GREEN<="10";
+			BLUE<="00";
 		else
 			RED<="00";
 			GREEN<="00";
@@ -487,21 +500,21 @@ begin
 		elsif palette_action_retard=DO_HEND then
 			palette_D_mem:=palette_D;
 			horizontal_counter_RIGHT_BORDER:=conv_integer(palette_D_mem(7 downto 0));
-			if horizontal_counter_RIGHT_BORDER>(HDsp/HardHZoom)/16 then
+			if horizontal_counter_RIGHT_BORDER>HDsp/16 then
 				--overwidth
-				horizontal_counter_RIGHT_BORDER:=HDsp/HardHZoom;
+				horizontal_counter_RIGHT_BORDER:=HDsp;
 				has_RIGHT_BORDER:=false; -- HEURISTIC :p
 			else
 				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER*16;
 				horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER+horizontal_counter_LEFT_BORDER;
-				if horizontal_counter_RIGHT_BORDER<(HDsp/HardHZoom) then
+				if horizontal_counter_RIGHT_BORDER<HDsp then
 					--horizontal_counter_RIGHT_BORDER:=480-1;
 					--horizontal_counter_RIGHT_BORDER:=35;--conv_integer(palette_D_mem(7 downto 0));
 					--horizontal_counter_RIGHT_BORDER:=horizontal_counter_RIGHT_BORDER-1;
 					--horizontal_counter_RIGHT_BORDER:=(16*(conv_integer(palette_D_mem(7 downto 0))-((HDecal_negatif-HDecal)/16)))-1;
 					has_RIGHT_BORDER:=true;
 				else
-					horizontal_counter_RIGHT_BORDER:=HDsp/HardHZoom;
+					horizontal_counter_RIGHT_BORDER:=HDsp;
 					has_RIGHT_BORDER:=false; -- HEURISTIC :p
 				end if;
 			end if;
@@ -514,6 +527,9 @@ begin
 		
 		
 		if palette_vertical_counter mod VZoom=0 and palette_vertical_counter<VDsp then  -- one line per two... + no out of VRAM range vertically
+		
+		
+		
 			if palette_horizontal_counter<1 then
 				-- mode
 				palette_A<=palette_A_mem;
@@ -544,27 +560,32 @@ begin
 		
 		
 		
-		if horizontal_counter<HDsp/HardHZoom and vertical_counter<VDsp then
-			if horizontal_counter>=HZoom*VRAM_HDsp or vertical_counter>=VZoom*VRAM_VDsp then
+		if horizontal_counter<HDsp and vertical_counter<VDsp then
+		
+			if horizontal_counter<H_BEGIN or horizontal_counter>=H_END or vertical_counter<V_BEGIN or vertical_counter>=V_END then
 				ADDRESS<= (others=>'0');
 				-- OUT OF VRAM800x600
-				etat_rgb:=DO_BORDER;
+				etat_rgb:=DO_BORDER2;
+			elsif vertical_counter<V_BEGIN2 or vertical_counter>=V_END2 then
+				ADDRESS<= (others=>'0');
+				-- OUT OF VRAM800x600
+				etat_rgb:=DO_BORDER3;
 			elsif is_full_vertical_BORDER then
 				-- vertical full BORDER (UPPER AND LOWER ONES)
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;
-			elsif has_LEFT_BORDER and horizontal_counter<horizontal_counter_LEFT_BORDER then
+			elsif has_LEFT_BORDER and horizontal_counter<H_BEGIN+horizontal_counter_LEFT_BORDER then
 				-- LEFT BORDER
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;
-			elsif has_RIGHT_BORDER and horizontal_counter>=horizontal_counter_RIGHT_BORDER then
+			elsif has_RIGHT_BORDER and horizontal_counter>=H_BEGIN+horizontal_counter_RIGHT_BORDER then
 			--elsif has_RIGHT_BORDER and horizontal_counter>horizontal_counter_RIGHT_BORDER then
 				-- RIGHT BORDER
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;
 			else
 				v:=(vertical_counter)/(VZoom);
-				h:=(horizontal_counter)/(HZoom);
+				h:=(horizontal_counter-H_BEGIN)/(HZoom);
 				no_char:=(h / 8) mod (CHAR_WIDTH/8);
 				-- 640x200 pixels with 2 colours ("Mode 2", 80 text columns) so it is really 8 physicals pixels per bytes
 				if NB_PIXEL_PER_OCTET=2 then
@@ -590,7 +611,7 @@ begin
 			ADDRESS<= (others=>'0');
 			etat_rgb:=DO_NOTHING_OUT;
 		end if;
-		if horizontal_counter>=HSS/HardHZoom and horizontal_counter<HSE/HardHZoom then
+		if horizontal_counter>=HSS and horizontal_counter<HSE then
 			etat_hsync:=DO_HSYNC;
 		else
 			etat_hsync:=DO_NOTHING;

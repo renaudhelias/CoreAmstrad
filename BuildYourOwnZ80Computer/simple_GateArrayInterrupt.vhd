@@ -49,7 +49,7 @@ entity simple_GateArrayInterrupt is
   VRAM_HDsp:integer:=800/16; -- words of 16bits, that contains more or less pixels... thinking as reference mode 2, some 800x600 mode 2 (mode 2 is one bit <=> one pixel, that's cool)
   VRAM_VDsp:integer:=600/2;
   -- plus je grandi cette valeur plus l'image va vers la gauche.
-  VRAM_Hoffset:integer:=11; -- 63*16-46*16
+  VRAM_Hoffset:integer:=12; -- 63*16-46*16
   
   -- le raster palette arrive au moment oÃƒÆ’Ã‚Â¹ l'encre est en face du stylo.
   -- si on a un dÃƒÆ’Ã‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
@@ -59,7 +59,7 @@ entity simple_GateArrayInterrupt is
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
-  VRAM_Voffset:integer:=18;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
+  VRAM_Voffset:integer:=14; --15; --16; --18;  -- no influence under layer PRAM (raster palette colours ink), because PRAM is time dependant. Here influence is just about image position on screen
  -- output pixels
 	-- Amstrad
 	 -- 
@@ -164,18 +164,19 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	--       ? RVsyncpos*RRmax=30*7=210, 266-210=56 (NB_HSYNC_BY_INTERRUPT=52) 30*8=240 312-240=72
 	-- NB_HSYNC_BY_INTERRUPT*6=52*6=312
 	
-	-- Grimware A PAL 50Hz video-frame on the Amstrad is 312 rasterlines. 
-	-- Grimware screenshoot R0 RHtot     =63 : 0..63                            (donc 64 pas)
-	-- Grimware screenshoot R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃƒÂ© passÃƒÂ©)
-	-- Grimware screenshoot R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃƒÂ© passÃƒÂ©)
-	-- Grimware screenshoot R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃƒÂ© passÃƒÂ©)
-	-- Grimware screenshoot R4 RVtot     =38 : 0..38                            (donc 39 pas)
-	-- Grimware screenshoot R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃƒÂ© passÃƒÂ©)
-	-- Grimware screenshoot R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃƒÂ© passÃƒÂ©)
-	-- Grimware screenshoot R3 RVwidth   =8  : VSYNC=OFF aprÃƒÂ¨s un certain temps...
-	-- Grimware screenshoot R9 RRmax     =7  : 0..7                             (donc  8 pas)
-	-- Grimware screenshoot : caractÃƒÂ¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
-	
+-- Grimware A PAL 50Hz video-frame on the Amstrad is 312 rasterlines. 
+-- Grimware screenshoot :
+--R0 RHtot     =63 : 0..63                            (donc 64 pas)
+--R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissé passé)
+--R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissé passé)
+--R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissé passé)
+--R4 RVtot     =38 : 0..38                            (donc 39 pas)
+--R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissé passé)
+--R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissé passé)
+--R3 RVwidth   =8  : VSYNC=OFF aprÃƒÂ¨s un certain temps...
+--R9 RRmax     =7  : 0..7                             (donc  8 pas)
+--caractères de 8*8, donc verticalement : 1024 et horizontalement : 312.
+
 	-- arnold cpctest.asm :
 	-- crtc_default_values:
 	-- defb 63,40,46,&8e,38,0,25,30,0,7,0,0,&30,0,0,0,0
@@ -185,7 +186,6 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	constant DO_VSYNC : STD_LOGIC:='1';
 	
 	signal maScreen:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
-
 	signal LineCounter:std_logic:='1';
 	signal RED : STD_LOGIC_VECTOR(1 downto 0);
    signal GREEN : STD_LOGIC_VECTOR(1 downto 0);
@@ -196,11 +196,8 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal hsync_int:std_logic;
 	
 	signal CLK4MHz : STD_LOGIC;
-	
 	--signal SOUND_CLK_i : STD_LOGIC;
-
 	signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
-
 	
 	type palette_type is array(31 downto 0) of std_logic_vector(5 downto 0); -- RRVVBB
 	constant palette:palette_type:=(
@@ -252,11 +249,6 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal etat_rgb : integer range 0 to 2:=DO_NOTHING_OUT;
 	signal DATA_action : std_logic:='0'; -- if rising_edge then DATA just is filled.
 	signal DATA : std_logic_vector(7 downto 0):=(others=>'0');
-	
-	-- wtf solver
-	--signal palette_A_tictac: STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
-	--signal palette_D_tictac: std_logic_vector(7 downto 0);
-	--signal palette_W_tictac: std_logic;
 begin
 
 ---- without scandoubler
@@ -265,63 +257,6 @@ GREEN_out<= GREEN & "0000";
 BLUE_out<= BLUE & "0000";
 HSYNC_out<= HSYNC;
 VSYNC_out<= VSYNC;
--- do scan mirror VRAM (underground way (no way)) via CRTC, and then send data to VRAM buffer
---
--- Z80=>RAM         (read/write at 4MHz)
---    =>mirror_VRAM (mirror : just write at 4MHz)
---
---mirror_VRAM<=CRTC (anarchy_clock read at 4MHz)
---
---CRTC=>VRAM_BUFFER+PRAM (pixels written at 50Hz)
---
---VRAM_BUFFER+PRAM=>VGA (read at 60Hz (that's another anarchy_clock))
-
-	-- synchronize palette_CLK_tictac with bvram_CLK to provocate clock solver aZRaEL_vram2vgaAmstradMiaow
---	stabilizatorVRAMvsPALETTE:process(reset,nCLK4_1) is
---		variable palette_A_mem:std_logic_vector(palette_A'range):=(others=>'0');
---		variable palette_D_mem:std_logic_vector(7 downto 0):=(others=>'0');
---		variable palette_W_mem:std_logic:='0';
---	begin
---		if reset='1' then
---			palette_A<=(others=>'0');
---			palette_D<=(others=>'0');
---			palette_W<='0';
---		elsif falling_edge(nCLK4_1) then
---			palette_A_mem:=palette_A_tictac;
---			palette_A<=palette_A_mem;
---			palette_D_mem:=palette_D_tictac;
---			palette_D<=palette_D_mem;
---			palette_W_mem:=palette_W_tictac;
---			palette_W<=palette_W_mem;
---		end if;
---	end process;
---
---	bvramWriter:process(reset,nCLK4_1) is -- transmit
---		variable D2:STD_LOGIC_VECTOR (7 downto 0):=(others=>'0');
---		variable W2:STD_LOGIC :='0';
---	begin
---		--problem with D2 and reset !
---		if reset='1' then
---			crtc_R<='0';
---			bvram_D<=(others=>'0'); -- do not loose tempo about D2
---			bvram_W<='0';
---		else
---			-- address is solved
---			if falling_edge(nCLK4_1) then
---				crtc_R<='1'; -- directly solve external ram_A for CRTC read
---				if crtc_DISP='1' then
---					D2:=crtc_D; --bug bug
---					W2:='1';
---				else
---					D2:=x"00";
---					W2:='0';
---				end if;
---				bvram_D<=D2; -- tempo D2 !!!
---				bvram_W<=W2;
---			end if;
---		end if;
---		
---	end process;
 
 ctrcConfig_process:process(reset,nCLK4_1) is
 	variable reg_select32 : std_logic_vector(7 downto 0);
@@ -490,7 +425,6 @@ begin
 				end if;
 			else
 				--JavaCPC readPort() not implemented
-			
 				-- CS (chip select) OFF
 				-- no read : pull-up
 				Dout<=x"FF";
@@ -504,14 +438,6 @@ begin
 	end if;
 end process ctrcConfig_process;
 
-
---delta_sound_clk : process(nCLK4_1) is
---begin
---	if falling_edge(nCLK4_1) then
---		SOUND_CLK<=SOUND_CLK_i;
---	end if;
---end process delta_sound_clk;
-	
 	-- DANGEROUS WARNING : CRTC PART WAS TESTED AND VALIDATED USING TESTBENCH
 simple_GateArray_process : process(reset,nCLK4_1) is
  
@@ -519,6 +445,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 	variable disp:std_logic:='0';
 	variable disp_delta:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
+	variable disp_VRAM:std_logic:='0';
 	-- following Quazar legends, 300 times per second
 	-- Following a lost trace in Google about www.cepece.info/amstrad/docs/garray.html I have
 	-- "In the CPC the Gate Array generates maskable interrupts, to do this it uses the HSYNC and VSYNC signals from CRTC, a 6-bit internal counter and monitors..."
@@ -559,6 +486,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable palette_A_tictac_mem:std_logic_vector(13 downto 0):=(others=>'0');
 		variable palette_D_tictac_mem:std_logic_vector(7 downto 0):=(others=>'0');
 		variable border_begin_mem:std_logic_vector(7 downto 0):=(others=>'0');
+		variable disp_begin_mem:std_logic:='0';
 		variable RHdisp_mem:std_logic_vector(7 downto 0):="00101000";
 		
 		variable last_dispH:std_logic:='0';
@@ -595,7 +523,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			
 			--bvram
 			crtc_R<='0';
-			bvram_D<=(others=>'0'); -- do not loose tempo about D2
+			bvram_D<=(others=>'0');
 			bvram_W<='0';
 	--it's Z80 time !
 		elsif falling_edge(nCLK4_1) then
@@ -608,21 +536,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			-- it's a falling_edge Yamaha
 			SOUND_CLK<='1';
 		end if;
---		case  is
---			when 0=>
---				-- SOUND_CLK/SOUND_CLK_i
---				
---				-- See games SimCity, TrailBlazer and demos -Circles (great to calibrate) and -LittleOne
---				-- r005.5.1c6 : 1011  (TrailBlazer KO SimCity OK)
---				-- r005.5.1c7 : 0111i (TrailBlazer OK SimCity KO)
---				SOUND_CLK<='0';
---			when 1=>
---				SOUND_CLK<='0';
---			when 2=>
---				SOUND_CLK<='1';
---			when 3=>
---				SOUND_CLK<='1';
---		end case;
 		
 		if IO_ACK='1' then
 --the Gate Array will reset bit5 of the counter
@@ -634,7 +547,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 -- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
 			int<='0'; -- following JavaCPC 2015
 		end if;
-		
 		
 crtc_DISP<='0';
 palette_W<='0';
@@ -648,7 +560,6 @@ bvram_W<='0';
 			-- z80 mode 1 : the byte need no be sent, as the z80 restarts at logical address x38 regardless(z80 datasheet)
 			case compteur1MHz is
 			when 0=>
-
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
 
@@ -676,10 +587,7 @@ hsync_int<=DO_NOTHING;
 				--if (inVSync && (vSyncCount = (vSyncCount + 1) & 0x0f) == vSyncWidth) {
 				if horizontal_counter_hCC = 0 then
 					etat_monitor_vsync:=etat_monitor_vsync(2 downto 0) & etat_monitor_vsync(0);
-
 					-- checkVSync() : if (vCC == reg[7] && !inVSync) {
-					--if RA=0 and vertical_counter_vCC=RVsyncpos then -- un char de trop
-					--if RA=0 and vertical_counter_vCC+1=RVsyncpos then -- deux char de trop
 					if RA=0 and vertical_counter_vCC=RVsyncpos then
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
 						-- Batman city towers does like RA=0 filter here...
@@ -776,8 +684,6 @@ if etat_monitor_hsync(2)=DO_HSYNC and etat_monitor_hsync(3)=DO_NOTHING then
 	--vram_horizontal_counter:=0;
 end if;
 
-
-
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
 if vram_horizontal_counter<VRAM_HDsp then
 	vram_horizontal_counter:=vram_horizontal_counter+1;
@@ -788,10 +694,6 @@ elsif vram_horizontal_offset_counter=VRAM_Hoffset then
 	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
 	vram_horizontal_counter:=0;
 end if;
-
-
-
-
 
 is_H_middle:=false;
 -- Here we're scanning 800x600 following VSYNC et HSYNC, so we can write some border...
@@ -805,7 +707,7 @@ if vram_vertical_counter<VRAM_VDsp then
 		is_H_middle:=true;
 	end if;
 	
-	if dispH='1' and last_dispH='0' then
+	if dispH='1' and (vram_horizontal_counter=0 or last_dispH='0') then
 		-- big capture.
 		border_begin_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
 		RHdisp_mem:=RHdisp;
@@ -815,24 +717,13 @@ else
 	in_V:=false;
 end if;
 
-
-
-
-
-if vram_vertical_counter<VRAM_VDsp then
+if vram_vertical_counter<VRAM_VDsp and vram_horizontal_counter<VRAM_HDsp then
 	bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
+	disp_VRAM:='1';
+else
+	-- do kill disp
+	disp_VRAM:='0';
 end if;
-	
---if vram_horizontal_offset_counter>VRAM_Hoffset then
---	if vram_horizontal_counter<VRAM_HDsp then
---		if vram_vertical_offset_counter>VRAM_Voffset and vram_vertical_counter<VRAM_VDsp then
---			bvram_A_mem:=conv_std_logic_vector(vram_vertical_counter*VRAM_HDsp+vram_horizontal_counter,bvram_A_mem'length);
---		end if;
---		vram_horizontal_counter:=vram_horizontal_counter+1;
---	end if;
---else
---	vram_horizontal_offset_counter:=vram_horizontal_offset_counter+1;
---end if;
 
 if dispH='0' then
 	-- allow last_dispH to go back to '0'.
@@ -918,11 +809,10 @@ end if;
 			when 1=>
 				-- Daisy relaxing (zsdram.v)
 				bvram_A_mem_delta:=bvram_A_mem;
-				disp_delta:=disp;
-			
+				disp_delta:=disp and disp_VRAM;
 				--Daisy relaxing (zsdram.v)
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
-				crtc_R<=disp;
+				crtc_R<=disp and disp_VRAM;
 				DATA_action<='0';
 			when 2=>
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '0';
@@ -931,28 +821,25 @@ end if;
 				DATA_action<='1';
 				bvram_W<=disp_delta;
 				bvram_D<=DATA_mem;
-
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
 				crtc_R<=disp;
 			when 3=>
 				--Daisy relaxing (zsdram.v)
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
-				crtc_R<=disp;
+				crtc_R<=disp and disp_VRAM;
 				DATA_action<='0';
 			end case;
 			
-			
+-- filling palette (PRAM)
 if in_V then
 	if is_H_middle and compteur1MHz=0 then
 		palette_horizontal_counter:=0;
+		disp_begin_mem:=disp and disp_VRAM;
 	elsif palette_horizontal_counter<2+16+1 then
 		palette_horizontal_counter:=palette_horizontal_counter+1;
 	end if;
-	
-	if disp='0' then
+	if disp_begin_mem='0' then
 		-- full VERTICAL BORDER
-		-- filling palette (PRAM)
-		
 		if palette_horizontal_counter<1 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
 			palette_D_tictac_mem:=border_begin_mem;
@@ -987,9 +874,8 @@ if in_V then
 			palette_D<=(others=>'0');
 			palette_W<='0';
 		end if;
-	elsif disp='1' then
+	elsif disp_begin_mem='1' then
 		-- DISPLAY
-		-- filling palette (PRAM)
 		if palette_horizontal_counter<1 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
 			-- compute LEFT BORDER
@@ -1029,30 +915,10 @@ if in_V then
 	end if;
 end if;
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			crtc_DISP<=disp;
 			
 			-- r52 begin
+			--http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display
 			if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
 				if D(7) ='0' then
 					-- ink -- osef
@@ -1108,9 +974,6 @@ end if;
 			
 			etat_hsync_old:=etat_hsync;
 			etat_vsync_old:=etat_vsync;
-			
-			
-			
 			
 			if was_MEMWR_0 and MEM_WR='1' then
 				waiting_MEMWR:=0;
@@ -1183,7 +1046,6 @@ end if;
 				was_MEMWR_0:=false;
 			end if;
 
-			
 		end if;
 	end process simple_GateArray_process;
 
@@ -1265,180 +1127,20 @@ end if;
 		end if;
 	end process aZRaEL_process;
 	
-	
---http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display
---	di                      ;; disable maskable interrupts
---	im 1                    ;; interrupt mode 0 (jump to interrupt handler at &0038)
---
---	ld hl,&c9fb             ;; poke EI,RET to interrupt handler.
---	ld (&0038),hl
---	ei                      ;; enable interrupts
---
---	;; first synchronise with the vsync
---	ld b,&f5
---	.vsync_sync
---	in a,(c)
---	rra
---	jr nc,vsync_sync
---
---	;; wait 3 interrupts so we are close to the position
---	;; we want
---	halt
---	halt
---	halt
---	;; at this point we are synchronised to the monitor draw cycle
---
---	;; now waste some time until we are at the exact point
---	ld b,32
---	.waste_time
---	djnz waste_time
---
---	;; we are now synchronised to exactly the point we want
---	.
---	.
---	.
-
--- 51/3=17 => @4MHz not a 17 counter instead ?
 --Interrupt Generation Facility of the Amstrad Gate Array
 --The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal. Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
 --A VSYNC triggers a delay action of 2 HSYNCs in the GA, at the completion of which the scan line count in the GA is compared to 32. If the counter is below 32, the interrupt generation is suppressed. If it is greater than or equal to 32, an interrupt is issued. Regardless of whether or not an interrupt is raised, the scan line counter is reset to 0.
 --The GA has a software controlled interrupt delay feature. The GA scan line counter will be cleared immediately upon enabling this option (bit 4 of ROM/mode control). It only applies once and has to be reissued if more than one interrupt needs to be delayed.
 --Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter. 
---GAinterrupt : process(reset,nCLK4_1)
---	variable r52 : std_logic_vector(5 downto 0):=(others=>'0'); -- a 6-bit counter, reset state is 0
---	variable vSyncInt:integer range 0 to 2:=2;
---	variable hsync_old:std_logic:=DO_NOTHING;
---	variable vsync_old:std_logic:=DO_NOTHING;
---begin
---	
-----http://cpctech.cpc-live.com/docs/ints2.html  (asm code)
-----	Furthur details of interrupt timing
-----Here is some information I got from Richard about the interrupt timing:
-----"Just when I finally thought I had the interrupt timing sorted out (from real tests on a 6128 and 6128+), I decided to look at the Arnold V diagnostic cartridge in WinAPE, and the Interrupt Timing test failed.
-----After pulling my hair out for a few hours, I checked out some info I found on the Z80 which states something like:
-----The Z80 forces 2 wait-cycles (2 T-States) at the start of an interrupt.
-----The code I had forced a 1us wait state for an interrupt acknowledge. For the most part this is correct, but it's not necessarily so. Seems the instruction currently being executed when an interrupt occurs can cause the extra CPC forced wait-state to be removed.
-----Those instructions are:
-----
-----INC ss (ss = HL, BC, DE or SP)
-----INC IX
-----INC IY
-----DEC ss
-----DEC IX
-----DEC IY
-----RET cc  (condition not met)
-----EX (SP),HL
-----EX (SP),IX
-----EX (SP),IY
-----LD SP,HL
-----LD SP,IX
-----LD SP,IY
-----LD A,I
-----LD I,A
-----LD A,R
-----LD R,A
-----LDI      (and both states of LDIR)
-----LDD     (and both states of LDDR)
-----CPIR    (when looping)
-----CPDR   (when looping)
-----
-----This seems to be related to a combination of the T-States of the instruction, the M-Cycles, and the wait states imposed by the CPC hardware to force each instruction to the 1us boundary.
-----Richard" 
---	
---	
-----	Interrupt Generation Facility of the Amstrad Gate Array
-----The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
-----Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
-----A VSYNC triggers a delay action of 2 HSYNCs in the GA, at the completion of which the scan line
-----count in the GA is compared to 32. If the counter is below 32, the interrupt generation is
-----suppressed. If it is greater than or equal to 32, an interrupt is issued. Regardless of whether
-----or not an interrupt is raised, the scan line counter is reset to 0.
-----The GA has a software controlled interrupt delay feature. The GA scan line counter will be
-----cleared immediately upon enabling this option (bit 4 of ROM/mode control). It only applies once
-----and has to be reissued if more than one interrupt needs to be delayed.
-----Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
 --
-----I think that "suppressed" is falling_edge the INTERRUPT signal (to 0), and I think that "raises" is rising_edge the INTERRUPT signal (to 1)
-----At IO_ACK signal certainly we shut down the INTERRUPT signal (to 0)
-----INTERRUPT
---	
-----Following my refactoring of Space Invaders during my MameVHDL project, in fact an IO_ACK do event when an interrupt finally want to start, and during IO_ACK, the DATA_BUS is read (warning several instruction, several consequences...)
---	if reset='1' then
---		r52:=(others=>'0');
---		vSyncInt:=2;
---		hsync_old:=DO_NOTHING;
---		vsync_old:=DO_NOTHING;
---		int<='0';
---		crtc_VSYNC<=DO_NOTHING;
---	elsif rising_edge(nCLK4_1) then
---		if IO_ACK='1' then
-----the Gate Array will reset bit5 of the counter
-----Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
----- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
---			r52(5):= '0';
----- following Grimware legends : When the CPU acknowledge the interrupt (eg. it is going to jump to the interrupt vector), the Gate Array will reset bit5 of the counter, so the next interrupt can't occur closer than 32 HSync.
---			--compteur52(5 downto 1):= (others=>'0'); -- following JavaCPC 2015
----- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
---			int<='0'; -- following JavaCPC 2015
---		end if;
---		
---		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
---			if D(7) ='0' then
---				-- ink -- osef
---			else
---				if D(6) = '0' then
---					-- It only applies once
---					if D(4) = '1' then
---						r52:=(others=>'0');
-----Grimware : if set (1), this will (only) reset the interrupt counter. --int<='0'; -- JavaCPC 2015
-----the interrupt request is cleared and the 6-bit counter is reset to "0".  -- http://cpctech.cpc-live.com/docs/ints.html
---						int<='0';
---					end if;
----- JavaCPC 2015 : always old_delay_feature:=D(4); -- It only applies once ????
---				else 
---					-- rambank -- osef pour 464
---				end if;
---			end if;
---		end if;
---		crtc_VSYNC<=vsync_int;
---		--vSyncStart()
---		if vsync_old=DO_NOTHING and vsync_int=DO_VSYNC then
---			--A VSYNC triggers a delay action of 2 HSYNCs in the GA
---			--In both cases the following interrupt requests are synchronised with the VSYNC. 
---			-- JavaCPC
---			vSyncInt := 0;
---			vsync_old:=DO_VSYNC;
---		elsif vsync_old=DO_VSYNC and vsync_int=DO_NOTHING then
---			vsync_old:=DO_NOTHING;
---		end if;
---		
---		--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
---		--hSyncEnd()
---		if hsync_int=DO_NOTHING and hsync_old=DO_HSYNC then
---		-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
---			-- JavaCPC interrupt style...
---			r52:=r52+1;
---			if conv_integer(r52)=NB_HSYNC_BY_INTERRUPT then -- Asphalt ? -- 52="110100"
---				--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
---				r52:=(others=>'0');
---				int<='1';
---			end if;
---		
---			if vSyncInt < 2 then
---				vSyncInt := vSyncInt + 1;
---				if vSyncInt = 2 then
---					if conv_integer(r52)>=32 then
---						int<='1';
---					--else
---						--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
---					end if;
---					r52:=(others=>'0');
---				end if;
---			end if;
---			hsync_old:=DO_NOTHING;
---		elsif hsync_int=DO_HSYNC and hsync_old=DO_NOTHING then
---			hsync_old:=DO_HSYNC;
---		end if;
---	end if;
---end process;
+--http://cpctech.cpc-live.com/docs/ints2.html  (asm code)
+--	Furthur details of interrupt timing
+--Here is some information I got from Richard about the interrupt timing:
+--"Just when I finally thought I had the interrupt timing sorted out (from real tests on a 6128 and 6128+), I decided to look at the Arnold V diagnostic cartridge in WinAPE, and the Interrupt Timing test failed.
+--After pulling my hair out for a few hours, I checked out some info I found on the Z80 which states something like:
+--The Z80 forces 2 wait-cycles (2 T-States) at the start of an interrupt.
+--The code I had forced a 1us wait state for an interrupt acknowledge. For the most part this is correct, but it's not necessarily so. Seems the instruction currently being executed when an interrupt occurs can cause the extra CPC forced wait-state to be removed.
+--Those instructions are:
+--This seems to be related to a combination of the T-States of the instruction, the M-Cycles, and the wait states imposed by the CPC hardware to force each instruction to the 1us boundary.
+--Richard" 
 end Behavioral;

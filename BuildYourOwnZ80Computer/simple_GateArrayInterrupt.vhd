@@ -501,8 +501,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		
-		variable crtc_VSYNC_mem:std_logic:=DO_NOTHING;
-		
 		variable r52 : std_logic_vector(5 downto 0):=(others=>'0'); -- a 6-bit counter, reset state is 0
 		variable vSyncInt:integer range 0 to 2:=2;
 
@@ -937,7 +935,6 @@ end if;
 					end if;
 				end if;
 			end if;
-			crtc_VSYNC<=vsync_int;
 			--vSyncStart()
 			if etat_vsync=DO_VSYNC and etat_vsync_old=DO_NOTHING then
 				--A VSYNC triggers a delay action of 2 HSYNCs in the GA

@@ -31,6 +31,7 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 --	 VOFFSET_NEGATIF:integer:=(600/2-480/2)/2;
 --	 VOFFSET_PALETTE:integer:=((600-480)/2)/2;
 	 --VOFFSET_NEGATIF:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
+	 DEBUG_FIX_BORDER:boolean:=false;
 	 VOFFSET_PALETTE:integer:=0; -- MiST 0 (voir composant FPGAmstrad_amstrad_video)
 	 -- Amstrad
 	 -- 
@@ -565,11 +566,19 @@ begin
 			if horizontal_counter<H_BEGIN or horizontal_counter>=H_END or vertical_counter<V_BEGIN or vertical_counter>=V_END then
 				ADDRESS<= (others=>'0');
 				-- OUT OF VRAM800x600
-				etat_rgb:=DO_BORDER2;
+				if DEBUG_FIX_BORDER then
+					etat_rgb:=DO_BORDER2;
+				else
+					etat_rgb:=DO_BORDER;
+				end if;
 			elsif vertical_counter<V_BEGIN2 or vertical_counter>=V_END2 then
 				ADDRESS<= (others=>'0');
 				-- OUT OF VRAM800x600
-				etat_rgb:=DO_BORDER3;
+				if DEBUG_FIX_BORDER then
+					etat_rgb:=DO_BORDER3;
+				else
+					etat_rgb:=DO_BORDER;
+				end if;
 			elsif is_full_vertical_BORDER then
 				-- vertical full BORDER (UPPER AND LOWER ONES)
 				ADDRESS<= (others=>'0');

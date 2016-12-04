@@ -394,6 +394,7 @@ begin
 		elsif MODE_select="10" then
 			NB_PIXEL_PER_OCTET:=8;
 		else
+			-- Not implemented : When in video mode 2 (640x200x2c), the 40010 starts rasterizing the video-ram exactly one mode 2 pixel earlier than in the mode 1 and 0, therefore the graphics are shifted to the left by one pixel mode 2 (see Appendix II). But since the INKR timing remains the same, it's effect seems to appear one pixel too late. 
 			NB_PIXEL_PER_OCTET:=2;
 		end if;
 		
@@ -416,15 +417,11 @@ begin
 				RED<=pen(conv_integer(color(3 downto 2)))(5 downto 4);
 				GREEN<=pen(conv_integer(color(3 downto 2)))(3 downto 2);
 				BLUE<=pen(conv_integer(color(3 downto 2)))(1 downto 0);
-			elsif MODE_select="00" then
+			else -- MODE_select="00" or MODE_select="11"
 				color_patch:=color(3) & color(1) & color(2) & color(0); -- wtf xD
 				RED<=pen(conv_integer(color_patch))(5 downto 4);
 				GREEN<=pen(conv_integer(color_patch))(3 downto 2);
 				BLUE<=pen(conv_integer(color_patch))(1 downto 0);
-			else -- MODE 11
-				RED<="01";
-				GREEN<="11";
-				BLUE<="01";
 			end if;
 		elsif etat_rgb_retard = DO_BORDER then
 			RED<=border(5 downto 4);

@@ -186,7 +186,7 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	constant DO_VSYNC : STD_LOGIC:='1';
 	
 	signal maScreen:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
-	signal LineCounter:std_logic:='1';
+	signal VBLANK:std_logic:='1';
 	signal RED : STD_LOGIC_VECTOR(1 downto 0);
    signal GREEN : STD_LOGIC_VECTOR(1 downto 0);
    signal BLUE : STD_LOGIC_VECTOR(1 downto 0);
@@ -365,6 +365,11 @@ begin
 							-- arnoldemu's crtc.c
 							-- Delay = (CRTCRegisters[8]>>4) & 0x03;
 							-- CRTC_InternalState.HDelayReg8 = (unsigned char)Delay;
+							--Interlace and Skew 	xxxxxx00
+							-- 00 : No interlace
+							-- 01 : Interlace Sync Raster Scan Mode
+							-- 10 : No Interlace
+							-- 11 : Interlace Sync and Video Raster Scan Mode 
 						when 9=> -- max raster adress
 							RRmax<=registres(9) and x"1f";
 						when 10=>NULL; -- and x"7f";
@@ -393,9 +398,15 @@ begin
 			elsif A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='1' then-- A9_READ
 				-- type 0 : status is not implemented
 				if A15_A14_A9_A8(0)='0' then
+					-- STATUS REGISTER (CRTC 1 only)
+					-- U (bit 7) : Update Ready
+					-- L (bit 6) : LPEN Reegister Full
+					-- V (bit 5) : Vertical Blanking (VDISP ?)
+					-- in type 3 & 4, status_reg=reg
+					
 					--if (LineCounter == 0) {
 					--  return (1 << 5); x"20"
-					if LineCounter='0' then
+					if VBLANK='1' then
 						Dout<=x"20";
 					else
 						Dout<=x"00"; 
@@ -408,17 +419,19 @@ begin
 					elsif reg_select32 = x"0B" then -- R11
 						Dout<=registres(11) and x"1f"; -- type 0 & 1
 					elsif reg_select32 = x"0C" then -- R12
-						Dout<=x"00"; -- type 1 registres(12) and x"3f"; -- type 0
+						--registres(12) and x"3f"; -- type 0
+						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0D" then -- R13
-						Dout<=x"00"; -- type 1 registres(13); -- type 0
+						--registres(13); -- type 0
+						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0E" then -- R14
-						Dout<=registres(14); --registres(14) and x"3f";
+						Dout<=registres(14) and x"3f";-- all types
 					elsif reg_select32 = x"0F" then -- R15	
-						Dout<=registres(15); --registres(15);
+						Dout<=registres(15);-- all types
 					elsif reg_select32 = x"0F" then -- R16
-						Dout<=registres(16) and x"3f";
+						Dout<=registres(16) and x"3f";-- all types
 					elsif reg_select32 = x"0F" then -- R17
-						Dout<=registres(17);
+						Dout<=registres(17);-- all types
 					else
 						Dout<=x"00";
 					end if;
@@ -619,6 +632,15 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					dispH:='0';
 				end if;
 				
+				-- V (bit 5) : Vertical Blanking
+				if vertical_counter_vCC<RVDisp then
+					-- Scan is not currently running in vertical blanking time-span.
+					VBLANK<='0';
+				else
+					-- Scan currently is in vertical blanking time-span.
+					VBLANK<='1';
+				end if;
+				
 				if dispH='1' and vertical_counter_vCC<RVDisp then
 					disp:='1';
 					etat_rgb<=DO_READ;
@@ -629,6 +651,35 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					
 					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
 					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
+					
+					-- .------- REG 12 --------.   .------- REG 13 --------.
+					-- |                       |   |                       |
+					--  15 14 13 12 11 10 09 08     07 06 05 04 03 02 01 00
+					-- .--.--.--.--.--.--.--.--.   .--.--.--.--.--.--.--.--.
+					-- |X |X |  |  |  |  |  |  |   |  |  |  |  |  |  |  |  |
+					-- '--'--'--'--'--'--'--'--'   '--'--'--'--'--'--'--'--'
+					--       '--.--'--.--'---------------.-----------------'
+					--          |     |                  |
+					--          |     |                  '------> Offset for setting
+					--          |     |                           videoram 
+					--          |     |                           (1024 positions)
+					--          |     |                           Bits 0..9
+					--          |     |
+					--          |     '-------------------------> Video Buffer : note (1)
+					--          |
+					--          '-------------------------------> Video Page : note (2)
+					-- note (1)                 note (2)
+					-- .--.--.--------------.  .--.--.---------------.
+					-- |11|10| Video Buffer |  |13|12|   Video Page  |
+					-- |--|--|--------------|  |--|--|---------------|
+					-- | 0| 0|     16Ko     |  | 0| 0|  0000 - 3FFF  |
+					-- |--|--|--------------|  |--|--|---------------|
+					-- | 0| 1|     16Ko     |  | 0| 1|  4000 - 7FFF  |
+					-- |--|--|--------------|  |--|--|---------------|
+					-- | 1| 0|     16Ko     |  | 1| 0|  8000 - BFFF  |
+					-- |--|--|--------------|  |--|--|---------------|
+					-- | 1| 1|     32Ko     |  | 1| 1|  C000 - FFFF  |
+					-- '--'--'--------------'  '--'--'---------------'
 					
 					-- ma = (maBase + hCC) & 0x3fff;
 					--MA:=conv_std_logic_vector(ADRESSE_maBase_mem+ADRESSE_hCC_mem,14);
@@ -789,11 +840,6 @@ end if;
 					--hCC = (hCC + 1) & hCCMask;
 					horizontal_counter_hCC:=horizontal_counter_hCC+1;
 					ADRESSE_MA_mem:=ADRESSE_MA_mem+1;
-				end if;
-				if vertical_counter_vCC = 0 then
-					LineCounter<='0';
-				else
-					LineCounter<='1';
 				end if;
 
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '1';

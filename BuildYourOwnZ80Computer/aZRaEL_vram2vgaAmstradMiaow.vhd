@@ -70,6 +70,9 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 	 -- mode 2 :
 	 --   1 byte <=> 8 pixels
 	 --   [AAAAAAAA] : so only 2 colors xD
+	 -- mode 3 (theory)
+	 --   1 byte <=> 2 pixels
+	 --   [A_][_A][B_][_B] : layering colors [AA] and [BB] (switching possible of layer by RAM offset (Edge Grinder ????))
 	 MODE_MAX:integer:=2;
 --	 NB_PIXEL_PER_OCTET:integer:=4;--2**(MODE+1);
 	NB_PIXEL_PER_OCTET_MAX:integer:=8;
@@ -186,16 +189,16 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 
 
 --Mock NES Nintendo VSync @50Hz
---Modeline "256×240 PAL (50Hz)" 5.320 256 269 294 341 240 270 273 312 -hsync -vsync
---On multiplie tout par 3, et on obtient du 16MHz 768×240 pixels un peu comme l’Amstrad, donc c’est un bon Mock
+--Modeline "256ÃƒÆ’Ã¢â‚¬â€240 PAL (50Hz)" 5.320 256 269 294 341 240 270 273 312 -hsync -vsync
+--On multiplie tout par 3, et on obtient du 16MHz 768ÃƒÆ’Ã¢â‚¬â€240 pixels un peu comme lÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Amstrad, donc cÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢est un bon Mock
 
 
 
 
 --   --Fakeline "800x600@75" 50.00 800 860 940 1070 600 601 604 623 +HSync +Vsync
---   --Fakeline "800x600@75" 50.00 800 875 955 1070 600 593 596 623 +HSync +Vsync -- noir en haut et à droite
+--   --Fakeline "800x600@75" 50.00 800 875 955 1070 600 593 596 623 +HSync +Vsync -- noir en haut et ÃƒÆ’Ã‚Â  droite
 --   --Fakeline "800x600@75" 50.00 800 815 895 1070 600 631 634 623 +HSync +Vsync -- KO
---   --Fakeline "800x600@75" 50.00 800 815 895 1070 600 631 011 623 +HSync +Vsync -- noir en bas et à gauche
+--   --Fakeline "800x600@75" 50.00 800 815 895 1070 600 631 011 623 +HSync +Vsync -- noir en bas et ÃƒÆ’Ã‚Â  gauche
 --   --Fakeline "800x600@75" 50.00 800 845 925 1070 600 616 619 623 +HSync +Vsync
 
 
@@ -233,7 +236,8 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 				  VZoom:integer:=2;
 				  
 				  VRAM_HDsp:integer:=800; --changing mode doesn't affect number of pixel finally outputted
-				  VRAM_VDsp:integer:=300 --600/2
+				  VRAM_VDsp:integer:=300; --600/2
+				  WINAPE_PLUSTEST_2_BUG_HBORDER:integer:=8
 		  );
     Port ( DATA : in  STD_LOGIC_VECTOR (7 downto 0); -- buffer
            ADDRESS : out  STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
@@ -259,10 +263,10 @@ architecture Behavioral of aZRaEL_vram2vgaAmstradMiaow is
 	constant DO_HSYNC : STD_LOGIC:='1';
 	constant DO_VSYNC : STD_LOGIC:='1';
 
-	constant H_BEGIN:integer:=(800-768)/2;
+	constant H_BEGIN:integer:=(800-768)/2+WINAPE_PLUSTEST_2_BUG_HBORDER;
 	constant V_BEGIN:integer:=(600-576)/2;
 	constant V_BEGIN2:integer:=(600-544)/2; -- 546
-	constant H_END:integer:=(800-768)/2+768;
+	constant H_END:integer:=(800-768)/2+768+WINAPE_PLUSTEST_2_BUG_HBORDER;
 	constant V_END:integer:=(600-576)/2+576;
 	constant V_END2:integer:=(600-544)/2+544;
 	
@@ -395,6 +399,45 @@ begin
 			NB_PIXEL_PER_OCTET:=8;
 		else
 			-- Not implemented : When in video mode 2 (640x200x2c), the 40010 starts rasterizing the video-ram exactly one mode 2 pixel earlier than in the mode 1 and 0, therefore the graphics are shifted to the left by one pixel mode 2 (see Appendix II). But since the INKR timing remains the same, it's effect seems to appear one pixel too late. 
+			--Mode 0 : 160x200 en seize couleurs sans contrainte (choisies parmi celles disponibles dans la palette de 27).
+			--Mode 1 : 320x200 en quatre couleurs sans contrainte.
+			--Mode 2 : 640x200 en deux couleurs. Soit la haute rÃƒÆ’Ã‚Â©solution du CP/M, le CPC jouait donc dans la cour des grands.
+			--Mode 3 : 160x200 en quatre couleurs. Taper Ãƒâ€šÃ‚Â« Mode 3 Ãƒâ€šÃ‚Â» sous Basic vous renverra une erreur Ãƒâ€šÃ‚Â« Improper argument Ãƒâ€šÃ‚Â», le systÃƒÆ’Ã‚Â¨me n'est pas capable de gÃƒÆ’Ã‚Â©rer ce mode. On ne peut accÃƒÆ’Ã‚Â©der ÃƒÆ’Ã‚Â  celui-ci qu'en passant par la programmation assembleur.
+			--=> mettre 4 couleurs => oui mais lesquels ? il y a 4 bytes lÃƒÆ’Ã‚Â  !!!
+			--=> Il me semble que ÃƒÆ’Ã‚Â§a permettait de rÃƒÆ’Ã‚Â©cupÃƒÆ’Ã‚Â©rer de la mÃƒÆ’Ã‚Â©moire pour mettre plus d'images et de 'switcher' rapidement de l'une ÃƒÆ’Ã‚Â  l'autre.
+			--=> le jeux lÃƒÆ’Ã‚Â  qui bug ÃƒÆ’Ã‚Â  droite ÃƒÆ’Ã‚Â  gauche, ÃƒÆ’Ã‚Â§a y ressemble grave.
+			--Counter      Mode 0        Mode 1        Mode 2  
+			--b2 b1 b0   p3 p2 p1 p0   p3 p2 p1 p0   p3 p2 p1 p0   
+			----------   -----------   -----------   -----------   
+			-- 0  0  0   d3 d2 d1 d0    0  0 d1 d0    0  0  0 d0   
+			-- 0  0  1   d3 d2 d1 d0    0  0 d1 d0    0  0  0 d1   
+			-- 0  1  0   d3 d2 d1 d0    0  0 d3 d2    0  0  0 d2   
+			-- 0  1  1   d3 d2 d1 d0    0  0 d3 d2    0  0  0 d3
+			-- Writing / for "not", * for "and" and + for "or", we can read off the simplified equations in DNF:
+			--
+			--p3 = d3 *             /m0 * /m1   # d3 in mode 0
+			--p2 = d2 *             /m0 * /m1   # d2 in mode 0
+			--p1 = d1 * /b1             * /m1   # d1 for b=0,1 in mode 0 & 1
+			--   + d1 *  b1       * /m0 * /m1   # d1 for b=2,3 in mode 0
+			--   + d3 *  b1       *  m0         # d3 for b=2,3 in mode 1
+			--p0 = d0 * /b1 * /b0               # d0 for b=0  
+			--   + d0 *           * /m0 * /m1   # d0 for mode 0
+			--   + d1 * /b1 *  b0 * /m0 *  m1   # d1 for b=1 in mode 2
+			--   + d2 *  b1       *  m0 * /m1   # d2 for b=2,3 in mode 1
+			--   + d2 *  b1 * /b0 * /m0 *  m1   # d2 for b=2 in mode 2
+			--   + d3 *  b1 *  b0 * /m0 *  m1   # d3 for b=3 in mode 3
+			--Now let's set m0=1 and m1=1, and see what happens in Mode 3:
+			--
+			--Counter     Mode 3
+			--b2 b1 b0   p3 p2 p1 p0
+			----------   -----------
+			-- 0  0  0    0  0  0 d0
+			-- 0  0  1    0  0  0 d0
+			-- 0  1  0    0  0 d3  0
+			-- 0  1  1    0  0 d3  0
+			-- 
+			--So for our implementation, Mode 3 is 320x200 with 2 colors, using bits d0, d3, d4 and d7 to select the pen for the color. (I've probably made a mistake somewhere, but it still illustrates the principle).
+
 			NB_PIXEL_PER_OCTET:=2;
 		end if;
 		
@@ -417,8 +460,14 @@ begin
 				RED<=pen(conv_integer(color(3 downto 2)))(5 downto 4);
 				GREEN<=pen(conv_integer(color(3 downto 2)))(3 downto 2);
 				BLUE<=pen(conv_integer(color(3 downto 2)))(1 downto 0);
-			else -- MODE_select="00" or MODE_select="11"
+			elsif MODE_select="00" then
 				color_patch:=color(3) & color(1) & color(2) & color(0); -- wtf xD
+				RED<=pen(conv_integer(color_patch))(5 downto 4);
+				GREEN<=pen(conv_integer(color_patch))(3 downto 2);
+				BLUE<=pen(conv_integer(color_patch))(1 downto 0);
+			else -- MODE_select="11"
+				--using bits d0, d3, d4 and d7
+				color_patch:="00" & color(3) & color(0); -- wtf xD
 				RED<=pen(conv_integer(color_patch))(5 downto 4);
 				GREEN<=pen(conv_integer(color_patch))(3 downto 2);
 				BLUE<=pen(conv_integer(color_patch))(1 downto 0);
@@ -498,7 +547,7 @@ begin
 		elsif palette_action_retard=DO_HEND then
 			palette_D_mem:=palette_D;
 			horizontal_counter_RIGHT_BORDER:=conv_integer(palette_D_mem(7 downto 0));
-			if horizontal_counter_RIGHT_BORDER>HDsp/16 then
+			if horizontal_counter_RIGHT_BORDER+horizontal_counter_LEFT_BORDER/16>HDsp/16 then
 				--overwidth
 				horizontal_counter_RIGHT_BORDER:=HDsp;
 				has_RIGHT_BORDER:=false; -- HEURISTIC :p
@@ -585,7 +634,6 @@ begin
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;
 			elsif has_RIGHT_BORDER and horizontal_counter>=H_BEGIN+horizontal_counter_RIGHT_BORDER then
-			--elsif has_RIGHT_BORDER and horizontal_counter>horizontal_counter_RIGHT_BORDER then
 				-- RIGHT BORDER
 				ADDRESS<= (others=>'0');
 				etat_rgb:=DO_BORDER;

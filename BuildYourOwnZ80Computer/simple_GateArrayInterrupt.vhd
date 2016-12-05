@@ -38,7 +38,7 @@ entity simple_GateArrayInterrupt is
 	--UM6845R 	UMC 		1 UM6845R_WriteMaskTable type 1 in JavaCPC <==
 	--MC6845 	Motorola	2 
 	--CRTC_TYPE:integer   :=1;
-	M1_OFFSET:integer :=3; -- from 0 to 3
+	M1_OFFSET:integer :=3;--3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3
 	LATENCE_MEM_WR:integer:=1;
 	NB_HSYNC_BY_INTERRUPT:integer:=52; --52; -- 52 sure it's 52
@@ -680,6 +680,8 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					-- |--|--|--------------|  |--|--|---------------|
 					-- | 1| 1|     32Ko     |  | 1| 1|  C000 - FFFF  |
 					-- '--'--'--------------'  '--'--'---------------'
+					--
+					--PulkoMandy - I don't get this "4 pages" thing. The CRTC can address the full 64K of central ram and start the display almost anywhere in it. 
 					
 					-- ma = (maBase + hCC) & 0x3fff;
 					--MA:=conv_std_logic_vector(ADRESSE_maBase_mem+ADRESSE_hCC_mem,14);

@@ -330,6 +330,10 @@ use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.ALL;
 
 entity FPGAmstrad_amstrad_motherboard is
+	generic (
+			 USE_AZ80:boolean:=false;
+			 HACK_Z80:boolean:=false
+	);
    port ( CLK4MHz    : in    std_logic; 
           init_A     : in    std_logic_vector (22 downto 0); 
           init_Din   : in    std_logic_vector (7 downto 0); 
@@ -451,6 +455,8 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    --signal ram_W_DUMMY   : std_logic;
    signal RAMBank_DUMMY : std_logic_vector (2 downto 0);
    signal RAMBank_DUMMY512 : std_logic_vector (2 downto 0);
+	
+	-- t80_latest.tar.gz (vhdl)
    component T80se_p
       port ( RESET_n : in    std_logic; -- under time constraint test
              CLK_n   : in    std_logic; 
@@ -471,6 +477,29 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              A       : out   std_logic_vector (15 downto 0); 
              DO      : out   std_logic_vector (7 downto 0));
    end component;
+	
+	-- a-z80_latest.tar.gz (verilog)
+	COMPONENT z80_top_direct_n
+		PORT(nWAIT : IN STD_LOGIC;
+			 nINT : IN STD_LOGIC;
+			 nNMI : IN STD_LOGIC;
+			 nRESET : IN STD_LOGIC;
+			 nBUSRQ : IN STD_LOGIC;
+			 CLK : IN STD_LOGIC;
+			 D : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+			 nM1 : OUT STD_LOGIC;
+			 nMREQ : OUT STD_LOGIC;
+			 nIORQ : OUT STD_LOGIC;
+			 nRD : OUT STD_LOGIC;
+			 nWR : OUT STD_LOGIC;
+			 nRFSH : OUT STD_LOGIC;
+			 nHALT : OUT STD_LOGIC;
+			 nBUSACK : OUT STD_LOGIC;
+			 A : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+		);
+	END COMPONENT;
+	
+	signal D_az80 : STD_LOGIC_VECTOR(7 DOWNTO 0);
    
    component simple_GateArray
       port ( CLK        : in    std_logic; 
@@ -675,7 +704,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    
 begin
 
-   --ram_W <= ram_W_DUMMY;
+do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
    AmstradT80 : T80se_p
       port map (BUSRQ_n=>'1',
                 CLKEN=>'1',
@@ -695,7 +724,68 @@ begin
                 RD_n=>XLXN_86,
                 RFSH_n=>open,
                 WR_n=>XLXN_38);
+
+
+   XLXI_568 : please_wait
+      port map (CLK_n=>CLK4MHz,
+                WAIT_n=>XLXN_830,
+                CLK_WAIT_n=>XLXN_802);
    
+end generate;
+
+do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
+   AmstradT80 : T80se_p
+      port map (BUSRQ_n=>'1',
+                CLKEN=>'1',
+                CLK_n=>CLK4MHz, --XLXN_802,
+                DI(7 downto 0)=>MIX_DOUT(7 downto 0),
+                INT_n=>XLXN_814,
+                NMI_n=>'1',
+                RESET_n=>RESET_n, -- '1'der time constraint test
+                WAIT_n=>XLXN_830, --'1',
+                A(15 downto 0)=>A(15 downto 0),
+                BUSAK_n=>open,
+                DO(7 downto 0)=>D(7 downto 0),
+                HALT_n=>open,
+                IORQ_n=>XLXN_75,
+                MREQ_n=>XLXN_58,
+                M1_n=>XLXN_845,
+                RD_n=>XLXN_86,
+                RFSH_n=>open,
+                WR_n=>XLXN_38);
+
+
+--   XLXI_568 : please_wait
+--      port map (CLK_n=>CLK4MHz,
+--                WAIT_n=>XLXN_830,
+--                CLK_WAIT_n=>XLXN_802);
+   
+end generate;
+
+XLXN_830<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
+	
+do_az80:if USE_AZ80 generate
+b2v_inst : z80_top_direct_n
+PORT MAP(nWAIT => XLXN_830,
+			nINT => XLXN_814,
+			nNMI => '1',
+			nRESET => RESET_n,
+			nBUSRQ=> '1',
+			CLK => CLK4MHz,
+			D => D_az80(7 downto 0), -- MIX_DOUT(7 downto 0)
+			nM1 =>XLXN_845,
+			nMREQ =>XLXN_58,
+			nIORQ =>XLXN_75,
+			nRD =>XLXN_86,
+			nWR =>XLXN_38,
+			nRFSH =>open,
+			nHALT =>open,
+			nBUSACK =>open,
+			A =>A(15 downto 0));
+	D(7 downto 0)<=D_az80;
+	D_az80<=(others=>'Z') when XLXN_86='1' else MIX_DOUT(7 downto 0);
+end generate;
+	
 	-- print inp(&0800)
 	-- 255
 	MIX_DOUT01<=MIX_DOUT0 and MIX_DOUT1;
@@ -904,12 +994,6 @@ XLXN_824<=not(XLXN_845);
    
 XLXN_785<=not(XLXN_38);
    
-   XLXI_568 : please_wait
-      port map (CLK_n=>CLK4MHz,
-                WAIT_n=>XLXN_830,
-                CLK_WAIT_n=>XLXN_802);
-   
-XLXN_830<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
    
 --	
 --	-- MIRROR VRAM

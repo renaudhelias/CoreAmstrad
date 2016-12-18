@@ -51,11 +51,11 @@ entity simple_GateArrayInterrupt is
   -- plus je grandi cette valeur plus l'image va vers la gauche.
   VRAM_Hoffset:integer:=12; -- 63*16-46*16
   
-  -- le raster palette arrive au moment oÃƒÆ’Ã‚Â¹ l'encre est en face du stylo.
-  -- si on a un dÃƒÆ’Ã‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
-  -- hors nous on lit via MA, et on ÃƒÆ’Ã‚Â©crit n'importe oÃƒÆ’Ã‚Â¹ via VRAM_Voffset
+  -- le raster palette arrive au moment oÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ l'encre est en face du stylo.
+  -- si on a un dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
+  -- hors nous on lit via MA, et on ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©crit n'importe oÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ via VRAM_Voffset
   -- donc VRAM_Voffset n'a pas d'influence sur le raster palette
-  -- ÃƒÆ’Ã‚Â§a veut dire que l'adresse mÃƒÆ’Ã‚Â©moire dessous la palette n'est pas bonne
+  -- ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a veut dire que l'adresse mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©moire dessous la palette n'est pas bonne
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
@@ -167,15 +167,15 @@ architecture Behavioral of simple_GateArrayInterrupt is
 -- Grimware A PAL 50Hz video-frame on the Amstrad is 312 rasterlines. 
 -- Grimware screenshoot :
 --R0 RHtot     =63 : 0..63                            (donc 64 pas)
---R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissé passé)
---R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissé passé)
---R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissé passé)
+--R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃ© passÃ©)
+--R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃ© passÃ©)
+--R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃ© passÃ©)
 --R4 RVtot     =38 : 0..38                            (donc 39 pas)
---R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissé passé)
---R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissé passé)
---R3 RVwidth   =8  : VSYNC=OFF aprÃƒÂ¨s un certain temps...
+--R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃ© passÃ©)
+--R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃ© passÃ©)
+--R3 RVwidth   =8  : VSYNC=OFF aprÃƒÆ’Ã‚Â¨s un certain temps...
 --R9 RRmax     =7  : 0..7                             (donc  8 pas)
---caractères de 8*8, donc verticalement : 1024 et horizontalement : 312.
+--caractÃ¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
 
 	-- arnold cpctest.asm :
 	-- crtc_default_values:
@@ -649,7 +649,7 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					
 					-- newFrame() :  ma = maBase = maScreen;
 					
-					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
+					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
 					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
 					
 					-- .------- REG 12 --------.   .------- REG 13 --------.
@@ -825,14 +825,16 @@ end if;
 						ADRESSE_MA_mem:=ADRESSE_maBase_mem;
 						-- vCC = (vCC + 1) & 0x7f;
 						vertical_counter_vCC:=(vertical_counter_vCC+1) and x"7F";
-
 					else
 						-- ra = (ra + scanAdd) & 0x1f;
 						RA:=(RA+1) and x"1F";
 						if RVtotAdjust_do then
 							RVtotAdjust_mem:=RVtotAdjust_mem-1;
 						end if;
-						
+						if vertical_counter_vCC = 0 then
+							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
+							ADRESSE_maBase_mem:=maScreen(13 downto 0);
+						end if;
 						ADRESSE_MA_mem:=ADRESSE_maBase_mem;
 					end if;
 					

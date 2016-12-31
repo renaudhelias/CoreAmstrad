@@ -18,13 +18,13 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 entity MIST_conf_str is
-    Port ( CONF_STR : out  STD_LOGIC_VECTOR (56*8-1 downto 0)
+    Port ( CONF_STR : out  STD_LOGIC_VECTOR (78*8-1 downto 0)
 			);
 end MIST_conf_str;
 
 architecture Behavioral of MIST_conf_str is
   --constant CONF_STRING : string := "AMSTRAD;DSK;O1,LowerVRAM,1X,0X;O2,LowerVRAM,X0,X1;O3,UpperVRAM,1X,0X;O4,UpperVRAM,1X,0X;O5,Brand name,Schneider,Amstrad;O6,Drive,A,B;O7,Output,VGA,TV";
-  constant CONF_STRING : string := "AMSTRAD;DSK;O1,Brand name,Schneider,Amstrad;O2,Drive,A,B";
+  constant CONF_STRING : string := "AMSTRAD;DSK;O1,Brand name,Schneider,Amstrad;O2,Screen,color,green;O3,Drive,A,B";
 
  function to_slv(s: string) return std_logic_vector is 
     constant ss: string(1 to s'length) := s; 

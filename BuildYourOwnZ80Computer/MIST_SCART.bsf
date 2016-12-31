@@ -103,16 +103,23 @@ applicable agreement for further details.
 	(port
 		(pt 0 208)
 		(input)
-		(text "pclk_in" (rect 0 0 27 12)(font "Arial" ))
-		(text "pclk_in" (rect 21 203 48 215)(font "Arial" ))
+		(text "rgb_or_g" (rect 0 0 37 12)(font "Arial" ))
+		(text "rgb_or_g" (rect 21 203 58 215)(font "Arial" ))
 		(line (pt 0 208)(pt 16 208)(line_width 1))
 	)
 	(port
 		(pt 0 224)
 		(input)
-		(text "pclk_TV_in" (rect 0 0 47 12)(font "Arial" ))
-		(text "pclk_TV_in" (rect 21 219 68 231)(font "Arial" ))
+		(text "pclk_in" (rect 0 0 27 12)(font "Arial" ))
+		(text "pclk_in" (rect 21 219 48 231)(font "Arial" ))
 		(line (pt 0 224)(pt 16 224)(line_width 1))
+	)
+	(port
+		(pt 0 240)
+		(input)
+		(text "pclk_TV_in" (rect 0 0 47 12)(font "Arial" ))
+		(text "pclk_TV_in" (rect 21 235 68 247)(font "Arial" ))
+		(line (pt 0 240)(pt 16 240)(line_width 1))
 	)
 	(port
 		(pt 264 32)

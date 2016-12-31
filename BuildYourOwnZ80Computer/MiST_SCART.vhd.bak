@@ -56,10 +56,10 @@ signal canal_blueTV:STD_LOGIC_VECTOR (5 downto 0);
 -- for delta time purpose
 signal canal_vsync:std_logic;
 signal canal_hsync:std_logic;
---signal canal_clk:std_logic;
+signal canal_clk:std_logic;
 signal canal_vsyncTV:std_logic;
 signal canal_hsyncTV:std_logic;
---signal canal_clkTV:std_logic;
+signal canal_clkTV:std_logic;
 
 
 
@@ -113,7 +113,7 @@ signal canal_hsyncTV:std_logic;
 
 
 
-type T_GREEN is array (0 to 63) --(63 downto 0)
+type T_GREEN is array (63 downto 0)
         of STD_LOGIC_VECTOR(5 downto 0);
   constant GREEN_SCREEN : T_GREEN :=
             ("000000", --"11111111111111111111111111111101", --0,0,0
@@ -203,7 +203,7 @@ begin
 			end if;
 			canal_hsync<=HSYNC_in;
 			canal_vsync<=VSYNC_in;
-			--canal_clk<=pclk_in;
+			canal_clk<=pclk_in;
 		end if;
 end process green_color_vga;
 
@@ -221,16 +221,13 @@ begin
 			end if;
 			canal_hsyncTV<=HSYNC_TV_in;
 			canal_vsyncTV<=VSYNC_TV_in;
-			--canal_clkTV<=pclk_TV_in;
+			canal_clkTV<=pclk_TV_in;
 		end if;
 end process green_color_tv;
 
 HSYNC_out<=canal_hsync when mode='0' else canal_hsyncTV;
 VSYNC_out<=canal_vsync when mode='0' else canal_vsyncTV;
---pclk_out<=canal_clk when mode='0' else canal_clkTV;
---HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
---VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
-pclk_out<=pclk_in when mode='0' else pclk_TV_in;
+pclk_out<=canal_clk when mode='0' else canal_clkTV;
 
 
 end Behavioral;

@@ -51,6 +51,13 @@ applicable agreement for further details.
 		(text "ppi_jumpers[3..0]" (rect 127 59 195 71)(font "Arial" ))
 		(line (pt 216 64)(pt 200 64)(line_width 3))
 	)
+	(port
+		(pt 216 80)
+		(output)
+		(text "rgb_or_g" (rect 0 0 37 12)(font "Arial" ))
+		(text "rgb_or_g" (rect 158 75 195 87)(font "Arial" ))
+		(line (pt 216 80)(pt 200 80)(line_width 1))
+	)
 	(drawing
 		(rectangle (rect 16 16 200 96)(line_width 1))
 	)

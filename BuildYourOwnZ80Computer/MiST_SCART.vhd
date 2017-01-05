@@ -111,45 +111,51 @@ signal canal_hsyncTV:std_logic;
 --}
 
 
+-- manual calibration :
+-- 111111 : 60/((2+2+2)/(2+2+2))=60 111100
+-- 110100 : 60/((2+2+2)/(1+2+2))=50 110010
+-- 101001 : 60/((2+2+2)/(0+2+2))=40 101000
+-- 011110 : 60/((2+2+2)/(0+1+2))=30 011110
+-- 010011 : 60/((2+2+2)/(0+0+2))=20 010100
+-- 001000 : 60/((2+2+2)/(0+0+1))=10 001010
+-- 000000 : 60/((2+2+2)/(0+0+0))=0  000000
 
 
 type T_GREEN is array (0 to 63) --(63 downto 0)
         of STD_LOGIC_VECTOR(5 downto 0);
   constant GREEN_SCREEN : T_GREEN :=
             ("000000", --"11111111111111111111111111111101", --0,0,0
-"001000", --0,0,1
+"001010", --0,0,1
 "000000", --X,X,X
-"010011", --0,0,2
-"001000", --0,1,0
-"010011", --0,1,1
+"010100", --0,0,2
+"001010", --0,1,0
+"010100", --0,1,1
 "000000", --X,X,X
 "011110", --0,1,2
 "000000", --X,X,X
 "000000", --X,X,X
 "000000", --X,X,X
 "000000", --X,X,X
-"010011", --0,2,0
+"010100", --0,2,0
 "011110", --0,2,1
 "000000", --X,X,X
-"101001", --0,2,2
-"001000", --1,0,0
-"010011", --1,0,1
+"101000", --0,2,2
+"001010", --1,0,0
+"010100", --1,0,1
 "000000", --X,X,X
 "011110", --1,0,2
-"010011", --1,1,0
+"010100", --1,1,0
 "011110", --1,1,1
 "000000", --X,X,X
-"101001", --1,1,2
+"101000", --1,1,2
 "000000", --X,X,X
 "000000", --X,X,X
 "000000", --X,X,X
 "000000", --X,X,X
 "011110", --1,2,0
-"101001", --1,2,1
+"101000", --1,2,1
 "000000", --X,X,X
-"110100", --1,2,2
-"000000", --X,X,X
-"000000", --X,X,X
+"110010", --1,2,2
 "000000", --X,X,X
 "000000", --X,X,X
 "000000", --X,X,X
@@ -164,23 +170,33 @@ type T_GREEN is array (0 to 63) --(63 downto 0)
 "000000", --X,X,X
 "000000", --X,X,X
 "000000", --X,X,X
-"010011", --2,0,0
+"000000", --X,X,X
+"000000", --X,X,X
+"010100", --2,0,0
 "011110", --2,0,1
 "000000", --X,X,X
-"101001", --2,0,2
+"101000", --2,0,2
 "011110", --2,1,0
-"101001", --2,1,1
+"101000", --2,1,1
 "000000", --X,X,X
-"110100", --2,1,2
-"000000", --X,X,X
-"000000", --X,X,X
+"110010", --2,1,2
 "000000", --X,X,X
 "000000", --X,X,X
-"101001", --2,2,0
-"110100", --2,2,1
 "000000", --X,X,X
-"111111" --2,2,2
+"000000", --X,X,X
+"101000", --2,2,0
+"110010", --2,2,1
+"000000", --X,X,X
+"111100" --2,2,2
+);
 
+type T_COLOR is array (0 to 3) --(63 downto 0)
+        of STD_LOGIC_VECTOR(5 downto 0);
+  constant COLOR_SCREEN : T_COLOR :=
+            ("000000",
+"011110",
+"011110",
+"111100"
 );
 
 begin
@@ -193,9 +209,9 @@ green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
 			if rgb_or_g='0' then
-				canal_red<= RED_in;
-				canal_green<= GREEN_in;
-				canal_blue<= BLUE_in;
+				canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
+				canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
+				canal_blue<= COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)));
 			else
 				canal_red<= "000000";
 				canal_green<= GREEN_SCREEN(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4)));
@@ -211,9 +227,9 @@ green_color_tv : process(pclk_TV_in) is
 begin
 		if rising_edge(pclk_TV_in) and mode='1' then
 			if rgb_or_g='0' then
-				canal_redTV<= RED_TV_in;
-				canal_greenTV<= GREEN_TV_in;
-				canal_blueTV<= BLUE_TV_in;
+				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
+				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
+				canal_blueTV<= COLOR_SCREEN(conv_integer(BLUE_TV_in(5 downto 4)));
 			else
 				canal_redTV<= "000000";
 				canal_greenTV<= GREEN_SCREEN(conv_integer(RED_TV_in(5 downto 4) & GREEN_TV_in(5 downto 4) & BLUE_TV_in(5 downto 4)));

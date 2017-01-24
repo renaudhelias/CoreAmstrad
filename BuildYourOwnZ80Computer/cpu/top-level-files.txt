@@ -1,0 +1,71 @@
+# This is a list of A-Z80 top-level files and their dependencies.
+# These files comprise the A-Z80 CPU proper. Use export.py to copy
+# them into your project folder.
+#
+# Note for the users of Lattice FPGA toolset: instead of data_pins.v
+# manually copy and use data_pins_lattice.v file instead.
+
+------ Control block -------
+control/clk_delay.v
+control/decode_state.v
+control/exec_module.vh
+control/execute.v
++ control/exec_matrix.vh
++ control/exec_matrix_compiled.vh
++ control/exec_module.vh
++ control/exec_zero.vh
++ control/temp_wires.vh
+control/interrupts.v
+control/ir.v
+control/pin_control.v
+control/pla_decode.v
+control/resets.v
+control/memory_ifc.v
+control/sequencer.v
+
+---------- ALU -------------
+alu/alu_control.v
++ alu/alu_mux_4.v
++ alu/alu_mux_8.v
+alu/alu_select.v
+alu/alu_flags.v
++ alu/alu_mux_2.v
++ alu/alu_mux_4.v
+alu/alu.v
++ alu/alu_core.v
++ alu/alu_slice.v
++ alu/alu_bit_select.v
++ alu/alu_shifter_core.v
++ alu/alu_mux_2z.v
++ alu/alu_mux_3z.v
++ alu/alu_prep_daa.v
+
+------ Register file -------
+registers/reg_file.v
++ registers/reg_latch.v
+registers/reg_control.v
+
+------ Address latch -------
+bus/address_latch.v
++ bus/address_mux.v
++ bus/inc_dec.v
++ bus/inc_dec_2bit.v
+bus/address_pins.v
+
+--------- Misc bus ---------
+bus/bus_control.v
+bus/bus_switch.v
++ bus/data_switch.v
++ bus/data_switch_mask.v
+
+------ I/O pin control -----
+bus/data_pins.v
+bus/control_pins_n.v
+
+--------- Top level --------
++ toplevel/z80_top_direct_n.v
++ toplevel/core.vh
++ toplevel/coremodules.vh
++ toplevel/globals.vh
+
+Files=49

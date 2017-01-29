@@ -999,10 +999,10 @@ entity FPGAmstrad_amstrad_video is
           vram_CLK    : in    std_logic; 
           vram_D      : in    std_logic_vector (7 downto 0); 
           vram_W      : in    std_logic; 
-          BLUE2       : out   std_logic_vector (1 downto 0); 
-          GREEN2      : out   std_logic_vector (1 downto 0); 
+          BLUE2       : out   std_logic_vector (2 downto 0); 
+          GREEN2      : out   std_logic_vector (2 downto 0); 
           HSYNC       : out   std_logic; 
-          RED2        : out   std_logic_vector (1 downto 0); 
+          RED2        : out   std_logic_vector (2 downto 0); 
           VSYNC       : out   std_logic);
 end FPGAmstrad_amstrad_video;
 
@@ -1041,9 +1041,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_video is
              HSYNC     : out   std_logic; 
              ADDRESS   : out   std_logic_vector (14 downto 0); 
              PALETTE_A : out   std_logic_vector (13 downto 0); 
-             RED       : out   std_logic_vector (1 downto 0); 
-             GREEN     : out   std_logic_vector (1 downto 0); 
-             BLUE      : out   std_logic_vector (1 downto 0));
+             RED       : out   std_logic_vector (2 downto 0); 
+             GREEN     : out   std_logic_vector (2 downto 0); 
+             BLUE      : out   std_logic_vector (2 downto 0));
    end component;
    
 --   component VRAM_Amstrad_NEXYS4_8Ko_MUSER_amstrad_video
@@ -1091,11 +1091,11 @@ begin
                 DATA(7 downto 0)=>XLXN_743(7 downto 0),
                 PALETTE_D(7 downto 0)=>XLXN_744(7 downto 0),
                 ADDRESS(14 downto 0)=>XLXN_693(14 downto 0),
-                BLUE(1 downto 0)=>BLUE2(1 downto 0),
-                GREEN(1 downto 0)=>GREEN2(1 downto 0),
+                BLUE(2 downto 0)=>BLUE2(2 downto 0),
+                GREEN(2 downto 0)=>GREEN2(2 downto 0),
                 HSYNC=>HSYNC,
                 PALETTE_A(13 downto 0)=>XLXN_694(13 downto 0),
-                RED(1 downto 0)=>RED2(1 downto 0),
+                RED(2 downto 0)=>RED2(2 downto 0),
                 VSYNC=>VSYNC);
    
    XLXI_478 : VRAM_Amstrad_NEXYS4_16Ko_MUSER_amstrad_video

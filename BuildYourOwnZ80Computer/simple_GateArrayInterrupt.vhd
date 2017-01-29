@@ -415,9 +415,11 @@ begin
 					-- type 0 : nothing (return x"00")
 					-- type 1 : read status
 					if reg_select32 = x"0A" then -- R10
-						Dout<=registres(10); --type1 and x"1f"; -- type 0
+						--registres(10); --type1 and x"1f"; -- type 0
+						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0B" then -- R11
-						Dout<=registres(11) and x"1f"; -- type 0 & 1
+						--Dout<=registres(11) and x"1f"; -- type 0 & 1
+						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0C" then -- R12
 						--registres(12) and x"3f"; -- type 0
 						Dout<=x"00"; -- type 1 & 2
@@ -428,11 +430,19 @@ begin
 						Dout<=registres(14) and x"3f";-- all types
 					elsif reg_select32 = x"0F" then -- R15	
 						Dout<=registres(15);-- all types
-					elsif reg_select32 = x"0F" then -- R16
+					elsif reg_select32 = x"10" then -- R16
 						Dout<=registres(16) and x"3f";-- all types
-					elsif reg_select32 = x"0F" then -- R17
+					elsif reg_select32 = x"11" then -- R17
 						Dout<=registres(17);-- all types
+					elsif reg_select32 = x"FF" then
+						-- registers 18-30 read as 0 on type1, register 31 reads as 0x0ff.
+						Dout<=x"FF";
+					elsif reg_select32 < x"11" then
+						-- 1. On type 0 and 1, if a Write Only register is read from, "0" is returned.
+						-- registers 18-31 read as 0, on type 0 and 2.
+						Dout<=x"00";
 					else
+						-- registers 18-30 read as 0 on type1
 						Dout<=x"00";
 					end if;
 				end if;
@@ -633,6 +643,11 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 				end if;
 				
 				-- V (bit 5) : Vertical Blanking
+				-- Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border
+				-- is active. i.e. VCC>=R6.
+				-- It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output
+				-- (used by the CPC to display the border colour) because that output is a combination of horizontal
+				-- and vertical blanking. This bit will be 0 when pixels are being displayed.
 				if vertical_counter_vCC<RVDisp then
 					-- Scan is not currently running in vertical blanking time-span.
 					VBLANK<='0';

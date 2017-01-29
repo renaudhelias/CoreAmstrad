@@ -36,7 +36,7 @@ entity MIST_SCART is
 			  VSYNC_TV_in : in STD_logic;
 			  
 			  mode : in std_logic;
-			  rgb_or_g : in std_logic;
+			  green_scanlines : in std_logic_vector (1 downto 0);
   			  pclk_in : in std_logic;
 			  pclk_TV_in : in std_logic;
 			  pclk_out : out std_logic
@@ -239,15 +239,28 @@ BLUE_out<=canal_blue when mode='0' else canal_blueTV;
 green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
-			if rgb_or_g='0' then
-				canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
-				canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
-				canal_blue<= COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)));
+			if green_scanlines(1)='0' then
+				if green_scanlines(0)='0' or RED_in(3)='0' then
+					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
+					canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
+					canal_blue<= COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)));
+				else
+					canal_red<= "0" & COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 1);-- + "00" & COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 2);
+					canal_green<= "0" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);-- + "00" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 2);
+					canal_blue<= "0" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);-- + "00" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 2);
+				end if;
 			else
-				canal_red<= "000000";
-				-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
-				canal_green<= GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)));
-				canal_blue<= "000000";
+				if green_scanlines(0)='0' or RED_in(3)='0' then
+					canal_red<= "000000";
+					-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
+					canal_green<= GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)));
+					canal_blue<= "000000";
+				else
+					canal_red<= "000000";
+					-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
+					canal_green<= "0" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 1); -- + "00" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 2);
+					canal_blue<= "000000";
+				end if;
 			end if;
 			canal_hsync<=HSYNC_in;
 			canal_vsync<=VSYNC_in;
@@ -258,7 +271,7 @@ end process green_color_vga;
 green_color_tv : process(pclk_TV_in) is
 begin
 		if rising_edge(pclk_TV_in) and mode='1' then
-			if rgb_or_g='0' then
+			if green_scanlines(1)='0' then
 				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
 				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
 				canal_blueTV<= COLOR_SCREEN(conv_integer(BLUE_TV_in(5 downto 4)));

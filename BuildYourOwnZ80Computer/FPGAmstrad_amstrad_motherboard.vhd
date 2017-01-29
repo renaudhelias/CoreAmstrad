@@ -332,7 +332,7 @@ use ieee.numeric_std.ALL;
 entity FPGAmstrad_amstrad_motherboard is
 	generic (
 			 USE_AZ80:boolean:=false;
-			 HACK_Z80:boolean:=false
+			 HACK_Z80:boolean:=true
 	);
    port ( CLK4MHz    : in    std_logic; 
           init_A     : in    std_logic_vector (22 downto 0); 

@@ -26,22 +26,22 @@ applicable agreement for further details.
 	(port
 		(pt 0 32)
 		(input)
-		(text "RED_FF[1..0]" (rect 0 0 59 12)(font "Arial" ))
-		(text "RED_FF[1..0]" (rect 21 27 80 39)(font "Arial" ))
+		(text "RED_FF[2..0]" (rect 0 0 60 12)(font "Arial" ))
+		(text "RED_FF[2..0]" (rect 21 27 81 39)(font "Arial" ))
 		(line (pt 0 32)(pt 16 32)(line_width 3))
 	)
 	(port
 		(pt 0 48)
 		(input)
-		(text "GREEN_FF[1..0]" (rect 0 0 73 12)(font "Arial" ))
-		(text "GREEN_FF[1..0]" (rect 21 43 94 55)(font "Arial" ))
+		(text "GREEN_FF[2..0]" (rect 0 0 74 12)(font "Arial" ))
+		(text "GREEN_FF[2..0]" (rect 21 43 95 55)(font "Arial" ))
 		(line (pt 0 48)(pt 16 48)(line_width 3))
 	)
 	(port
 		(pt 0 64)
 		(input)
-		(text "BLUE_FF[1..0]" (rect 0 0 62 12)(font "Arial" ))
-		(text "BLUE_FF[1..0]" (rect 21 59 83 71)(font "Arial" ))
+		(text "BLUE_FF[2..0]" (rect 0 0 63 12)(font "Arial" ))
+		(text "BLUE_FF[2..0]" (rect 21 59 84 71)(font "Arial" ))
 		(line (pt 0 64)(pt 16 64)(line_width 3))
 	)
 	(port

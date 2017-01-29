@@ -243,9 +243,9 @@ entity aZRaEL_vram2vgaAmstradMiaow is
            ADDRESS : out  STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
 			  PALETTE_D : in STD_LOGIC_VECTOR (7 downto 0);
 			  PALETTE_A : out STD_LOGIC_VECTOR (13 downto 0):=(others=>'0');
-           RED : out  STD_LOGIC_VECTOR(1 downto 0);
-           GREEN : out  STD_LOGIC_VECTOR(1 downto 0);
-           BLUE : out  STD_LOGIC_VECTOR(1 downto 0);
+           RED : out  STD_LOGIC_VECTOR(2 downto 0);
+           GREEN : out  STD_LOGIC_VECTOR(2 downto 0);
+           BLUE : out  STD_LOGIC_VECTOR(2 downto 0);
            VSYNC : out  STD_LOGIC;
            HSYNC : out  STD_LOGIC;
            CLK_25MHz : in  STD_LOGIC
@@ -348,6 +348,7 @@ aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 	variable cursor_pixel_ref : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
 	variable cursor_pixel : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
 	variable cursor_pixel_retard : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
+	variable pair_line_retard : std_logic;
 	variable v:integer range 0 to 512-1;
 	variable h:integer range 0 to 1024-1;
 	variable new_h:integer range 0 to 1024/CHAR_WIDTH-1;
@@ -442,6 +443,7 @@ begin
 		end if;
 		
 		-- more stable
+		pair_line_retard:=conv_std_logic_vector(palette_vertical_counter,1)(0);
 		cursor_pixel_retard:=cursor_pixel;
 		if etat_rgb_retard = DO_READ then
 			color:=(others=>'0');
@@ -453,41 +455,41 @@ begin
 				end if;
 			end loop;
 			if MODE_select="10" then
-				RED<=pen(conv_integer(color(3)))(5 downto 4);
-				GREEN<=pen(conv_integer(color(3)))(3 downto 2);
-				BLUE<=pen(conv_integer(color(3)))(1 downto 0);
+				RED<=pen(conv_integer(color(3)))(5 downto 4) & pair_line_retard;
+				GREEN<=pen(conv_integer(color(3)))(3 downto 2) & pair_line_retard;
+				BLUE<=pen(conv_integer(color(3)))(1 downto 0) & pair_line_retard;
 			elsif MODE_select="01" then
-				RED<=pen(conv_integer(color(3 downto 2)))(5 downto 4);
-				GREEN<=pen(conv_integer(color(3 downto 2)))(3 downto 2);
-				BLUE<=pen(conv_integer(color(3 downto 2)))(1 downto 0);
+				RED<=pen(conv_integer(color(3 downto 2)))(5 downto 4) & pair_line_retard;
+				GREEN<=pen(conv_integer(color(3 downto 2)))(3 downto 2) & pair_line_retard;
+				BLUE<=pen(conv_integer(color(3 downto 2)))(1 downto 0) & pair_line_retard;
 			elsif MODE_select="00" then
 				color_patch:=color(3) & color(1) & color(2) & color(0); -- wtf xD
-				RED<=pen(conv_integer(color_patch))(5 downto 4);
-				GREEN<=pen(conv_integer(color_patch))(3 downto 2);
-				BLUE<=pen(conv_integer(color_patch))(1 downto 0);
+				RED<=pen(conv_integer(color_patch))(5 downto 4) & pair_line_retard;
+				GREEN<=pen(conv_integer(color_patch))(3 downto 2) & pair_line_retard;
+				BLUE<=pen(conv_integer(color_patch))(1 downto 0) & pair_line_retard;
 			else -- MODE_select="11"
 				--using bits d0, d3, d4 and d7
 				color_patch:="00" & color(3) & color(0); -- wtf xD
-				RED<=pen(conv_integer(color_patch))(5 downto 4);
-				GREEN<=pen(conv_integer(color_patch))(3 downto 2);
-				BLUE<=pen(conv_integer(color_patch))(1 downto 0);
+				RED<=pen(conv_integer(color_patch))(5 downto 4) & pair_line_retard;
+				GREEN<=pen(conv_integer(color_patch))(3 downto 2) & pair_line_retard;
+				BLUE<=pen(conv_integer(color_patch))(1 downto 0) & pair_line_retard;
 			end if;
 		elsif etat_rgb_retard = DO_BORDER then
-			RED<=border(5 downto 4);
-			GREEN<=border(3 downto 2);
-			BLUE<=border(1 downto 0);
+			RED<=border(5 downto 4) & pair_line_retard;
+			GREEN<=border(3 downto 2) & pair_line_retard;
+			BLUE<=border(1 downto 0) & pair_line_retard;
 		elsif etat_rgb_retard = DO_BORDER2 then
-			RED<="10";
-			GREEN<="00";
-			BLUE<="00";
+			RED<="10" & pair_line_retard;
+			GREEN<="00" & pair_line_retard;
+			BLUE<="00" & pair_line_retard;
 		elsif etat_rgb_retard = DO_BORDER3 then
-			RED<="11";
-			GREEN<="10";
-			BLUE<="00";
+			RED<="11" & pair_line_retard;
+			GREEN<="10" & pair_line_retard;
+			BLUE<="00" & pair_line_retard;
 		else
-			RED<="00";
-			GREEN<="00";
-			BLUE<="00";
+			RED<="00" & pair_line_retard;
+			GREEN<="00" & pair_line_retard;
+			BLUE<="00" & pair_line_retard;
 		end if;
 		etat_rgb_retard:=etat_rgb;
 		-- strange cursor_pixel_retard:=cursor_pixel;

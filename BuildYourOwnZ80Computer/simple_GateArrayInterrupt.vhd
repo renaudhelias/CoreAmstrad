@@ -186,7 +186,7 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	constant DO_VSYNC : STD_LOGIC:='1';
 	
 	signal maScreen:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
-	signal VBLANK:std_logic:='1';
+	--signal VBLANK:std_logic:='1';
 	signal RED : STD_LOGIC_VECTOR(1 downto 0);
    signal GREEN : STD_LOGIC_VECTOR(1 downto 0);
    signal BLUE : STD_LOGIC_VECTOR(1 downto 0);
@@ -313,9 +313,12 @@ begin
 			if A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='0' then -- A9_WRITE
 				if A15_A14_A9_A8(0)='0' then
 					if IO_REQ_W='1' then
+						-- Décodage complet du numéro de registre sur le port &BFxx : Oui
 						reg_select32:=D and x"1F";
 						if reg_select32<=x"11" then -- < 17
 							reg_select:=conv_integer(reg_select32);
+						else
+							reg_select:=17; -- out of range :p
 						end if;
 					else
 						-- parasite : pull up
@@ -351,7 +354,10 @@ begin
 							--RVwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula
 -- Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111";
 -- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
-							RVwidth<=registres(3)(7 downto 4); -- JavaCPC 2015 puis freemac
+							-- RVwidth<=registres(3)(7 downto 4); -- JavaCPC 2015 puis freemac
+							-- http://quasar.cpcscene.net/doku.php?id=coding:test_crtc#fn__24
+							-- Le bit 7 du registre 3 change la durée de la VBL (valeur : toujours double)
+							RVwidth<=registres(3)(6 downto 4) & "0";
 						when 4=>
 							RVtot<=registres(4) and x"7f";
 						when 5=>
@@ -406,11 +412,11 @@ begin
 					
 					--if (LineCounter == 0) {
 					--  return (1 << 5); x"20"
-					if VBLANK='1' then
-						Dout<=x"20";
-					else
+					--if VBLANK='1' then
+					--	Dout<=x"20";
+					--else
 						Dout<=x"00"; 
-					end if;
+					--end if;
 				else
 					-- type 0 : nothing (return x"00")
 					-- type 1 : read status
@@ -422,9 +428,11 @@ begin
 						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0C" then -- R12
 						--registres(12) and x"3f"; -- type 0
+						-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0D" then -- R13
 						--registres(13); -- type 0
+						-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 						Dout<=x"00"; -- type 1 & 2
 					elsif reg_select32 = x"0E" then -- R14
 						Dout<=registres(14) and x"3f";-- all types
@@ -609,7 +617,7 @@ hsync_int<=DO_NOTHING;
 				if horizontal_counter_hCC = 0 then
 					etat_monitor_vsync:=etat_monitor_vsync(2 downto 0) & etat_monitor_vsync(0);
 					-- checkVSync() : if (vCC == reg[7] && !inVSync) {
-					if RA=0 and vertical_counter_vCC=RVsyncpos then
+					if RA=0 and vertical_counter_vCC=RVsyncpos and not(RVtotAdjust_do) then
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
 						-- Batman city towers does like RA=0 filter here...
 						-- CRTC datasheet : if 0000 is programmed for VSync, then 16 raster period is generated.
@@ -618,7 +626,7 @@ hsync_int<=DO_NOTHING;
 						etat_monitor_vsync(0):=DO_VSYNC;
 crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
 vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
-					elsif etat_vsync=DO_VSYNC then
+					elsif etat_vsync=DO_VSYNC then -- and not(RVtotAdjust_do) then
 						if vSyncCount=RVwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
@@ -648,15 +656,20 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 				-- It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output
 				-- (used by the CPC to display the border colour) because that output is a combination of horizontal
 				-- and vertical blanking. This bit will be 0 when pixels are being displayed.
-				if vertical_counter_vCC<RVDisp then
-					-- Scan is not currently running in vertical blanking time-span.
-					VBLANK<='0';
-				else
-					-- Scan currently is in vertical blanking time-span.
-					VBLANK<='1';
-				end if;
 				
-				if dispH='1' and vertical_counter_vCC<RVDisp then
+				-- http://quasar.cpcscene.net/doku.php?id=coding:test_crtc
+				-- Lecture de l'état de la VBL sur le bit 5 du registre 10 sur le port &BFxx	Non	>>Non<<	Non	Oui	Oui
+				
+--				if vertical_counter_vCC<RVDisp and not(RVtotAdjust_do) then
+--					-- Scan is not currently running in vertical blanking time-span.
+--					VBLANK<='0';
+--				else
+--					-- Scan currently is in vertical blanking time-span.
+--					VBLANK<='1';
+--				end if;
+				
+				-- Only R5 still needs to be explained. To allow a finer adjustment of the screen length than by the number of character lines (R4), R5 adds a number of blank scanlines at the end of the screen timing.
+				if dispH='1' and vertical_counter_vCC<RVDisp and not(RVtotAdjust_do) then
 					disp:='1';
 					etat_rgb<=DO_READ;
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
@@ -805,7 +818,7 @@ end if;
 					horizontal_counter_hCC:=(others=>'0');
 					--if (vtAdj > 0 && --vtAdj == 0) newFrame();
 					-- else if ((ra | interlaceVideo) == maxRaster) {
-					if (RA=RRmax and vertical_counter_vCC=RVtot and RVtotAdjust=0) -- tot-1 ok ok
+					if (RA=RRmax and vertical_counter_vCC=RVtot and RVtotAdjust=0 and not(RVtotAdjust_do)) -- tot-1 ok ok
 						or (RVtotAdjust_do and RVtotAdjust_mem=0) then
 						-- on a fini RVtotAdjust (ou sinon on a eu un RVtot fini sans RVtotAdjust)
 							RVtotAdjust_do:=false;
@@ -825,10 +838,10 @@ end if;
 							ADRESSE_MA_mem:=ADRESSE_maBase_mem;
 							vertical_counter_vCC:=(others=>'0');
 							-- RVtot vs RVtotAdjust ? RVtotAdjust ne serait-il pas dynamique par hazard ? NON selon JavaCPC c'est meme le contraire
-					elsif "000" & RA=RRmax then
+					elsif RA=RRmax then
 						RA:=(others=>'0');
 						-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;
-						if vertical_counter_vCC=RVtot then
+						if vertical_counter_vCC=RVtot and not(RVtotAdjust_do) then
 							RVtotAdjust_mem:=RVtotAdjust-1;
 							RVtotAdjust_do:=true;
 						elsif RVtotAdjust_do then
@@ -845,8 +858,7 @@ end if;
 						RA:=(RA+1) and x"1F";
 						if RVtotAdjust_do then
 							RVtotAdjust_mem:=RVtotAdjust_mem-1;
-						end if;
-						if vertical_counter_vCC = 0 then
+						elsif vertical_counter_vCC = 0 then
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 							ADRESSE_maBase_mem:=maScreen(13 downto 0);
 						end if;

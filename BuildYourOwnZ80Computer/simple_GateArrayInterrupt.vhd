@@ -37,7 +37,7 @@ entity simple_GateArrayInterrupt is
 	--UM6845 	UMC 		0
 	--UM6845R 	UMC 		1 UM6845R_WriteMaskTable type 1 in JavaCPC <==
 	--MC6845 	Motorola	2 
-	--CRTC_TYPE:integer   :=1;
+	CRTC_TYPE:std_logic:='0'; -- '0' or '1' :p
 	M1_OFFSET:integer :=3;--3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3
 	LATENCE_MEM_WR:integer:=1;
@@ -51,11 +51,11 @@ entity simple_GateArrayInterrupt is
   -- plus je grandi cette valeur plus l'image va vers la gauche.
   VRAM_Hoffset:integer:=12; -- 63*16-46*16
   
-  -- le raster palette arrive au moment oÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ l'encre est en face du stylo.
-  -- si on a un dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
-  -- hors nous on lit via MA, et on ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©crit n'importe oÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ via VRAM_Voffset
+  -- le raster palette arrive au moment oÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ l'encre est en face du stylo.
+  -- si on a un dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©calage raster palette alors on lis au mauvais moment, donc au mauvais endroit
+  -- hors nous on lit via MA, et on ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©crit n'importe oÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ via VRAM_Voffset
   -- donc VRAM_Voffset n'a pas d'influence sur le raster palette
-  -- ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a veut dire que l'adresse mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©moire dessous la palette n'est pas bonne
+  -- ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§a veut dire que l'adresse mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©moire dessous la palette n'est pas bonne
   
   
   -- plus je grandi cette valeur plus l'image va vers le haut.
@@ -167,26 +167,34 @@ architecture Behavioral of simple_GateArrayInterrupt is
 -- Grimware A PAL 50Hz video-frame on the Amstrad is 312 rasterlines. 
 -- Grimware screenshoot :
 --R0 RHtot     =63 : 0..63                            (donc 64 pas)
---R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃ© passÃ©)
---R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃ© passÃ©)
---R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃ© passÃ©)
+--R1 RHdisp    =40 : 0..39 si HCC=R1 alors DISPEN=OFF (donc 40 pas laissÃƒÂ© passÃƒÂ©)
+--R2 RHsyncpos =46 : si HCC=R2 alors HSYNC=ON         (donc 46 pas laissÃƒÂ© passÃƒÂ©)
+--R3 RHwidth   =14 : si (HCC-R2=)R3 alors HSYNC=OFF   (donc 60 pas laissÃƒÂ© passÃƒÂ©)
 --R4 RVtot     =38 : 0..38                            (donc 39 pas)
---R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃ© passÃ©)
---R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃ© passÃ©)
---R3 RVwidth   =8  : VSYNC=OFF aprÃƒÆ’Ã‚Â¨s un certain temps...
+--R6 RVdisp    =25 : 0..24 si VCC=R6 alors DISPEN=OFF (donc 25 pas laissÃƒÂ© passÃƒÂ©)
+--R7 RVsyncpos =30 : si VCC=R7 alors VSYNC=ON         (donc 30 pas laissÃƒÂ© passÃƒÂ©)
+--R3 RVwidth   =8  : VSYNC=OFF aprÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s un certain temps...
 --R9 RRmax     =7  : 0..7                             (donc  8 pas)
---caractÃ¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
+--caractÃƒÂ¨res de 8*8, donc verticalement : 1024 et horizontalement : 312.
 
 	-- arnold cpctest.asm :
 	-- crtc_default_values:
 	-- defb 63,40,46,&8e,38,0,25,30,0,7,0,0,&30,0,0,0,0
+	
+	--CRTC register 1 defines the width of the visible area in CRTC characters.
+	--The CPC display hardware fetches two bytes per CRTC character.
+	--Therefore the length of a CRTC scanline in bytes is (R1*2). (here : 40*2*8=640 pixels)
+	
+	--CRTC register 6 defines the height of the visible area in CRTC character lines.
+	--Therefore the total height of the visible area in CRTC scanlines is (R9+1)*R6 (here :(7+1)*25=200 pixels)
+	-- (RRmax+1)*RVdisp
 	
 	constant DO_NOTHING : STD_LOGIC:='0';
 	constant DO_HSYNC : STD_LOGIC:='1';
 	constant DO_VSYNC : STD_LOGIC:='1';
 	
 	signal maScreen:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
-	--signal VBLANK:std_logic:='1';
+	signal LineCounter_is0:boolean:=true;
 	signal RED : STD_LOGIC_VECTOR(1 downto 0);
    signal GREEN : STD_LOGIC_VECTOR(1 downto 0);
    signal BLUE : STD_LOGIC_VECTOR(1 downto 0);
@@ -313,7 +321,7 @@ begin
 			if A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='0' then -- A9_WRITE
 				if A15_A14_A9_A8(0)='0' then
 					if IO_REQ_W='1' then
-						-- Décodage complet du numéro de registre sur le port &BFxx : Oui
+						-- DÃ©codage complet du numÃ©ro de registre sur le port &BFxx : Oui
 						reg_select32:=D and x"1F";
 						if reg_select32<=x"11" then -- < 17
 							reg_select:=conv_integer(reg_select32);
@@ -341,6 +349,7 @@ begin
 					-- JavaCPC Basic6845[CRTC].setRegister().setEvents()
 					case reg_select is
 						when 0=>
+							-- Valeur minimale du registre 0 >>0<<
 							RHtot<=registres(0);
 						when 1=>
 							RHdisp<=registres(1);
@@ -356,13 +365,23 @@ begin
 -- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
 							-- RVwidth<=registres(3)(7 downto 4); -- JavaCPC 2015 puis freemac
 							-- http://quasar.cpcscene.net/doku.php?id=coding:test_crtc#fn__24
-							-- Le bit 7 du registre 3 change la durée de la VBL (valeur : toujours double)
-							RVwidth<=registres(3)(6 downto 4) & "0";
+							
+							-- VSync width can only be changed on type 3 and 4 (???)
+							-- The Vsync has a fixed length for CRTC 2, which is 16 scan lines (and not 8 as programmed by the firmware, implicitly using CRTC 0). 
+							--http://cpctech.cpc-live.com/source/split.html
+							if CRTC_TYPE='1' then
+								RVwidth<=registres(3)(7 downto 4);
+							else
+								RVwidth<=x"0"; --registres(3)(6 downto 4) & "0";
+							end if;
 						when 4=>
+							-- Validation des registres 9 et 4 aprÃ¨s reprogrammation (Pendant que C4 = 0, buffÃ©risÃ©s sinon)
+							-- Rupture ligne-Ã -ligne possible (R9 = R4 =0 ) >>oui<<
 							RVtot<=registres(4) and x"7f";
 						when 5=>
 							RVtotAdjust<=registres(5) and x"1f";
 						when 6=>
+							--The DISPTMG (Activation du split-border) can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
 							RVdisp<=registres(6) and x"7f";
 						when 7=>
 							RVsyncpos<=registres(7) and x"7f";
@@ -377,12 +396,16 @@ begin
 							-- 10 : No Interlace
 							-- 11 : Interlace Sync and Video Raster Scan Mode 
 						when 9=> -- max raster adress
+							-- Validation des registres 9 et 4 aprÃ¨s reprogrammation (Pendant que C4 = 0, buffÃ©risÃ©s sinon)
 							RRmax<=registres(9) and x"1f";
 						when 10=>NULL; -- and x"7f";
 							-- cursor start raster 
 						when 11=>NULL; -- and x"1f";
 							-- cursor end raster
-						when 12=> --NULL;  (read/write type 0) (write only type 1)
+						when 12=>
+							--Validation de l'offset aprÃ¨s reprogrammation des registres 12 et 13 : >>ImmÃ©diatement<< (Pendant que C4 = 0, Ã  l'Ã©cran suivant sinon)
+							
+						   --NULL;  (read/write type 0) (write only type 1)
 							-- start adress H
 							--maScreen = (reg[13] + (reg[12] << 8)) & 0x3fff;
 							-- and x"3f" donc (5 downto 0)
@@ -410,13 +433,31 @@ begin
 					-- V (bit 5) : Vertical Blanking (VDISP ?)
 					-- in type 3 & 4, status_reg=reg
 					
+					
+					--Vertical BLanking (VBL)
+					--This is a time interval during a video-frame required by the electron gun in a CRT monitor to move back up to the top of the tube. While the vertical blank, the electron beam is off, hence no data is displayed on the screen.
+					--As soon as the electron gun is back to the top, the monitor will hold it there until a VSync appears to indicate the start of a new frame. If no VSync appears, the monitor will release the gun by itself after some time (depending on it's VHold) and will usually produce a rolling/jumping image because the monitor vertical synchronisation is no longer done with the CPC video-frame but with the monitor hardware limits (and they won't be the same).
+					--The VBL is a monitor specific time interval, it can not be software controlled (on the Amstrad), unlike the VSync, which is a signal produced by the CRTC we can control. The monitor expect a VSync at regular interval to produce a stable image.
+					
+					--Bit 5, VERTB, causes an interrupt at line 0 (start of vertical blank) of
+					--the video display frame. The system is often required to perform many
+					--different tasks during the vertical blanking interval. Among these tasks
+					--are the updating of various pointer registers, rewriting lists of Copper
+					--tasks when necessary, and other system-control operations.
+					
+					--Registre de status accessible sur le port &BExx (VBL, border)
+					
+					-- Le bit 7 du registre 3 change la durÃ©e de la VBL >>NON<<(valeur : toujours double)
+					-- CRTC 3 et 4 : lecture de la derniÃ¨re ligne de VBL sur le registre 10
 					--if (LineCounter == 0) {
 					--  return (1 << 5); x"20"
-					--if VBLANK='1' then
-					--	Dout<=x"20";
-					--else
+					if LineCounter_is0 then --and CRTC_TYPE='1' then
+					--Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border is active. i.e. VCC>=R6.
+					--It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output (used by the CPC to display the border colour) because that output is a combination of horizontal and vertical blanking. This bit will be 0 when pixels are being displayed.
+						Dout<=x"20";
+					else
 						Dout<=x"00"; 
-					--end if;
+					end if;
 				else
 					-- type 0 : nothing (return x"00")
 					-- type 1 : read status
@@ -473,7 +514,7 @@ end process ctrcConfig_process;
 simple_GateArray_process : process(reset,nCLK4_1) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
-	variable disp:std_logic:='0';
+	variable dispV:std_logic:='0';
 	variable disp_delta:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
 	variable disp_VRAM:std_logic:='0';
@@ -535,6 +576,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable r52 : std_logic_vector(5 downto 0):=(others=>'0'); -- a 6-bit counter, reset state is 0
 		variable vSyncInt:integer range 0 to 2:=2;
 
+		variable LineCounter_is0_double : boolean:=false;
+		
 	begin
 		if reset='1' then
 			hsync_int<=DO_NOTHING;
@@ -658,26 +701,37 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 				-- and vertical blanking. This bit will be 0 when pixels are being displayed.
 				
 				-- http://quasar.cpcscene.net/doku.php?id=coding:test_crtc
-				-- Lecture de l'état de la VBL sur le bit 5 du registre 10 sur le port &BFxx	Non	>>Non<<	Non	Oui	Oui
-				
---				if vertical_counter_vCC<RVDisp and not(RVtotAdjust_do) then
---					-- Scan is not currently running in vertical blanking time-span.
---					VBLANK<='0';
---				else
---					-- Scan currently is in vertical blanking time-span.
---					VBLANK<='1';
---				end if;
+				-- Lecture de l'Ã©tat de la VBL sur le bit 5 du registre 10 sur le port &BFxx	Non	>>Non<<	Non	Oui	Oui
 				
 				-- Only R5 still needs to be explained. To allow a finer adjustment of the screen length than by the number of character lines (R4), R5 adds a number of blank scanlines at the end of the screen timing.
-				if dispH='1' and vertical_counter_vCC<RVDisp and not(RVtotAdjust_do) then
-					disp:='1';
+				--The DISPTMG can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
+				
+				LineCounter_is0<=LineCounter_is0_double; -- one more time.
+				LineCounter_is0_double:=false;
+				if vertical_counter_vCC=RVDisp and not(RVtotAdjust_do) then
+					dispV:='0';
+					-- Scan is not currently running in vertical blanking time-span.
+					--VBLANK<='1';
+					if RA=x"00" then
+						-- je crois avoir compris que la VBL a une longueur fixe, d'une ligne, doublÃ© donc deux lignes.
+						--elle est Ã  la ligne 0 de VBLANK donc fin de dispV.
+						LineCounter_is0_double:=true;
+						LineCounter_is0<=LineCounter_is0_double;
+					end if;
+				elsif vertical_counter_vCC=0 and not(RVtotAdjust_do) then
+					dispV:='1';
+					-- Scan currently is in vertical blanking time-span.
+					--VBLANK<='0';
+				end if;
+				
+				if dispH='1' and dispV='1' then
 					etat_rgb<=DO_READ;
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
 					-- Have to respect address cut ADRESSE_CONSTANT_mem:=conv_integer(maScreen(13 downto 0)) mod (16*1024);
 					
 					-- newFrame() :  ma = maBase = maScreen;
 					
-					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
+					-- je suis relatif ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  RHdisp, alors qu'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  chaque scanStart() RHdisp est relu et += ADRESSE_maBase_mem
 					--ADRESSE_hCC_mem:=conv_integer(horizontal_counter_hCC) mod (16*1024);
 					
 					-- .------- REG 12 --------.   .------- REG 13 --------.
@@ -714,12 +768,12 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 					-- ma = (maBase + hCC) & 0x3fff;
 					--MA:=conv_std_logic_vector(ADRESSE_maBase_mem+ADRESSE_hCC_mem,14);
 					--RA:=ligne_carac_v_RA;
+					--http://cpctech.cpc-live.com/docs/scraddr.html
 					crtc_A_mem(14 downto 0):=ADRESSE_MA_mem(13 downto 12) & RA(2 downto 0) & ADRESSE_MA_mem(9 downto 0);
 					--http://cpcrulez.fr/coding_amslive02-balayage_video.htm dit :
 					--MA(13 downto 12) & RA(2 downto 0) & MA(9 downto 0) & CCLK
 				else
 					etat_rgb<=DO_NOTHING_OUT;
-					disp:='0';
 					crtc_A_mem:=(others=>'0');
 				end if;
 				-- it's not really 16MHz, but we don't care
@@ -819,7 +873,7 @@ end if;
 					--if (vtAdj > 0 && --vtAdj == 0) newFrame();
 					-- else if ((ra | interlaceVideo) == maxRaster) {
 					if (RA=RRmax and vertical_counter_vCC=RVtot and RVtotAdjust=0 and not(RVtotAdjust_do)) -- tot-1 ok ok
-						or (RVtotAdjust_do and RVtotAdjust_mem=0) then
+						or (RVtotAdjust_do and RVtotAdjust_mem=RVtotAdjust) then
 						-- on a fini RVtotAdjust (ou sinon on a eu un RVtot fini sans RVtotAdjust)
 							RVtotAdjust_do:=false;
 							--newFrame()
@@ -842,10 +896,10 @@ end if;
 						RA:=(others=>'0');
 						-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;
 						if vertical_counter_vCC=RVtot and not(RVtotAdjust_do) then
-							RVtotAdjust_mem:=RVtotAdjust-1;
+							RVtotAdjust_mem:=x"01";
 							RVtotAdjust_do:=true;
 						elsif RVtotAdjust_do then
-							RVtotAdjust_mem:=RVtotAdjust_mem-1;
+							RVtotAdjust_mem:=RVtotAdjust_mem+1;
 						end if;
 						-- Linear Address Generator
 						-- Nhd+0
@@ -857,7 +911,7 @@ end if;
 						-- ra = (ra + scanAdd) & 0x1f;
 						RA:=(RA+1) and x"1F";
 						if RVtotAdjust_do then
-							RVtotAdjust_mem:=RVtotAdjust_mem-1;
+							RVtotAdjust_mem:=RVtotAdjust_mem+1;
 						elsif vertical_counter_vCC = 0 then
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 							ADRESSE_maBase_mem:=maScreen(13 downto 0);
@@ -880,14 +934,14 @@ end if;
 				bvram_W<=disp_delta;
 				bvram_D<=DATA_mem;
 				
-				crtc_R<=disp;
+				crtc_R<=dispH and dispV and disp_VRAM;
 			when 1=>
 				-- Daisy relaxing (zsdram.v)
 				bvram_A_mem_delta:=bvram_A_mem;
-				disp_delta:=disp and disp_VRAM;
+				disp_delta:=dispH and dispV and disp_VRAM;
 				--Daisy relaxing (zsdram.v)
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
-				crtc_R<=disp and disp_VRAM;
+				crtc_R<=dispH and dispV and disp_VRAM;
 				DATA_action<='0';
 			when 2=>
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '0';
@@ -897,11 +951,11 @@ end if;
 				bvram_W<=disp_delta;
 				bvram_D<=DATA_mem;
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
-				crtc_R<=disp;
+				crtc_R<=dispH and dispV and disp_VRAM;
 			when 3=>
 				--Daisy relaxing (zsdram.v)
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
-				crtc_R<=disp and disp_VRAM;
+				crtc_R<=dispH and dispV and disp_VRAM;
 				DATA_action<='0';
 			end case;
 			
@@ -909,7 +963,7 @@ end if;
 if in_V then
 	if is_H_middle and compteur1MHz=0 then
 		palette_horizontal_counter:=0;
-		disp_begin_mem:=disp and disp_VRAM;
+		disp_begin_mem:=dispH and dispV and disp_VRAM;
 	elsif palette_horizontal_counter<2+16+1 then
 		palette_horizontal_counter:=palette_horizontal_counter+1;
 	end if;
@@ -990,7 +1044,7 @@ if in_V then
 	end if;
 end if;
 			
-			crtc_DISP<=disp;
+			crtc_DISP<=dispH and dispV and disp_VRAM;
 			
 			-- r52 begin
 			--http://www.cpcwiki.eu/index.php/Synchronising_with_the_CRTC_and_display

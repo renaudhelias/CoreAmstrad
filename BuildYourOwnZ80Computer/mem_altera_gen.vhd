@@ -72,9 +72,14 @@ architecture behav of altera_syncram_dp is
     width_b	: natural := 1;
     widthad_a	: natural;
     widthad_b	: natural := 1;
-	 read_during_write_mode_mixed_ports      :       string := "OLD_DATA"; -- "DONT_CARE";
-    read_during_write_mode_port_a   :       string := "OLD_DATA"; --"NEW_DATA_NO_NBE_READ";
-    read_during_write_mode_port_b   :       string := "OLD_DATA" --"NEW_DATA_NO_NBE_READ"
+	 --operation_mode : string := "DUAL_PORT",
+	 --AUTO|M-RAM(MEGARAM)|M4K|M512|M9K|M144K|M20K|M10K|MLAB(LUTRAM)
+	 --RAM_BLOCK_TYPE : string := "M9K";
+	 --DONT_CARE|CONSTRAINED_DONT_CARE|OLD_DATA|NEW_DATA
+	 read_during_write_mode_mixed_ports      :       string :="OLD_DATA";--:= "OLD_DATA";
+	 --NEW_DATA_NO_NBE_READ|NEW_DATA_WITH_NBE_READ|OLD_DATA|DONT_CARE
+    read_during_write_mode_port_a   :       string := "NEW_DATA_WITH_NBE_READ"; --"DONT_CARE";
+    read_during_write_mode_port_b   :       string := "NEW_DATA_WITH_NBE_READ" --"DONT_CARE"
 	 );
   port(
     address_a	: in std_logic_vector(widthad_a-1 downto 0);
@@ -95,11 +100,13 @@ begin
 
   u0 : altsyncram 
     generic map (
+	   --operation_mode => "DUAL_PORT",
+	   --RAM_BLOCK_TYPE => "M9K",--"AUTO",
       WIDTH_A => dbits, WIDTHAD_A => abits,
       WIDTH_B => dbits, WIDTHAD_B => abits,
-		read_during_write_mode_mixed_ports=>"OLD_DATA",
-      read_during_write_mode_port_a=>"OLD_DATA",
-		read_during_write_mode_port_b=>"OLD_DATA"
+		read_during_write_mode_mixed_ports=>"OLD_DATA",--"OLD_DATA",
+		read_during_write_mode_port_a=>"NEW_DATA_WITH_NBE_READ",--"DONT_CARE",
+		read_during_write_mode_port_b=>"NEW_DATA_WITH_NBE_READ"--"DONT_CARE"
 		)
     port map ( 
       address_a => address1, address_b => address2, clock0 => clk1, 

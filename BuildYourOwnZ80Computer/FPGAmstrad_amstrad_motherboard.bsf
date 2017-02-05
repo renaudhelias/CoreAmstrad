@@ -185,6 +185,13 @@ applicable agreement for further details.
 		(line (pt 0 384)(pt 16 384)(line_width 3))
 	)
 	(port
+		(pt 0 400)
+		(input)
+		(text "crtc_type" (rect 0 0 38 12)(font "Arial" ))
+		(text "crtc_type" (rect 21 395 59 407)(font "Arial" ))
+		(line (pt 0 400)(pt 16 400)(line_width 1))
+	)
+	(port
 		(pt 336 32)
 		(output)
 		(text "audio_AB" (rect 0 0 40 12)(font "Arial" ))
@@ -380,7 +387,18 @@ applicable agreement for further details.
 		(text "zram_rd" (rect 281 459 315 471)(font "Arial" ))
 		(line (pt 336 464)(pt 320 464)(line_width 1))
 	)
+	(parameter
+		"USE_AZ80"
+		"false"
+		""
+		(type "PARAMETER_ENUM")	)
+	(parameter
+		"HACK_Z80"
+		"true"
+		""
+		(type "PARAMETER_ENUM")	)
 	(drawing
 		(rectangle (rect 16 16 320 480)(line_width 1))
 	)
+	(annotation_block (parameter)(rect 352 -64 452 16))
 )

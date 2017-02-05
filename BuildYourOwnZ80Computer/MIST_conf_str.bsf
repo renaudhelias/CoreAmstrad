@@ -26,8 +26,8 @@ applicable agreement for further details.
 	(port
 		(pt 184 32)
 		(output)
-		(text "CONF_STR[783..0]" (rect 0 0 82 12)(font "Arial" ))
-		(text "CONF_STR[783..0]" (rect 81 27 163 39)(font "Arial" ))
+		(text "CONF_STR[879..0]" (rect 0 0 82 12)(font "Arial" ))
+		(text "CONF_STR[879..0]" (rect 81 27 163 39)(font "Arial" ))
 		(line (pt 184 32)(pt 168 32)(line_width 3))
 	)
 	(drawing

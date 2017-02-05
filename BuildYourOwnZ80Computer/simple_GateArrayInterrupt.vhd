@@ -37,7 +37,7 @@ entity simple_GateArrayInterrupt is
 	--UM6845 	UMC 		0
 	--UM6845R 	UMC 		1 UM6845R_WriteMaskTable type 1 in JavaCPC <==
 	--MC6845 	Motorola	2 
-	CRTC_TYPE:std_logic:='0'; -- '0' or '1' :p
+	CRTC_TYPE:std_logic:='1'; -- '0' or '1' :p
 	M1_OFFSET:integer :=3;--3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3
 	LATENCE_MEM_WR:integer:=1;
@@ -369,11 +369,20 @@ begin
 							-- VSync width can only be changed on type 3 and 4 (???)
 							-- The Vsync has a fixed length for CRTC 2, which is 16 scan lines (and not 8 as programmed by the firmware, implicitly using CRTC 0). 
 							--http://cpctech.cpc-live.com/source/split.html
-							if CRTC_TYPE='1' then
+							if CRTC_TYPE='0' then
+								--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 								RVwidth<=registres(3)(7 downto 4);
 							else
+								--CRTC1 MC6845/MC6845R/UM6845R have a fixed Vertical Sync Width of 16 scanlines.
 								RVwidth<=x"0"; --registres(3)(6 downto 4) & "0";
 							end if;
+							
+							--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
+							--CRTC1 MC6845/UM6845: Note for UM6845: When the Horizontal Sync width is set to 0, then no Horizontal Syncs will be generated. (This feature can be used to distinguish between the UM6845 and MC6845).
+							
+							
+							--CRTC0 Programming Horizontal Sync Width with 0: HD6845S: The data sheets says that the Horizontal Sync Width cannot be programmed with 0. The effect of doing this is not documented. MC6845: If the Horizontal Sync Width register is programmed with 0, no horizontal syncs are generated.
+							
 						when 4=>
 							-- Validation des registres 9 et 4 aprÃ¨s reprogrammation (Pendant que C4 = 0, buffÃ©risÃ©s sinon)
 							-- Rupture ligne-Ã -ligne possible (R9 = R4 =0 ) >>oui<<
@@ -395,6 +404,14 @@ begin
 							-- 01 : Interlace Sync Raster Scan Mode
 							-- 10 : No Interlace
 							-- 11 : Interlace Sync and Video Raster Scan Mode 
+							
+							-- CRTC0 HD6845S: Register 8: Interlace and Skew Bit 7 Cursor Display timing Skew Bit 1 Bit 6 Cursor Display timing Skew Bit 0 Bit 5 Display timing Skew Bit 1 (DTSKB1) Bit 4 Display timing SKew Bit 0 (DTSKB0) Bit 3 not used Bit 2 not used Bit 1 Video Mode Bit 0 Interlace Sync Mode Display timing skew: The data can be skewed by 0 characters, 1 character or 2 characters. When both bits are 1 the display is stopped and border is displayed. This is used in the BSC Megademo in the Crazy Cars II part. 
+							-- CRTC1 MC6845/UM6845 : Bit 1 Video Mode Bit 0 Interlace Sync Mode
+							
+							-- Type 0,1a (and 4 ?) have an extra feature in R8, which seems to be the basis for the "register 8 border technique". These CRTCs use bits 4 and 5 of R8 for character delay: that is, to account for the fact, that in a typical low-cost system, the memory fetches (RAM and then font ROM) would be slow and would make the raster out of sync with "Display Enable" (DE, the frame, or border) which is wired directly to the color generator. 
+							-- So they implemented a programmable DE delay (the "Skew") which is to be set a the duration of the raster fetch (counted in CRTC clock cycles, or mode 1 characters). The same thing is done for the "Cursor" line, because it is also shorter than the raster data-path. 
+							--To implement this, you can by-pass or enable couple of registers on the concerned lines. Because these registers probably get reset when they're bypassed, if you reenable them while DE is true, it will take them as many characters as the DE delay, before they echo "true": you get a bit of border color in the middle of the screen ! 
+							--Of course, when the delay is elapsed, the raster comes back, but you could repeatedly turn the delay on and off. 
 						when 9=> -- max raster adress
 							-- Validation des registres 9 et 4 aprÃ¨s reprogrammation (Pendant que C4 = 0, buffÃ©risÃ©s sinon)
 							RRmax<=registres(9) and x"1f";
@@ -433,7 +450,8 @@ begin
 					-- V (bit 5) : Vertical Blanking (VDISP ?)
 					-- in type 3 & 4, status_reg=reg
 					
-					
+					-- Bit 6 LPEN REGISTER FULL 1: A light pen strobe has occured (light pen has put to screen and button has been pressed), 0: R16 or R17 has been read by the CPU 
+					-- Bit 5	VERTICAL BLANKING 1: CRTC is scanning in the vertical blanking time, 0: CRTC is not scanning in the vertical blanking time.
 					--Vertical BLanking (VBL)
 					--This is a time interval during a video-frame required by the electron gun in a CRT monitor to move back up to the top of the tube. While the vertical blank, the electron beam is off, hence no data is displayed on the screen.
 					--As soon as the electron gun is back to the top, the monitor will hold it there until a VSync appears to indicate the start of a new frame. If no VSync appears, the monitor will release the gun by itself after some time (depending on it's VHold) and will usually produce a rolling/jumping image because the monitor vertical synchronisation is no longer done with the CPC video-frame but with the monitor hardware limits (and they won't be the same).
@@ -451,9 +469,9 @@ begin
 					-- CRTC 3 et 4 : lecture de la derniÃ¨re ligne de VBL sur le registre 10
 					--if (LineCounter == 0) {
 					--  return (1 << 5); x"20"
-					if LineCounter_is0 then --and CRTC_TYPE='1' then
-					--Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border is active. i.e. VCC>=R6.
-					--It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output (used by the CPC to display the border colour) because that output is a combination of horizontal and vertical blanking. This bit will be 0 when pixels are being displayed.
+					if LineCounter_is0 and CRTC_TYPE='1' then
+						--Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border is active. i.e. VCC>=R6.
+						--It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output (used by the CPC to display the border colour) because that output is a combination of horizontal and vertical blanking. This bit will be 0 when pixels are being displayed.
 						Dout<=x"20";
 					else
 						Dout<=x"00"; 
@@ -461,20 +479,25 @@ begin
 				else
 					-- type 0 : nothing (return x"00")
 					-- type 1 : read status
-					if reg_select32 = x"0A" then -- R10
-						--registres(10); --type1 and x"1f"; -- type 0
-						Dout<=x"00"; -- type 1 & 2
-					elsif reg_select32 = x"0B" then -- R11
-						--Dout<=registres(11) and x"1f"; -- type 0 & 1
-						Dout<=x"00"; -- type 1 & 2
-					elsif reg_select32 = x"0C" then -- R12
-						--registres(12) and x"3f"; -- type 0
-						-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
-						Dout<=x"00"; -- type 1 & 2
+					if reg_select32 = x"0C" then -- R12
+						if CRTC_TYPE='0' then
+							--CRTC0 HD6845S/MC6845: Start Address Registers (R12 and R13) can be read.
+							Dout<=registres(12) and x"3f"; -- type 0 2
+						else
+							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
+							--CRTC1 UM6845R: Start Address Registers cannot be read.
+							Dout<=x"00"; -- type 1
+						end if;
+						
 					elsif reg_select32 = x"0D" then -- R13
-						--registres(13); -- type 0
-						-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
-						Dout<=x"00"; -- type 1 & 2
+						if CRTC_TYPE='0' then
+							Dout<=registres(13); -- type 0
+							--CRTC0 HD6845S/MC6845: Start Address Registers (R12 and R13) can be read.
+						else
+							--CRTC1 UM6845R: Start Address Registers cannot be read.
+							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
+							Dout<=x"00"; -- type 1 & 2
+						end if;
 					elsif reg_select32 = x"0E" then -- R14
 						Dout<=registres(14) and x"3f";-- all types
 					elsif reg_select32 = x"0F" then -- R15	
@@ -636,7 +659,7 @@ bvram_W<='0';
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
 
 				--checkHSync(false); -- and RHwidth/=x"0" FIXME
-				if horizontal_counter_hCC=RHsyncpos then
+				if horizontal_counter_hCC=RHsyncpos and (CRTC_TYPE='0' or RHwidth/=x"0") then
 					etat_hsync:=DO_HSYNC;
 					hSyncCount:= x"0";
 					etat_monitor_hsync(0):=DO_HSYNC;

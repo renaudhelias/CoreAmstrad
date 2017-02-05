@@ -332,7 +332,7 @@ use ieee.numeric_std.ALL;
 entity FPGAmstrad_amstrad_motherboard is
 	generic (
 			 USE_AZ80:boolean:=false;
-			 HACK_Z80:boolean:=false
+			 HACK_Z80:boolean:=true
 	);
    port ( CLK4MHz    : in    std_logic; 
           init_A     : in    std_logic_vector (22 downto 0); 
@@ -856,7 +856,7 @@ end generate;
 	cs=>A(11),
 	iowr=>XLXN_904,
 	iord=>XLXN_180,
-	cpuclk=>nCLK4MHz,
+	cpuclk=>CLK16MHz, -- (no clocked this component normaly, so let's overclock it) --nCLK4MHz,
 	
 	PBI(7)=>'1', -- pull up (default)
 	PBI(6)=>'1', -- pull up (default)

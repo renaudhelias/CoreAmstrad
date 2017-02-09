@@ -403,14 +403,14 @@ cortex:process(reset,nCLK4_1)
 	
 	type params_type is array(0 to 7) of std_logic_vector(7 downto 0);
 	type results_type is array(0 to 6) of std_logic_vector(7 downto 0);
-	variable command_restant:integer range 0 to 8;
-	variable params:params_type; -- stack of params
-	variable exec_restant:integer;
-	variable exec_restant_write:integer;
-	variable result_restant:integer range 0 to 7;
-	variable results:results_type; -- stack of results
+	variable command_restant:integer range 0 to 8:=0;
+	variable params:params_type:=(others=>(others=>'0')); -- stack of params
+	variable exec_restant:integer:=0;
+	variable exec_restant_write:integer:=0;
+	variable result_restant:integer range 0 to 7:=0;
+	variable results:results_type:=(others=>(others=>'0')); -- stack of results
 	type chrn_type is array(3 downto 0) of std_logic_vector(7 downto 0);
-	variable chrn:chrn_type;
+	variable chrn:chrn_type:=(others=>(others=>'0'));
 
 	function getCHRN(chrn : in STD_LOGIC_VECTOR(4*8-1 downto 0)) return chrn_type is
 		variable chrn_interne:chrn_type;

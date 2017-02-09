@@ -35,6 +35,54 @@
 --
 ----- CELL CB4CE_HXILINX_amstrad_motherboard -----
 
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity CB4CE_HXILINX_amstrad_motherboard is
+  
+port (
+    CEO  : out STD_LOGIC;
+    Q0   : out STD_LOGIC;
+    Q1   : out STD_LOGIC;
+    Q2   : out STD_LOGIC;
+    Q3   : out STD_LOGIC;
+    TC   : out STD_LOGIC;
+    C    : in STD_LOGIC;
+    CE   : in STD_LOGIC;
+    CLR  : in STD_LOGIC
+    );
+end CB4CE_HXILINX_amstrad_motherboard;
+
+architecture Behavioral of CB4CE_HXILINX_amstrad_motherboard is
+
+  signal COUNT : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
+  constant TERMINAL_COUNT : STD_LOGIC_VECTOR(3 downto 0) := (others => '1');
+  
+begin
+
+process(C, CLR)
+begin
+  if (CLR='1') then
+    COUNT <= (others => '0');
+  elsif (C'event and C = '1') then
+    if (CE='1') then 
+      COUNT <= COUNT+1;
+    end if;
+  end if;
+end process;
+
+TC   <= '1' when (COUNT = TERMINAL_COUNT) else '0';
+CEO  <= '1' when ((COUNT = TERMINAL_COUNT) and CE='1') else '0';
+
+Q3 <= COUNT(3);
+Q2 <= COUNT(2);
+Q1 <= COUNT(1);
+Q0 <= COUNT(0);
+
+end Behavioral;
+
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -449,7 +497,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    --signal XLXN_884      : std_logic;
    signal XLXN_904      : std_logic;
    signal XLXN_907      : std_logic;
-   signal XLXN_940      : std_logic;
+   --signal XLXN_940      : std_logic;
 	signal SOUND_CLK     : std_logic;
    signal xram_A        : std_logic_vector (22 downto 0);
    signal ROMbank_DUMMY : std_logic_vector (7 downto 0);
@@ -523,7 +571,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              M1_n          : in    std_logic; 
              MEM_WR        : in    std_logic; 
              reset         : in    std_logic; 
-				 crtc_type : in std_logic;
+				 --crtc_type : in std_logic;
              A15_A14_A9_A8 : in    std_logic_vector (3 downto 0); 
              MODE_select   : in    std_logic_vector (1 downto 0); 
              D             : in    std_logic_vector (7 downto 0); 
@@ -535,7 +583,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              int           : out   std_logic;
              WAIT_MEM_n    : out   std_logic;
              WAIT_n        : out   std_logic;
-				 SOUND_CLK     : out   std_logic;
+				 --SOUND_CLK     : out   std_logic;
              palette_W     : out   std_logic; 
              crtc_A        : out   std_logic_vector (15 downto 0); 
              bvram_A       : out   std_logic_vector (14 downto 0); 
@@ -679,6 +727,19 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              key_reset : out   std_logic_vector(1 downto 0));
    end component;
    
+	   component CB4CE_HXILINX_amstrad_motherboard
+      port ( C   : in    std_logic; 
+             CE  : in    std_logic; 
+             CLR : in    std_logic; 
+             CEO : out   std_logic; 
+             Q0  : out   std_logic; 
+             Q1  : out   std_logic; 
+             Q2  : out   std_logic; 
+             Q3  : out   std_logic; 
+             TC  : out   std_logic);
+   end component;
+	
+	
    component please_wait
       port ( CLK_n      : in    std_logic; 
              WAIT_n     : in    std_logic; 
@@ -705,6 +766,18 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    end component;
    
 begin
+
+
+   XLXI_399 : CB4CE_HXILINX_amstrad_motherboard
+      port map (C=>nCLK4MHz,
+                CE=>'1',
+                CLR=>'0',
+                CEO=>open,
+                Q0=>open,
+                Q1=>SOUND_CLK,
+                Q2=>open,
+                Q3=>open,
+                TC=>open);
 
 do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
    AmstradT80 : T80se_p
@@ -822,7 +895,7 @@ end generate;
                 nCLK4_1=>nCLK4MHz,
 					 CLK16MHz=>CLK16MHz,
                 reset=>XLXN_907,
-					 crtc_type=>crtc_type,
+					 --crtc_type=>crtc_type,
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
                 bvram_D(7 downto 0)=>vram_D(7 downto 0),
                 bvram_W=>vram_W,
@@ -835,7 +908,7 @@ end generate;
                 palette_W=>palette_W,
                 WAIT_MEM_n=>WAIT_MEM_n,
                 WAIT_n=>WAIT_n,
-					 SOUND_CLK=>SOUND_CLK,
+					 --SOUND_CLK=>SOUND_CLK,
                 Dout(7 downto 0)=>MIX_DOUT0(7 downto 0), --inout
 					 RED_out=>RED_out,
 					 GREEN_out=>GREEN_out,

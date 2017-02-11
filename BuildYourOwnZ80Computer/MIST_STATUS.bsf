@@ -65,6 +65,13 @@ applicable agreement for further details.
 		(text "crtc_type" (rect 165 91 203 103)(font "Arial" ))
 		(line (pt 224 96)(pt 208 96)(line_width 1))
 	)
+	(port
+		(pt 224 112)
+		(output)
+		(text "ga_shunt" (rect 0 0 36 12)(font "Arial" ))
+		(text "ga_shunt" (rect 167 107 203 119)(font "Arial" ))
+		(line (pt 224 112)(pt 208 112)(line_width 1))
+	)
 	(drawing
 		(rectangle (rect 16 16 208 128)(line_width 1))
 	)

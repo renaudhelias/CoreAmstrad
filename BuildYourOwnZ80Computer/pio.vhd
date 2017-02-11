@@ -265,6 +265,7 @@ begin
 					--CAUTION: Writing to PIO Control Register (with Bit7 set), automatically resets PIO Ports A,B,C to 00h each!
 					--(datasheet) The output registers for ports A and C are cleared to 0 each time data is written in the command register and the mode is changed, but the port B state is undefined
 					
+					--Programmer le PPI remet à 0 la valeur du port de donnée
 					--ports[PORT_A].write(0);
 					PAO_mem:="00000000";
 					--ports[PORT_B].write(0);

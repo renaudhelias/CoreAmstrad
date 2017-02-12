@@ -38,9 +38,9 @@ entity simple_GateArrayInterrupt is
 	--UM6845R 	UMC 		1 UM6845R_WriteMaskTable type 1 in JavaCPC <==
 	--MC6845 	Motorola	2 
 	--crtc_type:std_logic:='1'; -- '0' or '1' :p
-	M1_OFFSET:integer :=3;--3; -- from 0 to 3
-	SOUND_OFFSET:integer :=1; -- from 0 to 3
-	LATENCE_MEM_WR:integer:=1;
+	M1_OFFSET:integer :=3; -- from 0 to 3
+	SOUND_OFFSET:integer :=1; -- from 0 to 3 =(M1_OFFSET+2)%4
+	LATENCE_MEM_WR:integer:=1; -- 1 (http://www.cpcwiki.eu/forum/emulators/cpc-z80-timing/)
 	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
@@ -167,7 +167,6 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal interlace:std_logic:='0';
 	signal scanAdd:std_logic_vector(7 downto 0):=x"01";
 	signal halfR0:std_logic_vector(7 downto 0):="00100000"; --(RHTot+1)/2
-	signal nCLK4_1_special:std_logic;
 
 	-- check RVtot*RRmax=38*7=266>200 => 39*8=312 ! 38*8=304 304/52=5.84 ! 38*7=266=5.11
 	--       ? RVsyncpos*RRmax=30*7=210, 266-210=56 (NB_HSYNC_BY_INTERRUPT=52) 30*8=240 312-240=72
@@ -214,7 +213,7 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal vsync_int:std_logic;
 	signal hsync_int:std_logic;
 	
-	signal CLK4MHz : STD_LOGIC;
+	--signal CLK4MHz : STD_LOGIC;
 	--signal SOUND_CLK_i : STD_LOGIC;
 	signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
 	
@@ -269,9 +268,9 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal DATA_action : std_logic:='0'; -- if rising_edge then DATA just is filled.
 	signal DATA : std_logic_vector(7 downto 0):=(others=>'0');
 	
+	
+	signal compteur1MHz_signal : integer range 0 to 3:=0;
 begin
-
-nCLK4_1_special<=nCLK4_1 when ga_shunt='0' else not(nCLK4_1);
 
 ---- without scandoubler
 RED_out<= RED & "0000";
@@ -279,6 +278,98 @@ GREEN_out<= GREEN & "0000";
 BLUE_out<= BLUE & "0000";
 HSYNC_out<= HSYNC;
 VSYNC_out<= VSYNC;
+
+m1_process:process(reset,nCLK4_1) is
+	variable compteur1MHz:integer range 0 to 3:=0;
+			variable was_M1:boolean:=false;
+		variable waiting:boolean:=false;
+		variable waiting_MEMWR:integer range 0 to LATENCE_MEM_WR:=LATENCE_MEM_WR;
+		variable was_MEMWR:boolean:=false;
+
+begin
+if reset='1' then
+WAIT_MEM_n<='1';
+WAIT_n<='1';
+waiting:=false;
+was_MEMWR:=false;
+was_M1:=false;
+elsif falling_edge(nCLK4_1) then
+	compteur1MHz:=compteur1MHz_signal;
+	
+	
+			if not(was_MEMWR) and MEM_WR='1' then
+				waiting_MEMWR:=0;
+			end if;
+			
+			if (waiting_MEMWR<LATENCE_MEM_WR and ga_shunt='1') then
+				waiting_MEMWR:=waiting_MEMWR+1;
+				WAIT_MEM_n<='0';
+			else
+				WAIT_MEM_n<='1';
+				if waiting then
+					WAIT_n<='0';
+				else
+					WAIT_n<='1';
+				end if;
+
+				--compteur1MHz=0
+				--Z80 CLK4MHz
+				--GateArray nCLK4MHz (+0.5)
+				-- \=>M1 Wait_n
+				-- \=>i (+0.5)
+				--   \=>crtc_VSYNC
+				--   \=>SOUND_CLK
+				
+				-- si je met --compteur1MHz=3, j'ai HSYNC_width qui est bon dans le test CPCTEST de ArnoldEmu
+				
+				--z80_synchronise	
+				if (M1_n='0' and IO_ACK='0') and not(was_M1) and compteur1MHz=M1_OFFSET then
+					-- M---M---M---
+					-- 012301230123
+					-- cool
+					waiting:=false;
+					WAIT_n<='1';
+				elsif waiting and compteur1MHz=M1_OFFSET then
+					waiting:=false;
+					WAIT_n<='1';
+				elsif waiting then
+					-- quand on pose un wait, cet idiot il garde M1_n=0 le tour suivant
+				elsif (M1_n='0' and IO_ACK='0') and not(was_M1) then
+					-- M--M---M---
+					-- 012301230123
+					-- M--MW---M---
+					-- 012301230123
+					
+					-- M-M---M---
+					-- 012301230123
+					-- M-MWW---M---
+					-- 012301230123
+				
+					-- M----M---M---
+					-- 0123012301230123
+					-- M----MWWW---M---
+					-- 0123012301230123
+				
+					-- pas cool
+					WAIT_n<='0';
+					waiting:=true;
+				elsif compteur1MHz=M1_OFFSET and not(waiting) then
+					-- Some instructions has more than 4 Tstate -- validated
+				end if;
+			end if;
+			if M1_n='0' and IO_ACK='0' then
+				was_M1:=true;
+			else
+				was_M1:=false;
+			end if;
+			if MEM_WR='1' then
+				was_MEMWR:=true;
+			else
+				was_MEMWR:=false;
+			end if;
+	
+end if;
+end process m1_process;
 
 ctrcConfig_process:process(reset,nCLK4_1) is
 	variable reg_select32 : std_logic_vector(7 downto 0);
@@ -591,7 +682,7 @@ begin
 end process ctrcConfig_process;
 
 	-- DANGEROUS WARNING : CRTC PART WAS TESTED AND VALIDATED USING TESTBENCH
-simple_GateArray_process : process(reset,nCLK4_1_special) is
+simple_GateArray_process : process(reset,nCLK4_1) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
 	variable dispV:std_logic:='0';
@@ -622,10 +713,6 @@ simple_GateArray_process : process(reset,nCLK4_1_special) is
 		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem_delta:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 
-		variable was_M1_1:boolean:=false;
-		variable waiting:boolean:=false;
-		variable waiting_MEMWR:integer range 0 to LATENCE_MEM_WR:=LATENCE_MEM_WR;
-		variable was_MEMWR_0:boolean:=false;
 		
 		--(128*1024)/64 2*1024=2^11
 		variable zap_scan:boolean:=true; -- if in last round, has no blank signal, do not scan memory !
@@ -680,9 +767,10 @@ simple_GateArray_process : process(reset,nCLK4_1_special) is
 			bvram_D<=(others=>'0');
 			bvram_W<='0';
 	--it's Z80 time !
-		elsif rising_edge(nCLK4_1_special) then
+		elsif rising_edge(nCLK4_1) then
 		
 		compteur1MHz:=(compteur1MHz+1) mod 4;
+		compteur1MHz_signal<=compteur1MHz;
 		
 		if compteur1MHz=SOUND_OFFSET then
 			SOUND_CLK<='0';
@@ -731,7 +819,7 @@ bvram_W<='0';
 					etat_hsync:=DO_HSYNC;
 					--listener.hSyncStart();
 					etat_monitor_hsync(0):=DO_HSYNC;
-hsync_int<=DO_HSYNC; -- following javacpc,grimware and arnold
+--hsync_int<=DO_HSYNC; -- following javacpc,grimware and arnold
 				-- if (inHSync) {
 				elsif etat_hsync=DO_HSYNC then
 					--hSyncCount = (hSyncCount + 1) & 0x0f;
@@ -742,7 +830,7 @@ hsync_int<=DO_HSYNC; -- following javacpc,grimware and arnold
 						etat_hsync:=DO_NOTHING;
 						--listener.hSyncEnd();
 						etat_monitor_hsync(0):=DO_NOTHING;
-hsync_int<=DO_NOTHING;
+--hsync_int<=DO_NOTHING;
 					end if;
 				end if;
 				
@@ -772,15 +860,15 @@ hsync_int<=DO_NOTHING;
 						vSyncCount:= x"0"; -- pulse ?
 						etat_vsync:=DO_VSYNC;
 						etat_monitor_vsync(0):=DO_VSYNC;
-crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
-vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
+--crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
+--vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then -- and not(RVtotAdjust_do) then
 						vSyncCount:=vSyncCount+1;
 						if vSyncCount=RVwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
-crtc_VSYNC<=DO_NOTHING;
-vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+--crtc_VSYNC<=DO_NOTHING;
+--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 						else
 							if vSyncCount=2+4 then
 								etat_monitor_vsync:="0000";
@@ -1118,6 +1206,10 @@ end if;
 				bvram_D<=DATA_mem;
 				
 				crtc_R<=dispH and dispV and disp_VRAM;
+crtc_VSYNC<=etat_vsync;
+vsync_int<=etat_vsync;
+hsync_int<=etat_hsync;
+				
 			when 1=>
 				-- Daisy relaxing (zsdram.v)
 				bvram_A_mem_delta:=bvram_A_mem;
@@ -1126,6 +1218,8 @@ end if;
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
 				crtc_R<=dispH and dispV and disp_VRAM;
 				DATA_action<='0';
+				
+
 			when 2=>
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '0';
 				DATA_mem:=crtc_D;
@@ -1232,76 +1326,6 @@ end if;
 --does pass arnoldemu testbench "cpctest" http://cpctech.cpc-live.com/test.zip
 --crtc_VSYNC<=vsync_int;
 	
-			if was_MEMWR_0 and MEM_WR='1' then
-				waiting_MEMWR:=0;
-			end if;
-			
-			if waiting_MEMWR<LATENCE_MEM_WR then
-				waiting_MEMWR:=waiting_MEMWR+1;
-				WAIT_MEM_n<='0';
-			else
-				WAIT_MEM_n<='1';
-				if waiting then
-					WAIT_n<='0';
-				else
-					WAIT_n<='1';
-				end if;
-
-				--compteur1MHz=0
-				--Z80 CLK4MHz
-				--GateArray nCLK4MHz (+0.5)
-				-- \=>M1 Wait_n
-				-- \=>i (+0.5)
-				--   \=>crtc_VSYNC
-				--   \=>SOUND_CLK
-				
-				-- si je met --compteur1MHz=3, j'ai HSYNC_width qui est bon dans le test CPCTEST de ArnoldEmu
-				
-				--z80_synchronise	
-				if M1_n='0' and was_M1_1 and compteur1MHz=M1_OFFSET then
-					-- M---M---M---
-					-- 012301230123
-					-- cool
-					waiting:=false;
-					WAIT_n<='1';
-				elsif waiting and compteur1MHz=M1_OFFSET then
-					waiting:=false;
-					WAIT_n<='1';
-				elsif waiting then
-					-- quand on pose un wait, cet idiot il garde M1_n=0 le tour suivant
-				elsif M1_n='0' and was_M1_1 then
-					-- M--M---M---
-					-- 012301230123
-					-- M--MW---M---
-					-- 012301230123
-					
-					-- M-M---M---
-					-- 012301230123
-					-- M-MWW---M---
-					-- 012301230123
-				
-					-- M----M---M---
-					-- 0123012301230123
-					-- M----MWWW---M---
-					-- 0123012301230123
-				
-					-- pas cool
-					WAIT_n<='0';
-					waiting:=true;
-				elsif compteur1MHz=M1_OFFSET and not(waiting) then
-					-- Some instructions has more than 4 Tstate -- validated
-				end if;
-			end if;
-			if M1_n='1' then
-				was_M1_1:=true;
-			else
-				was_M1_1:=false;
-			end if;
-			if MEM_WR='0' then
-				was_MEMWR_0:=true;
-			else
-				was_MEMWR_0:=false;
-			end if;
 
 		end if;
 	end process simple_GateArray_process;

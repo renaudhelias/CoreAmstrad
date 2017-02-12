@@ -411,10 +411,10 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal MEM_WR        : std_logic;
    signal n_crtc_vsync  : std_logic;
    signal portC         : std_logic_vector (7 downto 0);
-   signal XLXN_38       : std_logic;
-   signal XLXN_58       : std_logic;
-   signal XLXN_75       : std_logic;
-   signal XLXN_86       : std_logic;
+   signal WR_n       : std_logic;
+   signal MREQ_n       : std_logic;
+   signal IORQ_n       : std_logic;
+   signal RD_n       : std_logic;
    signal XLXN_180      : std_logic;
 	signal MIX_DOUT : std_logic_vector (7 downto 0):=(others=>'1');
 	signal MIX_DOUT0 : std_logic_vector (7 downto 0):=(others=>'1');
@@ -430,21 +430,19 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_518      : std_logic_vector (7 downto 0);
    signal XLXN_519      : std_logic_vector (7 downto 0);
    signal XLXN_551      : std_logic;
-   signal XLXN_785      : std_logic;
-   signal XLXN_786      : std_logic;
-   signal XLXN_787      : std_logic;
+   signal WR      : std_logic;
+   signal MREQ      : std_logic;
+   signal RD      : std_logic;
    signal XLXN_802      : std_logic;
    signal WAIT_n      : std_logic;
    signal WAIT_MEM_n      : std_logic;
-   signal XLXN_814      : std_logic;
+   signal INT_n      : std_logic;
    signal XLXN_824      : std_logic;
    signal XLXN_826      : std_logic;
    signal XLXN_830      : std_logic;
    signal XLXN_835      : std_logic;
-   signal XLXN_845      : std_logic;
+   signal M1_n      : std_logic;
    signal XLXN_857      : std_logic_vector (1 downto 0);
-   --signal XLXN_868      : std_logic_vector (15 downto 0);
-   --signal XLXN_869      : std_logic_vector (7 downto 0);
    --signal XLXN_872      : std_logic;
    --signal XLXN_874      : std_logic_vector (15 downto 0);
    --signal XLXN_884      : std_logic;
@@ -714,7 +712,7 @@ do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
                 CLKEN=>'1',
                 CLK_n=>XLXN_802,
                 DI(7 downto 0)=>MIX_DOUT(7 downto 0),
-                INT_n=>XLXN_814,
+                INT_n=>INT_n,
                 NMI_n=>'1',
                 RESET_n=>RESET_n, -- '1'der time constraint test
                 WAIT_n=>'1',
@@ -722,12 +720,12 @@ do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
                 BUSAK_n=>open,
                 DO(7 downto 0)=>D(7 downto 0),
                 HALT_n=>open,
-                IORQ_n=>XLXN_75,
-                MREQ_n=>XLXN_58,
-                M1_n=>XLXN_845,
-                RD_n=>XLXN_86,
+                IORQ_n=>IORQ_n,
+                MREQ_n=>MREQ_n,
+                M1_n=>M1_n,
+                RD_n=>RD_n,
                 RFSH_n=>open,
-                WR_n=>XLXN_38);
+                WR_n=>WR_n);
 
 
    XLXI_568 : please_wait
@@ -743,7 +741,7 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
                 CLKEN=>'1',
                 CLK_n=>CLK4MHz, --XLXN_802,
                 DI(7 downto 0)=>MIX_DOUT(7 downto 0),
-                INT_n=>XLXN_814,
+                INT_n=>INT_n,
                 NMI_n=>'1',
                 RESET_n=>RESET_n, -- '1'der time constraint test
                 WAIT_n=>XLXN_830, --'1',
@@ -751,12 +749,12 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
                 BUSAK_n=>open,
                 DO(7 downto 0)=>D(7 downto 0),
                 HALT_n=>open,
-                IORQ_n=>XLXN_75,
-                MREQ_n=>XLXN_58,
-                M1_n=>XLXN_845,
-                RD_n=>XLXN_86,
+                IORQ_n=>IORQ_n,
+                MREQ_n=>MREQ_n,
+                M1_n=>M1_n,
+                RD_n=>RD_n,
                 RFSH_n=>open,
-                WR_n=>XLXN_38);
+                WR_n=>WR_n);
 
 
 --   XLXI_568 : please_wait
@@ -771,23 +769,23 @@ XLXN_830<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
 do_az80:if USE_AZ80 generate
 b2v_inst : z80_top_direct_n
 PORT MAP(nWAIT => XLXN_830,
-			nINT => XLXN_814,
+			nINT => INT_n,
 			nNMI => '1',
 			nRESET => RESET_n,
 			nBUSRQ=> '1',
 			CLK => CLK4MHz,
 			D => D_az80(7 downto 0), -- MIX_DOUT(7 downto 0)
-			nM1 =>XLXN_845,
-			nMREQ =>XLXN_58,
-			nIORQ =>XLXN_75,
-			nRD =>XLXN_86,
-			nWR =>XLXN_38,
+			nM1 =>M1_n,
+			nMREQ =>MREQ_n,
+			nIORQ =>IORQ_n,
+			nRD =>RD_n,
+			nWR =>WR_n,
 			nRFSH =>open,
 			nHALT =>open,
 			nBUSACK =>open,
 			A =>A(15 downto 0));
 	D(7 downto 0)<=D_az80;
-	D_az80<=(others=>'Z') when XLXN_86='1' else MIX_DOUT(7 downto 0);
+	D_az80<=(others=>'Z') when RD_n='1' else MIX_DOUT(7 downto 0);
 end generate;
 	
 	-- print inp(&0800)
@@ -820,7 +818,7 @@ end generate;
                 IO_REQ_W=>IO_WR,
                 MEM_WR=>MEM_WR,
                 MODE_select(1 downto 0)=>XLXN_857(1 downto 0),
-                M1_n=>XLXN_845,
+                M1_n=>M1_n,
                 nCLK4_1=>nCLK4MHz,
 					 CLK16MHz=>CLK16MHz,
                 reset=>XLXN_907,
@@ -879,7 +877,7 @@ end generate;
 	DO(7 downto 0)=>MIX_DOUT1(7 downto 0)
     );
 
-MEM_WR<=XLXN_785 and XLXN_786;
+MEM_WR<=WR and MREQ;
    
    XLXI_173 : AmstradRAMROM
       port map (A(15 downto 0)=>A(15 downto 0),
@@ -892,12 +890,12 @@ MEM_WR<=XLXN_785 and XLXN_786;
                 wr_z80=>MEM_WR,
                 ram_A(22 downto 0)=>xram_A(22 downto 0));
    
-XLXN_786<=not(XLXN_58);
-IO_REQ<=not(XLXN_75);
-IO_WR<=IO_REQ and XLXN_785;
-XLXN_787<=not(XLXN_86);
-MEM_RD<=XLXN_787 and XLXN_786;
-IO_RD<=XLXN_787 and IO_REQ;
+MREQ<=not(MREQ_n);
+IO_REQ<=not(IORQ_n);
+IO_WR<=IO_REQ and WR;
+RD<=not(RD_n);
+MEM_RD<=RD and MREQ;
+IO_RD<=RD and IO_REQ;
    
 	XLXI_348 : AmstradRAM
 port map ( reset=>XLXN_907,
@@ -928,7 +926,7 @@ port map ( reset=>XLXN_907,
 XLXN_180<=not(IO_RD);
 XLXN_904<=not(IO_WR);
 XLXN_907<=not(RESET_n);
-XLXN_814<=not(XLXN_835);
+INT_n<=not(XLXN_835);
    
    XLXI_344 : simple_DSK
       port map (A0=>A(0),
@@ -986,7 +984,7 @@ XLXN_814<=not(XLXN_835);
                 PWM_out=>audio_BC);
    
 XLXN_826<=XLXN_824 and IO_REQ;
-XLXN_824<=not(XLXN_845);
+XLXN_824<=not(M1_n);
    
    XLXI_494 : joykeyb_MUSER_amstrad_motherboard
       port map (CLK4MHz=>nCLK4MHz,
@@ -998,23 +996,9 @@ XLXN_824<=not(XLXN_845);
                 key_reset=>key_reset,
                 PPI_portA(7 downto 0)=>XLXN_518(7 downto 0));
    
-XLXN_785<=not(XLXN_38);
+WR<=not(WR_n);
    
    
---	
---	-- MIRROR VRAM
---   XLXI_589 : VRAM32Ko_Amstrad_MUSER_amstrad_motherboard
---      port map (vga_A(15 downto 0)=>--XLXN_868(15 downto 0),
---                vga_CLK=>nCLK4MHz, --CLK4MHz,
---                vram_A(15 downto 0)=>--XLXN_874(15 downto 0),
---                vram_CLK=>nCLK4MHz,
---                vram_D(7 downto 0)=>D(7 downto 0),
---                vram_W=>--XLXN_884,
---					 --lowerVRAM=>lowerVRAM,
---					 --upperVRAM=>upperVRAM,
---                vga_D(7 downto 0)=>--XLXN_869(7 downto 0));
---   
-----XLXN_884<=ram_W_DUMMY and XLXN_872;
    
 end BEHAVIORAL;
 

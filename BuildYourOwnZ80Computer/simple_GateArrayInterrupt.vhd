@@ -591,7 +591,7 @@ begin
 end process ctrcConfig_process;
 
 	-- DANGEROUS WARNING : CRTC PART WAS TESTED AND VALIDATED USING TESTBENCH
-simple_GateArray_process : process(reset,nCLK4_1) is
+simple_GateArray_process : process(reset,nCLK4_1_special) is
  
  variable compteur1MHz : integer range 0 to 3:=0;
 	variable dispV:std_logic:='0';
@@ -654,13 +654,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
-		
-		
-		variable RVTot_mem:std_logic_vector(7 downto 0):=x"00";
-		variable RRmax_mem:std_logic_vector(7 downto 0):=x"00";
-		
-		variable HDispAdd:std_logic_vector(7 downto 0):=x"00";
-		variable ADRESSE_maLine_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 	begin
 		if reset='1' then
 			hsync_int<=DO_NOTHING;
@@ -678,10 +671,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			
 			ADRESSE_maStore_mem:=(others=>'0');
 			ADRESSE_MAcurrent_mem:=(others=>'0');
-			ADRESSE_maLine_mem:=(others=>'0');
-			HDispAdd:=x"00";
-			RVTot_mem:=x"00";
-			RRmax_mem:=x"00";
 			LineCounter:=x"00";
 			RasterCounter:=x"00";
 			hCC:=x"00";
@@ -724,20 +713,20 @@ bvram_W<='0';
 				-- http://cpctech.cpc-live.com/docs/hd6845s/hd6845sp.htm 0=>16
 				-- http://cpctech.cpc-live.com/docs/um6845r/um6845r.htm 0=>???
 				-- http://cpctech.cpc-live.com/docs/mc6845/mc6845.htm 0=>ignore
-				if (frame_oddEven='1' and hCC = halfR0)
-				or (frame_oddEven='0' and hCC=RHsyncpos) then --and (CRTC_TYPE='0' or RHwidth/=x"0") then
+				if ((frame_oddEven='1' and hCC = halfR0)
+				or (frame_oddEven='0' and hCC=RHsyncpos)) and (CRTC_TYPE='1' or RHwidth/=x"0") then -- and etat_hsync=DO_NOTHING
 					--hSyncCount = 0;
 					hSyncCount:= x"0";
 					--if (hDisp && CRTCType == 1 && hSyncWidth == (reg[3] & 0x0f)) {
-					if dispH_skew0='1' and crtc_type='1' then
-						--vDisp = reg[6] != 0;
-						if RVDisp=0 then
-							dispV:='0';
-						else
-							dispV:='1';
-						end if;
-						hSyncCount:= x"1"; -- Prehistoric live barre, at right, if x"0" : a pixel glinch.
-					end if;
+					--if dispH_skew0='1' and crtc_type='1' then
+					--	--vDisp = reg[6] != 0;
+					--	if RVDisp=0 then
+					--		dispV:='0';
+					--	else
+					--		dispV:='1';
+					--	end if;
+					--	hSyncCount:= x"1"; -- Prehistoric live barre, at right, if x"0" : a pixel glinch.
+					--end if;
 					--inHSync = true;
 					etat_hsync:=DO_HSYNC;
 					--listener.hSyncStart();
@@ -768,18 +757,25 @@ hsync_int<=DO_NOTHING;
 					-- on CRTC type 0 and 1, Vsync can be triggered on any line of the char. -- WakeUp! demo fail in scrolling down the girl
 					--if (LineCounter == reg[7] && !inVSync) {
 					--if RasterCounter=0 and etat_vsync=DO_NOTHING and LineCounter=RVsyncpos then -- crtc 0 et 1 -- WakeUp! slow down
-					if RasterCounter=0 and LineCounter=RVsyncpos then
+					--if RasterCounter=0 and LineCounter=RVsyncpos then
+					--on CRTC type 0 and 1, Vsync can be triggered on any line of the char.
+					--if LineCounter=RVsyncpos and etat_vsync=DO_NOTHING then -- (too clever for a CRTC, isn't it ? "do offset if problems")
+					--checkVSync();
+					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
+					--WakeUp!
+					if RasterCounter=0 and LineCounter=RVsyncpos then -- and etat_vsync=DO_NOTHING then
 					--if LineCounter=RVsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
 						-- Batman city towers does like RasterCounter=0 filter here...
 						-- CRTC datasheet : if 0000 is programmed for VSync, then 16 raster period is generated.
-						vSyncCount:= x"1"; -- pulse ?
+						vSyncCount:= x"0"; -- pulse ?
 						etat_vsync:=DO_VSYNC;
 						etat_monitor_vsync(0):=DO_VSYNC;
 crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
 vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then -- and not(RVtotAdjust_do) then
+						vSyncCount:=vSyncCount+1;
 						if vSyncCount=RVwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
@@ -789,7 +785,6 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 							if vSyncCount=2+4 then
 								etat_monitor_vsync:="0000";
 							end if;
-							vSyncCount:=vSyncCount+1;
 						end if;
 					end if;
 				end if;
@@ -803,12 +798,8 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 				elsif (crtc_type='1' and hCC = RHdisp) or (crtc_type='0' and hCC=RHdisp+Skew) then
 					dispH_skew0:='0';
 					
-						if crtc_type='0' then
-							--CRTC_InternalState.HDispAdd = CRTCRegisters[1];
-							HDispAdd:=RHDisp;
-						end if;
 						--if ((getRA() | interlaceVideo) == maxRaster) {
-						if (RasterCounter or "0000000" & interlaceVideo)=RRMax_mem then
+						if (RasterCounter or "0000000" & interlaceVideo)=RRMax then
 							if crtc_type='1' then
 								--maStore = (maStore + reg[1]) & 0x3fff;
 								--0x3fff est ok : ADRESSE_maStore_mem(13:0)
@@ -816,7 +807,7 @@ vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering the
 							else
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
 								--CRTC_InternalState.MAStore = CRTC_InternalState.MALine + CRTC_InternalState.HCount;
-								ADRESSE_maStore_mem:=ADRESSE_maLine_mem + RHDisp + Skew;
+								ADRESSE_maStore_mem:=ADRESSE_maStore_mem + RHDisp + Skew;
 							end if;
 						end if;
 
@@ -1019,12 +1010,6 @@ if dispH='0' then
 end if;
 
 				--cycle()
-				--if LineCounter = 0 and crtc_type='1' then
-				if crtc_type='1' then
-					--Validation des registres 9 et 4 après reprogrammation
-					RRMax_mem:=RRMax;
-					RVTot_mem:=RVTot;
-				end if;
 -- The CRTC component is separated from Gatearray component, so does we have some late ?
 -- Not certain, as this old component was really old ones : using state and no rising_egde...
 				-- if (hCC == reg[0]) {
@@ -1038,7 +1023,7 @@ end if;
 					--}
 					--if (vtAdj > 0 && --vtAdj == 0) newFrame();
 					-- else if ((ra | interlaceVideo) == maxRaster) {
-					if ((RasterCounter or "0000000" & interlaceVideo)=RRMax_mem and LineCounter=RVTot_mem and RVtotAdjust=0 and not(RVtotAdjust_do)) -- tot-1 ok ok
+					if ((RasterCounter or "0000000" & interlaceVideo)=RRMax and LineCounter=RVTot and RVtotAdjust=0 and not(RVtotAdjust_do)) -- tot-1 ok ok
 						or (RVtotAdjust_do and RVtotAdjust_mem=RVtotAdjust) then
 						-- on a fini RVtotAdjust (ou sinon on a eu un RVtot fini sans RVtotAdjust)
 							RVtotAdjust_do:=false;
@@ -1058,75 +1043,39 @@ end if;
 							--maCurrent = maStore = maRegister;
 							--Validation de l'offset après reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-							--Validation des registres 9 et 4 après reprogrammation
-							if LineCounter=RVTot_mem then
-								RVTot_mem:=RVTot;
-							end if;
-							if (RasterCounter or "0000000" & interlaceVideo)=RRMax_mem then
-								RRMax_mem:=RRMax;
-							end if;
 							
 							LineCounter:=(others=>'0');
-							if crtc_type='0' then
-								HDispAdd:=x"00";
-								ADRESSE_maLine_mem:=ADRESSE_maStore_mem;
-								ADRESSE_MAcurrent_mem:=ADRESSE_maLine_mem;
-							else
-								ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-							end if;
+							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 							if interlace = '0' then
 								frame_oddEven:='0';
 							else
 								frame_oddEven:=not(frame_oddEven);
 							end if;
 							-- RVtot vs RVtotAdjust ? RVtotAdjust ne serait-il pas dynamique par hazard ? NON selon JavaCPC c'est meme le contraire
-					elsif (RasterCounter or "0000000" & interlaceVideo)=RRMax_mem then
-						RRMax_mem:=RRMax;
+					elsif (RasterCounter or "0000000" & interlaceVideo)=RRMax then
 						--RasterCounter = (frame & interlaceVideo) & 0x07;
 						RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0');
 						-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;
-						if LineCounter=RVTot_mem and not(RVtotAdjust_do) then
+						if LineCounter=RVTot and not(RVtotAdjust_do) then
 							--if (interlace && frame == 0) {
 							--	vtAdj++;
 							--}
 							RVtotAdjust_mem:=x"01";
 							RVtotAdjust_do:=true;
-							RVTot_mem:=RVTot;
 						elsif RVtotAdjust_do then
 							RVtotAdjust_mem:=RVtotAdjust_mem+1;
 						end if;
 						-- Linear Address Generator
 						-- Nhd+0
-						if crtc_type='0' then
-						
---						if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd)             
---            {
---                    CRTC_ClearFlag(CRTC_HDISP_FLAG);
---					
---                    CRTC_InternalState.HDispAdd = CRTCRegisters[1];
---
---                    /* if max raster matches, store current MA */
---                    if (CRTC_InternalState.CRTC_Flags & CRTC_MR_FLAG)
---                    {
---                            CRTC_InternalState.MAStore = CRTC_InternalState.MALine + CRTC_InternalState.HCount;
---                    }
-						
-							--if (CRTC_InternalState.CRTC_Flags & CRTC_MR_FLAG)
-							--CRTC_InternalState.MALine +=CRTC_InternalState.HDispAdd;
-							
-							--CRTC_InternalState.MAStore = CRTC_InternalState.MALine + CRTC_InternalState.HCount;
-							
-							
-							--CRTC_InternalState.MAStore = CRTC_InternalState.MALine + CRTC_InternalState.HCount;
-							--CRTC_InternalState.MALine +=CRTC_InternalState.HDispAdd;
-							ADRESSE_maLine_mem:=ADRESSE_maLine_mem+HDispAdd;
-						else
-							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-						end if;
+						--if ((getRA() | interlaceVideo) == maxRaster) {
+						--	maStore = (maStore + reg[1]) & 0x3fff;
+						--}
+						--maStore = (maStore + reg[1]) & 0x3fff;
+						--0x3fff est ok : ADRESSE_maStore_mem(13:0)
+
 						--hDispStart()
 						--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancé lors vDisp dans JavaCPC
-						
-						
+						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 						--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un RRmax atteind)
 						--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un RRmax atteind)
 						if crtc_type='1' or not(RVtotAdjust_do) then
@@ -1147,26 +1096,18 @@ end if;
 							--Validation de l'offset après reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 						end if;
-						if crtc_type='1' then
-							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-						end if;
 						--hDispStart()
 						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancé lors vDisp dans JavaCPC
-						--
+						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 					end if;
 					
 				else
-					
 					-- hCCMask : so var is size 256 and mod is 128...
 					--protected int hCCMask = 0x7f;
 					--hCC = (hCC + 1) & hCCMask;
 					hCC:=(hCC+1) and x"7F";
 					--maCurrent = (maStore + hCC) & 0x3fff;
-					if crtc_type='0' then
-						ADRESSE_MAcurrent_mem:=ADRESSE_maLine_mem+hCC;
-					else
-						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem+hCC; -- WakeUp color raster while girl is here. Better if this code is here.
-					end if;
+					ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem+hCC; -- WakeUp color raster while girl is here. Better if this code is here.
 				end if;
 
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '1';
@@ -1370,10 +1311,14 @@ end if;
 		variable InterruptSyncCount:integer range 0 to 2:=2;
 		variable etat_hsync_old : STD_LOGIC:=DO_NOTHING;
 		variable etat_vsync_old : STD_LOGIC:=DO_NOTHING;
+		variable IO_ACK_old : STD_LOGIC:='0';
 	begin
 		if reset='1' then
 			InterruptLineCount:=(others=>'0');
 			InterruptSyncCount:=2;
+			IO_ACK_old:='0';
+			etat_hsync_old:=DO_NOTHING;
+			etat_vsync_old:=DO_NOTHING;
 			int<='0';
 			--crtc_VSYNC<=DO_NOTHING;
 			
@@ -1386,7 +1331,7 @@ end if;
 		elsif rising_edge(nCLK4_1) then
 
 
-		if IO_ACK='1' then
+		if IO_ACK='1' and IO_ACK_old='0' then
 --the Gate Array will reset bit5 of the counter
 --Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
 -- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
@@ -1397,7 +1342,7 @@ end if;
 -- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
 			int<='0'; -- following JavaCPC 2015
 		end if;
-		
+		IO_ACK_old:=IO_ACK;
 		
 		
 		-- InterruptLineCount begin

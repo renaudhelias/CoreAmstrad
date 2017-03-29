@@ -74,13 +74,13 @@ entity FPGAmstrad_bootloader_sd is
 			 
 			 -- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
+			  megashark_doGOTO : in std_logic_vector(1 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
-			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
+			  megashark_A : in std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic_vector(2 downto 0);
-			  megashark_doWRITE : in std_logic;
+			  megashark_doREAD : in std_logic_vector(3 downto 0);
+			  megashark_doWRITE : in std_logic_vector(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
 			  megashark_face : in std_logic;
@@ -175,13 +175,13 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 				 init_RAM: out std_logic;
 -- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
+			  megashark_doGOTO : in std_logic_vector(1 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
-			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
+			  megashark_A : in std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic_vector(2 downto 0);
-			  megashark_doWRITE : in std_logic;
+			  megashark_doREAD : in std_logic_vector(3 downto 0);
+			  megashark_doWRITE : in std_logic_vector(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
 			  megashark_face : in std_logic;

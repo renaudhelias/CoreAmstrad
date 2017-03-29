@@ -56,9 +56,9 @@ module osd (
 	// VGA signals going to video connector
 	output reg [5:0]  	red_out,
 	output reg [5:0]  	green_out,
-	output reg [5:0]  	blue_out,
-	output			hs_out,
-	output			vs_out
+	output reg [5:0]  	blue_out
+	//output			hs_out,
+	//output			vs_out
 );
 
 parameter OSD_X_OFFSET = 10'd0;
@@ -388,7 +388,7 @@ always @(posedge pclk) begin
 	//end
 end
 
-assign hs_out = hs_in;
-assign vs_out = vs_in;
+//assign hs_out = hs_in;
+//assign vs_out = vs_in;
 
 endmodule

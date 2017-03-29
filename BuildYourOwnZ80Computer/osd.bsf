@@ -107,20 +107,6 @@ applicable agreement for further details.
 		(text "blue_out[5..0]" (rect 142 59 195 71)(font "Arial" ))
 		(line (pt 216 64)(pt 200 64)(line_width 3))
 	)
-	(port
-		(pt 216 80)
-		(output)
-		(text "hs_out" (rect 0 0 27 12)(font "Arial" ))
-		(text "hs_out" (rect 168 75 195 87)(font "Arial" ))
-		(line (pt 216 80)(pt 200 80)(line_width 1))
-	)
-	(port
-		(pt 216 96)
-		(output)
-		(text "vs_out" (rect 0 0 28 12)(font "Arial" ))
-		(text "vs_out" (rect 167 91 195 103)(font "Arial" ))
-		(line (pt 216 96)(pt 200 96)(line_width 1))
-	)
 	(parameter
 		"OSD_X_OFFSET"
 		"0000000000"

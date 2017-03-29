@@ -39,8 +39,10 @@ entity MIST_SCART is
 			  green_scanlines : in std_logic_vector (1 downto 0);
   			  pclk_in : in std_logic;
 			  pclk_TV_in : in std_logic;
-			  pclk_out : out std_logic
-
+			  pclk_out : out std_logic;
+			  
+			  HSYNC_XOR_out : out STD_logic;
+			  VSYNC_XOR_out : out STD_logic
 			  );
 end MIST_SCART;
 
@@ -287,13 +289,16 @@ begin
 		end if;
 end process green_color_tv;
 
+--assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
+--assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
 HSYNC_out<=canal_hsync when mode='0' else canal_hsyncTV;
 VSYNC_out<=canal_vsync when mode='0' else canal_vsyncTV;
+HSYNC_XOR_out<=canal_hsync when mode='0' else not(canal_hsyncTV xor canal_vsyncTV);
+VSYNC_XOR_out<=canal_vsync when mode='0' else '1';
 --pclk_out<=canal_clk when mode='0' else canal_clkTV;
 --HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
 --VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
 pclk_out<=pclk_in when mode='0' else pclk_TV_in;
-
 
 end Behavioral;
 

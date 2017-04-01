@@ -51,7 +51,7 @@ entity simple_DSK is
 			  is_dskReady : in std_logic_vector(1 downto 0);
 			  
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0);
-			  megashark_doGOTO : out STD_LOGIC_VECTOR(1 downto 0); -- not a W/R operation finally
+			  megashark_doGOTO : out STD_LOGIC_VECTOR(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection : 512B block
 			  megashark_Din : in std_logic_vector(7 downto 0);
@@ -94,7 +94,7 @@ architecture Behavioral of simple_DSK is
 	constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
 	constant ST1_NOT_WRITABLE : std_logic_vector(7 downto 0):=x"02";
 	constant ST1_NO_DATA : std_logic_vector(7 downto 0):=x"04";
-	--constant ST1_OVERRUN : std_logic_vector(7 downto 0):=x"10"; -- protected dsk
+	constant ST1_OVERRUN : std_logic_vector(7 downto 0):=x"10"; -- protected dsk
 	constant ST1_DATA_ERROR : std_logic_vector(7 downto 0):=x"20"; -- protected dsk
 	constant ST1_END_CYL : std_logic_vector(7 downto 0):=x"80";
 	
@@ -157,6 +157,7 @@ architecture Behavioral of simple_DSK is
 	signal memshark_chrn:STD_LOGIC_VECTOR(4*8-1 downto 0):=(others=>'0');
 	signal memshark_doGOTO:boolean:=false;
 	signal memshark_doGOTO_T:boolean:=false;
+	signal memshark_doGOTO_R:boolean:=false;
 	signal memshark_doREAD:boolean:=false;
 	signal memshark_doREAD_DEL:boolean:=false;
 	signal memshark_doREAD_SK:boolean:=false;
@@ -179,7 +180,7 @@ architecture Behavioral of simple_DSK is
 	signal block_W_megashark:std_ulogic:='0';
 	signal block_W_cortex:std_ulogic:='0';
 
-	signal megashark_doGOTO_s:std_logic_vector(1 downto 0):="00";
+	signal megashark_doGOTO_s:std_logic_vector(2 downto 0):="000";
 	signal megashark_doREAD_s:std_logic_vector(3 downto 0):="0000";
 	signal megashark_doWRITE_s:std_logic_vector(2 downto 0):="000";
 	
@@ -260,7 +261,7 @@ megashark:process(reset,nCLK4_1)
 	variable block_W_megashark_mem:std_logic:='0';
 	variable megashark_A_mem:std_logic_vector(megashark_A'range):=(others=>'0');
 	variable megashark_Dout_mem:std_logic_vector(megashark_Dout'range):=(others=>'0');
-	variable doGOTO_mem:std_logic_vector(1 downto 0):="00";
+	variable doGOTO_mem:std_logic_vector(2 downto 0):="000";
 	variable doREAD_mem:std_logic_vector(3 downto 0):="0000";
 	variable doWRITE_mem:std_logic_vector(2 downto 0):="000";
 begin
@@ -276,9 +277,13 @@ begin
 		if memshark_doGOTO then
 			-- GOTO CHRN : here R is current_sector (0 or +)
 			memshark_done<=false;
-			doGOTO_mem:="01";
+			doGOTO_mem:="001";
 			if memshark_doGOTO_T then
 				doGOTO_mem(1):='1';
+			end if;
+			if memshark_doGOTO_R then
+				doGOTO_mem(1):='1';
+				doGOTO_mem(2):='1';
 			end if;
 			memshark_step:=0;
 		elsif memshark_doREAD then
@@ -307,7 +312,7 @@ begin
 			memshark_step:=6;
 		end if;
 		
-		megashark_doGOTO_s<="00";
+		megashark_doGOTO_s<="000";
 		megashark_doREAD_s<="0000";
 		megashark_doWRITE_s<="000";
 		
@@ -533,7 +538,15 @@ cortex:process(reset,nCLK4_1)
 	
 	variable is_seeking_FACE_A:boolean:=false;
 	variable is_seeking_FACE_B:boolean:=false;
+	variable is_recalibrating_FACE_A:boolean:=false;
+	variable is_recalibrating_FACE_B:boolean:=false;
+	
 	variable is_issue:boolean:=false; -- not is_seeking but bad command result
+	variable is_overrun:boolean:=false;
+	
+	variable motors:std_logic:='0';
+	
+	variable gremlin:integer range 0 to 127:=0; --When sector data is read, a byte comes every 32us. => overrun
 begin
 
 	if reset='1' then
@@ -545,6 +558,10 @@ begin
 		rcount:=0;
 		action:=ACTION_POLL;
 		data:=(others=>'0');
+		is_issue:=false;
+		is_overrun:=false;
+		motors:='0';
+		gremlin:=0;
 		
 		do_update:=false;
 		phase<=PHASE_ATTENTE_COMMANDE;
@@ -553,6 +570,7 @@ begin
 	
 			memshark_doGOTO<=false;
 			memshark_doGOTO_T<=false;
+			memshark_doGOTO_R<=false;
 			memshark_doREAD<=false;
 			memshark_doREAD_DEL<=false;
 			memshark_doREAD_SK<=false;
@@ -642,6 +660,13 @@ begin
 				ST3:=ST3_READY or actualDrive;
 			end if;
 			
+			if is_issue then
+				ST0:=ST0 or ST0_INVALID;
+			elsif is_overrun then
+				ST0:=ST0 or ST0_ABNORMAL;
+				ST1:=ST1 or ST1_OVERRUN;
+			end if;
+			
 			if megashark_INFO_2SIDES='1' then
 				-- JavaCPC : 2T is at '1' if it is a double sided dsk...
 				-- Batman in one disk not running correctly
@@ -655,8 +680,28 @@ begin
 			--	ST0:=ST0 or ST0_NOT_READY;
 			--end if;
 				
-	
-			if ((wasIO_RD='0' and IO_RD='1') or (wasIO_WR='0' and IO_WR='1')) and A10_A8_A7=b"010"  then
+			--When sector data is read, a byte comes every 32us. => overrun
+			if (phase=PHASE_EXECUTION_WRITE or phase=PHASE_EXECUTION_READ) then
+				gremlin:=gremlin+1;
+				if gremlin=127 then
+					-- FDCTEST.ASM 45
+					--HELL (gremlin and (PHASE_EXECUTION_WRITE or PHASE_EXECUTION_READ))
+					rcount:=7;
+					is_overrun:=true;
+					--is_issue:=true;
+					exec_restant:=0;
+					exec_restant_write:=0;
+					if etat_wait then
+						phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
+					else
+						phase<=PHASE_RESULT;
+					end if;
+				end if;
+			end if;
+			if A10_A8_A7=b"000" then
+				-- I am concerned (motors)
+				do_update:=true;
+			elsif ((wasIO_RD='0' and IO_RD='1') or (wasIO_WR='0' and IO_WR='1')) and A10_A8_A7=b"010"  then
 				-- I am concerned
 				do_update:=true;
 			elsif ((wasIO_RD='1' and IO_RD='1') or (wasIO_WR='1' and IO_WR='1')) and A10_A8_A7=b"010"  then
@@ -729,6 +774,7 @@ begin
 						D_result<=status_mem;
 					elsif (IO_RD='1' and A10_A8_A7=b"010" and A0='1') then
 						-- read data
+						gremlin:=0;
 						if phase=PHASE_EXECUTION_READ then
 							if exec_restant>0 then
 								exec_restant:=exec_restant-1;
@@ -799,16 +845,86 @@ begin
 									end if;
 								end if;
 								
-							else
+							--else
 								-- HELL
+--								exec_restant:=0;
+--								exec_restant_write:=0;
+--								if etat_wait then
+--									phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
+--								else
+--									phase<=PHASE_RESULT;
+--								end if;
+--								--is_issue:=true;
+--								is_overrun:=true;
+--								if rcount=0 then
+--									rcount:=1;
+--									result(0):=ST0 or ST0_ABNORMAL;
+--								end if;
 							end if;
 							
 							
 							
 							
 						
-						elsif phase=PHASE_RESULT then
-							if action=ACTION_READ and rcount=7 then
+						else
+							if phase/=PHASE_RESULT then
+								-- HELL (PHASE_EXECUTION_WRITE)
+								if phase=PHASE_EXECUTION_WRITE then
+									rcount:=7;
+									is_overrun:=true;
+									ST0 := ST0 or ST0_ABNORMAL;
+									ST1 := ST1 or ST1_OVERRUN;
+								else
+									is_issue:=true;
+								end if;
+								exec_restant:=0;
+								exec_restant_write:=0;
+								if etat_wait then
+									phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
+								else
+									phase<=PHASE_RESULT;
+								end if;
+								
+								if rcount=0 then
+									rcount:=1;
+									ST0 := ST0 or ST0_INVALID;
+									result(0):=ST0 or ST0_INVALID;
+								end if;
+							end if;
+							
+							if action=ACTION_SCAN and rcount=7 then
+								action:=ACTION_POLL;
+								chrn:=getCHRN(megashark_CHRNresult);
+								result(6):=ST0; -- ST0
+								if (ST0 and ST0_ABNORMAL)=ST0_ABNORMAL then
+									result(5):=ST1;
+								else
+									result(5):=ST1 or ST1_END_CYL; -- ST1
+								end if;
+								if compare_OK then
+									result(4):=ST2 or ST2_SCAN_EQUAL_HIT; -- ST2
+								else
+									result(4):=ST2 or ST2_SCAN_NOT_SATISFIED; -- ST2
+								end if;
+								result(3):=chrn(3); --params(6); -- C
+								result(2):=chrn(2); --params(5); -- H
+								result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
+								result(0):=chrn(0); -- N (BLOCK_SIZE)
+							elsif action=ACTION_WRITE and rcount=7 then
+								action:=ACTION_POLL;
+								chrn:=getCHRN(megashark_CHRNresult);
+								result(6):=ST0; -- ST0
+								if (ST0 and ST0_ABNORMAL)=ST0_ABNORMAL then
+									result(5):=ST1;
+								else
+									result(5):=ST1 or ST1_END_CYL; -- ST1
+								end if;
+								result(4):=ST2; -- ST2
+								result(3):=chrn(3); --params(6); -- C
+								result(2):=chrn(2); --params(5); -- H
+								result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
+								result(0):=chrn(0); -- N (BLOCK_SIZE)
+							elsif action=ACTION_READ and rcount=7 then
 								action:=ACTION_POLL;
 								chrn:=getCHRN(megashark_CHRNresult);
 								result(6):=ST0; -- ST0
@@ -853,26 +969,38 @@ begin
 							elsif action=ETAT_SENSE_INTERRUPT_STATUS  and rcount=3 then
 								action:=ACTION_POLL;
 								--chrn:=getCHRN(megashark_CHRNresult); -- result of a previous seek/recalibrate
-								if is_issue then
+								if is_issue or is_overrun then
 									 -- generaly just after a failing "read command"
 									is_issue:=false;
+									is_overrun:=false;
 									is_seeking_FACE_A:=false;
 									is_seeking_FACE_B:=false;
+									is_recalibrating_FACE_A:=false;
+									is_recalibrating_FACE_B:=false;
 									-- JavaCPC result[rindex = 0] = ST0_INVALID;
 									result(0):=ST0; -- or ST0_INVALID;
 									-- JavaCPC rcount = 1;
 									rcount:=1;
 								elsif actualDrive(1 downto 0)="00" and is_seeking_FACE_A then
 									rcount:=2;
-									result(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									if is_recalibrating_FACE_A and chrn(3)/=x"00" then
+										result(1):=ST0 or ST0_EQUIP_CHECK; -- recalibrate => seek 77 not returned at track 0 !
+									else
+										result(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									end if;
 									result(0):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_A:=false;
+									is_recalibrating_FACE_A:=false;
 								elsif actualDrive(1 downto 0)="01" and is_seeking_FACE_B then
 									rcount:=2;
-									result(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
-									--end if;
+									if is_recalibrating_FACE_B and chrn(3)/=x"00" then
+										result(1):=ST0 or ST0_EQUIP_CHECK; -- recalibrate => seek 77 not returned at track 0 !
+									else
+										result(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+									end if;
 									result(0):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_B:=false;
+									is_recalibrating_FACE_B:=false;
 								else
 									-- Cpc Aventure : "Please insert disk 2" message ?
 									rcount:=1;
@@ -903,11 +1031,27 @@ begin
 							
 							
 					
+					elsif (IO_WR='1' and A10_A8_A7=b"000" and A0='0') then
+						motors:=D_command(0);
+						if motors='0' and (phase=PHASE_EXECUTION_WRITE or phase=PHASE_AFTER_EXECUTION_WRITE or phase=PHASE_WAIT_EXECUTION_WRITE) then
+							-- FDCTEST.ASM 40
+							--HELL (!motors and PHASE_EXECUTION_WRITE ?)
+							rcount:=7;
+							--is_overrun:=true;
+							is_issue:=true;
+							exec_restant:=0;
+							exec_restant_write:=0;
+							if etat_wait then
+								phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
+							else
+								phase<=PHASE_RESULT;
+							end if;
+						end if;
 					elsif (IO_WR='1' and A10_A8_A7=b"010" and A0='0') then
 						-- HELL
 					elsif (IO_WR='1' and A10_A8_A7=b"010" and A0='1') then
 						-- write data
-						
+						gremlin:=0;
 						if phase=PHASE_EXECUTION_WRITE then
 							if exec_restant_write>0 then
 								exec_restant_write:=exec_restant_write-1;
@@ -947,13 +1091,13 @@ begin
 										etat_wait:=true;
 									end if;
 									rcount:=7;
-									result(6):=ST0; -- ST0
-									result(5):=ST1 or ST1_END_CYL; -- ST1
-									result(4):=ST2; -- ST2
-									result(3):=params(6); -- C
-									result(2):=params(5); -- H
-									result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
-									result(0):=chrn(0); -- N (BLOCK_SIZE)
+--									result(6):=ST0; -- ST0
+--									result(5):=ST1 or ST1_END_CYL; -- ST1
+--									result(4):=ST2; -- ST2
+--									result(3):=params(6); -- C
+--									result(2):=params(5); -- H
+--									result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
+--									result(0):=chrn(0); -- N (BLOCK_SIZE)
 								end if;
 							elsif action=ACTION_SCAN then
 								--if current_byte>=SECTOR_SIZES(chrn(3)) then
@@ -996,17 +1140,17 @@ begin
 											phase<=PHASE_RESULT;
 										end if;
 										rcount:=7;
-										result(6):=ST0; -- ST0
-										result(5):=ST1 or ST1_END_CYL; -- ST1
-										if compare_OK then
-											result(4):=ST2 or ST2_SCAN_EQUAL_HIT; -- ST2
-										else
-											result(4):=ST2 or ST2_SCAN_NOT_SATISFIED; -- ST2
-										end if;
-										result(3):=params(6); -- C
-										result(2):=params(5); -- H
-										result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
-										result(0):=chrn(0); -- N (BLOCK_SIZE)
+--										result(6):=ST0; -- ST0
+--										result(5):=ST1 or ST1_END_CYL; -- ST1
+--										if compare_OK then
+--											result(4):=ST2 or ST2_SCAN_EQUAL_HIT; -- ST2
+--										else
+--											result(4):=ST2 or ST2_SCAN_NOT_SATISFIED; -- ST2
+--										end if;
+--										result(3):=params(6); -- C
+--										result(2):=params(5); -- H
+--										result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
+--										result(0):=chrn(0); -- N (BLOCK_SIZE)
 									else
 										BOT:=BOT+x"01";
 										chrn(1):=BOT;
@@ -1047,6 +1191,7 @@ begin
 							else
 								--back to normal state machine
 								is_issue:=false;
+								is_overrun:=false;
 							end if;
 							
 							-- result is facultative.
@@ -1186,13 +1331,15 @@ begin
 										-- let's go
 										if actualDrive(1 downto 0)="00" then
 											is_seeking_FACE_A:=true;
+											is_recalibrating_FACE_A:=true;
 										elsif actualDrive(1 downto 0)="01" then
 											is_seeking_FACE_B:=true;
+											is_recalibrating_FACE_B:=true;
 										end if;
 										actualDrive(2):='0';
 										memshark_chrn<=x"00000002";
 										memshark_doGOTO<=true;
-										memshark_doGOTO_T<=true;
+										memshark_doGOTO_R<=true;
 										etat_wait := true;
 										etat_zap := false;
 									else
@@ -1335,6 +1482,10 @@ begin
 									else
 										is_EOT_DTL:=true;
 										EOT_DTL:=conv_integer(params(0));
+										if EOT_DTL=0 then
+											-- FDCTEST.ASM 5B
+											EOT_DTL:=256;
+										end if;
 										if BOT=EOT then
 											exec_restant:=EOT_DTL; -- DTL
 											--memshark_DTL<=EOT_DTL;
@@ -1378,8 +1529,10 @@ begin
 										-- let's go
 										if actualDrive(1 downto 0)="00" then
 											is_seeking_FACE_A:=true;
+											is_recalibrating_FACE_A:=false;
 										elsif actualDrive(1 downto 0)="01" then
 											is_seeking_FACE_B:=true;
+											is_recalibrating_FACE_B:=false;
 										end if;
 										chrn(3):=params(0); -- C = param NCN
 										chrn(2):="0000000" & actualDrive(2); -- H
@@ -1483,6 +1636,25 @@ begin
 										phase<=PHASE_ATTENTE_COMMANDE;
 									end if;
 								end if;
+							end if;
+						else
+							--HELL (PHASE_EXECUTION_WRITE ?)
+							if phase=PHASE_EXECUTION_WRITE then
+								rcount:=7;
+								is_overrun:=true;
+							else
+								is_issue:=true;
+							end if;
+							exec_restant:=0;
+							exec_restant_write:=0;
+							if etat_wait then
+								phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
+							else
+								phase<=PHASE_RESULT;
+							end if;
+							if rcount=0 then
+								rcount:=1;
+								result(0):=ST0 or ST0_INVALID;
 							end if;
 						end if;
 					end if;

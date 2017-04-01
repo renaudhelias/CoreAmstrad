@@ -71,7 +71,7 @@ entity SDRAM_FAT32_LOADER is
 			  
 			  -- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : in STD_LOGIC_VECTOR(1 downto 0); -- not a W/R operation finally
+			  megashark_doGOTO : in STD_LOGIC_VECTOR(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : in std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
@@ -1746,10 +1746,13 @@ end if;
 		variable winape:face_boolean_type:=(false,false);
 		type face_integer_type is array(0 to 1) of integer range 0 to 255;
 		variable nb_tracks:face_integer_type:=(0,0); -- super cauldron has 42 tracks !!! -- Batman demo has 80 tracks
-		variable no_track:integer range 0 to 255; -- force simple face
+		variable no_track_current:face_integer_type:=(0,0);
+		variable no_track:integer range 0 to 255:=0; -- force simple face
 		variable nb_sides:face_integer_type:=(1,1); -- Batman demo one-dsk version has 2 sides
+		variable no_side_current:face_integer_type:=(0,0);
 		variable no_side:integer range 0 to 255:=0;
 		variable nb_sects:integer range 0 to 255:=9; -- super cauldron has 10 sectors !! -- batman demo has 9 sectors (track size 13) 10 sectors (track size 15)
+		variable no_sect_current:face_integer_type;
 		variable no_sect:integer range 0 to 255;
 		variable track_size:std_logic_vector(40 downto 0):=(others=>'0');
 		--type sector_sizes_type is array(0 to 6) of std_logic_vector(15 downto 0);
@@ -1765,6 +1768,7 @@ end if;
 		variable is_multitrack:boolean:=false;
 		variable is_multitrackSecondSide:boolean:=false;
 		variable is_searching_track:boolean:=false;
+		variable is_searching_track77:boolean:=false;
 		
 		variable mecashark_addr_mem:std_logic_vector(40 downto 0); -- work
 		variable mecashark_addr_memFaceA:std_logic_vector(40 downto 0); -- stock address face A
@@ -1802,6 +1806,7 @@ end if;
 				is_overrun:=false;
 			elsif megashark_doGOTO(0)='1' then
 				is_searching_track:=(megashark_doGOTO(1)='1');
+				is_searching_track77:=(megashark_doGOTO(2)='1');
 				is_Del:=false;
 				is_Sk:=false;
 				is_multitrack:=false;
@@ -1812,6 +1817,7 @@ end if;
 				doWRITE:=false;
 			elsif megashark_doREAD(0)='1' then
 				is_searching_track:=false;
+				is_searching_track77:=false;
 				is_Del:=(megashark_doREAD(1)='1');
 				is_Sk:=(megashark_doREAD(2)='1');
 				is_multitrack:=(megashark_doREAD(3)='1');
@@ -1822,6 +1828,7 @@ end if;
 				mecashark_step:=25;
 			elsif megashark_doWRITE(0)='1' then
 				is_searching_track:=false;
+				is_searching_track77:=false;
 				is_Del:=(megashark_doWRITE(1)='1');
 				is_Sk:=false;
 				is_multitrack:=(megashark_doWRITE(2)='1');
@@ -1912,7 +1919,11 @@ end if;
 							megashark_INFO_ST2_mem:=x"00";
 							megashark_INFO_ST2<=megashark_INFO_ST2_mem;
 							is_sector_or_track_not_found:=false;
+							is_overrun:=false;
 							mecashark_step:=16;
+							no_track_current(mecashark_face):=0;
+							no_side_current(mecashark_face):=0;
+							no_sect_current(mecashark_face):=0;
 						when 16=>-- DSK is just inserted, CHRN is not loaded. TrackInfo_A is not ready (invalidated)
 							mecashark_changeDSK_done<=true;
 
@@ -1969,8 +1980,29 @@ end if;
 								mecashark_addr_mem:=mecashark_addr_memFaceA;
 							end if;
 							dskIsValid:=true;
+							is_sector_or_track_not_found:=false;
+							is_overrun:=false;
 							TrackInfo_A:=mecashark_addr_mem+(PREFIX & x"00000100");
 							chrn:=chrn_build;
+							
+							-- le side est dynamique, sauf peut-être en mode multi track (mais déjà appliqué avant dans chrn_build)
+							no_side_current(mecashark_face):=conv_integer(chrn(23 downto 16));
+							if is_searching_track then
+								no_track_current(mecashark_face):=conv_integer(chrn(31 downto 24));
+								-- if is_searching_track77 viser le mauvais track lors du premier coup.
+								if is_searching_track77 and no_sect_current(mecashark_face)>77 then
+									no_sect_current(mecashark_face):=no_sect_current(mecashark_face)-77;
+								else
+									no_sect_current(mecashark_face):=0; -- changing track, so goto sector 0
+								end if;
+							elsif doGOTO then
+								--READ_ID
+								no_sect_current(mecashark_face):=no_sect_current(mecashark_face)+1;
+								if no_sect_current(mecashark_face)>=nb_sects then
+									no_sect_current(mecashark_face):=0; -- back to 0
+								end if;
+							end if; -- else READ|WRITE DATA : osef no_sect_current(mecashark_face)
+							
 							if nb_sides(mecashark_face)=1 then
 								megashark_INFO_2SIDES<='0';
 							else
@@ -1982,8 +2014,8 @@ end if;
 							mecashark_step:=19;
 						when 19=>
 							-- if last track/side reached or else good track/side found then
-							if no_track=conv_integer(chrn(31 downto 24)) and no_side = conv_integer(chrn(23 downto 16)) then
-								is_sector_or_track_not_found:=false; -- TRACK FOUND
+							if no_track=no_track_current(mecashark_face) and no_side = no_side_current(mecashark_face) then
+								-- TRACK FOUND
 								-- need sector_size+nb_sects of the track here
 								Track_A:=TrackInfo_A + (PREFIX & x"00000014");
 								meca_spi_A<=Track_A;
@@ -1991,6 +2023,7 @@ end if;
 								mecashark_step:=5;
 							elsif no_track=nb_tracks(mecashark_face)-1 and no_side=nb_sides(mecashark_face)-1 then
 								is_sector_or_track_not_found:=true; -- TRACK NOT FOUND
+								is_overrun:=false;
 								-- need sector_size+nb_sects of the track here
 								Track_A:=TrackInfo_A + (PREFIX & x"00000014");
 								meca_spi_A<=Track_A;
@@ -2082,14 +2115,14 @@ end if;
 							mecashark_step:=21;
 
 						when 21=> -- we are front to the nice wanted Track-Info
-							no_sect:=0;
+							no_sect:=0;is_overrun:=false;
 							 -- x"18"+x"00"=x"18" : track -- C
 							SectorInfo_A:=TrackInfo_A+(PREFIX & x"00000018"); -- +conv_std_logic_vector(no_sect*8,41);
 							meca_spi_A<=SectorInfo_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=11;
 						when 11=>
-							no_sect:=0;
+							no_sect:=0;is_overrun:=false;
 							if not(doGoto) and chrn(31 downto 24)/=spi_Din then
 								-- bad track (protection : missing one track ?)
 								is_sector_or_track_not_found:=true;
@@ -2100,8 +2133,8 @@ end if;
 							meca_spi_Rdo<='1';
 							mecashark_step:=18;
 						when 18=>
-							no_sect:=0;
-							if not(doGoto) and chrn(23 downto 16)/=spi_Din then
+							no_sect:=0;is_overrun:=false;
+							if not(doGoto) and no_side_current(mecashark_face)/=conv_integer(spi_Din) then
 								-- bad side (protection : missing one track ?)
 								is_sector_or_track_not_found:=true;
 							end if;
@@ -2111,52 +2144,54 @@ end if;
 							meca_spi_Rdo<='1';
 							mecashark_step:=22;
 						when 22=> -- x"18"+x"02"=x"1a" : sector ID -- R
-							if (doGOTO and is_searching_track) or is_sector_or_track_not_found then
+							if (doGOTO and no_sect=no_sect_current(mecashark_face)) or is_sector_or_track_not_found then
 								chrn(15 downto 8):=spi_Din;
 								-- no_sect found (=0)
 								mecashark_step:=12;
-							elsif chrn(15 downto 8)=spi_Din then
+							elsif not(doGOTO) and chrn(15 downto 8)=spi_Din then --no_sect_current(mecashark_face)
 								-- no_sect found
-								if doGOTO then
-									-- I want the new one
-									no_sect:=no_sect+1;
-									if no_sect>=nb_sects then
-										-- if is_multitrack and not last track/side reached
-										-- if is_multitrack and not(no_track=nb_tracks(mecashark_face)-1 and no_side=nb_sides(mecashark_face)-1) then
-											-- -- looking after track/sector from CHRN value (old mecashark_step 18)
-											-- if nb_sides(mecashark_face)=1 or chrn(23 downto 16)=x"01" then
-												-- chrn(31 downto 24):=chrn(31 downto 24)+1;
-												-- chrn(23 downto 16):=x"00";
-												-- no_track:=no_track+1;
-												-- no_side:=0;
-											-- else
-												-- chrn(23 downto 16):=x"01";
-												-- no_side:=1;
-											-- end if;
-											-- no_sect:=0;
-											-- -- goto next track (TrackInfo_A++)
-											-- mecashark_step:=28;
-										-- else
-										no_sect:=0; -- back to sector 0 of this current track.
-										is_sector_or_track_not_found:=true;
-										SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
-										meca_spi_A<=SectorInfo_A;
-										meca_spi_Rdo<='1';
-										mecashark_step:=14;
-										-- end if;
-									else
-										SectorInfo_A:=SectorInfo_A+(PREFIX & x"00000008");
-										meca_spi_A<=SectorInfo_A;
-										meca_spi_Rdo<='1';
-										mecashark_step:=14;
-									end if;
-								else
+								no_sect_current(mecashark_face):=no_sect;
+								-- if doGOTO then
+									-- -- I want the new one
+									-- no_sect:=no_sect+1;
+									-- if no_sect>=nb_sects then
+										-- -- if is_multitrack and not last track/side reached
+										-- -- if is_multitrack and not(no_track=nb_tracks(mecashark_face)-1 and no_side=nb_sides(mecashark_face)-1) then
+											-- -- -- looking after track/sector from CHRN value (old mecashark_step 18)
+											-- -- if nb_sides(mecashark_face)=1 or chrn(23 downto 16)=x"01" then
+												-- -- chrn(31 downto 24):=chrn(31 downto 24)+1;
+												-- -- chrn(23 downto 16):=x"00";
+												-- -- no_track:=no_track+1;
+												-- -- no_side:=0;
+											-- -- else
+												-- -- chrn(23 downto 16):=x"01";
+												-- -- no_side:=1;
+											-- -- end if;
+											-- -- no_sect:=0;
+											-- -- -- goto next track (TrackInfo_A++)
+											-- -- mecashark_step:=28;
+										-- -- else
+										-- no_sect:=0; -- back to sector 0 of this current track.
+										-- is_sector_or_track_not_found:=true;
+										-- SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+										-- meca_spi_A<=SectorInfo_A;
+										-- meca_spi_Rdo<='1';
+										-- mecashark_step:=14;
+										-- -- end if;
+									-- else
+										-- SectorInfo_A:=SectorInfo_A+(PREFIX & x"00000008");
+										-- meca_spi_A<=SectorInfo_A;
+										-- meca_spi_Rdo<='1';
+										-- mecashark_step:=14;
+									-- end if;
+								-- else
 									-- here we are :)
 									mecashark_step:=12;
-								end if;
+								-- end if;
 							else
 								-- on passe au suivant.
 								no_sect:=no_sect+1;
+								
 								if no_sect>=nb_sects then
 									-- if is_multitrack and not last track/side reached
 									-- if is_multitrack and not(no_track=nb_tracks(mecashark_face)-1 and no_side=nb_sides(mecashark_face)-1) then
@@ -2178,12 +2213,20 @@ end if;
 										--no_sect := nb_sects-1;
 										--chrn(15 downto 8):=spi_Din; -- R
 										--mecashark_step:=12;
-									no_sect:=0; -- back to sector 0 of this current track.
-									is_sector_or_track_not_found:=true;
-									SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
-									meca_spi_A<=SectorInfo_A;
-									meca_spi_Rdo<='1';
-									mecashark_step:=14;
+									if is_overrun then
+										no_sect:=0; -- back to sector 0 of this current track.
+										is_sector_or_track_not_found:=true;
+										SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+										meca_spi_A<=SectorInfo_A;
+										meca_spi_Rdo<='1';
+										mecashark_step:=14;
+									else
+										no_sect:=0; -- back to sector 0 of this current track.
+										is_overrun:=true;
+										SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+										meca_spi_A<=SectorInfo_A;
+										meca_spi_Rdo<='1';
+									end if;
 									-- end if;
 								else
 									-- goto next sector info
@@ -2195,6 +2238,7 @@ end if;
 							end if;
 						when 14=>-- doGOTO !is_searching_track "I want the new one"
 							chrn(15 downto 8):=spi_Din;
+							no_sect_current(mecashark_face):=no_sect;
 							mecashark_step:=12;
 						when 12=> -- sector_sector_size
 							Sector_A:=SectorInfo_A+(PREFIX & x"00000001");
@@ -2210,10 +2254,12 @@ end if;
 							meca_spi_Rdo<='1';
 							mecashark_step:=15;
 						when 15=>
-							if is_overrun then
-								megashark_INFO_ST1_mem:=ST1_OVERRUN;
-							elsif is_sector_or_track_not_found then
+							if is_sector_or_track_not_found then
 								megashark_INFO_ST1_mem:=ST1_NO_DATA or ST1_MISSING_ADDR;
+							elsif is_overrun then
+								megashark_INFO_ST1_mem:=ST1_OVERRUN;
+							elsif is_searching_track then
+								megashark_INFO_ST1_mem:=x"00"; -- seek 77
 							else
 								megashark_INFO_ST1_mem:=spi_Din;
 							end if;
@@ -2231,8 +2277,10 @@ end if;
 							
 							-- isDeletedData() : megashark_INFO_ST2_mem(6) CONTROL MASK (0x040) = '1'
 							--if (is_Sk and not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
-							if (not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
-								or (is_Del and (megashark_INFO_ST2_mem(6)='0')) then
+							if not(doGOTO) and ((not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
+								or (is_Del and (megashark_INFO_ST2_mem(6)='0'))) 
+								and not(is_overrun and is_sector_or_track_not_found)
+								then
 								---- SK stands for skip deleted data address mark
 								---- je suis en READ+SK, et je suis sur un DATA DELETED, donc je le SKIP.
 								---- je suis en READ_DELETED, et je suis sur un DATA !DELETED, donc je zap
@@ -2244,20 +2292,17 @@ end if;
 								--  ST2_DATA_ERROR
 								-- Niger Mansell, Orion x46/x66 (commande read avec et sans sk)
 								-- on passe au suivant.
+								-- sector found by skipped
 								no_sect:=no_sect+1;
 								if no_sect>=nb_sects then
-									-- sector not found
-									is_sector_or_track_not_found:=true;
-									megashark_INFO_ST1_mem:=ST1_NO_DATA or ST1_MISSING_ADDR;
-									megashark_INFO_ST2_mem:=ST2_MISSING_ADDR;
-									no_sect := nb_sects-1;
-									-- R already filled chrn(15 downto 8):=chrn(15 downto 8); -- R
-									-- In order to leave this mecashark_step, applying end of mecashark_step result :
-									megashark_INFO_ST1<=megashark_INFO_ST1_mem;
-									megashark_INFO_ST2<=megashark_INFO_ST2_mem;
-									-- go to start of sector list of this track
-									Sector_A:=TrackInfo_A + (PREFIX & x"00000100");
-									mecashark_step:=24;
+									-- normalement on fait un tour complet, et après on stop.
+									-- goto next sector info
+									no_sect:=0; -- back to sector 0 of this current track.
+									is_overrun:=true;
+									SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+									meca_spi_A<=SectorInfo_A;
+									meca_spi_Rdo<='1';
+									mecashark_step:=22;
 								else
 									-- goto next sector info
 									-- sizeof(SectorInfo) = 8

@@ -96,8 +96,8 @@ applicable agreement for further details.
 	(port
 		(pt 0 192)
 		(input)
-		(text "megashark_doGOTO[1..0]" (rect 0 0 106 12)(font "Arial" ))
-		(text "megashark_doGOTO[1..0]" (rect 21 187 127 199)(font "Arial" ))
+		(text "megashark_doGOTO[2..0]" (rect 0 0 107 12)(font "Arial" ))
+		(text "megashark_doGOTO[2..0]" (rect 21 187 128 199)(font "Arial" ))
 		(line (pt 0 192)(pt 16 192)(line_width 3))
 	)
 	(port

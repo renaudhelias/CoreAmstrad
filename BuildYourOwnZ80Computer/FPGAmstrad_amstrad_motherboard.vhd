@@ -366,7 +366,7 @@ entity FPGAmstrad_amstrad_motherboard is
           vram_D     : out   std_logic_vector (7 downto 0); -- pixel_DATA
           vram_W     : out   std_logic;
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : out std_logic_vector(1 downto 0); -- not a W/R operation finally
+			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
@@ -601,7 +601,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              D_command      : in    std_logic_vector (7 downto 0); 
              D_result       : inout std_logic_vector (7 downto 0); 
 				  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
-			  megashark_doGOTO : out std_logic_vector(1 downto 0); -- not a W/R operation finally
+			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);

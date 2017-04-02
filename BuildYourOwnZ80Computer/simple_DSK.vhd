@@ -56,7 +56,7 @@ entity simple_DSK is
 			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection : 512B block
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out STD_LOGIC_VECTOR(3 downto 0);
+			  megashark_doREAD : out STD_LOGIC_VECTOR(4 downto 0);
 			  megashark_doWRITE : out STD_LOGIC_VECTOR(2 downto 0);
 			  megashark_done : in std_logic;
 			  megashark_face : out std_logic:='0';
@@ -90,6 +90,9 @@ architecture Behavioral of simple_DSK is
 	constant ST0_EQUIP_CHECK : std_logic_vector(7 downto 0):=x"10"; -- RECALIBRATE (SEEK 0) cmd fail
 	constant ST0_SEEK_END : std_logic_vector(7 downto 0):=x"20";
 	-- + actualDrive
+	-- hacks FDCTEST.ASM
+	constant ST0_END_OF_READ_DRIVE_US0 : std_logic_vector(7 downto 0):=x"41"; -- FDCTEST.ASM WTF ???????
+	constant ST0_END_OF_READ_DRIVE_US0_BAD : std_logic_vector(7 downto 0):=x"40"; -- FDCTEST.ASM WTF ???????
 	
 	constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
 	constant ST1_NOT_WRITABLE : std_logic_vector(7 downto 0):=x"02";
@@ -97,6 +100,8 @@ architecture Behavioral of simple_DSK is
 	constant ST1_OVERRUN : std_logic_vector(7 downto 0):=x"10"; -- protected dsk
 	constant ST1_DATA_ERROR : std_logic_vector(7 downto 0):=x"20"; -- protected dsk
 	constant ST1_END_CYL : std_logic_vector(7 downto 0):=x"80";
+	-- hacks FDCTEST.ASM
+	constant ST1_SECTOR_NOT_FOUND_BAD : std_logic_vector(7 downto 0):=x"84";
 	
 	--constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
 	--constant ST2_BAD_CYLINDER : std_logic_vector(7 downto 0):=x"02";
@@ -105,6 +110,8 @@ architecture Behavioral of simple_DSK is
 	--constant ST2_WRONG_CYL : std_logic_vector(7 downto 0):=x"10";
 	--constant ST2_DATA_ERROR : std_logic_vector(7 downto 0):=x"20";
 	--constant ST2_CONTROL_MARK : std_logic_vector(7 downto 0):=x"40";
+	-- hacks FDCTEST.ASM
+	constant ST2_SECTOR_NOT_FOUND_BAD : std_logic_vector(7 downto 0):=x"00";
 	
 	--constant ST3_HEAD_ADDR : std_logic_vector(7 downto 0):=x"04";
 	constant ST3_TWO_SIDE : std_logic_vector(7 downto 0):=x"08";
@@ -159,6 +166,7 @@ architecture Behavioral of simple_DSK is
 	signal memshark_doGOTO_T:boolean:=false;
 	signal memshark_doGOTO_R:boolean:=false;
 	signal memshark_doREAD:boolean:=false;
+	signal memshark_doREADnext:boolean:=false;
 	signal memshark_doREAD_DEL:boolean:=false;
 	signal memshark_doREAD_SK:boolean:=false;
 	signal memshark_doREAD_MT:boolean:=false;
@@ -181,7 +189,7 @@ architecture Behavioral of simple_DSK is
 	signal block_W_cortex:std_ulogic:='0';
 
 	signal megashark_doGOTO_s:std_logic_vector(2 downto 0):="000";
-	signal megashark_doREAD_s:std_logic_vector(3 downto 0):="0000";
+	signal megashark_doREAD_s:std_logic_vector(4 downto 0):="00000";
 	signal megashark_doWRITE_s:std_logic_vector(2 downto 0):="000";
 	
 begin
@@ -262,7 +270,7 @@ megashark:process(reset,nCLK4_1)
 	variable megashark_A_mem:std_logic_vector(megashark_A'range):=(others=>'0');
 	variable megashark_Dout_mem:std_logic_vector(megashark_Dout'range):=(others=>'0');
 	variable doGOTO_mem:std_logic_vector(2 downto 0):="000";
-	variable doREAD_mem:std_logic_vector(3 downto 0):="0000";
+	variable doREAD_mem:std_logic_vector(4 downto 0):="00000";
 	variable doWRITE_mem:std_logic_vector(2 downto 0):="000";
 begin
 	if reset='1' then
@@ -289,15 +297,18 @@ begin
 		elsif memshark_doREAD then
 			-- READ CHRN : here R is sector id (x"C1"...), READ_DIAGNOSTIC do use EOT parameter, that is a sector id, so I doREAD when READ_DIAGNOSTIC command is called, instead of launching doGOTO.
 			memshark_done<=false;
-			doREAD_mem:="0001";
-			if memshark_doREAD_DEL then
+			doREAD_mem:="00001";
+			if memshark_doREADnext then
 				doREAD_mem(1):='1';
 			end if;
-			if memshark_doREAD_SK then
+			if memshark_doREAD_DEL then
 				doREAD_mem(2):='1';
 			end if;
-			if memshark_doREAD_MT then
+			if memshark_doREAD_SK then
 				doREAD_mem(3):='1';
+			end if;
+			if memshark_doREAD_MT then
+				doREAD_mem(4):='1';
 			end if;
 			memshark_step:=3;
 		elsif memshark_doWRITE then
@@ -313,7 +324,7 @@ begin
 		end if;
 		
 		megashark_doGOTO_s<="000";
-		megashark_doREAD_s<="0000";
+		megashark_doREAD_s<="00000";
 		megashark_doWRITE_s<="000";
 		
 		block_W_megashark_mem:='0'; -- we write only one time
@@ -339,6 +350,11 @@ begin
 						megashark_doREAD_s<=doREAD_mem;
 						memshark_step:=4;
 					when 4=>
+						if doREAD_mem(1)='1' then
+							-- is_next
+							doREAD_mem(1):='0';
+							chrn_mem:=megashark_CHRNresult;
+						end if;
 						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,10);
 						block_Din_megashark_mem:=megashark_Din;
 						--if memshark_counter<16*2 then
@@ -347,8 +363,8 @@ begin
 						--	block_Din_megashark_mem:=x"E5";
 						--end if;
 						block_W_megashark_mem:='1';
-						if (doREAD_mem(3)='1' and memshark_counter = SECTOR_SIZE_MT-1)
-							or (doREAD_mem(3)='0' and memshark_counter = SECTOR_SIZE-1) then
+						if (doREAD_mem(4)='1' and memshark_counter = SECTOR_SIZE_MT-1)
+							or (doREAD_mem(4)='0' and memshark_counter = SECTOR_SIZE-1) then
 							memshark_step:=5;
 						else
 							megashark_CHRN<=chrn_mem;
@@ -466,6 +482,9 @@ cortex:process(reset,nCLK4_1)
 	
 	variable is_del:boolean:=false;
 	variable is_sk:boolean:=false;
+
+	variable is_readtrack:boolean:=false;
+	variable isBOT:boolean:=false; -- against loop FDCTEST.ASM 37 multi-track operation - eot doesn't exist
 	
 	variable data:std_logic_vector(7 downto 0);
 	variable do_update:boolean;
@@ -544,6 +563,7 @@ cortex:process(reset,nCLK4_1)
 	variable is_issue:boolean:=false; -- not is_seeking but bad command result
 	variable is_overrun:boolean:=false;
 	
+	
 	variable motors:std_logic:='0';
 	
 	variable gremlin:integer range 0 to 127:=0; --When sector data is read, a byte comes every 32us. => overrun
@@ -572,6 +592,7 @@ begin
 			memshark_doGOTO_T<=false;
 			memshark_doGOTO_R<=false;
 			memshark_doREAD<=false;
+			memshark_doREADnext<=false;
 			memshark_doREAD_DEL<=false;
 			memshark_doREAD_SK<=false;
 			memshark_doREAD_MT<=false;
@@ -652,7 +673,7 @@ begin
 				ST2:=megashark_INFO_ST2;
 				-- TEST : |a |b |a using ss40t in drive A: and ds80t DOS D2 in drive B:
 				-- RESULT : crash due to ST0_ABNORMAL returned in a simple READ_ID cmd...
-				if (megashark_INFO_ST1 and ST1_MISSING_ADDR)=ST1_MISSING_ADDR then
+				if (megashark_INFO_ST1 and ST1_NO_DATA)=ST1_NO_DATA then
 					ST0:=ST0_ABNORMAL or actualDrive;
 				else
 					ST0:=actualDrive;
@@ -808,7 +829,9 @@ begin
 
 								
 								if exec_restant=0 then
-									if EOT=BOT or etat_zap then
+									if (is_readtrack and EOT=1)
+											or (not(is_readtrack) and (EOT=chrn(1) or (not(isBOT) and BOT=chrn(1))))
+											or etat_zap then -- found sector is EOT ?
 										if etat_wait then
 											phase<=PHASE_WAIT_RESULT;
 										else
@@ -823,9 +846,16 @@ begin
 										--result(1):=SECTOR_FOUND; --chrn(1); -- R (BOT=EOT)
 										--result(0):=chrn(0); -- N (BLOCK_SIZE)
 									else
-										BOT:=BOT+x"01"; -- no brain
-										chrn(1):=BOT;
-										if EOT=BOT and is_EOT_DTL then
+										-- FDCTEST.ASM read_data_noskip R=1, EOT=9 => 2 read_data
+										if isBOT then
+											BOT:=chrn(1); --+x"01"; -- found sector +1 -- no brain ? first sector is targeted, then next ones until EOT ?
+											isBOT:=false;
+										end if;
+										--chrn(1):=BOT;
+										if is_readtrack then
+											EOT:=EOT-1;
+										end if;
+										if ((is_readtrack and EOT=1) or (not(is_readtrack) and EOT=chrn(1)+x"01")) and is_EOT_DTL then
 											exec_restant:=EOT_DTL;
 										else
 											exec_restant:=SECTOR_SIZE;
@@ -838,6 +868,7 @@ begin
 											-- on lance une tentative de lecture du block en parallele
 											memshark_chrn<=setCHRN(chrn);
 											memshark_doREAD<=true;
+											memshark_doREADnext<=true;
 											memshark_doREAD_DEL<=is_del;
 											memshark_doREAD_SK<=is_sk;
 											memshark_doREAD_MT<=is_multitrack;
@@ -927,16 +958,20 @@ begin
 							elsif action=ACTION_READ and rcount=7 then
 								action:=ACTION_POLL;
 								chrn:=getCHRN(megashark_CHRNresult);
-								result(6):=ST0; -- ST0
+								
 								if (ST0 and ST0_ABNORMAL)=ST0_ABNORMAL then
-									result(5):=ST1;
+									--result(5):=ST1;
+									result(5):=ST1;--ST1_SECTOR_NOT_FOUND_BAD; --FDCTEST.ASM 26
+									result(6):=ST0;-- or ST0_END_OF_READ_DRIVE_US0_BAD; -- ST0
+									result(4):=ST2;--_SECTOR_NOT_FOUND_BAD; -- ST2
 								else
 									result(5):=ST1 or ST1_END_CYL; -- ST1
+									result(6):=ST0;-- or ST0_END_OF_READ_DRIVE_US0; -- ST0
+									result(4):=ST2; -- ST2
 								end if;
-								result(4):=ST2; -- ST2
 								result(3):=chrn(3); -- params(6); -- C
 								result(2):=chrn(2); -- params(5); -- H
-								result(1):=SECTOR_FOUND; --chrn(1); -- R (BOT=EOT)
+								result(1):=params(2); -- FDCTEST.ASM 11 FAIL 04 chrn(1); -- SECTOR_FOUND; --chrn(1); -- R (BOT=EOT) FDCTEST.ASM 0F FAIL 04
 								result(0):=chrn(0); -- N (BLOCK_SIZE)
 							elsif action=ACTION_READ_ID and rcount=7 then-- PARADOS second drive seem have serious problem (with same data and fixed sector id here, size of disk/file is different), perhaps more FDC instructions runs
 								action:=ACTION_POLL;
@@ -1131,7 +1166,7 @@ begin
 								end if;
 								
 								if exec_restant_write=0 then
-									if EOT=BOT then
+									if EOT=chrn(1) then
 										if etat_zap then
 											phase<=PHASE_RESULT;
 										elsif etat_wait then
@@ -1152,9 +1187,9 @@ begin
 --										result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
 --										result(0):=chrn(0); -- N (BLOCK_SIZE)
 									else
-										BOT:=BOT+x"01";
-										chrn(1):=BOT;
-										if EOT=BOT and is_EOT_DTL then
+										BOT:=chrn(1);
+										--chrn(1):=BOT;
+										if EOT=chrn(1)+x"01" and is_EOT_DTL then
 											exec_restant_write:=EOT_DTL;
 											memshark_is_DTL<=true;
 										else
@@ -1168,6 +1203,7 @@ begin
 											-- on lance une tentative de lecture du block en parallele
 											memshark_chrn<=setCHRN(chrn);
 											memshark_doREAD<=true;
+											memshark_doREADnext<=true;
 											memshark_doREAD_DEL<=is_del;
 											memshark_doREAD_SK<=is_sk;
 											memshark_doREAD_MT<=is_multitrack;
@@ -1206,6 +1242,7 @@ begin
 							is_multitrack:=(D_command(7)='1');
 							is_del:=false;
 							is_sk:=(D_command(5)='1');
+							is_readtrack:=false;
 
 							compare_OK:=false;
 							case command is
@@ -1213,6 +1250,7 @@ begin
 									is_multitrack:=false; -- READ_DIAGNOSTIC : pas de MT ici
 									action:=ACTION_READ; -- getNextSector(READ) with resetSector() : sector=0
 									phase<=PHASE_COMMAND;
+									is_readtrack:=true; -- EOT is not sector, but sector count.
 									pcount:=8;
 									check_dsk_face:=true;
 								when x"03" => -- specify
@@ -1430,6 +1468,10 @@ begin
 									else
 										is_EOT_DTL:=true;
 										EOT_DTL:=conv_integer(params(0)); -- DTL
+										if EOT_DTL=0 then
+											-- (FDCTEST.ASM 5B)
+											EOT_DTL:=256;
+										end if;
 										if BOT=EOT then
 											exec_restant_write:=EOT_DTL; -- DTL
 											--memshark_DTL<=EOT_DTL;
@@ -1465,7 +1507,7 @@ begin
 									block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
 									block_W_cortex_mem:='0';
 								elsif action=ACTION_READ then
-									BOT:=params(4);
+									BOT:=params(4);isBOT:=true;
 									EOT:=params(2); -- EOT = R
 									chrn(3):=params(6); -- C
 									chrn(2):=params(5); -- H
@@ -1585,6 +1627,10 @@ begin
 									else
 										is_EOT_DTL:=true;
 										EOT_DTL:=conv_integer(params(0)); -- DTL
+										if EOT_DTL=0 then
+											-- (FDCTEST.ASM 5B)
+											EOT_DTL:=256;
+										end if;
 										if BOT=EOT then
 											exec_restant_write:=EOT_DTL; -- DTL
 											--memshark_DTL<=EOT_DTL;

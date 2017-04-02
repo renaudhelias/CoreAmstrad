@@ -79,7 +79,7 @@ entity SDRAM_FAT32_LOADER is
 			  megashark_INFO_2SIDES : out std_logic:='0';
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : in STD_LOGIC_VECTOR(3 downto 0);
+			  megashark_doREAD : in STD_LOGIC_VECTOR(4 downto 0);
 			  megashark_doWRITE : in STD_LOGIC_VECTOR(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic; -- from OSD
@@ -1796,6 +1796,7 @@ end if;
 
 		variable is_Del:boolean:=false; --injected via H of CHRN (operation "DELETED")
 		variable is_Sk:boolean:=false; --injected via H of CHRN (SK skip)
+		variable is_next:boolean:=false; -- megashark_doREAD is not targeting special sector BOT
 		
 	begin
 		if rising_edge(CLK) then
@@ -1807,6 +1808,7 @@ end if;
 			elsif megashark_doGOTO(0)='1' then
 				is_searching_track:=(megashark_doGOTO(1)='1');
 				is_searching_track77:=(megashark_doGOTO(2)='1');
+				is_next:=not(is_searching_track); -- READ_ID
 				is_Del:=false;
 				is_Sk:=false;
 				is_multitrack:=false;
@@ -1818,9 +1820,10 @@ end if;
 			elsif megashark_doREAD(0)='1' then
 				is_searching_track:=false;
 				is_searching_track77:=false;
-				is_Del:=(megashark_doREAD(1)='1');
-				is_Sk:=(megashark_doREAD(2)='1');
-				is_multitrack:=(megashark_doREAD(3)='1');
+				is_next:=(megashark_doREAD(1)='1');
+				is_Del:=(megashark_doREAD(2)='1');
+				is_Sk:=(megashark_doREAD(3)='1');
+				is_multitrack:=(megashark_doREAD(4)='1');
 				is_multitrackSecondSide:=(megashark_A(9)='1');
 				megashark_done_s<='0';
 				doGOTO:=false;
@@ -1829,6 +1832,7 @@ end if;
 			elsif megashark_doWRITE(0)='1' then
 				is_searching_track:=false;
 				is_searching_track77:=false;
+				is_next:=false;
 				is_Del:=(megashark_doWRITE(1)='1');
 				is_Sk:=false;
 				is_multitrack:=(megashark_doWRITE(2)='1');
@@ -1950,7 +1954,7 @@ end if;
 							-- megashark_select
 							if megashark_face='1' then
 								if mecashark_face_dskB then
-									if dskIsValid and chrn = chrn_build then
+									if dskIsValid and chrn = chrn_build and not(is_next) then
 										mecashark_step:=26;
 									else
 										mecashark_step:=17;
@@ -1965,7 +1969,7 @@ end if;
 									mecashark_face_dskB:=false;
 									mecashark_face:=FACE_A;
 									mecashark_step:=17;
-								elsif dskIsValid and chrn = chrn_build then
+								elsif dskIsValid and chrn = chrn_build and not(is_next) then
 									mecashark_step:=26;
 								else
 									mecashark_step:=17;
@@ -1988,15 +1992,15 @@ end if;
 							-- le side est dynamique, sauf peut-être en mode multi track (mais déjà appliqué avant dans chrn_build)
 							no_side_current(mecashark_face):=conv_integer(chrn(23 downto 16));
 							if is_searching_track then
-								no_track_current(mecashark_face):=conv_integer(chrn(31 downto 24));
 								-- if is_searching_track77 viser le mauvais track lors du premier coup.
-								if is_searching_track77 and no_sect_current(mecashark_face)>77 then
-									no_sect_current(mecashark_face):=no_sect_current(mecashark_face)-77;
+								if is_searching_track77 and no_track_current(mecashark_face)>77 then
+									no_track_current(mecashark_face):=no_track_current(mecashark_face)-77;
 								else
-									no_sect_current(mecashark_face):=0; -- changing track, so goto sector 0
+									-- changing track, so goto sector 0 (recalibrate) or seek target
+									no_track_current(mecashark_face):=conv_integer(chrn(31 downto 24));
 								end if;
-							elsif doGOTO then
-								--READ_ID
+							elsif is_next then
+								--READ_ID or READ_DATA.next (not BOT)
 								no_sect_current(mecashark_face):=no_sect_current(mecashark_face)+1;
 								if no_sect_current(mecashark_face)>=nb_sects then
 									no_sect_current(mecashark_face):=0; -- back to 0
@@ -2144,11 +2148,11 @@ end if;
 							meca_spi_Rdo<='1';
 							mecashark_step:=22;
 						when 22=> -- x"18"+x"02"=x"1a" : sector ID -- R
-							if (doGOTO and no_sect=no_sect_current(mecashark_face)) or is_sector_or_track_not_found then
+							if ((doGOTO or is_next) and no_sect=no_sect_current(mecashark_face)) or is_sector_or_track_not_found then
 								chrn(15 downto 8):=spi_Din;
 								-- no_sect found (=0)
 								mecashark_step:=12;
-							elsif not(doGOTO) and chrn(15 downto 8)=spi_Din then --no_sect_current(mecashark_face)
+							elsif not(doGOTO or is_next) and chrn(15 downto 8)=spi_Din then --no_sect_current(mecashark_face)
 								-- no_sect found
 								no_sect_current(mecashark_face):=no_sect;
 								-- if doGOTO then
@@ -2273,13 +2277,30 @@ end if;
 								megashark_INFO_ST2_mem:=ST2_MISSING_ADDR;
 							else
 								megashark_INFO_ST2_mem:=spi_Din;
+								--if is_Sk and is_Del then
+								--	-- FDCTEST.ASM : 1A FAIL 06 donc EOT est &40
+								--els
+								if is_Del then -- FDCTEST.ASM : 20 21
+									megashark_INFO_ST2_mem(6):=not(megashark_INFO_ST2_mem(6));
+								end if;
 							end if;
 							
 							-- isDeletedData() : megashark_INFO_ST2_mem(6) CONTROL MASK (0x040) = '1'
 							--if (is_Sk and not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
-							if not(doGOTO) and ((not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
-								or (is_Del and (megashark_INFO_ST2_mem(6)='0'))) 
-								and not(is_overrun and is_sector_or_track_not_found)
+							if not(doGOTO) and (
+									--FDCTEST.ASM defw read_data_noskip	;; 19 read data, no skip
+									--FDCTEST.ASM defw read_del_data_skip	;; 1A read deleted data sectors with skip
+									--(is_Sk  and not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
+									--or 
+									--(is_Del and (megashark_INFO_ST2_mem(6)='0'))
+									--(is_Del and not(is_Sk ) and (megashark_INFO_ST2_mem(6)='1'))
+									
+									(is_Sk  and (megashark_INFO_ST2_mem(6)='1'))
+									
+									--(is_Sk  and not(is_Del) and (megashark_INFO_ST2_mem(6)='1')) -- FDCTEST 1F read_data_skip2
+									--or
+									--(is_Del and is_Sk  and (megashark_INFO_ST2_mem(6)='0')) -- FDCTEST.ASM 1A PASS
+								) and not(is_overrun and is_sector_or_track_not_found)
 								then
 								---- SK stands for skip deleted data address mark
 								---- je suis en READ+SK, et je suis sur un DATA DELETED, donc je le SKIP.
@@ -2293,7 +2314,9 @@ end if;
 								-- Niger Mansell, Orion x46/x66 (commande read avec et sans sk)
 								-- on passe au suivant.
 								-- sector found by skipped
-								no_sect:=no_sect+1;
+								--chrn(15 downto 8):=chrn(15 downto 8)+1; -- skip ! (in testbench EOT=BOT+4 and READ_DATA is 2)
+								is_next:=true;
+								no_sect:=no_sect+1; -- skip (myself)
 								if no_sect>=nb_sects then
 									-- normalement on fait un tour complet, et après on stop.
 									-- goto next sector info

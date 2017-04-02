@@ -124,8 +124,8 @@ applicable agreement for further details.
 	(port
 		(pt 0 256)
 		(input)
-		(text "megashark_doREAD[3..0]" (rect 0 0 110 12)(font "Arial" ))
-		(text "megashark_doREAD[3..0]" (rect 21 251 131 263)(font "Arial" ))
+		(text "megashark_doREAD[4..0]" (rect 0 0 112 12)(font "Arial" ))
+		(text "megashark_doREAD[4..0]" (rect 21 251 133 263)(font "Arial" ))
 		(line (pt 0 256)(pt 16 256)(line_width 3))
 	)
 	(port

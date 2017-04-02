@@ -371,7 +371,7 @@ entity FPGAmstrad_amstrad_motherboard is
 			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out std_logic_vector(3 downto 0);
+			  megashark_doREAD : out std_logic_vector(4 downto 0);
 			  megashark_doWRITE : out std_logic_vector(2 downto 0);
 			  megashark_done : in std_logic;
 			  megashark_face : out std_logic;
@@ -606,7 +606,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out std_logic_vector(3 downto 0);
+			  megashark_doREAD : out std_logic_vector(4 downto 0);
 			  megashark_doWRITE : out std_logic_vector(2 downto 0);
 			  megashark_done : in std_logic;
 			  megashark_face : out std_logic;

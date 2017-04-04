@@ -53,15 +53,15 @@ entity simple_DSK is
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0);
 			  megashark_doGOTO : out STD_LOGIC_VECTOR(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
-			  megashark_A : out std_logic_vector(9 downto 0); -- sector byte selection : 512B block
+			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection : 512B block
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out STD_LOGIC_VECTOR(4 downto 0);
-			  megashark_doWRITE : out STD_LOGIC_VECTOR(2 downto 0);
+			  megashark_doREAD : out STD_LOGIC_VECTOR(2 downto 0);
+			  megashark_doWRITE : out std_logic;
 			  megashark_done : in std_logic;
 			  megashark_face : out std_logic:='0';
 			  megashark_INFO_2SIDES : in std_logic;
-			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0); -- contains also ST1_END_CYL and ST1_NO_DATA
+			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0); -- contains also ST1_END_OF_CYLINDER and ST1_NO_DATA
 			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0)
 			  );
 end simple_DSK;
@@ -69,68 +69,50 @@ end simple_DSK;
 architecture Behavioral of simple_DSK is
 
 	constant SECTOR_SIZE:integer:=512; -- some protected format seen with SECTOR_SIZES(6) value
-	constant SECTOR_SIZE_MT:integer:=1024;
-	constant SECTOR_FOUND:std_logic_vector(7 downto 0):=x"01";
 	--constant sampleSector : STD_LOGIC_VECTOR(8*16*2-1 downto 0) := x"004441525453313830A020200000004902030405060708090A0B000000000000";
 
 	constant REQ_MASTER : STD_LOGIC_VECTOR (7 downto 0):=x"80";
 	constant DATA_IN_OUT : STD_LOGIC_VECTOR (7 downto 0):=x"40";
 	constant EXEC_MODE : STD_LOGIC_VECTOR (7 downto 0):=x"20";
 	constant COMMAND_BUSY : STD_LOGIC_VECTOR (7 downto 0):=x"10";
-	--constant FDD_BUSY : STD_LOGIC_VECTOR (7 downto 0):=x"0F";
+	constant FDD_BUSY : STD_LOGIC_VECTOR (7 downto 0):=x"0F";
 
 	signal status:STD_LOGIC_VECTOR (7 downto 0):=REQ_MASTER;
 	
-	--constant ST0_NORMAL : std_logic_vector(7 downto 0):=x"00";
+	constant ST0_INVALID_COMMAND_ISSUE : std_logic_vector(7 downto 0):=x"80";
 	constant ST0_ABNORMAL : std_logic_vector(7 downto 0):=x"40";
-	constant ST0_INVALID : std_logic_vector(7 downto 0):=x"80";
-	--constant ST0_READY_CHANGE : std_logic_vector(7 downto 0):=x"C0"; --FIXME
-	constant ST0_NOT_READY : std_logic_vector(7 downto 0):=x"08";
-	constant ST0_HEAD_ADDR : std_logic_vector(7 downto 0):=x"04";
-	constant ST0_EQUIP_CHECK : std_logic_vector(7 downto 0):=x"10"; -- RECALIBRATE (SEEK 0) cmd fail
 	constant ST0_SEEK_END : std_logic_vector(7 downto 0):=x"20";
-	-- + actualDrive
-	-- hacks FDCTEST.ASM
-	constant ST0_END_OF_READ_DRIVE_US0 : std_logic_vector(7 downto 0):=x"41"; -- FDCTEST.ASM WTF ???????
-	constant ST0_END_OF_READ_DRIVE_US0_BAD : std_logic_vector(7 downto 0):=x"40"; -- FDCTEST.ASM WTF ???????
+	constant ST0_EQUIPMENT_CHECK : std_logic_vector(7 downto 0):=x"10"; -- RECALIBRATE (SEEK 0) cmd fail
+	constant ST0_NOT_READY : std_logic_vector(7 downto 0):=x"08";
+	-- + current_HUS
 	
-	constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
-	constant ST1_NOT_WRITABLE : std_logic_vector(7 downto 0):=x"02";
-	constant ST1_NO_DATA : std_logic_vector(7 downto 0):=x"04";
-	constant ST1_OVERRUN : std_logic_vector(7 downto 0):=x"10"; -- protected dsk
+	constant ST1_END_OF_CYLINDER : std_logic_vector(7 downto 0):=x"80";
 	constant ST1_DATA_ERROR : std_logic_vector(7 downto 0):=x"20"; -- protected dsk
-	constant ST1_END_CYL : std_logic_vector(7 downto 0):=x"80";
-	-- hacks FDCTEST.ASM
-	constant ST1_SECTOR_NOT_FOUND_BAD : std_logic_vector(7 downto 0):=x"84";
+	constant ST1_OVERRUN : std_logic_vector(7 downto 0):=x"10"; -- protected dsk
+	constant ST1_NO_DATA : std_logic_vector(7 downto 0):=x"04";
+	constant ST1_NOT_WRITABLE : std_logic_vector(7 downto 0):=x"02";
+	constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
 	
-	--constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
-	--constant ST2_BAD_CYLINDER : std_logic_vector(7 downto 0):=x"02";
-	constant ST2_SCAN_NOT_SATISFIED : std_logic_vector(7 downto 0):=x"04";
 	constant ST2_SCAN_EQUAL_HIT : std_logic_vector(7 downto 0):=x"08";
-	--constant ST2_WRONG_CYL : std_logic_vector(7 downto 0):=x"10";
-	--constant ST2_DATA_ERROR : std_logic_vector(7 downto 0):=x"20";
-	--constant ST2_CONTROL_MARK : std_logic_vector(7 downto 0):=x"40";
-	-- hacks FDCTEST.ASM
-	constant ST2_SECTOR_NOT_FOUND_BAD : std_logic_vector(7 downto 0):=x"00";
+	constant ST2_SCAN_NOT_SATISFIED : std_logic_vector(7 downto 0):=x"04";
+	constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01"; -- protected dsk
 	
-	--constant ST3_HEAD_ADDR : std_logic_vector(7 downto 0):=x"04";
-	constant ST3_TWO_SIDE : std_logic_vector(7 downto 0):=x"08";
-	constant ST3_TRACK_0 : std_logic_vector(7 downto 0):=x"10";
+	constant ST3_WRITE_PROTECTED : std_logic_vector(7 downto 0):=x"40";
 	constant ST3_READY : std_logic_vector(7 downto 0):=x"20";
-	constant ST3_WRITE_PROT : std_logic_vector(7 downto 0):=x"40";
-	--constant ST3_FAULT : std_logic_vector(7 downto 0):=x"80";
-	-- + actualDrive
+	constant ST3_TRACK_ZERO : std_logic_vector(7 downto 0):=x"10";
+	constant ST3_2SIDES : std_logic_vector(7 downto 0):=x"08";
+	-- + current_HUS
 	
-	constant ACTION_POLL:integer range 0 to 8:=0;
+	constant ETAT_OSEF:integer range 0 to 8:=0;
 	--constant ETAT_READ_DIAGNOSTIC:integer range 0 to 9:=1;
-	constant ACTION_READ:integer range 0 to 8:=1;
-	constant ACTION_SEEK:integer range 0 to 8:=2;
-	constant ACTION_WRITE:integer range 0 to 8:=3;
+	constant ETAT_READ:integer range 0 to 8:=1;
+	constant ETAT_SEEK:integer range 0 to 8:=2;
+	constant ETAT_WRITE:integer range 0 to 8:=3;
 	constant ETAT_RECALIBRATE:integer range 0 to 8:=4;
-	constant ACTION_READ_ID:integer range 0 to 8:=5;
+	constant ETAT_READ_ID:integer range 0 to 8:=5;
 	constant ETAT_SENSE_DRIVE_STATUS:integer range 0 to 8:=6;
 	constant ETAT_SENSE_INTERRUPT_STATUS:integer range 0 to 8:=7;
-	constant ACTION_SCAN:integer range 0 to 8:=8;
+	constant ETAT_COMPARE:integer range 0 to 8:=8;
 	
 	constant PHASE_ATTENTE_COMMANDE:integer range 0 to 9:=0;
 	constant PHASE_COMMAND:integer range 0 to 9:=1;
@@ -164,15 +146,11 @@ architecture Behavioral of simple_DSK is
 	signal memshark_chrn:STD_LOGIC_VECTOR(4*8-1 downto 0):=(others=>'0');
 	signal memshark_doGOTO:boolean:=false;
 	signal memshark_doGOTO_T:boolean:=false;
-	signal memshark_doGOTO_R:boolean:=false;
+	signal memshark_doGOTO_MT:boolean:=false;
 	signal memshark_doREAD:boolean:=false;
-	signal memshark_doREADnext:boolean:=false;
 	signal memshark_doREAD_DEL:boolean:=false;
 	signal memshark_doREAD_SK:boolean:=false;
-	signal memshark_doREAD_MT:boolean:=false;
 	signal memshark_doWRITE:boolean:=false;
-	signal memshark_doWRITE_DEL:boolean:=false;
-	signal memshark_doWRITE_MT:boolean:=false;
 	signal memshark_DTL:integer range 0 to SECTOR_SIZE-1:=0;
 	signal memshark_is_DTL:boolean:=false;
 	signal memshark_done:boolean:=true;
@@ -181,16 +159,16 @@ architecture Behavioral of simple_DSK is
 	signal block_Din_megashark:std_logic_vector(7 downto 0);
 	signal block_Din_cortex:std_logic_vector(7 downto 0);
 	signal block_Dout:std_logic_vector(7 downto 0);
-	signal block_A:std_logic_vector(9 downto 0);
-	signal block_A_megashark:std_logic_vector(9 downto 0);
-	signal block_A_cortex:std_logic_vector(9 downto 0);
+	signal block_A:std_logic_vector(8 downto 0);
+	signal block_A_megashark:std_logic_vector(8 downto 0);
+	signal block_A_cortex:std_logic_vector(8 downto 0);
 	signal block_W:std_ulogic;
 	signal block_W_megashark:std_ulogic:='0';
 	signal block_W_cortex:std_ulogic:='0';
 
 	signal megashark_doGOTO_s:std_logic_vector(2 downto 0):="000";
-	signal megashark_doREAD_s:std_logic_vector(4 downto 0):="00000";
-	signal megashark_doWRITE_s:std_logic_vector(2 downto 0):="000";
+	signal megashark_doREAD_s:std_logic_vector(2 downto 0):="000";
+	signal megashark_doWRITE_s:std_logic:='0';
 	
 begin
 
@@ -234,7 +212,7 @@ status <= REQ_MASTER when phase = PHASE_ATTENTE_COMMANDE
 	else               COMMAND_BUSY or EXEC_MODE when phase = PHASE_WAIT_EXECUTION_WRITE
 	else REQ_MASTER or COMMAND_BUSY or EXEC_MODE when phase = PHASE_EXECUTION_WRITE
 	else               COMMAND_BUSY or EXEC_MODE when phase = PHASE_AFTER_EXECUTION_WRITE
-	-- readPort:result : if REQ_MASTER then pop result[],
+	-- readPort:results : if REQ_MASTER then pop result[],
 	--                         if last pop then remove COMMAND_BUSY and DATA_IN_OUT
 	else               COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_WAIT_RESULT
 	else REQ_MASTER or COMMAND_BUSY or DATA_IN_OUT when phase = PHASE_RESULT
@@ -245,7 +223,7 @@ status <= REQ_MASTER when phase = PHASE_ATTENTE_COMMANDE
 
  RAMB16_S9_inst : altera_syncram
  generic map (
-   abits =>10,
+   abits =>9,
 	dbits =>8
  )
  port map (
@@ -262,7 +240,7 @@ block_W<=block_W_megashark when not(memshark_done) else block_W_cortex;
 megashark:process(reset,nCLK4_1)
 	--variable newDskInserted : boolean := true;
 	variable chrn_mem:STD_LOGIC_VECTOR(4*8-1 downto 0):=(others=>'0');
-	variable memshark_counter:integer range 0 to SECTOR_SIZE_MT-1; --std_logic_vector(8 downto 0):=(others=>'0');
+	variable memshark_counter:integer range 0 to 511; --std_logic_vector(8 downto 0):=(others=>'0');
 	variable memshark_step:integer range 0 to 9;
 	variable block_A_megashark_mem:std_logic_vector(block_A_megashark'range):=(others=>'0');
 	variable block_Din_megashark_mem:std_logic_vector(block_Din_megashark'range):=(others=>'0');
@@ -270,8 +248,7 @@ megashark:process(reset,nCLK4_1)
 	variable megashark_A_mem:std_logic_vector(megashark_A'range):=(others=>'0');
 	variable megashark_Dout_mem:std_logic_vector(megashark_Dout'range):=(others=>'0');
 	variable doGOTO_mem:std_logic_vector(2 downto 0):="000";
-	variable doREAD_mem:std_logic_vector(4 downto 0):="00000";
-	variable doWRITE_mem:std_logic_vector(2 downto 0):="000";
+	variable doREAD_mem:std_logic_vector(2 downto 0):="000";
 begin
 	if reset='1' then
 	elsif rising_edge(nCLK4_1) then --CLK4
@@ -288,48 +265,33 @@ begin
 			doGOTO_mem:="001";
 			if memshark_doGOTO_T then
 				doGOTO_mem(1):='1';
-			end if;
-			if memshark_doGOTO_R then
-				doGOTO_mem(1):='1';
+			elsif memshark_doGOTO_MT then
 				doGOTO_mem(2):='1';
 			end if;
 			memshark_step:=0;
 		elsif memshark_doREAD then
 			-- READ CHRN : here R is sector id (x"C1"...), READ_DIAGNOSTIC do use EOT parameter, that is a sector id, so I doREAD when READ_DIAGNOSTIC command is called, instead of launching doGOTO.
 			memshark_done<=false;
-			doREAD_mem:="00001";
-			if memshark_doREADnext then
+			doREAD_mem:="001";
+			if memshark_doREAD_SK then
 				doREAD_mem(1):='1';
-			end if;
-			if memshark_doREAD_DEL then
+			elsif memshark_doREAD_DEL then
 				doREAD_mem(2):='1';
 			end if;
-			if memshark_doREAD_SK then
-				doREAD_mem(3):='1';
-			end if;
-			if memshark_doREAD_MT then
-				doREAD_mem(4):='1';
-			end if;
+			
 			memshark_step:=3;
 		elsif memshark_doWRITE then
 			memshark_done<=false;
-			doWRITE_mem:="001";
-			if memshark_doWRITE_DEL then
-				doWRITE_mem(1):='1';
-			end if;
-			if memshark_doWRITE_MT then
-				doWRITE_mem(2):='1';
-			end if;
 			memshark_step:=6;
 		end if;
 		
 		megashark_doGOTO_s<="000";
-		megashark_doREAD_s<="00000";
-		megashark_doWRITE_s<="000";
+		megashark_doREAD_s<="000";
+		megashark_doWRITE_s<='0';
 		
 		block_W_megashark_mem:='0'; -- we write only one time
 		if not(memshark_done) then
-			if megashark_done='1' and megashark_doGOTO_s(0)='0' and megashark_doREAD_s(0)='0' and megashark_doWRITE_s(0)='0' then
+			if megashark_done='1' and megashark_doGOTO_s(0)='0' and megashark_doREAD_s(0)='0' and megashark_doWRITE_s='0' then
 				case memshark_step is
 					when 0=> -- GOTO memshark_chrn
 						chrn_mem:=memshark_chrn;
@@ -346,16 +308,11 @@ begin
 						chrn_mem:=memshark_chrn;
 						megashark_CHRN<=chrn_mem;
 						memshark_counter:=0;
-						megashark_A<=conv_std_logic_vector(memshark_counter,10);
+						megashark_A<=conv_std_logic_vector(memshark_counter,9);
 						megashark_doREAD_s<=doREAD_mem;
 						memshark_step:=4;
 					when 4=>
-						if doREAD_mem(1)='1' then
-							-- is_next
-							doREAD_mem(1):='0';
-							chrn_mem:=megashark_CHRNresult;
-						end if;
-						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,10);
+						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,9);
 						block_Din_megashark_mem:=megashark_Din;
 						--if memshark_counter<16*2 then
 						--	block_Din_megashark_mem:=sampleSector((16*2-memshark_counter)*8-1 downto (16*2-memshark_counter-1)*8);
@@ -363,13 +320,12 @@ begin
 						--	block_Din_megashark_mem:=x"E5";
 						--end if;
 						block_W_megashark_mem:='1';
-						if (doREAD_mem(4)='1' and memshark_counter = SECTOR_SIZE_MT-1)
-							or (doREAD_mem(4)='0' and memshark_counter = SECTOR_SIZE-1) then
+						if memshark_counter = 511 then
 							memshark_step:=5;
 						else
 							megashark_CHRN<=chrn_mem;
 							memshark_counter:=memshark_counter+1;
-							megashark_A<=conv_std_logic_vector(memshark_counter,10);
+							megashark_A<=conv_std_logic_vector(memshark_counter,9);
 							megashark_doREAD_s<=doREAD_mem;
 						end if;
 					when 5=>
@@ -381,7 +337,7 @@ begin
 						chrn_mem:=memshark_chrn;
 						megashark_CHRN<=chrn_mem;
 						memshark_counter:=0;
-						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,10);
+						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,9);
 						block_W_megashark_mem:='0';
 						memshark_step:=9;
 					when 9=>
@@ -390,37 +346,36 @@ begin
 							-- just wait MORE THAN one tic that I can read block_A_megashark_mem
 							megashark_Dout_mem:=block_Dout;
 							megashark_Dout<=megashark_Dout_mem;
-							megashark_A_mem:=conv_std_logic_vector(memshark_counter,10);
+							megashark_A_mem:=conv_std_logic_vector(memshark_counter,9);
 							megashark_A<=megashark_A_mem;
-							megashark_doWRITE_s<=doWRITE_mem;
+							megashark_doWRITE_s<='1';
 						memshark_counter:=0;
-						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,10);
+						block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,9);
 						block_W_megashark_mem:='0';
 						memshark_step:=7;
 					when 7=>
-						if (doWRITE_mem(2)='1' and not(memshark_is_DTL) and memshark_counter = SECTOR_SIZE_MT-1)
-							or (doWRITE_mem(2)='0' and not(memshark_is_DTL) and memshark_counter = SECTOR_SIZE-1) then
+						if not(memshark_is_DTL) and memshark_counter = 511 then
 							-- fin de non DTL
 							megashark_CHRN<=chrn_mem;
 							megashark_Dout_mem:=block_Dout;
 							megashark_Dout<=megashark_Dout_mem;
-							megashark_A_mem:=conv_std_logic_vector(memshark_counter,10);
+							megashark_A_mem:=conv_std_logic_vector(memshark_counter,9);
 							megashark_A<=megashark_A_mem;
-							megashark_doWRITE_s<=doWRITE_mem;
+							megashark_doWRITE_s<='1';
 							memshark_step:=8;
 						else
 							megashark_CHRN<=chrn_mem;
 							megashark_Dout_mem:=block_Dout;
 							megashark_Dout<=megashark_Dout_mem;
-							megashark_A_mem:=conv_std_logic_vector(memshark_counter,10);
+							megashark_A_mem:=conv_std_logic_vector(memshark_counter,9);
 							megashark_A<=megashark_A_mem;
-							megashark_doWRITE_s<=doWRITE_mem;
+							megashark_doWRITE_s<='1';
 							memshark_counter:=memshark_counter+1;
 							if memshark_is_DTL and memshark_counter = memshark_DTL then
 								-- fin de DTL...
 								memshark_step:=8;
 							else
-								block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,10);
+								block_A_megashark_mem:=conv_std_logic_vector(memshark_counter,9);
 								block_W_megashark_mem:='0';
 							end if;
 						end if;
@@ -441,22 +396,21 @@ end process megashark;
 
 
 cortex:process(reset,nCLK4_1)
-	variable current_byte:integer range 0 to SECTOR_SIZE_MT-1;
+	variable current_byte:integer range 0 to 511;
 	--type sector_size_type is array(0 to 4) of integer;
 	--constant SECTOR_SIZES:sector_size_type:=(128,256,512,1024,2048);--(x"80",x"100",x"200",x"400",x"800",x"1000",x"1800");
 	--variable dtl:integer range 0 to SECTOR_SIZE-1:=0; -- against Drive <drive>: disc changed, closing <filename>	The user has changed the disc while files were still open on it.
 	
 	type params_type is array(0 to 7) of std_logic_vector(7 downto 0);
 	type results_type is array(0 to 6) of std_logic_vector(7 downto 0);
-	variable pcount:integer range 0 to 8:=0;
+	variable command_restant:integer range 0 to 8:=0;
 	variable params:params_type:=(others=>(others=>'0')); -- stack of params
-	variable exec_restant:integer range 0 to SECTOR_SIZE_MT:=0;
-	variable exec_restant_write:integer range 0 to SECTOR_SIZE_MT:=0;
-	variable rcount:integer range 0 to 7:=0;
-	variable result:results_type:=(others=>(others=>'0')); -- stack of result
+	variable exec_restant:integer:=0;
+	variable exec_restant_write:integer:=0;
+	variable result_restant:integer range 0 to 7:=0;
+	variable results:results_type:=(others=>(others=>'0')); -- stack of results
 	type chrn_type is array(3 downto 0) of std_logic_vector(7 downto 0);
 	variable chrn:chrn_type:=(others=>(others=>'0'));
-	variable status_mem:std_logic_vector(7 downto 0);
 
 	function getCHRN(chrn : in STD_LOGIC_VECTOR(4*8-1 downto 0)) return chrn_type is
 		variable chrn_interne:chrn_type;
@@ -473,7 +427,7 @@ cortex:process(reset,nCLK4_1)
 		return chrn(3) & chrn(2) & chrn(1) & chrn(0);
 	end function;
 
-	variable action:integer range 0 to 8;
+	variable etat:integer range 0 to 8;
 	variable check_dsk_face:boolean:=false;
 	variable etat_wait:boolean:=false; -- memshark is busy or out of synchro (work in progress, do generate a ST0/ST1 failing for this round)
 	variable etat_zap:boolean:=false;
@@ -482,9 +436,6 @@ cortex:process(reset,nCLK4_1)
 	
 	variable is_del:boolean:=false;
 	variable is_sk:boolean:=false;
-
-	variable is_readtrack:boolean:=false;
-	variable isBOT:boolean:=false; -- against loop FDCTEST.ASM 37 multi-track operation - eot doesn't exist
 	
 	variable data:std_logic_vector(7 downto 0);
 	variable do_update:boolean;
@@ -533,11 +484,11 @@ cortex:process(reset,nCLK4_1)
 -- b6     WP  Write Protected (write protected)
 -- b7     FT  Fault (if supported: 1=Drive failure)
 	variable ST0:std_logic_vector(7 downto 0):=(others=>'0');
-	variable actualDrive:std_logic_vector(7 downto 0):=(others=>'0'); -- H + US + US
+	variable current_HUS:std_logic_vector(7 downto 0):=(others=>'0'); -- H + US + US
 	variable ST1:std_logic_vector(7 downto 0):=(others=>'0');
 	variable ST2:std_logic_vector(7 downto 0):=(others=>'0');
 	variable ST3:std_logic_vector(7 downto 0):=(others=>'0');
-	-- BLOCK_SIZE : N stands for the number of data bytes written in a (Number) sector
+	constant ONE_BLOCK:std_logic_vector(7 downto 0):=x"01";
 	constant BLOCK_SIZE:std_logic_vector(7 downto 0):=x"02";
 	constant TRACK_00:std_logic_vector(7 downto 0):=x"00";
 	variable EOT:std_logic_vector(7 downto 0):=(others=>'0');
@@ -551,37 +502,26 @@ cortex:process(reset,nCLK4_1)
 	--variable current_face:std_logic:='0';
 	variable current_face_notReady:boolean:=true;
 	
-	variable compare_low_or_equal:boolean:=false;
-	variable compare_high_or_equal:boolean:=false;
+	variable compare_low:boolean:=false;
+	variable compare_high:boolean:=false;
 	variable compare_OK:boolean:=false;
 	
 	variable is_seeking_FACE_A:boolean:=false;
 	variable is_seeking_FACE_B:boolean:=false;
-	variable is_recalibrating_FACE_A:boolean:=false;
-	variable is_recalibrating_FACE_B:boolean:=false;
-	
 	variable is_issue:boolean:=false; -- not is_seeking but bad command result
-	variable is_overrun:boolean:=false;
 	
-	
-	variable motors:std_logic:='0';
-	
-	variable gremlin:integer range 0 to 127:=0; --When sector data is read, a byte comes every 32us. => overrun
+	variable seek_failed:boolean:=false; -- seek/recalibrate result
 begin
 
 	if reset='1' then
 		D_result<=(others=>'1');
 
 		current_byte:=0;
-		pcount:=0;
+		command_restant:=0;
 		exec_restant:=0;
-		rcount:=0;
-		action:=ACTION_POLL;
+		result_restant:=0;
+		etat:=ETAT_OSEF;
 		data:=(others=>'0');
-		is_issue:=false;
-		is_overrun:=false;
-		motors:='0';
-		gremlin:=0;
 		
 		do_update:=false;
 		phase<=PHASE_ATTENTE_COMMANDE;
@@ -590,21 +530,16 @@ begin
 	
 			memshark_doGOTO<=false;
 			memshark_doGOTO_T<=false;
-			memshark_doGOTO_R<=false;
+			memshark_doGOTO_MT<=false;
 			memshark_doREAD<=false;
-			memshark_doREADnext<=false;
 			memshark_doREAD_DEL<=false;
 			memshark_doREAD_SK<=false;
-			memshark_doREAD_MT<=false;
 			memshark_doWRITE<=false;
-			memshark_doWRITE_DEL<=false;
-			memshark_doWRITE_MT<=false;
 			
-			if actualDrive(1)='1' then
+	
+			if current_HUS(0)='0' and is_dskReady(0) = '1' then
 				current_face_notReady:=false;
-			elsif actualDrive(0)='0' and is_dskReady(0) = '1' then
-				current_face_notReady:=false;
-			elsif actualDrive(0)='1' and is_dskReady(1) = '1' then
+			elsif current_HUS(0)='1' and is_dskReady(1) = '1' then
 				current_face_notReady:=false;
 			else
 				current_face_notReady:=true;
@@ -620,39 +555,31 @@ begin
 			if etat_wait then
 				if phase = PHASE_WAIT_ATTENTE_COMMANDE and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					actualDrive(2):=megashark_CHRNresult(16); -- side (one side only ?)
+					current_HUS(2):=megashark_CHRNresult(16); -- side (one side only ?)
 					chrn:=getCHRN(megashark_CHRNresult); -- C (from SEEK command ask)
 					-- ST1_NO_DATA or ST1_MISSING_ADDR
+					seek_failed:=(megashark_INFO_ST1(2)='1' or megashark_INFO_ST1(0)='1');
 					etat_wait:=false;
 					phase <= PHASE_ATTENTE_COMMANDE;
 				elsif phase = PHASE_WAIT_EXECUTION_READ and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					actualDrive(2):=megashark_CHRNresult(16); -- side (one side only ?)
+					current_HUS(2):=megashark_CHRNresult(16); -- side (one side only ?)
 					etat_wait:=false;
-					if (megashark_INFO_ST1 and ST1_MISSING_ADDR) = x"00" then
-						phase <= PHASE_EXECUTION_READ;
-					else
-						-- no bytes to read
-						exec_restant:=0;
-						BOT:=EOT;
-						phase <= PHASE_RESULT;
-						rcount:=7;
-					end if;
+					phase <= PHASE_EXECUTION_READ;
 				elsif phase = PHASE_WAIT_EXECUTION_WRITE and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					actualDrive(2):=megashark_CHRNresult(16); -- side (one side only ?)
+					current_HUS(2):=megashark_CHRNresult(16); -- side (one side only ?)
 					etat_wait:=false;
 					phase <= PHASE_EXECUTION_WRITE;
 				elsif phase = PHASE_WAIT_RESULT and memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					-- that's all folks !
-					actualDrive(2):=megashark_CHRNresult(16); -- side (one side only ?)
+					current_HUS(2):=megashark_CHRNresult(16); -- side (one side only ?)
 					etat_wait:=false;
 					phase <= PHASE_RESULT;
 				end if;
 			end if;
 	
-	
-			if current_face_notReady or etat_wait then
+			if current_face_notReady then
 				--The following bits are used from NEC765 status register 1:
 				--b7 EN (End of Cylinder)
 				--b5 DE (Data Error)
@@ -664,65 +591,33 @@ begin
 				--b0 MD (Missing address Mark in Data field)
 			
 				-- DSK NOT READY MESSAGE
-				ST0:=ST0_ABNORMAL or ST0_NOT_READY or actualDrive; -- do press retry to test :/
-				ST1:=x"00";
+				ST0:=ST0_ABNORMAL or ST0_NOT_READY or current_HUS;
+				ST1:=ST1_NO_DATA or ST1_MISSING_ADDR;-- or megashark_INFO_ST1;
 				ST2:=x"00";
-				ST3:=x"00" or actualDrive;
+			elsif etat_wait then
+				ST0:=ST0_ABNORMAL or ST0_NOT_READY or current_HUS; -- do press retry to test :/
+				ST1:=ST1_NO_DATA or ST1_MISSING_ADDR;-- or megashark_INFO_ST1;
+				ST2:=x"00";
 			else
 				ST1:=megashark_INFO_ST1;
 				ST2:=megashark_INFO_ST2;
 				-- TEST : |a |b |a using ss40t in drive A: and ds80t DOS D2 in drive B:
 				-- RESULT : crash due to ST0_ABNORMAL returned in a simple READ_ID cmd...
-				if (megashark_INFO_ST1 and ST1_NO_DATA)=ST1_NO_DATA then
-					ST0:=ST0_ABNORMAL or actualDrive;
-				else
-					ST0:=actualDrive;
-				end if;
-				ST3:=ST3_READY or actualDrive;
+--				if ST1(0)='1' then
+--					--ST1_MISSING_ADDR
+--					ST0:=ST0_ABNORMAL or current_HUS;
+--				else
+					ST0:=current_HUS;
+--				end if;
 			end if;
-			
-			if is_issue then
-				ST0:=ST0 or ST0_INVALID;
-			elsif is_overrun then
-				ST0:=ST0 or ST0_ABNORMAL;
-				ST1:=ST1 or ST1_OVERRUN;
-			end if;
-			
 			if megashark_INFO_2SIDES='1' then
-				-- JavaCPC : 2T is at '1' if it is a double sided dsk...
-				-- Batman in one disk not running correctly
-				-- RTypes128K doesn't matter ST3_TWO_SIDE.
-				ST3:=ST3 or ST3_TWO_SIDE;
+				ST3:=ST3_READY or current_HUS;
+			else
+				-- JavaCPC : 2T is at '1' if it is a simple sided dsk...
+				ST3:=ST3_READY or ST3_2SIDES or current_HUS;
 			end if;
-			--JavaCPC
-			--if megashark_INFO_2SIDES='0' and actualDrive(2)='1' then
-			--	--When the FDD IS in the not-ready state and (Not Ready) a Read or Write command IS Issued, this flag IS set 
-			--	--If a Read or Write command isissued to side 1 of a single-sided drive,then this flag IS set
-			--	ST0:=ST0 or ST0_NOT_READY;
-			--end if;
-				
-			--When sector data is read, a byte comes every 32us. => overrun
-			if (phase=PHASE_EXECUTION_WRITE or phase=PHASE_EXECUTION_READ) then
-				gremlin:=gremlin+1;
-				if gremlin=127 then
-					-- FDCTEST.ASM 45
-					--HELL (gremlin and (PHASE_EXECUTION_WRITE or PHASE_EXECUTION_READ))
-					rcount:=7;
-					is_overrun:=true;
-					--is_issue:=true;
-					exec_restant:=0;
-					exec_restant_write:=0;
-					if etat_wait then
-						phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
-					else
-						phase<=PHASE_RESULT;
-					end if;
-				end if;
-			end if;
-			if A10_A8_A7=b"000" then
-				-- I am concerned (motors)
-				do_update:=true;
-			elsif ((wasIO_RD='0' and IO_RD='1') or (wasIO_WR='0' and IO_WR='1')) and A10_A8_A7=b"010"  then
+	
+			if ((wasIO_RD='0' and IO_RD='1') or (wasIO_WR='0' and IO_WR='1')) and A10_A8_A7=b"010"  then
 				-- I am concerned
 				do_update:=true;
 			elsif ((wasIO_RD='1' and IO_RD='1') or (wasIO_WR='1' and IO_WR='1')) and A10_A8_A7=b"010"  then
@@ -785,22 +680,14 @@ begin
 					if (IO_RD='1' and A10_A8_A7=b"010" and A0='0') then
 						-- read status
 						-- read status
-						status_mem:=status;
-						if is_seeking_FACE_A then
-							status_mem(0):='1';
-						end if;
-						if is_seeking_FACE_B then
-							status_mem(1):='1';
-						end if;
-						D_result<=status_mem;
+						D_result<=status;
 					elsif (IO_RD='1' and A10_A8_A7=b"010" and A0='1') then
 						-- read data
-						gremlin:=0;
 						if phase=PHASE_EXECUTION_READ then
 							if exec_restant>0 then
 								exec_restant:=exec_restant-1;
 							end if;
-							if action=ACTION_READ then
+							if etat=ETAT_READ then
 								chrn:=getCHRN(megashark_CHRNresult);
 								if not(etat_wait) and not(etat_zap) then
 									data:=block_Dout;
@@ -813,49 +700,37 @@ begin
 								else
 									D_result<=(others=>'1');
 								end if;
-								if is_multitrack and current_byte=SECTOR_SIZE_MT-1 then
-									-- bug overflow !
-									current_byte:=0;
-								elsif not(is_multitrack) and current_byte=SECTOR_SIZE-1 then
+								if current_byte=511 then
 									-- bug overflow !
 									current_byte:=0;
 								else
 									current_byte:=current_byte+1;
 								end if;
 								if not(etat_wait) and not(etat_zap) then
-									block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
+									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									block_W_cortex_mem:='0';
 								end if;
 
 								
 								if exec_restant=0 then
-									if (is_readtrack and EOT=1)
-											or (not(is_readtrack) and (EOT=chrn(1) or (not(isBOT) and BOT=chrn(1))))
-											or etat_zap then -- found sector is EOT ?
+									if EOT=BOT or etat_zap then
 										if etat_wait then
 											phase<=PHASE_WAIT_RESULT;
 										else
 											phase<=PHASE_RESULT;
 										end if;
-										rcount:=7;
-										--result(6):=ST0; -- ST0
-										--result(5):=ST1 or ST1_END_CYL; -- ST1
-										--result(4):=ST2; -- ST2
-										--result(3):=chrn(3); -- params(6); -- C
-										--result(2):=chrn(2); -- params(5); -- H
-										--result(1):=SECTOR_FOUND; --chrn(1); -- R (BOT=EOT)
-										--result(0):=chrn(0); -- N (BLOCK_SIZE)
+										result_restant:=7;
+										results(6):=ST0; -- ST0
+										results(5):=ST1; -- ST1
+										results(4):=ST2; -- ST2
+										results(3):=chrn(3); -- params(6); -- C
+										results(2):=chrn(2); -- params(5); -- H
+										results(1):=ONE_BLOCK; -- JavaCPC chrn(1); -- params(4); -- R
+										results(0):=params(3); -- N (DTL applyed)
 									else
-										-- FDCTEST.ASM read_data_noskip R=1, EOT=9 => 2 read_data
-										if isBOT then
-											BOT:=chrn(1); --+x"01"; -- found sector +1 -- no brain ? first sector is targeted, then next ones until EOT ?
-											isBOT:=false;
-										end if;
-										--chrn(1):=BOT;
-										if is_readtrack then
-											EOT:=EOT-1;
-										end if;
-										if ((is_readtrack and EOT=1) or (not(is_readtrack) and EOT=chrn(1)+x"01")) and is_EOT_DTL then
+										BOT:=BOT+x"01"; -- no brain
+										chrn(1):=BOT;
+										if EOT=BOT and is_EOT_DTL then
 											exec_restant:=EOT_DTL;
 										else
 											exec_restant:=SECTOR_SIZE;
@@ -868,195 +743,97 @@ begin
 											-- on lance une tentative de lecture du block en parallele
 											memshark_chrn<=setCHRN(chrn);
 											memshark_doREAD<=true;
-											memshark_doREADnext<=true;
 											memshark_doREAD_DEL<=is_del;
 											memshark_doREAD_SK<=is_sk;
-											memshark_doREAD_MT<=is_multitrack;
 										end if;
 									end if;
 								end if;
 								
-							--else
+							else
 								-- HELL
---								exec_restant:=0;
---								exec_restant_write:=0;
---								if etat_wait then
---									phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
---								else
---									phase<=PHASE_RESULT;
---								end if;
---								--is_issue:=true;
---								is_overrun:=true;
---								if rcount=0 then
---									rcount:=1;
---									result(0):=ST0 or ST0_ABNORMAL;
---								end if;
 							end if;
 							
 							
 							
 							
 						
-						else
-							if phase/=PHASE_RESULT then
-								-- HELL (PHASE_EXECUTION_WRITE)
-								if phase=PHASE_EXECUTION_WRITE then
-									rcount:=7;
-									is_overrun:=true;
-									ST0 := ST0 or ST0_ABNORMAL;
-									ST1 := ST1 or ST1_OVERRUN;
-								else
-									is_issue:=true;
-								end if;
-								exec_restant:=0;
-								exec_restant_write:=0;
-								if etat_wait then
-									phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
-								else
-									phase<=PHASE_RESULT;
-								end if;
-								
-								if rcount=0 then
-									rcount:=1;
-									ST0 := ST0 or ST0_INVALID;
-									result(0):=ST0 or ST0_INVALID;
-								end if;
-							end if;
-							
-							if action=ACTION_SCAN and rcount=7 then
-								action:=ACTION_POLL;
+						elsif phase=PHASE_RESULT then
+							if etat=ETAT_READ_ID and result_restant=7 then-- PARADOS second drive seem have serious problem (with same data and fixed sector id here, size of disk/file is different), perhaps more FDC instructions runs
+								etat:=ETAT_OSEF;
 								chrn:=getCHRN(megashark_CHRNresult);
-								result(6):=ST0; -- ST0
-								if (ST0 and ST0_ABNORMAL)=ST0_ABNORMAL then
-									result(5):=ST1;
-								else
-									result(5):=ST1 or ST1_END_CYL; -- ST1
-								end if;
-								if compare_OK then
-									result(4):=ST2 or ST2_SCAN_EQUAL_HIT; -- ST2
-								else
-									result(4):=ST2 or ST2_SCAN_NOT_SATISFIED; -- ST2
-								end if;
-								result(3):=chrn(3); --params(6); -- C
-								result(2):=chrn(2); --params(5); -- H
-								result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
-								result(0):=chrn(0); -- N (BLOCK_SIZE)
-							elsif action=ACTION_WRITE and rcount=7 then
-								action:=ACTION_POLL;
-								chrn:=getCHRN(megashark_CHRNresult);
-								result(6):=ST0; -- ST0
-								if (ST0 and ST0_ABNORMAL)=ST0_ABNORMAL then
-									result(5):=ST1;
-								else
-									result(5):=ST1 or ST1_END_CYL; -- ST1
-								end if;
-								result(4):=ST2; -- ST2
-								result(3):=chrn(3); --params(6); -- C
-								result(2):=chrn(2); --params(5); -- H
-								result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
-								result(0):=chrn(0); -- N (BLOCK_SIZE)
-							elsif action=ACTION_READ and rcount=7 then
-								action:=ACTION_POLL;
-								chrn:=getCHRN(megashark_CHRNresult);
-								
-								if (ST0 and ST0_ABNORMAL)=ST0_ABNORMAL then
-									--result(5):=ST1;
-									result(5):=ST1;--ST1_SECTOR_NOT_FOUND_BAD; --FDCTEST.ASM 26
-									result(6):=ST0;-- or ST0_END_OF_READ_DRIVE_US0_BAD; -- ST0
-									result(4):=ST2;--_SECTOR_NOT_FOUND_BAD; -- ST2
-								else
-									result(5):=ST1 or ST1_END_CYL; -- ST1
-									result(6):=ST0;-- or ST0_END_OF_READ_DRIVE_US0; -- ST0
-									result(4):=ST2; -- ST2
-								end if;
-								result(3):=chrn(3); -- params(6); -- C
-								result(2):=chrn(2); -- params(5); -- H
-								result(1):=params(2); -- FDCTEST.ASM 11 FAIL 04 chrn(1); -- SECTOR_FOUND; --chrn(1); -- R (BOT=EOT) FDCTEST.ASM 0F FAIL 04
-								result(0):=chrn(0); -- N (BLOCK_SIZE)
-							elsif action=ACTION_READ_ID and rcount=7 then-- PARADOS second drive seem have serious problem (with same data and fixed sector id here, size of disk/file is different), perhaps more FDC instructions runs
-								action:=ACTION_POLL;
-								chrn:=getCHRN(megashark_CHRNresult);
-								result(6):=ST0;
-								result(5):=ST1; -- ST1 (I'm always fine)
-								result(4):=ST2; -- ST2
-								result(3):=chrn(3); -- C
-								result(2):=chrn(2); -- H
-								result(1):=chrn(1); -- R (READ_ID sector ID)
-								result(0):=chrn(0); -- N (BLOCK_SIZE)
-							elsif action=ETAT_SENSE_DRIVE_STATUS and rcount=1 then
-								action:=ACTION_POLL;
+								results(6):=ST0;
+								results(5):=ST1; -- ST1 (I'm always fine)
+								results(4):=ST2; -- ST2
+								results(3):=chrn(3);
+								results(2):=chrn(2);
+								results(1):=chrn(1);
+								results(0):=BLOCK_SIZE; --chrn(0);
+							elsif etat=ETAT_SENSE_DRIVE_STATUS and result_restant=1 then
+								etat:=ETAT_OSEF;
 								chrn:=getCHRN(megashark_CHRNresult);
 								if chrn(3)=0 then
-									result(0):=ST3 or ST3_TRACK_0;
+									results(0):=ST3_TRACK_ZERO or ST3;
 								else
-									result(0):=ST3;
+									results(0):=ST3;
 								end if;
---							elsif action=ETAT_READ_DIAGNOSTIC and rcount=7 then
---								action:=ACTION_POLL;
+--							elsif etat=ETAT_READ_DIAGNOSTIC and result_restant=7 then
+--								etat:=ETAT_OSEF;
 --								chrn:=getCHRN(megashark_CHRNresult);
---								result(6):=ST0;
---								result(5):=ST1; -- ST1 (I'm always fine : asynchronous/PHASE_WAIT_ATTENTE_COMMANDE, OK)
---								result(4):=ST2; -- ST2
---								result(3):=chrn(3);
---								result(2):=chrn(2);
---								result(1):=chrn(1);
---								result(0):=chrn(0);
-							elsif action=ETAT_SENSE_INTERRUPT_STATUS  and rcount=3 then
-								action:=ACTION_POLL;
+--								results(6):=ST0;
+--								results(5):=ST1; -- ST1 (I'm always fine : asynchronous/PHASE_WAIT_ATTENTE_COMMANDE, OK)
+--								results(4):=ST2; -- ST2
+--								results(3):=chrn(3);
+--								results(2):=chrn(2);
+--								results(1):=ONE_BLOCK; --chrn(1);
+--								results(0):=chrn(0);
+							elsif etat=ETAT_SENSE_INTERRUPT_STATUS  and result_restant=3 then
+								etat:=ETAT_OSEF;
+								-- JavaCPC result[rindex = 0] = ST0_INVALID;
+								results(0):=ST0_INVALID_COMMAND_ISSUE;
 								--chrn:=getCHRN(megashark_CHRNresult); -- result of a previous seek/recalibrate
-								if is_issue or is_overrun then
+								if is_issue then
 									 -- generaly just after a failing "read command"
 									is_issue:=false;
-									is_overrun:=false;
 									is_seeking_FACE_A:=false;
 									is_seeking_FACE_B:=false;
-									is_recalibrating_FACE_A:=false;
-									is_recalibrating_FACE_B:=false;
-									-- JavaCPC result[rindex = 0] = ST0_INVALID;
-									result(0):=ST0; -- or ST0_INVALID;
 									-- JavaCPC rcount = 1;
-									rcount:=1;
-								elsif actualDrive(1 downto 0)="00" and is_seeking_FACE_A then
-									rcount:=2;
-									if is_recalibrating_FACE_A and chrn(3)/=x"00" then
-										result(1):=ST0 or ST0_EQUIP_CHECK; -- recalibrate => seek 77 not returned at track 0 !
+									result_restant:=1;
+								elsif current_HUS(0)='0' and is_seeking_FACE_A then
+									if seek_failed then
+										results(2):=ST0 or ST0_ABNORMAL or ST0_SEEK_END or ST0_EQUIPMENT_CHECK; -- generaly just after a "recalibrate command" ST0_SEEK_END
 									else
-										result(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+										results(2):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
 									end if;
-									result(0):=chrn(3); -- C -- PCN : Present Cylinder Number
+									results(1):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_A:=false;
-									is_recalibrating_FACE_A:=false;
-								elsif actualDrive(1 downto 0)="01" and is_seeking_FACE_B then
-									rcount:=2;
-									if is_recalibrating_FACE_B and chrn(3)/=x"00" then
-										result(1):=ST0 or ST0_EQUIP_CHECK; -- recalibrate => seek 77 not returned at track 0 !
+								elsif current_HUS(0)='1' and is_seeking_FACE_B then
+									if seek_failed then
+										results(2):=ST0 or ST0_ABNORMAL or ST0_SEEK_END or ST0_EQUIPMENT_CHECK; -- generaly just after a "recalibrate command" ST0_SEEK_END
 									else
-										result(1):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
+										results(2):=ST0 or ST0_SEEK_END; -- generaly just after a "recalibrate command" ST0_SEEK_END
 									end if;
-									result(0):=chrn(3); -- C -- PCN : Present Cylinder Number
+									results(1):=chrn(3); -- C -- PCN : Present Cylinder Number
 									is_seeking_FACE_B:=false;
-									is_recalibrating_FACE_B:=false;
 								else
 									-- Cpc Aventure : "Please insert disk 2" message ?
-									rcount:=1;
-									result(0):=ST0 or ST0_INVALID; -- FDCTEST.ASM &0D sense_intr1
+									result_restant:=1;
 								end if;
 							end if;
 							
-							if rcount>0 then
+							if result_restant>0 then
 							
-								rcount:=rcount-1;
+								result_restant:=result_restant-1;
 								
-								data:=result(rcount);
+								data:=results(result_restant);
 								D_result<=data;
 								
-								if rcount=0 then
+								if result_restant=0 then
 									if etat_wait then
 										phase<=PHASE_WAIT_ATTENTE_COMMANDE;
 									else
 										phase<=PHASE_ATTENTE_COMMANDE;
 									end if;
-									action:=ACTION_POLL;
+									etat:=ETAT_OSEF;
 								end if;
 							else
 								-- HELL
@@ -1066,36 +843,20 @@ begin
 							
 							
 					
-					elsif (IO_WR='1' and A10_A8_A7=b"000" and A0='0') then
-						motors:=D_command(0);
-						if motors='0' and (phase=PHASE_EXECUTION_WRITE or phase=PHASE_AFTER_EXECUTION_WRITE or phase=PHASE_WAIT_EXECUTION_WRITE) then
-							-- FDCTEST.ASM 40
-							--HELL (!motors and PHASE_EXECUTION_WRITE ?)
-							rcount:=7;
-							--is_overrun:=true;
-							is_issue:=true;
-							exec_restant:=0;
-							exec_restant_write:=0;
-							if etat_wait then
-								phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
-							else
-								phase<=PHASE_RESULT;
-							end if;
-						end if;
 					elsif (IO_WR='1' and A10_A8_A7=b"010" and A0='0') then
 						-- HELL
 					elsif (IO_WR='1' and A10_A8_A7=b"010" and A0='1') then
 						-- write data
-						gremlin:=0;
+						
 						if phase=PHASE_EXECUTION_WRITE then
 							if exec_restant_write>0 then
 								exec_restant_write:=exec_restant_write-1;
 							end if;
-							if action=ACTION_WRITE then
+							if etat=ETAT_WRITE then
 								--if current_byte>=SECTOR_SIZES(chrn(3)) then
 								data:=D_command;
 								if not(etat_wait) and not(etat_zap) then
-									block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
+									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									-- OK if current_byte=0 then
 									-- OK 	block_A_cortex_mem:=conv_std_logic_vector(1,9);
 									-- OK 	block_Din_cortex_mem:=data;
@@ -1107,10 +868,7 @@ begin
 									-- OK end if;
 									block_W_cortex_mem:='1';
 								end if;
-								if is_multitrack and current_byte=SECTOR_SIZE_MT-1 then
-									--overrun
-									current_byte:=0;
-								elsif not(is_multitrack) and current_byte=SECTOR_SIZE-1 then
+								if current_byte=511 then
 									--overrun
 									current_byte:=0;
 								else
@@ -1125,35 +883,32 @@ begin
 										phase<=PHASE_AFTER_EXECUTION_WRITE;
 										etat_wait:=true;
 									end if;
-									rcount:=7;
---									result(6):=ST0; -- ST0
---									result(5):=ST1 or ST1_END_CYL; -- ST1
---									result(4):=ST2; -- ST2
---									result(3):=params(6); -- C
---									result(2):=params(5); -- H
---									result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
---									result(0):=chrn(0); -- N (BLOCK_SIZE)
+									result_restant:=7;
+									results(6):=ST0; -- ST0
+									results(5):=ST1; -- ST1
+									results(4):=ST2; -- ST2
+									results(3):=params(6); -- C
+									results(2):=params(5); -- H
+									results(1):=ONE_BLOCK; --params(2); -- R EOT
+									results(0):=params(3); -- N (with DTL)
 								end if;
-							elsif action=ACTION_SCAN then
+							elsif etat=ETAT_COMPARE then
 								--if current_byte>=SECTOR_SIZES(chrn(3)) then
 								data:=D_command;
 								if not(etat_wait) and not(etat_zap) then
 									if compare_OK then
 										if block_Dout=data then
 											-- cool
-										elsif compare_low_or_equal and block_Dout<=data then
+										elsif compare_low and block_Dout<data then
 											-- cool
-										elsif compare_high_or_equal and block_Dout>=data then
+										elsif compare_high and block_Dout>data then
 											-- cool
 										else
 											compare_OK:=false;
 										end if;
 									end if;
 								end if;
-								if is_multitrack and current_byte=SECTOR_SIZE_MT-1 then
-									--overrun
-									current_byte:=0;
-								elsif not(is_multitrack) and current_byte=SECTOR_SIZE-1 then
+								if current_byte=511 then
 									--overrun
 									current_byte:=0;
 								else
@@ -1161,12 +916,12 @@ begin
 								end if;
 								
 								if not(etat_wait) and not(etat_zap) then
-									block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
+									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									block_W_cortex_mem:='0';
 								end if;
 								
 								if exec_restant_write=0 then
-									if EOT=chrn(1) then
+									if EOT=BOT then
 										if etat_zap then
 											phase<=PHASE_RESULT;
 										elsif etat_wait then
@@ -1174,22 +929,21 @@ begin
 										else
 											phase<=PHASE_RESULT;
 										end if;
-										rcount:=7;
---										result(6):=ST0; -- ST0
---										result(5):=ST1 or ST1_END_CYL; -- ST1
---										if compare_OK then
---											result(4):=ST2 or ST2_SCAN_EQUAL_HIT; -- ST2
---										else
---											result(4):=ST2 or ST2_SCAN_NOT_SATISFIED; -- ST2
---										end if;
---										result(3):=params(6); -- C
---										result(2):=params(5); -- H
---										result(1):=SECTOR_FOUND; --params(2); -- R (EOT)
---										result(0):=chrn(0); -- N (BLOCK_SIZE)
+										result_restant:=7;
+										results(6):=ST0; -- ST0
+										results(5):=ST1; -- ST1
+										if compare_OK then
+											results(4):=ST2 or ST2_SCAN_EQUAL_HIT; -- ST2
+										else
+											results(4):=ST2 or ST2_SCAN_NOT_SATISFIED; -- ST2
+										end if;
+										results(3):=params(6); -- C
+										results(2):=params(5); -- H
+										results(1):=params(2); -- R EOT
+										results(0):=params(3); -- N (with DTL)
 									else
-										BOT:=chrn(1);
-										--chrn(1):=BOT;
-										if EOT=chrn(1)+x"01" and is_EOT_DTL then
+										BOT:=BOT+x"01";
+										if EOT=BOT and is_EOT_DTL then
 											exec_restant_write:=EOT_DTL;
 											memshark_is_DTL<=true;
 										else
@@ -1203,12 +957,10 @@ begin
 											-- on lance une tentative de lecture du block en parallele
 											memshark_chrn<=setCHRN(chrn);
 											memshark_doREAD<=true;
-											memshark_doREADnext<=true;
 											memshark_doREAD_DEL<=is_del;
 											memshark_doREAD_SK<=is_sk;
-											memshark_doREAD_MT<=is_multitrack;
 											-- pointer charger le premier octet (tout de suite ou apres la sortie d'un PHASE_WAIT_*)
-											block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
+											block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 											block_W_cortex_mem:='0';
 										end if;
 									end if;
@@ -1220,164 +972,150 @@ begin
 							if phase=PHASE_RESULT then
 								--leaving normal state machine : command issue
 								is_issue:=true;
-								rcount:=1;
-								result(0):=ST0 or ST0_INVALID;
-								--FDCTEST.ASM &0F read_data_c
-								-- ;; 41,80,00,0b,00,c1,02
 							else
 								--back to normal state machine
 								is_issue:=false;
-								is_overrun:=false;
 							end if;
 							
 							-- result is facultative.
 							phase<=PHASE_ATTENTE_COMMANDE;
-							pcount:=0;
+							command_restant:=0;
 							exec_restant:=0;
 							exec_restant_write:=0;
-							rcount:=0;
-							action:=ACTION_POLL;
+							result_restant:=0;
+							etat:=ETAT_OSEF;
 							-- MT MF et SK (we don't care about theses 3 first bits)
 							command:=D_command and x"1f";
 							is_multitrack:=(D_command(7)='1');
 							is_del:=false;
 							is_sk:=(D_command(5)='1');
-							is_readtrack:=false;
 
 							compare_OK:=false;
 							case command is
-								when x"02" => -- read track
-									is_multitrack:=false; -- READ_DIAGNOSTIC : pas de MT ici
-									action:=ACTION_READ; -- getNextSector(READ) with resetSector() : sector=0
-									phase<=PHASE_COMMAND;
-									is_readtrack:=true; -- EOT is not sector, but sector count.
-									pcount:=8;
-									check_dsk_face:=true;
 								when x"03" => -- specify
-									pcount:=2;
+									command_restant:=2;
 									phase<=PHASE_COMMAND;
-								when x"04" => -- SENSE DRIVE STATUS
-									pcount:=1;
-									action:=ETAT_SENSE_DRIVE_STATUS;
-									check_dsk_face:=true;
-									phase<=PHASE_COMMAND;
-								when x"05" => -- write data
-									pcount:=8;
-									phase<=PHASE_COMMAND;
-									action:=ACTION_WRITE;
-									check_dsk_face:=true;
-								when x"06" => -- read
-									pcount:=8;
-									action:=ACTION_READ; -- getNextSector(READ) : sector=0
-									phase<=PHASE_COMMAND;
-									check_dsk_face:=true;
 								when x"07" => -- recalibrate (==SEEK at C=0, 77 fois max)
-									pcount:=1;
-									action:=ETAT_RECALIBRATE;
+									command_restant:=1;
+									etat:=ETAT_RECALIBRATE;
 									phase<=PHASE_COMMAND;
 									check_dsk_face:=true;
+									--is_seeking:=true;
 								when x"08" => -- sense interrupt status : status information about the FDC at the end of operation
-									rcount:=3;
+									result_restant:=3;
 									if etat_wait then
 										phase<=PHASE_WAIT_RESULT;
 									else
 										phase<=PHASE_RESULT;
 									end if;
-									action:=ETAT_SENSE_INTERRUPT_STATUS;
-								when x"09" => -- write DELETED DATA
-									pcount:=8;
-									phase<=PHASE_COMMAND;
-									action:=ACTION_WRITE;
-									-- is_del:=true
-									check_dsk_face:=true;
+									etat:=ETAT_SENSE_INTERRUPT_STATUS;
+									
 								when x"0a" => -- read id
-									pcount:=1; -- select drive/side
-									action:=ACTION_READ_ID;
+									command_restant:=1; -- select drive/side
+									etat:=ETAT_READ_ID;
 									check_dsk_face:=true;
 									phase<=PHASE_COMMAND;
-								when x"0C" => -- read DELETED DATA
-									pcount:=8;
-									action:=ACTION_READ;
+								when x"04" => -- SENSE DRIVE STATUS
+									command_restant:=1;
+									etat:=ETAT_SENSE_DRIVE_STATUS;
+									check_dsk_face:=true;
 									phase<=PHASE_COMMAND;
-									is_del:=true; -- skip [not] set? if (isDeletedData()) {result[2] |= 0x040;}
+									
+									
+								when x"02" => -- read diagnostic
+									etat:=ETAT_READ; --ETAT_READ_DIAGNOSTIC;
+									phase<=PHASE_COMMAND;
+									command_restant:=8;
+									check_dsk_face:=true;
+								when x"06" => -- read
+									command_restant:=8;
+									etat:=ETAT_READ;
+									phase<=PHASE_COMMAND;
+									check_dsk_face:=true;
+								when x"0C" => -- read DELETED DATA
+									command_restant:=8;
+									etat:=ETAT_READ;
+									phase<=PHASE_COMMAND;
+									is_del:=true;
 									check_dsk_face:=true;
 								when x"0f" => -- seek : changing track C
 									phase<=PHASE_COMMAND;
-									pcount:=2;
-									action:=ACTION_SEEK;
+									command_restant:=2;
+									etat:=ETAT_SEEK;
 									check_dsk_face:=true;
-								when x"11" => -- SCAN EQUAL
-									pcount:=8;
+									--is_seeking:=true;
+								when x"05" => -- write data
+									command_restant:=8;
 									phase<=PHASE_COMMAND;
-									action:=ACTION_SCAN;
-									compare_low_or_equal:=false;
-									compare_high_or_equal:=false;
+									etat:=ETAT_WRITE;
+									check_dsk_face:=true;
+								when x"09" => -- write DELETED DATA
+									command_restant:=8;
+									phase<=PHASE_COMMAND;
+									etat:=ETAT_WRITE;
+									-- is_del:=true
+									check_dsk_face:=true;
+									
+								when x"11" => -- SCAN EQUAL
+									command_restant:=8;
+									phase<=PHASE_COMMAND;
+									etat:=ETAT_COMPARE;
+									compare_low:=false;
+									compare_high:=false;
 									check_dsk_face:=true;
 								when x"19" => -- SCAN LOW OR EQUAL
-									pcount:=8;
+									command_restant:=8;
 									phase<=PHASE_COMMAND;
-									action:=ACTION_SCAN;
-									compare_low_or_equal:=true;
-									compare_high_or_equal:=false;
+									etat:=ETAT_COMPARE;
+									compare_low:=true;
+									compare_high:=false;
 									check_dsk_face:=true;
 								when x"1D" => -- SCAN HIGH OR EQUAL
-									pcount:=8;
+									command_restant:=8;
 									phase<=PHASE_COMMAND;
-									action:=ACTION_SCAN;
-									compare_low_or_equal:=false;
-									compare_high_or_equal:=true;
+									etat:=ETAT_COMPARE;
+									compare_low:=false;
+									compare_high:=true;
 									check_dsk_face:=true;
 									
 								when x"10" => -- VERSION
-									rcount:=1;
-									result(0):=ST0 or x"80"; -- 80H indicates 765A/A-2 as JavaCPC
-									--result(0):=ST0 or x"90"; --90h indicates 765B
-									if etat_wait then
-										phase<=PHASE_WAIT_RESULT;
-									else
-										phase<=PHASE_RESULT;
-									end if;
+									result_restant:=1;
+									results(0):=ST0 or x"80"; -- 80H indicates 765A/A-2 as JavaCPC
+									--results(0):=ST0 or x"90"; --90h indicates 765B
 								when others => --INVALID
 									--go to standby state
-									rcount:=1;
-									result(0):=ST0 or ST0_INVALID; -- 80h
-									if etat_wait then
-										phase<=PHASE_WAIT_RESULT;
-									else
-										phase<=PHASE_RESULT;
-									end if;
+									result_restant:=1;
+									results(0):=ST0 or ST0_INVALID_COMMAND_ISSUE; -- 80h
+								
 							end case;
 						elsif phase=PHASE_COMMAND then
-							if pcount>0 then
-								pcount:=pcount-1;
-								params(pcount):=D_command;
+							if command_restant>0 then
+								command_restant:=command_restant-1;
+								params(command_restant):=D_command;
 								if check_dsk_face then
 									check_dsk_face:=false;
 									-- HD : physical HEAD
-									actualDrive(2 downto 0):=D_command(2 downto 0); -- HD US1 US0
-									megashark_face<=actualDrive(0);
+									current_HUS(2 downto 0):=D_command(2 downto 0); -- HD US1 US0
+									megashark_face<=current_HUS(0);
 								end if;
 							end if;
-							if pcount=0 then
-								if action=ETAT_RECALIBRATE then -- no result
+							if command_restant=0 then
+								if etat=ETAT_RECALIBRATE then -- no results
 									-- goto track 0 side 0
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- let's go
-										if actualDrive(1 downto 0)="00" then
+										if current_HUS(0)='0' then
 											is_seeking_FACE_A:=true;
-											is_recalibrating_FACE_A:=true;
-										elsif actualDrive(1 downto 0)="01" then
+										else
 											is_seeking_FACE_B:=true;
-											is_recalibrating_FACE_B:=true;
 										end if;
-										actualDrive(2):='0';
+										current_HUS(2):='0';
 										memshark_chrn<=x"00000002";
 										memshark_doGOTO<=true;
-										memshark_doGOTO_R<=true;
+										memshark_doGOTO_T<=true;
 										etat_wait := true;
 										etat_zap := false;
 									else
@@ -1385,18 +1123,18 @@ begin
 										etat_wait := true;
 										etat_zap := false;
 									end if;
-								elsif action=ACTION_READ_ID then
-									rcount:=7;
+								elsif etat=ETAT_READ_ID then
+									result_restant:=7;
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- let's go
-										chrn(2):="0000000" & actualDrive(2); -- H
+										chrn(2):="0000000" & current_HUS(2); -- H
 										chrn(0):=BLOCK_SIZE;
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doGOTO<=true;
+										memshark_doGOTO_MT<=is_multitrack;
 										etat_wait := true;
 										etat_zap := false;
 									else
@@ -1404,7 +1142,7 @@ begin
 										etat_wait := true;
 										etat_zap := false;
 									end if;
---								elsif action=ETAT_READ_DIAGNOSTIC then
+--								elsif etat=ETAT_READ_DIAGNOSTIC then
 --									-- TODO : do read from index to end of track ?
 --									BOT:=params(4);
 --									EOT:=params(2); -- EOT = R
@@ -1431,7 +1169,7 @@ begin
 --									end if;
 --									-- params select C H R N EOT GPL DTL
 --								
---									rcount:=7;
+--									result_restant:=7;
 --									
 --									if current_face_notReady then
 --										-- disk not inserted
@@ -1450,33 +1188,23 @@ begin
 --										etat_zap := false;
 --									end if;
 --									
-								elsif action=ACTION_SCAN then
+								elsif etat=ETAT_COMPARE then
 									BOT:=params(4);
 									EOT:=params(2); -- EOT = R
 									chrn(3):=params(6); -- C
 									chrn(2):=params(5); -- H
 									chrn(1):=params(4); -- R
-									chrn(0):=BLOCK_SIZE; -- N
+									chrn(0):=BLOCK_SIZE; --params(3); -- N
 									-- params select C H R N EOT GPL DTL
 									if params(3)>x"00" then -- N
 										is_EOT_DTL:=false;
-										if is_multitrack then
-											exec_restant_write:=SECTOR_SIZE_MT;
-										else
-											exec_restant_write:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
-										end if;
+										exec_restant_write:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
 									else
 										is_EOT_DTL:=true;
 										EOT_DTL:=conv_integer(params(0)); -- DTL
-										if EOT_DTL=0 then
-											-- (FDCTEST.ASM 5B)
-											EOT_DTL:=256;
-										end if;
 										if BOT=EOT then
 											exec_restant_write:=EOT_DTL; -- DTL
 											--memshark_DTL<=EOT_DTL;
-										elsif is_multitrack then
-											exec_restant_write:=SECTOR_SIZE_MT;
 										else
 											exec_restant_write:=SECTOR_SIZE;
 											--memshark_DTL<=EOT_DTL;
@@ -1486,15 +1214,13 @@ begin
 									current_byte:=0;
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- on lance une tentative de lecture du block en parallele
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doREAD<=true;
 										memshark_doREAD_DEL<=is_del;
 										memshark_doREAD_SK<=is_sk;
-										memshark_doREAD_MT<=is_multitrack;
 										etat_wait := true;
 										etat_zap := false;
 										compare_OK:=true;
@@ -1504,35 +1230,25 @@ begin
 										etat_zap := false;
 									end if;
 									-- pointer charger le premier octet (tout de suite ou apres la sortie d'un PHASE_WAIT_*)
-									block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
+									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									block_W_cortex_mem:='0';
-								elsif action=ACTION_READ then
-									BOT:=params(4);isBOT:=true;
+								elsif etat=ETAT_READ then
+									BOT:=params(4);
 									EOT:=params(2); -- EOT = R
 									chrn(3):=params(6); -- C
 									chrn(2):=params(5); -- H
 									chrn(1):=params(4); -- R
-									chrn(0):=BLOCK_SIZE; -- N
+									chrn(0):=BLOCK_SIZE; --params(3); -- N
 									-- params select C H R N EOT GPL DTL
 									if params(3)>x"00" then -- N
 										is_EOT_DTL:=false;
-										if is_multitrack then
-											exec_restant:=SECTOR_SIZE_MT;
-										else
-											exec_restant:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
-										end if;
+										exec_restant:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
 									else
 										is_EOT_DTL:=true;
 										EOT_DTL:=conv_integer(params(0));
-										if EOT_DTL=0 then
-											-- FDCTEST.ASM 5B
-											EOT_DTL:=256;
-										end if;
 										if BOT=EOT then
 											exec_restant:=EOT_DTL; -- DTL
 											--memshark_DTL<=EOT_DTL;
-										elsif is_multitrack then
-											exec_restant:=SECTOR_SIZE_MT;
 										else
 											exec_restant:=SECTOR_SIZE;
 											--memshark_DTL<=0;
@@ -1542,15 +1258,13 @@ begin
 									current_byte:=0;
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- on lance une tentative de lecture du block en parallele
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doREAD<=true;
 										memshark_doREAD_DEL<=is_del;
 										memshark_doREAD_SK<=is_sk;
-										memshark_doREAD_MT<=is_multitrack;
 										etat_wait := true;
 										etat_zap := false;
 									else
@@ -1559,25 +1273,22 @@ begin
 										etat_zap := false;
 									end if;
 									-- pointer charger le premier octet (tout de suite ou apres la sortie d'un PHASE_WAIT_*)
-									block_A_cortex_mem:=conv_std_logic_vector(current_byte,10);
+									block_A_cortex_mem:=conv_std_logic_vector(current_byte,9);
 									block_W_cortex_mem:='0';
-								elsif action=ACTION_SEEK then -- no result
+								elsif etat=ETAT_SEEK then -- no results
 									-- params select NCN
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- let's go
-										if actualDrive(1 downto 0)="00" then
+										if current_HUS(0)='0' then
 											is_seeking_FACE_A:=true;
-											is_recalibrating_FACE_A:=false;
-										elsif actualDrive(1 downto 0)="01" then
+										else
 											is_seeking_FACE_B:=true;
-											is_recalibrating_FACE_B:=false;
 										end if;
 										chrn(3):=params(0); -- C = param NCN
-										chrn(2):="0000000" & actualDrive(2); -- H
+										chrn(2):="0000000" & current_HUS(2); -- H
 										chrn(1):=TRACK_00; -- R
 										chrn(0):=BLOCK_SIZE; -- N
 										memshark_chrn<=setCHRN(chrn);
@@ -1590,18 +1301,18 @@ begin
 										etat_wait := true;
 										etat_zap := false;
 									end if;
-								elsif action=ETAT_SENSE_DRIVE_STATUS then
-									rcount:=1;
+								elsif etat=ETAT_SENSE_DRIVE_STATUS then
+									result_restant:=1;
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										-- let's go
-										chrn(2):="0000000" & actualDrive(2); -- H
+										chrn(2):="0000000" & current_HUS(2); -- H
 										chrn(0):=BLOCK_SIZE;
 										memshark_chrn<=setCHRN(chrn);
 										memshark_doGOTO<=true;
+										memshark_doGOTO_MT<=is_multitrack;
 										etat_wait := true;
 										etat_zap := false;
 									else
@@ -1609,33 +1320,23 @@ begin
 										etat_wait := true;
 										etat_zap := false;
 									end if;
-								elsif action=ACTION_WRITE then
+								elsif etat=ETAT_WRITE then
 									BOT:=params(4);
 									EOT:=params(2); -- R (EOT)
 									chrn(3):=params(6); -- C
 									chrn(2):=params(5); -- H
 									chrn(1):=params(4); -- R
-									chrn(0):=BLOCK_SIZE; -- N
+									chrn(0):=BLOCK_SIZE; --params(3); -- N
 									-- params select C H R N EOT GPL DTL
 									if params(3)>x"00" then -- N
 										is_EOT_DTL:=false;
-										if is_multitrack then
-											exec_restant_write:=SECTOR_SIZE_MT;
-										else
-											exec_restant_write:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
-										end if;
+										exec_restant_write:=SECTOR_SIZE;--S(params(3)); -- SECTOR_SIZES(params(3))
 									else
 										is_EOT_DTL:=true;
 										EOT_DTL:=conv_integer(params(0)); -- DTL
-										if EOT_DTL=0 then
-											-- (FDCTEST.ASM 5B)
-											EOT_DTL:=256;
-										end if;
 										if BOT=EOT then
 											exec_restant_write:=EOT_DTL; -- DTL
 											--memshark_DTL<=EOT_DTL;
-										elsif is_multitrack then
-											exec_restant_write:=SECTOR_SIZE_MT;
 										else
 											exec_restant_write:=SECTOR_SIZE;
 											--memshark_DTL<=EOT_DTL;
@@ -1645,8 +1346,7 @@ begin
 									
 									if current_face_notReady then
 										-- disk not inserted
-										exec_restant:=0;
-										rcount:=7;
+										etat_zap := true;
 									elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 										etat_wait := false; -- cool, no action at this step, goto next step.
 										etat_zap := false;
@@ -1668,7 +1368,7 @@ begin
 									else
 										phase<=PHASE_EXECUTION_WRITE;
 									end if;
-								elsif rcount>0 then
+								elsif result_restant>0 then
 									if etat_wait then
 										phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
 									else
@@ -1676,31 +1376,12 @@ begin
 									end if;
 								else
 									if etat_wait then
-										-- This case does really exists, proof : action=ACTION_POLL, command recalibrate()
+										-- This case does really exists, proof : etat=ETAT_OSEF, command recalibrate()
 										phase<=PHASE_WAIT_ATTENTE_COMMANDE;
 									else
 										phase<=PHASE_ATTENTE_COMMANDE;
 									end if;
 								end if;
-							end if;
-						else
-							--HELL (PHASE_EXECUTION_WRITE ?)
-							if phase=PHASE_EXECUTION_WRITE then
-								rcount:=7;
-								is_overrun:=true;
-							else
-								is_issue:=true;
-							end if;
-							exec_restant:=0;
-							exec_restant_write:=0;
-							if etat_wait then
-								phase<=PHASE_WAIT_RESULT; -- we switch into RESULT
-							else
-								phase<=PHASE_RESULT;
-							end if;
-							if rcount=0 then
-								rcount:=1;
-								result(0):=ST0 or ST0_INVALID;
 							end if;
 						end if;
 					end if;
@@ -1711,8 +1392,7 @@ begin
 				-- special
 				if current_face_notReady then
 					-- disk not inserted
-					exec_restant:=0;
-					rcount:=7;
+					etat_zap := true;
 					phase<=PHASE_RESULT;
 				elsif memshark_done and not (memshark_doGOTO or memshark_doREAD or memshark_doWRITE) then
 					if EOT=BOT and is_EOT_DTL and EOT_DTL=0 then
@@ -1728,8 +1408,6 @@ begin
 						end if;
 						memshark_chrn<=setCHRN(chrn);
 						memshark_doWRITE<=true;
-						memshark_doWRITE_DEL<=is_del;
-						memshark_doWRITE_MT<=is_multitrack;
 						etat_wait:=true;
 						etat_zap := false;
 						phase<=PHASE_WAIT_RESULT;
@@ -1738,13 +1416,9 @@ begin
 						memshark_is_DTL<=false;
 						memshark_chrn<=setCHRN(chrn);
 						memshark_doWRITE<=true;
-						memshark_doWRITE_DEL<=is_del;
-						memshark_doWRITE_MT<=is_multitrack;
 						BOT:=BOT+1;
 						if EOT=BOT and is_EOT_DTL then
 							exec_restant_write:=EOT_DTL;
-						elsif is_multitrack then
-							exec_restant_write:=SECTOR_SIZE_MT;
 						else
 							exec_restant_write:=SECTOR_SIZE;
 						end if;

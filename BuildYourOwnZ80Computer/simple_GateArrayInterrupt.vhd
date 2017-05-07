@@ -836,6 +836,10 @@ bvram_W<='0';
 						--etat_monitor_hsync(0):=DO_NOTHING;
 						etat_monitor_hsync:="0000";
 --hsync_int<=DO_NOTHING;
+					else
+						if hSyncCount=2+4 then
+							etat_monitor_hsync:="0000";
+						end if;
 					end if;
 				end if;
 				
@@ -875,7 +879,7 @@ bvram_W<='0';
 --crtc_VSYNC<=DO_NOTHING;
 --vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 						else
-							if vSyncCount=2+4 then
+							if vSyncCount=2+2 then
 								etat_monitor_vsync:="0000";
 							end if;
 						end if;

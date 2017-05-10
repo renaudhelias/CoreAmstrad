@@ -1452,6 +1452,29 @@ end if;
 	end process Markus_interrupt_process;
 	
 	aZRaEL_process : process(CLK16MHz) is
+		-- BORDER 0 testbench (image position)
+		--38-8=8 carac
+		constant BEGIN_VBORDER : integer :=(8-4)*8; -- OK validated 32
+		constant END_VBORDER : integer :=(8+25+4)*8; -- KO missing 4 chars OK corrected. 296
+		--64-46=18 carac16(2 carac) => 16 (????)
+		-- 296-32=296 296*2=528 720x528 does exists...
+		
+		-- -3.5
+		--constant BEGIN_HBORDER : integer :=(16-2 -2 )*16+8; -- ko missing 3 char 200
+		constant BEGIN_HBORDER : integer :=(16-2 -2 -3)*16; -- ko missing 3 char 144
+		--constant END_HBORDER : integer :=(16+40+2)*16-8; -- OK but -8 cause one char too late 920
+		-- constant END_HBORDER : integer :=(16+40+2 -4)*16; -- OK but -8 cause one char too late 920
+		-- + 2.5
+		--constant END_HBORDER : integer :=(16+40+2 -4 +2)*16+8; -- OK but -8 cause one char too late 904
+		-- + 2.5+0.5
+		constant END_HBORDER : integer :=(16+40+2 -4 +2)*16+8+8; -- OK but -8 cause one char too late 912
+		-- Not 720 : 904-144 = 760
+		
+		-- 4*16*2+640=768
+		-- 912 - 144=768
+		
+		
+		
 		 variable compteur1MHz_16 : integer range 0 to 7:=0;
 		 variable old_DATA_action : std_logic:='0';
 		 -- aZRaEL
@@ -1462,8 +1485,14 @@ end if;
 		variable etat_rgb_mem : integer range 0 to 2:=DO_NOTHING_OUT;
 		variable color : STD_LOGIC_VECTOR(2**(MODE_MAX)-1 downto 0);
 		variable color_patch : STD_LOGIC_VECTOR(2**(MODE_MAX)-1 downto 0);
-		variable vsync_mem:std_logic;
-		variable hsync_mem:std_logic;
+		variable vsync_mem:std_logic:='0';
+		variable hsync_mem:std_logic:='0';
+		variable vsync_mem_old:std_logic:='0';
+		variable hsync_mem_old:std_logic:='0';
+		
+		variable VBORDERmem:integer:=0; -- 304 max
+		variable doResetVBORDERmem:boolean:=false;
+		variable HBORDERmem:integer:=0; -- 64*16 max
 	begin
 		if rising_edge(CLK16MHz) then
 			-- rising_edge
@@ -1478,7 +1507,29 @@ end if;
 			vsync<=vsync_mem;
 			hsync<=hsync_mem;
 			-- aZRaEL display pixels
-			if etat_rgb_mem = DO_READ then
+			
+			if vsync_mem=DO_VSYNC and vsync_mem_old=DO_NOTHING then
+				--VBORDERmem:=0;
+				doResetVBORDERmem:=true;
+			end if;
+			if hsync_mem=DO_HSYNC and hsync_mem_old=DO_NOTHING then
+				HBORDERmem:=0;
+				if doResetVBORDERmem then
+					VBORDERmem:=0;
+					doResetVBORDERmem:=false;
+				else
+					VBORDERmem:=VBORDERmem+1;
+				end if;
+			else
+				HBORDERmem:=HBORDERmem+1;
+			end if;
+			
+			if VBORDERmem<BEGIN_VBORDER or VBORDERmem>=END_VBORDER or HBORDERmem<BEGIN_HBORDER or HBORDERmem>=END_HBORDER then
+				-- out of SCREEN
+				RED<="00";
+				GREEN<="00";
+				BLUE<="00";
+			elsif etat_rgb_mem = DO_READ then
 			
 				if MODE_select="10" then
 					NB_PIXEL_PER_OCTET:=8;
@@ -1516,16 +1567,22 @@ end if;
 					GREEN<=palette(pen(conv_integer(color_patch)))(3 downto 2);
 					BLUE<=palette(pen(conv_integer(color_patch)))(1 downto 0);
 				end if;
-			elsif etat_rgb_mem = DO_BORDER then
+--			elsif etat_rgb_mem = DO_BORDER then
+--				RED<=palette(border)(5 downto 4);
+--				GREEN<=palette(border)(3 downto 2);
+--				BLUE<=palette(border)(1 downto 0);
+			else
+				-- border
 				RED<=palette(border)(5 downto 4);
 				GREEN<=palette(border)(3 downto 2);
 				BLUE<=palette(border)(1 downto 0);
-			else
-				RED<="00";
-				GREEN<="00";
-				BLUE<="00";
+				--RED<="00";
+				--GREEN<="00";
+				--BLUE<="00";
 			end if;
 			old_DATA_action:=DATA_action;
+			vsync_mem_old:=vsync_mem;
+			hsync_mem_old:=hsync_mem;
 		end if;
 	end process aZRaEL_process;
 	

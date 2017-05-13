@@ -706,6 +706,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable etat_monitor_hsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		variable etat_vsync : STD_LOGIC:=DO_NOTHING;
 		variable etat_monitor_vsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
+		variable etat_monitor_vhsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		--idem ADRESSE_MAcurrent_mem variable MA:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable RasterCounter:STD_LOGIC_VECTOR(7 downto 0):=(others=>'0'); -- buggy boy has value RRmax=5
 		variable frame_oddEven:std_logic:='0';
@@ -759,6 +760,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			etat_monitor_hsync:=(others=>DO_NOTHING);
 			etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:=(others=>DO_NOTHING);
+			etat_monitor_vhsync:=(others=>DO_NOTHING);
 			
 			ADRESSE_maStore_mem:=(others=>'0');
 			ADRESSE_MAcurrent_mem:=(others=>'0');
@@ -837,7 +839,7 @@ bvram_W<='0';
 						etat_monitor_hsync:="0000";
 --hsync_int<=DO_NOTHING;
 					else
-						if hSyncCount=2+4 then
+						if hSyncCount=1+4 then
 							etat_monitor_hsync:="0000";
 						end if;
 					end if;
@@ -885,6 +887,7 @@ bvram_W<='0';
 						end if;
 					end if;
 				end if;
+				etat_monitor_vhsync:=etat_monitor_vhsync(2 downto 0) & etat_monitor_vsync(2);
 				
 				--setEvents() HSync strange behaviour : part 2
 				if zap_scan then
@@ -968,7 +971,7 @@ bvram_W<='0';
 				end if;
 				
 				if dispH='1' and dispV='1' then
-					etat_rgb<=DO_READ;
+					--etat_rgb<=DO_READ;
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
 					-- Have to respect address cut ADRESSE_CONSTANT_mem:=conv_integer(ADRESSE_maRegister(13 downto 0)) mod (16*1024);
 					
@@ -1016,7 +1019,7 @@ bvram_W<='0';
 					--http://cpcrulez.fr/coding_amslive02-balayage_video.htm dit :
 					--MA(13 downto 12) & RasterCounter(2 downto 0) & MA(9 downto 0) & CCLK
 				else
-					etat_rgb<=DO_NOTHING_OUT;
+					--etat_rgb<=DO_NOTHING_OUT;
 					crtc_A_mem:=(others=>'0');
 				end if;
 				-- it's not really 16MHz, but we don't care
@@ -1218,8 +1221,6 @@ end if;
 crtc_VSYNC<=etat_vsync;
 vsync_int<=etat_vsync;
 hsync_int<=etat_hsync;
-vsync_azrael<=etat_monitor_vsync(2);
-hsync_azrael<=etat_monitor_hsync(2);
 				
 			when 1=>
 				-- Daisy relaxing (zsdram.v)
@@ -1240,6 +1241,13 @@ hsync_azrael<=etat_monitor_hsync(2);
 				bvram_D<=DATA_mem;
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';
 				crtc_R<=dispH and dispV and disp_VRAM;
+				if dispH='1' and dispV='1' then
+					etat_rgb<=DO_READ;
+				else
+					etat_rgb<=DO_NOTHING_OUT;
+				end if;
+vsync_azrael<=etat_monitor_vhsync(1);
+hsync_azrael<=etat_monitor_hsync(1);
 			when 3=>
 				--Daisy relaxing (zsdram.v)
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '1';

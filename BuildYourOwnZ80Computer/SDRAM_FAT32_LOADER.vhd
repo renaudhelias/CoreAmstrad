@@ -40,8 +40,8 @@ entity SDRAM_FAT32_LOADER is
     Port ( CLK:in STD_LOGIC;
            --file_select:in std_logic_vector(7 downto 0);
            ram_A : out  STD_LOGIC_VECTOR (22 downto 0):=(others=>'0');
-           ram_Din : in  STD_LOGIC_VECTOR (7 downto 0):=(others=>'Z'); -- for sim
-			  ram_Dout : out  STD_LOGIC_VECTOR (7 downto 0):=(others=>'Z'); -- for sim
+           ram_Din : in  STD_LOGIC_VECTOR (7 downto 0);
+			  ram_Dout : out  STD_LOGIC_VECTOR (7 downto 0):=(others=>'0');
            ram_W : out  STD_LOGIC:='0';
 		   ram_R : out  STD_LOGIC:='0';
            spi_A : out  STD_LOGIC_VECTOR (31 downto 0);
@@ -118,7 +118,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal data_reader1:STD_LOGIC_VECTOR(7 downto 0);
 	signal data_reader2:STD_LOGIC_VECTOR(15 downto 0);
 	signal data_reader4:STD_LOGIC_VECTOR(31 downto 0);
-	signal data_writer1:STD_LOGIC_VECTOR(7 downto 0);
+	--signal data_writer1:STD_LOGIC_VECTOR(7 downto 0);
 	signal data_writer2:STD_LOGIC_VECTOR(15 downto 0);
 	signal data_writer4:STD_LOGIC_VECTOR(31 downto 0);
 	
@@ -128,7 +128,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal data_length:integer range 1 to 5:=1;
 	signal data_RWdone:boolean:=true;
 	signal data_spi_A:STD_LOGIC_VECTOR(40 downto 0);
-	signal data_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'Z');
+	signal data_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'0');
 	signal data_spi_Rdo:std_logic:='0';
 	signal data_spi_Wdo:std_logic:='0';
 	
@@ -163,7 +163,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal dump_do:boolean:=false;
 	signal dump_done:boolean:=true;
 	signal dump_spi_A:STD_LOGIC_VECTOR(40 downto 0);
-	signal dump_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'Z');
+	signal dump_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'0');
 	signal dump_spi_Wdo:std_logic:='0';
 	signal dump_spi_Wblock:std_logic:='0';
 	
@@ -182,7 +182,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal dump_ram_A:std_logic_vector(ram_A'range):=(others=>'0');
 	signal dump_ram_R:std_logic:='0';
 	signal transmit_ram_A:std_logic_vector(ram_A'range):=(others=>'0');
-	signal transmit_ram_D:std_logic_vector(ram_Din'range):=(others=>'Z');
+	signal transmit_ram_D:std_logic_vector(ram_Din'range):=(others=>'0');
 	signal transmit_ram_W:std_logic:='0';
 	
 	signal mecashark_changeDSK_do:boolean:=false;
@@ -190,7 +190,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal mecashark_addr:std_logic_vector(40 downto 0):=(others=>'0');
 	signal mecashark_dskB:boolean:=false;
 	signal meca_spi_A:STD_LOGIC_VECTOR(40 downto 0);
-	signal meca_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'Z');
+	signal meca_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'0');
 	signal meca_spi_Rdo:std_logic:='0';
 	signal meca_spi_Wdo:std_logic:='0';
 	signal meca_spi_Wblock:std_logic:='0';
@@ -205,7 +205,7 @@ begin
 	megashark_done<=megashark_done_s;
 
 	ram_A<= transmit_ram_A when switch_transmit_dump=SWITCH_TRANSMIT else dump_ram_A when switch_transmit_dump=SWITCH_DUMP else (others=>'0');
-	ram_Dout<= transmit_ram_D when switch_transmit_dump=SWITCH_TRANSMIT else (others=>'Z');
+	ram_Dout<= transmit_ram_D when switch_transmit_dump=SWITCH_TRANSMIT else (others=>'0');
 	ram_W<= transmit_ram_W when switch_transmit_dump=SWITCH_TRANSMIT else '0';
 	ram_R<= dump_ram_R when switch_transmit_dump=SWITCH_DUMP else '0';
 	
@@ -249,7 +249,7 @@ begin
 		variable data_reader1_mem:std_logic_vector(7 downto 0):=(others=>'0');
 		variable data_reader2_mem:std_logic_vector(15 downto 0):=(others=>'0');
 		variable data_reader4_mem:std_logic_vector(31 downto 0):=(others=>'0');
-		variable data_writer1_mem:std_logic_vector(7 downto 0):=(others=>'0');
+		--variable data_writer1_mem:std_logic_vector(7 downto 0):=(others=>'0');
 		variable data_writer2_mem:std_logic_vector(15 downto 0):=(others=>'0');
 		variable data_writer4_mem:std_logic_vector(31 downto 0):=(others=>'0');
 		
@@ -355,11 +355,11 @@ begin
 							data_cursor:=0;
 							data_spi_A<=data_addr +data_cursor;
 							case data_length is
-								when 1 => -- 1 byte
-									data_writer1_mem:=data_writer1;
-									data_spi_Dout(7 downto 0)<=data_writer1_mem(7 downto 0);
-									data_spi_Wdo<='1';
-									data_step:=5;
+								when 1 => NULL; -- 1 byte
+									--data_writer1_mem:=data_writer1;
+									--data_spi_Dout(7 downto 0)<=data_writer1_mem(7 downto 0);
+									--data_spi_Wdo<='1';
+									--data_step:=5;
 								when 2 => -- 2 byte
 									data_writer2_mem:=data_writer2;
 									data_spi_Dout(7 downto 0)<=data_writer2_mem(15 downto 8);
@@ -667,7 +667,7 @@ begin
 						transmit_step:=0;
 						cursor:=cursor+1;
 						if cursor>=transmit_length then
-							transmit_ram_D<=(others=>'Z');
+							transmit_ram_D<=(others=>'0');
 							transmit_done<=true;
 							transmit_step:=3;
 						end if;
@@ -863,14 +863,14 @@ begin
 	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
 end;
 
-procedure set_var1b(var_name: in STD_LOGIC_VECTOR(7 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
-begin
-	data_length<=1;
-	data_addr<=var_addr_b;
-	data_writer1<=var_name;
-	data_Wdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
-end;
+--procedure set_var1b(var_name: in STD_LOGIC_VECTOR(7 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
+--begin
+--	data_length<=1;
+--	data_addr<=var_addr_b;
+--	data_writer1<=var_name;
+--	data_Wdo<=true;
+--	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+--end;
 procedure set_var2b(var_name: in STD_LOGIC_VECTOR(15 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
 	data_length<=2;

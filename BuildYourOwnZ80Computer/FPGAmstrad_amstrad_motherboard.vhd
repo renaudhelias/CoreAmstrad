@@ -499,7 +499,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 		);
 	END COMPONENT;
 	
-	signal D_az80 : STD_LOGIC_VECTOR(7 DOWNTO 0);
+	--signal D_az80 : STD_LOGIC_VECTOR(7 DOWNTO 0);
    
    component simple_GateArray
       port ( CLK        : in    std_logic; 
@@ -774,7 +774,7 @@ PORT MAP(nWAIT => XLXN_830,
 			nRESET => RESET_n,
 			nBUSRQ=> '1',
 			CLK => CLK4MHz,
-			D => D_az80(7 downto 0), -- MIX_DOUT(7 downto 0)
+			D => MIX_DOUT(7 downto 0), --D_az80(7 downto 0), 
 			nM1 =>M1_n,
 			nMREQ =>MREQ_n,
 			nIORQ =>IORQ_n,
@@ -784,8 +784,8 @@ PORT MAP(nWAIT => XLXN_830,
 			nHALT =>open,
 			nBUSACK =>open,
 			A =>A(15 downto 0));
-	D(7 downto 0)<=D_az80;
-	D_az80<=(others=>'Z') when RD_n='1' else MIX_DOUT(7 downto 0);
+	--D(7 downto 0)<=D_az80;
+	--D_az80<=(others=>'0') when RD_n='1' else MIX_DOUT(7 downto 0);
 end generate;
 	
 	-- print inp(&0800)

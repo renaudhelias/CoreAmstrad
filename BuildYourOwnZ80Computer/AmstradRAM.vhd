@@ -56,7 +56,7 @@ begin
 	ram_W<= (not(init_done) and not(init_W_n)) or (init_done and not(reset) and (wr and not(rd)));
 	ram_R<= (not(init_done) and not(init_R_n)) or (init_done and not(reset) and (rd and not(wr)));
 
-	ram_Dout<= init_Din when init_done='0' else Din when (wr='1' and rd='0') else (others=>'Z');
+	ram_Dout<= init_Din when init_done='0' else Din when (wr='1' and rd='0') else (others=>'0');
 	init_Dout <= ram_Din when init_done='0' else (others=>'0');
 	Dout<=(others=>'1') when init_done='0' or reset='1' else ram_Din when (rd='1' and wr='0') else (others=>'1');
 

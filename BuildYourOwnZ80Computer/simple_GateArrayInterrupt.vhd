@@ -217,7 +217,7 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	
 	--signal CLK4MHz : STD_LOGIC;
 	--signal SOUND_CLK_i : STD_LOGIC;
-	signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
+	--signal crtc_DISP : STD_LOGIC;--alternate 2MHz phase scaled   ===//
 	
 	type palette_type is array(31 downto 0) of std_logic_vector(5 downto 0); -- RRVVBB
 	constant palette:palette_type:=(
@@ -787,7 +787,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 
 		
-crtc_DISP<='0';
+--crtc_DISP<='0';
 palette_W<='0';
 --bvram
 crtc_R<='0'; -- directly solve external ram_A for CRTC read
@@ -1340,7 +1340,7 @@ if in_V then
 	end if;
 end if;
 			
-			crtc_DISP<=dispH and dispV and disp_VRAM;
+			--crtc_DISP<=dispH and dispV and disp_VRAM;
 			
 --does pass arnoldemu testbench "cpctest" http://cpctech.cpc-live.com/test.zip
 --crtc_VSYNC<=vsync_int;

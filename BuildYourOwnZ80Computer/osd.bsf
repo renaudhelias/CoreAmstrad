@@ -87,6 +87,13 @@ applicable agreement for further details.
 		(line (pt 0 160)(pt 16 160)(line_width 1))
 	)
 	(port
+		(pt 0 176)
+		(input)
+		(text "green" (rect 0 0 22 12)(font "Arial" ))
+		(text "green" (rect 21 171 43 183)(font "Arial" ))
+		(line (pt 0 176)(pt 16 176)(line_width 1))
+	)
+	(port
 		(pt 216 32)
 		(output)
 		(text "red_out[5..0]" (rect 0 0 50 12)(font "Arial" ))

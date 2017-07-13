@@ -216,18 +216,33 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 
 --   --ModeLine "800x600@72" 50.00 800 856 976 1040 600 637 643 666 +HSync +VSync
 
-              label_modeline  :string:="800x600@72";--(ignored  by  svgalib) mainly there to be compatible with XF86Config.   I  use  the  format  "Width  x   Height   @   Vert.Refresh", but that's just personal taste...
+--              label_modeline  :string:="800x600@72";--(ignored  by  svgalib) mainly there to be compatible with XF86Config.   I  use  the  format  "Width  x   Height   @   Vert.Refresh", but that's just personal taste...
+--              pxcl:string:="50.00"; -- the pixel clock in MHz
+--              HDsp:integer:=800; -- size of the visible area (horizontal/vertical)
+--              HSS:integer:=856; -- Sync start (horizontal/vertical)
+						-- 916 entre HSS et HSE +8 = 924
+--              HSE:integer:=976; -- Sync end (horizontal/vertical)
+--              HTot:integer:=1040; -- Total width/height (end of back porch)
+--              VDsp:integer:=600; -- size of the visible area (horizontal/vertical)
+--              VSS:integer:=637; -- Sync start (horizontal/vertical)
+--              VSE:integer:=643; -- Sync end (horizontal/vertical)
+--              VTot:integer:=666; -- Total width/height (end of back porch)
+--				  nvsync:std_logic:='0';--flags  +vsync -vsync
+--				  nhsync:std_logic:='0'; --flags  +hsync -hsync
+				  
+--				 label_modeline  :string:="800x600@71.18";
               pxcl:string:="50.00"; -- the pixel clock in MHz
               HDsp:integer:=800; -- size of the visible area (horizontal/vertical)
-              HSS:integer:=856; -- Sync start (horizontal/vertical)
-              HSE:integer:=976; -- Sync end (horizontal/vertical)
-              HTot:integer:=1040; -- Total width/height (end of back porch)
+				  HSS:integer:=857; -- Sync start (horizontal/vertical)
+				  HSE:integer:=937; -- Sync end (horizontal/vertical)
+              HTot:integer:=1056; -- Total width/height (end of back porch)
               VDsp:integer:=600; -- size of the visible area (horizontal/vertical)
               VSS:integer:=637; -- Sync start (horizontal/vertical)
               VSE:integer:=643; -- Sync end (horizontal/vertical)
               VTot:integer:=666; -- Total width/height (end of back porch)
 				  nvsync:std_logic:='0';--flags  +vsync -vsync
 				  nhsync:std_logic:='0'; --flags  +hsync -hsync
+				  
               --flags  interlace interlaced
               --       doublescan Sync polarity, interlace mode
 				  SQRT_VRAM_SIZE:integer:=16;
@@ -236,8 +251,8 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 				  VZoom:integer:=2;
 				  
 				  VRAM_HDsp:integer:=800; --changing mode doesn't affect number of pixel finally outputted
-				  VRAM_VDsp:integer:=300; --600/2
-				  WINAPE_PLUSTEST_2_BUG_HBORDER:integer:=8
+				  VRAM_VDsp:integer:=300 --600/2
+				  --WINAPE_PLUSTEST_2_BUG_HBORDER:integer:=8 Mauvais endroit pour un patch emu :p
 		  );
     Port ( DATA : in  STD_LOGIC_VECTOR (7 downto 0); -- buffer
            ADDRESS : out  STD_LOGIC_VECTOR (14 downto 0):=(others=>'0');
@@ -263,10 +278,10 @@ architecture Behavioral of aZRaEL_vram2vgaAmstradMiaow is
 	constant DO_HSYNC : STD_LOGIC:='1';
 	constant DO_VSYNC : STD_LOGIC:='1';
 
-	constant H_BEGIN:integer:=(800-768)/2+WINAPE_PLUSTEST_2_BUG_HBORDER;
+	constant H_BEGIN:integer:=(800-768)/2; --+WINAPE_PLUSTEST_2_BUG_HBORDER;
 	constant V_BEGIN:integer:=(600-576)/2;
 	constant V_BEGIN2:integer:=(600-544)/2; -- 546
-	constant H_END:integer:=(800-768)/2+768+WINAPE_PLUSTEST_2_BUG_HBORDER;
+	constant H_END:integer:=(800-768)/2+768; --+WINAPE_PLUSTEST_2_BUG_HBORDER;
 	constant V_END:integer:=(600-576)/2+576;
 	constant V_END2:integer:=(600-544)/2+544;
 	

@@ -20,9 +20,9 @@ applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 240 160)
+	(rect 16 16 240 192)
 	(text "MIST_STATUS" (rect 5 0 72 12)(font "Arial" ))
-	(text "inst" (rect 8 128 20 140)(font "Arial" ))
+	(text "inst" (rect 8 160 20 172)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -61,18 +61,25 @@ applicable agreement for further details.
 	(port
 		(pt 224 96)
 		(output)
-		(text "crtc_type" (rect 0 0 38 12)(font "Arial" ))
-		(text "crtc_type" (rect 165 91 203 103)(font "Arial" ))
+		(text "green" (rect 0 0 22 12)(font "Arial" ))
+		(text "green" (rect 181 91 203 103)(font "Arial" ))
 		(line (pt 224 96)(pt 208 96)(line_width 1))
 	)
 	(port
 		(pt 224 112)
 		(output)
-		(text "ga_shunt" (rect 0 0 36 12)(font "Arial" ))
-		(text "ga_shunt" (rect 167 107 203 119)(font "Arial" ))
+		(text "crtc_type" (rect 0 0 38 12)(font "Arial" ))
+		(text "crtc_type" (rect 165 107 203 119)(font "Arial" ))
 		(line (pt 224 112)(pt 208 112)(line_width 1))
 	)
+	(port
+		(pt 224 128)
+		(output)
+		(text "ga_shunt" (rect 0 0 36 12)(font "Arial" ))
+		(text "ga_shunt" (rect 167 123 203 135)(font "Arial" ))
+		(line (pt 224 128)(pt 208 128)(line_width 1))
+	)
 	(drawing
-		(rectangle (rect 16 16 208 128)(line_width 1))
+		(rectangle (rect 16 16 208 160)(line_width 1))
 	)
 )

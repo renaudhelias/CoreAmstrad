@@ -36,6 +36,9 @@ module osd (
 	input				hs_in,
 	input				vs_in,
 	
+	// green/scanlines
+	input green,
+	
 	// debug 7seg input examples
 	//input [7:0] leds8,
 	//input [3:0] leds4,
@@ -307,9 +310,18 @@ reg [3:0] seg7_i=0; // current 7segment selected
 always @(posedge pclk) begin
 	if (osd_de)
 		begin
-			red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
+			if (green == 1'b0)
+				begin
+					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
+					blue_out  <= {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
+				end
+			else
+				begin
+					red_out   <= {1'b0, 1'b0, osd_color[2], red_in[5:3]  };
+					blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
+				end
+			//end
 			green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
-			blue_out  <= {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
 			seg7_hB<=3'd0;
 			seg7_h<=2'd0;
 			seg7_i<=0;
@@ -334,24 +346,52 @@ always @(posedge pclk) begin
 					matrice_v[seg7_i]<=seg7_vcntDiv4[2:0];
 					matrice_h[seg7_i]<=seg7_h;
 					seg7_pixel<=matrice_pixel[seg7_i];
-					red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]  };
-					green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
-					blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
+					if (green == 1'b0)
+						begin
+							red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]  };
+							green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
+							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
+						end
+					else
+						begin
+							red_out   <= {1'b0, 1'b0, osd_color[2], red_in[5:3]  };
+							green_out   <= {seg7_pixel, seg7_pixel, osd_color[1], red_in[5:3]  };
+							blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
+						end
+					//end
 					
 					if (seg7_hB==3'd0 || seg7_hB==3'd5)
 						begin
 							// separators
-							red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
+							if (green == 1'b0)
+								begin
+									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
+									blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
+								end
+							else
+								begin
+									red_out   <= {1'b0, 1'b0, osd_color[2], red_in[5:3]  };
+									blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
+								end
+							//end
 							green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
-							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
 						end
 					//end
 					if (seg7_hB==3'd1)
 						begin
 							// This is a strange FIX -- but a beautifull one ^^'
-							red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
+							if (green == 1'b0)
+								begin
+									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
+									blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
+								end
+							else
+								begin
+									red_out   <= {1'b0, 1'b0, osd_color[2], red_in[5:3]  };
+									blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
+								end
+							//end
 							green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
-							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
 						end
 					//end
 					if (seg7_hcntModulo4==2'd3)

@@ -368,16 +368,19 @@ entity FPGAmstrad_amstrad_motherboard is
 			  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_BOT_EOT : out STD_LOGIC_VECTOR(15 downto 0);
 			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out std_logic_vector(2 downto 0);
-			  megashark_doWRITE : out std_logic;
+			  megashark_doREAD : out std_logic_vector(5 downto 0);
+			  megashark_doWRITE : out std_logic_vector(2 downto 0);
 			  megashark_done : in std_logic;
-			  megashark_face : out std_logic;
+			  megashark_face : out std_logic_vector(3 downto 0);
 			  megashark_INFO_2SIDES : in std_logic;
+			  megashark_INFO_ST0 : in std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0);
+			  megashark_INFO_PANIC : in std_logic_vector(1 downto 0);
 			  CLK16MHz : in std_logic;
 			 
 			 RED_out : out  STD_LOGIC_VECTOR (5 downto 0);
@@ -392,7 +395,7 @@ entity FPGAmstrad_amstrad_motherboard is
 			  crtc_type: in std_logic;
 			  ga_shunt : in std_logic
 
-			  
+			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -603,16 +606,20 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 				  megashark_CHRNresult : in STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : out std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : out STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_BOT_EOT : out STD_LOGIC_VECTOR(15 downto 0);
 			  megashark_A : out std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : in std_logic_vector(7 downto 0);
 			  megashark_Dout : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : out std_logic_vector(2 downto 0);
-			  megashark_doWRITE : out std_logic;
+			  megashark_doREAD : out std_logic_vector(5 downto 0);
+			  megashark_doWRITE : out std_logic_vector(2 downto 0);
 			  megashark_done : in std_logic;
-			  megashark_face : out std_logic;
+			  megashark_face : out std_logic_vector(3 downto 0);
 			  megashark_INFO_2SIDES : in std_logic;
+			  megashark_INFO_ST0 : in std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : in std_logic_vector(7 downto 0);
-			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0)
+			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0);
+			  megashark_INFO_PANIC : in std_logic_vector(1 downto 0)
+			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 				 );
    end component;
    
@@ -943,6 +950,7 @@ INT_n<=not(XLXN_835);
 			  megashark_CHRNresult=>megashark_CHRNresult,
 			  megashark_doGOTO=>megashark_doGOTO,
 			  megashark_CHRN=>megashark_CHRN,
+			  megashark_BOT_EOT=>megashark_BOT_EOT,
 			  megashark_A=>megashark_A,
 			  megashark_Din=>megashark_Din,
 			  megashark_Dout=>megashark_Dout,
@@ -951,8 +959,12 @@ INT_n<=not(XLXN_835);
 			  megashark_done=>megashark_done,
 			  megashark_face=>megashark_face,
 			  megashark_INFO_2SIDES=>megashark_INFO_2SIDES,
+			  megashark_INFO_ST0=>megashark_INFO_ST0,
 			  megashark_INFO_ST1=>megashark_INFO_ST1,
-			  megashark_INFO_ST2=>megashark_INFO_ST2
+			  megashark_INFO_ST2=>megashark_INFO_ST2,
+			  megashark_INFO_PANIC=>megashark_INFO_PANIC
+			  
+			  --leds8_debug=>leds8_debug
 					 );
    
    XLXI_349 : YM2149

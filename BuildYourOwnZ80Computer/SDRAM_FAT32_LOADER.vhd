@@ -73,17 +73,21 @@ entity SDRAM_FAT32_LOADER is
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : in STD_LOGIC_VECTOR(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_BOT_EOT : in STD_LOGIC_VECTOR(15 downto 0); -- chrn.R(out) is BOT during is_readtrack
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
 			  megashark_INFO_2SIDES : out std_logic:='0';
+			  megashark_INFO_ST0 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic_vector(2 downto 0);
-			  megashark_doWRITE : in std_logic;
+			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0); -- no data blocks to read
+			  megashark_doREAD : in STD_LOGIC_VECTOR(5 downto 0);
+			  megashark_doWRITE : in STD_LOGIC_VECTOR(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic; -- from OSD
-			  megashark_face : in std_logic -- from simpleDSK
+			  megashark_face : in std_logic_vector(3 downto 0) -- from simpleDSK
+			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
 			  	--attribute keep : string;
 				--attribute keep of file_select : signal is "TRUE";
@@ -92,6 +96,8 @@ entity SDRAM_FAT32_LOADER is
 end SDRAM_FAT32_LOADER;
 
 architecture Behavioral of SDRAM_FAT32_LOADER is
+
+	constant IS_ARNOLDEMU_TESTBENCH:boolean:=false; -- do not corrupt fdctest.dsk file, FDCTEST.ASM &41 41FAIL06
 
 	constant PREFIX:std_logic_vector(8 downto 0):="0" & x"00";
 
@@ -1733,8 +1739,12 @@ end if;
 	end process tortue_geniale;
 	
 	mecashark:process(CLK) is
-		variable mecashark_step:integer range 0 to 31:=0;
-		variable input_A:std_logic_vector(40 downto 0):=(others=>'0');
+		variable mecashark_step:integer range 0 to 33:=0;
+		variable DiskInfo_A:std_logic_vector(40 downto 0):=(others=>'0');
+		variable TrackInfo_A:std_logic_vector(40 downto 0):=(others=>'0');
+		variable Track_A:std_logic_vector(40 downto 0):=(others=>'0');
+		variable SectorInfo_A:std_logic_vector(40 downto 0):=(others=>'0');
+		variable Sector_A:std_logic_vector(40 downto 0):=(others=>'0');
 		variable output_A:std_logic_vector(40 downto 0):=(others=>'0');
 		--variable data_mem:std_logic_vector(7 downto 0);
 		type face_boolean_type is array(0 to 1) of boolean;
@@ -1742,10 +1752,13 @@ end if;
 		variable winape:face_boolean_type:=(false,false);
 		type face_integer_type is array(0 to 1) of integer range 0 to 255;
 		variable nb_tracks:face_integer_type:=(0,0); -- super cauldron has 42 tracks !!! -- Batman demo has 80 tracks
-		variable no_track:integer range 0 to 255; -- force simple face
+		variable no_track_current:face_integer_type:=(0,0);
+		variable no_track:integer range 0 to 255:=0; -- force simple face
 		variable nb_sides:face_integer_type:=(1,1); -- Batman demo one-dsk version has 2 sides
+		variable no_side_current:face_integer_type:=(0,0);
 		variable no_side:integer range 0 to 255:=0;
 		variable nb_sects:integer range 0 to 255:=9; -- super cauldron has 10 sectors !! -- batman demo has 9 sectors (track size 13) 10 sectors (track size 15)
+		variable no_sect_current:face_integer_type;
 		variable no_sect:integer range 0 to 255;
 		variable track_size:std_logic_vector(40 downto 0):=(others=>'0');
 		--type sector_sizes_type is array(0 to 6) of std_logic_vector(15 downto 0);
@@ -1753,12 +1766,11 @@ end if;
 		--constant DEFAULT_SECTOR_SIZE:std_logic_vector(15 downto 0):=x"0200";
 		variable track_sector_size:std_logic_vector(40 downto 0):=PREFIX & x"00000200"; -- Mission delta has ST2=x20 (crc error) + sector_size 4 + parfois sector_size 1
 		variable sector_sector_size:std_logic_vector(7 downto 0):=x"02";
+		variable sector_sector_side:std_logic_vector(7 downto 0);
 		variable chrn:std_logic_vector(31 downto 0);
-		variable doWRITE:boolean:=false;
-		variable doGOTO:boolean:=false;
+		variable chrn_build:std_logic_vector(31 downto 0);
+		variable old_chrn_build:std_logic_vector(31 downto 0);
 		
-		variable is_multitrack:boolean:=false;
-		variable is_searching_track:boolean:=false;
 		
 		variable mecashark_addr_mem:std_logic_vector(40 downto 0); -- work
 		variable mecashark_addr_memFaceA:std_logic_vector(40 downto 0); -- stock address face A
@@ -1769,51 +1781,110 @@ end if;
 		constant FACE_A:integer range 0 to 1:=0;
 		constant FACE_B:integer range 0 to 1:=1;
 		variable mecashark_face:integer range 0 to 1:=FACE_A;
+		variable mecashark_face_build:integer range 0 to 1:=FACE_A;
 		variable mecashark_face_dskB:boolean:=false;
 		variable dskIsValid:boolean:=false;
 		
+		variable megashark_INFO_ST0_mem:std_logic_vector(7 downto 0):=x"00";
 		variable megashark_INFO_ST1_mem:std_logic_vector(7 downto 0):=x"00";
 		variable megashark_INFO_ST2_mem:std_logic_vector(7 downto 0):=x"00";
+		variable megashark_INFO_PANIC_mem:std_logic_vector(1 downto 0):="00";
 		variable is_sector_or_track_not_found:boolean:=false;
-		variable is_first_sector_of_track:boolean:=false;
+		variable is_overrun:boolean:=false;
+		variable is_unformated_track_or_low_density:boolean:=false;
+		variable is_bad_cylinder:boolean:=false;
+		variable is_low_density:boolean:=false;
+		variable has_control_mark:boolean:=false;
+		--variable has_flag_sector_found:boolean:=false;
 		
-		constant ST1_END_OF_CYLINDER : std_logic_vector(7 downto 0):=x"80";
+		constant ST0_END_OF_READ_DRIVE_USX : std_logic_vector(7 downto 0):=x"40"; -- FDCTEST.ASM WTF ???????
+		constant ST0_ABNORMAL : std_logic_vector(7 downto 0):=x"40";
+		constant ST1_END_CYL : std_logic_vector(7 downto 0):=x"80";
 		constant ST1_NO_DATA : std_logic_vector(7 downto 0):=x"04";
 		constant ST1_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
+		constant ST1_DATA_ERROR : std_logic_vector(7 downto 0):=x"20"; -- overrun (sector ID not found)
+		constant ST2_WRONG_CYLINDER : std_logic_vector(7 downto 0):=x"10";
 		constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
+		constant ST2_DATA_ERROR : std_logic_vector(7 downto 0):=x"20"; -- overrun (sector ID not found)
+		constant ST2_CONTROL_MARK : std_logic_vector(7 downto 0):=x"40"; -- FDCTEST.ASM &1E read_data_skip (attrapÃ© lus tard mÃªme si on skip les marked deleted sectors)
+		--constant ST2_SCAN_NOT_SATISFIED : std_logic_vector(7 downto 0):=x"04";
+		constant ST2_BAD_CYLINDER : std_logic_vector(7 downto 0):=x"02";
+		constant PANIC_RAGE_QUIT : std_logic_vector(1 downto 0):="01";
+		constant PANIC_SLOW_QUIT : std_logic_vector(1 downto 0):="10";
+		--constant PANIC_SLOW_SKIP : std_logic_vector(2 downto 0):="010";
 
+
+		variable is_readtrack:boolean:=false; -- megashark_doREAD is not targeting special sector BOT
+
+		variable is_searching_track:boolean:=false;
+		variable is_searching_track77:boolean:=false;
+		--variable is_firstSector:boolean:=false; -- megashark_doREAD is not targeting special sector BOT, but the first one of track
 		variable is_Del:boolean:=false; --injected via H of CHRN (operation "DELETED")
 		variable is_Sk:boolean:=false; --injected via H of CHRN (SK skip)
+		variable is_multitrack:boolean:=false;
+		variable is_head:boolean:=false;
+		
+		variable doGOTO:boolean:=false;
+		variable doWRITE:boolean:=false;
+
+		type old_params_type is array(0 to 9) of boolean;
+		variable old_params : old_params_type;
+		variable old_params_build : old_params_type:=(others=>false);
+		variable old_boteot : std_logic_vector(15 downto 0):=x"0000";
+		variable old_boteot_build : std_logic_vector(15 downto 0):=x"0000";
+		
+		--variable debug_mem:std_logic_vector(leds8_debug'range):=(others=>'0');
 		
 	begin
 		if rising_edge(CLK) then
+		
+		--leds8_debug<=debug_mem;
+		
 			if mecashark_changeDSK_do then
 				mecashark_changeDSK_done<=false;
 				megashark_done_s<='1'; -- unbind
 				mecashark_step:=0;
+				is_overrun:=false;
 			elsif megashark_doGOTO(0)='1' then
-				is_searching_track:=( megashark_doGOTO(1)='1');
-				is_multitrack:=(megashark_doGOTO(2)='1');
+				is_searching_track:=(megashark_doGOTO(1)='1');
+				is_searching_track77:=(megashark_doGOTO(2)='1');
+				is_readtrack:=false; -- READ_ID
 				is_Del:=false;
 				is_Sk:=false;
+				is_multitrack:=false;
+				is_low_density:=(megashark_face(3)='1');
+				is_head:=(megashark_face(2)='1');
 				megashark_done_s<='0';
 				mecashark_step:=25;
 				doGOTO:=true;
 				doWRITE:=false;
 			elsif megashark_doREAD(0)='1' then
 				is_searching_track:=false;
-				is_multitrack:=(megashark_doGOTO(2)='1');
-				is_Del:=(megashark_doREAD(2)='1');
-				is_Sk:=(megashark_doREAD(1)='1');
+				is_searching_track77:=false;
+				is_readtrack:=(megashark_doREAD(2)='1');
+				is_Del:=(megashark_doREAD(3)='1');
+				is_Sk:=(megashark_doREAD(4)='1');
+				is_multitrack:=(megashark_doREAD(5)='1');
+				is_low_density:=(megashark_face(3)='1');
+				is_head:=(megashark_face(2)='1');
 				megashark_done_s<='0';
 				doGOTO:=false;
 				doWRITE:=false;
-				mecashark_step:=25;
-			elsif megashark_doWRITE='1' then
+				if megashark_doREAD(1)='1' then
+					-- POP
+					mecashark_step:=26;
+				else
+					mecashark_step:=25;
+				end if;
+			elsif megashark_doWRITE(0)='1' then
 				is_searching_track:=false;
-				is_multitrack:=(megashark_doGOTO(2)='1');
-				is_Del:=false;
+				is_searching_track77:=false;
+				is_readtrack:=false;
+				is_Del:=(megashark_doWRITE(1)='1');
 				is_Sk:=false;
+				is_multitrack:=(megashark_doWRITE(2)='1');
+				is_low_density:=(megashark_face(3)='1');
+				is_head:=(megashark_face(2)='1');
 				megashark_done_s<='0';
 				doGOTO:=false;
 				doWRITE:=true;
@@ -1822,7 +1893,7 @@ end if;
 			
 			if not(megashark_done_s='1') and not(mecashark_changeDSK_done) then
 				--overrun
-				mecashark_step:=28;
+				is_overrun:=true;
 			end if;
 			
 			meca_spi_Rdo<='0';
@@ -1835,16 +1906,16 @@ end if;
 						when 0=> -- disk ID
 							if mecashark_dskB then
 								mecashark_addr_memFaceB:=mecashark_addr;
-								output_A:=mecashark_addr_memFaceB;-- + (PREFIX & x"00000000");
+								DiskInfo_A:=mecashark_addr_memFaceB;-- + (PREFIX & x"00000000");
 								mecashark_face:=FACE_B;
 								mecashark_face_dskB:=true;
 							else
 								mecashark_addr_memFaceA:=mecashark_addr;
-								output_A:=mecashark_addr_memFaceA;-- + (PREFIX & x"00000000");
+								DiskInfo_A:=mecashark_addr_memFaceA;-- + (PREFIX & x"00000000");
 								mecashark_face:=FACE_A;
 								mecashark_face_dskB:=false;
 							end if;
-							meca_spi_A<=output_A;
+							meca_spi_A<=DiskInfo_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=1;
 						when 1=>
@@ -1853,20 +1924,20 @@ end if;
 							elsif spi_Din=x"4D" then
 								extended(mecashark_face):=false;
 							end if;
-							output_A:=output_A+(PREFIX & x"00000022"); -- goto x22
-							meca_spi_A<=output_A;
+							DiskInfo_A:=DiskInfo_A+(PREFIX & x"00000022"); -- goto x22
+							meca_spi_A<=DiskInfo_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=2;
 						when 2=> -- disk creator
 							if spi_Din=x"57" then -- [W]in APE 32 1.0
-								output_A:=output_A+(PREFIX & x"00000004"); -- goto x26
-								meca_spi_A<=output_A;
+								DiskInfo_A:=DiskInfo_A+(PREFIX & x"00000004"); -- goto x26
+								meca_spi_A<=DiskInfo_A;
 								meca_spi_Rdo<='1';
 								mecashark_step:=31;
 							else
 								winape(mecashark_face):=false;
-								output_A:=output_A+(PREFIX & x"0000000E"); -- goto x30
-								meca_spi_A<=output_A;
+								DiskInfo_A:=DiskInfo_A+(PREFIX & x"0000000E"); -- goto x30
+								meca_spi_A<=DiskInfo_A;
 								meca_spi_Rdo<='1';
 								mecashark_step:=3;
 							end if;
@@ -1876,37 +1947,59 @@ end if;
 							else
 								winape(mecashark_face):=false;
 							end if;
-							output_A:=output_A+(PREFIX & x"0000000A"); -- goto x30
-							meca_spi_A<=output_A;
+							DiskInfo_A:=DiskInfo_A+(PREFIX & x"0000000A"); -- goto x30
+							meca_spi_A<=DiskInfo_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=3;
 						when 3=>
 							nb_tracks(mecashark_face):=conv_integer(spi_Din);
-							output_A:=output_A+(PREFIX & x"00000001"); -- goto x31
-							meca_spi_A<=output_A;
+							DiskInfo_A:=DiskInfo_A+(PREFIX & x"00000001"); -- goto x31
+							meca_spi_A<=DiskInfo_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=7;
 						when 7=>
 							nb_sides(mecashark_face):=conv_integer(spi_Din);
 							dskIsValid:=false; -- invalidate
-							megashark_INFO_2SIDES<='0';
+							if nb_sides(mecashark_face)=1 then
+								-- one side only
+								megashark_INFO_2SIDES<='0';
+							else
+								megashark_INFO_2SIDES<='1';
+							end if;
+							megashark_INFO_ST0_mem:=x"00";
+							megashark_INFO_ST0<=megashark_INFO_ST0_mem;
 							megashark_INFO_ST1_mem:=x"00";
 							megashark_INFO_ST1<=megashark_INFO_ST1_mem;
 							megashark_INFO_ST2_mem:=x"00";
 							megashark_INFO_ST2<=megashark_INFO_ST2_mem;
-							is_first_sector_of_track:=false;
+							megashark_INFO_PANIC_mem:="00";
+							megashark_INFO_PANIC<=megashark_INFO_PANIC_mem;
 							is_sector_or_track_not_found:=false;
+							is_overrun:=false;
 							mecashark_step:=16;
-						when 16=>-- DSK is just inserted, CHRN is not loaded. input_A is not ready (invalidated)
+							no_track_current(mecashark_face):=0;
+							no_side_current(mecashark_face):=0;
+							no_sect_current(mecashark_face):=0;
+						when 16=>-- DSK is just inserted, CHRN is not loaded. TrackInfo_A is not ready (invalidated)
 							mecashark_changeDSK_done<=true;
 
-							
-							
+
+
+
+
 						when 25=> -- megashark_doREAD || megashark_doWRITE || megashark_doGOTO
+							chrn_build:=megashark_CHRN;
+							old_params_build:=(is_searching_track,is_searching_track77,is_readtrack,is_Del,is_Sk,is_multitrack,is_head,is_low_density,doGOTO,doWRITE);
+							old_boteot_build:=megashark_BOT_EOT;
+							if megashark_face(0)='1' then
+								mecashark_face_build:=FACE_B;
+							else
+								mecashark_face_build:=FACE_A;
+							end if;
 							-- megashark_select
-							if megashark_face='1' then
+							if megashark_face(0)='1' then
 								if mecashark_face_dskB then
-									if dskIsValid and chrn = megashark_CHRN then
+									if dskIsValid and old_chrn_build = chrn_build and old_params=old_params_build and old_boteot=old_boteot_build and not(is_searching_track) then
 										mecashark_step:=26;
 									else
 										mecashark_step:=17;
@@ -1921,7 +2014,7 @@ end if;
 									mecashark_face_dskB:=false;
 									mecashark_face:=FACE_A;
 									mecashark_step:=17;
-								elsif dskIsValid and chrn = megashark_CHRN then
+								elsif dskIsValid and old_chrn_build = chrn_build and old_params=old_params_build and old_boteot=old_boteot_build and not(is_searching_track) then
 									mecashark_step:=26;
 								else
 									mecashark_step:=17;
@@ -1929,17 +2022,51 @@ end if;
 							end if;
 						when 17=>
 							if mecashark_face_dskB then
-								-- input_A : at begin of Track-Info
+								-- TrackInfo_A : at begin of Track-Info
 								mecashark_addr_mem:=mecashark_addr_memFaceB;
 							else
-								-- input_A : at begin of Track-Info
+								-- TrackInfo_A : at begin of Track-Info
 								mecashark_addr_mem:=mecashark_addr_memFaceA;
 							end if;
 							dskIsValid:=true;
-							input_A:=mecashark_addr_mem+(PREFIX & x"00000100");
-							chrn:=megashark_CHRN;
+							is_sector_or_track_not_found:=false;
+							is_bad_cylinder:=false;
+							
+							is_overrun:=false;
+							has_control_mark:=false;
+							--has_flag_sector_found:=false;
+							TrackInfo_A:=mecashark_addr_mem+(PREFIX & x"00000100");
+							old_chrn_build:=chrn_build;
+							chrn:=chrn_build;
+							old_params:=old_params_build;
+							old_boteot:=old_boteot_build;
+							
+							-- le side est dynamic : head physique
+							no_side_current(mecashark_face):=conv_integer(megashark_face(2)); --conv_integer(chrn(16));
+							if is_searching_track then
+								-- if is_searching_track77 viser le mauvais track lors du premier coup.
+								if is_searching_track77 and no_track_current(mecashark_face)>77 then
+									no_track_current(mecashark_face):=no_track_current(mecashark_face)-77;
+									chrn(31 downto 24):=conv_std_logic_vector(no_track_current(mecashark_face),8);
+								else
+									-- changing track, so goto sector 0 (recalibrate) or seek target
+									no_track_current(mecashark_face):=conv_integer(chrn(31 downto 24));
+								end if;
+							elsif (doGOTO) then
+								--READ_ID
+								no_sect_current(mecashark_face):=no_sect_current(mecashark_face)+1;
+								if no_sect_current(mecashark_face)>=nb_sects then
+									no_sect_current(mecashark_face):=0; -- back to 0
+								end if;
+							elsif is_readtrack then
+								--is_readtrack
+								chrn(15 downto 8):=megashark_BOT_EOT(15 downto 8);
+								no_sect_current(mecashark_face):=conv_integer(chrn(15 downto 8))-1;
+								-- FDCTEST.ASL 2D (bad track 00 when wanting 0A....) 2A
+								--no_track_current(mecashark_face):=conv_integer(chrn(31 downto 24));
+							end if; -- else READ|WRITE DATA : osef no_sect_current(mecashark_face)
+							
 							if nb_sides(mecashark_face)=1 then
-								chrn(23 downto 16):=x"00"; -- one side only
 								megashark_INFO_2SIDES<='0';
 							else
 								megashark_INFO_2SIDES<='1';
@@ -1950,42 +2077,35 @@ end if;
 							mecashark_step:=19;
 						when 19=>
 							-- if last track/side reached or else good track/side found then
-							if no_track=conv_integer(chrn(31 downto 24)) and no_side = conv_integer(chrn(23 downto 16)) then
-								is_sector_or_track_not_found:=false; -- TRACK FOUND
-								-- need sector_size+nb_sects of the track here
-								output_A:=input_A + (PREFIX & x"00000014");
-								meca_spi_A<=output_A;
-								meca_spi_Rdo<='1';
-								mecashark_step:=5;
+							if no_track=no_track_current(mecashark_face) and no_side = no_side_current(mecashark_face) then
+								-- TRACK FOUND
+								
+								if not(winape(mecashark_face)) and extended(mecashark_face) then
+									--is_unformated_track_or_low_density ?
+									--check this current track-size, so x34 here.
+									DiskInfo_A:=mecashark_addr_mem + (PREFIX & x"00000034") + conv_std_logic_vector(no_track*nb_sides(mecashark_face)+no_side,41);
+									meca_spi_A<=DiskInfo_A;
+									meca_spi_Rdo<='1';
+									mecashark_step:=32;
+								else
+									is_unformated_track_or_low_density:=false;
+									-- need sector_size+nb_sects of the track here
+									Track_A:=TrackInfo_A + (PREFIX & x"00000014");
+									meca_spi_A<=Track_A;
+									meca_spi_Rdo<='1';
+									mecashark_step:=5;
+								end if;
 							elsif no_track=nb_tracks(mecashark_face)-1 and no_side=nb_sides(mecashark_face)-1 then
 								is_sector_or_track_not_found:=true; -- TRACK NOT FOUND
+								is_overrun:=false;
 								-- need sector_size+nb_sects of the track here
-								output_A:=input_A + (PREFIX & x"00000014");
-								meca_spi_A<=output_A;
+								Track_A:=TrackInfo_A + (PREFIX & x"00000014");
+								meca_spi_A<=Track_A;
 								meca_spi_Rdo<='1';
 								mecashark_step:=5;
 							else
-								if winape(mecashark_face) then
-									-- need sector_size+nb_sects here
-									output_A:=input_A + (PREFIX & x"00000014");
-									meca_spi_A<=output_A;
-									meca_spi_Rdo<='1';
-									mecashark_step:=6;
-								else
-									-- using track_size (that contains Track-Info size)
-									if extended(mecashark_face) then
-										output_A:=mecashark_addr_mem + (PREFIX & x"00000034") + conv_std_logic_vector(no_track*nb_sides(mecashark_face)+no_side,41);
-										meca_spi_A<=output_A;
-										meca_spi_Rdo<='1';
-										mecashark_step:=30;
-									else
-										output_A:=mecashark_addr_mem + (PREFIX & x"00000032");
-										meca_spi_A<=output_A;
-										meca_spi_Rdo<='1';
-										mecashark_step:=4;
-									end if;
-								end if;
-								
+								-- goto next track (TrackInfo_A++)
+								mecashark_step:=28;
 								if no_side = nb_sides(mecashark_face)-1 then
 									no_track:=no_track+1;
 									no_side:=0;
@@ -1993,46 +2113,85 @@ end if;
 									no_side:=no_side+1;
 								end if;
 							end if;
+						when 32=> --is_unformated_track_or_low_density ?
+							is_unformated_track_or_low_density:=(spi_Din=x"00");
+							if is_low_density then
+								-- FDCTEST.ASM &48 read_id_low
+								is_unformated_track_or_low_density:=true;
+							end if;
+							if is_unformated_track_or_low_density then
+								is_sector_or_track_not_found:=true;
+								is_overrun:=false;
+							end if;
+							-- need sector_size+nb_sects of the track here
+							Track_A:=TrackInfo_A + (PREFIX & x"00000014");
+							meca_spi_A<=Track_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=5;
+						when 28=> -- goto next track (TrackInfo_A++)
+
+							if winape(mecashark_face) then
+								-- need sector_size+nb_sects here
+								Track_A:=TrackInfo_A + (PREFIX & x"00000014");
+								meca_spi_A<=Track_A;
+								meca_spi_Rdo<='1';
+								mecashark_step:=6;
+							else
+								-- using track_size (that contains Track-Info size)
+								if extended(mecashark_face) then
+									-- the track/side just before, so x33 instead of x34 here.
+									DiskInfo_A:=mecashark_addr_mem + (PREFIX & x"00000033") + conv_std_logic_vector(no_track*nb_sides(mecashark_face)+no_side,41);
+									meca_spi_A<=DiskInfo_A;
+									meca_spi_Rdo<='1';
+									mecashark_step:=30;
+								else
+									DiskInfo_A:=mecashark_addr_mem + (PREFIX & x"00000032");
+									meca_spi_A<=DiskInfo_A;
+									meca_spi_Rdo<='1';
+									mecashark_step:=4;
+								end if;
+							end if;
+							
 						when 4=> -- not WinApe and not Extended 1/2
 							track_size(7 downto 0):=spi_Din;
-							output_A:=mecashark_addr_mem + (PREFIX & x"00000033");
-							meca_spi_A<=output_A;
+							DiskInfo_A:=mecashark_addr_mem + (PREFIX & x"00000033");
+							meca_spi_A<=DiskInfo_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=9;
 						when 9=> -- not WinApe and not Extended 2/2
 							track_size(15 downto 8):=spi_Din;
-							input_A:=input_A + track_size;
+							TrackInfo_A:=TrackInfo_A + track_size;
 							mecashark_step:=19;
 						when 30=> -- not WinApe and Extended : research track_size in track_size table
 							track_size(15 downto 0):=spi_Din & x"00";
-							input_A:=input_A + track_size;
+							TrackInfo_A:=TrackInfo_A + track_size;
 							mecashark_step:=19;
 						when 6=> -- WinApe : reached sector_size+nb_sects
 							track_sector_size(15 downto 8):=spi_Din;
 							-- need nb_sects here
-							output_A:=input_A + (PREFIX & x"00000015");
-							meca_spi_A<=output_A;
+							Track_A:=TrackInfo_A + (PREFIX & x"00000015");
+							meca_spi_A<=Track_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=8;
 						when 8=> -- WinApe : reached sector_size+nb_sects
 							nb_sects:=conv_integer(spi_Din);
 							-- using sector_size for track sizes
-							input_A:=input_A+(PREFIX & x"00000100");
+							TrackInfo_A:=TrackInfo_A+(PREFIX & x"00000100");
 							no_sect:=0;
 							mecashark_step:=20; -- do eat all sector of this track...
 						when 20=> -- WinApe : zap sectors
 							if no_sect/=nb_sects then
 								no_sect:=no_sect+1;
 								-- zap sector
-								input_A:=input_A + track_sector_size;
+								TrackInfo_A:=TrackInfo_A + track_sector_size;
 							else --nb_sects zero (empty track) OK
 								mecashark_step:=19;
 							end if;
 						when 5=>
 							track_sector_size(15 downto 8):=spi_Din;
 							-- need sector_size+nb_sects of the track here
-							output_A:=input_A + (PREFIX & x"00000015");
-							meca_spi_A<=output_A;
+							Track_A:=TrackInfo_A + (PREFIX & x"00000015");
+							meca_spi_A<=Track_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=10;
 						when 10=>
@@ -2040,189 +2199,530 @@ end if;
 							nb_sects:=conv_integer(spi_Din);
 							if nb_sects = 0 then
 								is_sector_or_track_not_found:=true;
+								is_overrun:=false;
 								-- anarchy...
 							end if;
 							mecashark_step:=21;
 
 						when 21=> -- we are front to the nice wanted Track-Info
-							no_sect:=0;
-							is_first_sector_of_track:=true;
-							 -- x"18"+x"00"=x"18" : track -- C
-							output_A:=input_A+(PREFIX & x"00000018"); -- +conv_std_logic_vector(no_sect*8,41);
-							meca_spi_A<=output_A;
+							no_sect:=0;--is_overrun:=false;
+							if nb_sects>no_sect_current(mecashark_face) and not(is_readtrack) then
+								-- outch
+								no_sect_current(mecashark_face):=0;
+							end if;
+							-- physical track
+							Track_A:=TrackInfo_A+(PREFIX & x"00000010");
+							meca_spi_A<=Track_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=11;
 						when 11=>
-							if not(doGoto) and chrn(31 downto 24)/=spi_Din then
-								-- bad track (protection : missing one track ?)
+							no_sect:=0;--is_overrun:=false;
+							if not(doGoto) and no_track_current(mecashark_face)/=conv_integer(spi_Din) then
+								-- bad physical track (protection : missing one track ?)
 								is_sector_or_track_not_found:=true;
+								is_overrun:=false;
 							end if;
-							-- x"18"+x"01"=x"19" : side -- H
-							output_A:=input_A+(PREFIX & x"00000019"); -- +conv_std_logic_vector(no_sect*8,41);
-							meca_spi_A<=output_A;
+							-- physical side
+							Track_A:=TrackInfo_A+(PREFIX & x"00000011");
+							meca_spi_A<=Track_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=18;
 						when 18=>
-							if not(doGoto) and chrn(23 downto 16)/=spi_Din then
-								-- bad side (protection : missing one track ?)
+							no_sect:=0;--is_overrun:=false;
+							if not(doGoto) and "0000000" & megashark_face(2)/=spi_Din then
+								-- bad physical side (protection : missing one track ?)
 								is_sector_or_track_not_found:=true;
+								is_overrun:=false;
 							end if;
 							-- x"18"+x"02"=x"1a" : sector ID -- R
-							output_A:=input_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
-							meca_spi_A<=output_A;
+							SectorInfo_A:=TrackInfo_A+(PREFIX & x"00000018"); -- +conv_std_logic_vector(no_sect*8,41);
+							Sector_A:=SectorInfo_A+(PREFIX & x"00000002");
+							meca_spi_A<=Sector_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=22;
 						when 22=> -- x"18"+x"02"=x"1a" : sector ID -- R
-							if doGOTO and is_searching_track then
-								chrn(15 downto 8):=spi_Din;
+							--if is_readtrack and chrn_build(15 downto 8)=spi_Din then
+							--	has_flag_sector_found:=true;
+							--end if;
+							if is_readtrack and (no_sect=no_sect_current(mecashark_face) or is_sector_or_track_not_found) then
+								-- no_sect found (=0)
+								if not(is_sector_or_track_not_found) then
+									-- retablissement contre le no_sect_current-=nb_sects;
+									no_sect_current(mecashark_face):=conv_integer(chrn(15 downto 8))-1;
+								end if;
+								mecashark_step:=12;
+							elsif (doGOTO and no_sect=no_sect_current(mecashark_face)) or is_sector_or_track_not_found then
+								-- FDCTEST.ASM &18 read_data_unform
+								-- FDCTEST.ASM &2A read_track_unform
+								-- FDCTEST.ASM &49 read_id_de
+								if not(is_sector_or_track_not_found) then
+									chrn(15 downto 8):=spi_Din;
+								end if;
 								-- no_sect found (=0)
 								mecashark_step:=12;
-							elsif chrn(15 downto 8)=spi_Din then
+							elsif not(doGOTO or is_readtrack) and chrn(15 downto 8)=spi_Din then --no_sect_current(mecashark_face)
 								-- no_sect found
-								if doGOTO then
-									-- I want the new one
-									no_sect:=no_sect+1;
-									if no_sect>=nb_sects then
-										if is_multitrack then
-											is_searching_track:=true;
-											is_multitrack:=false;
-											if nb_sides(mecashark_face)=1 or chrn(23 downto 16)=x"01" then
-												chrn(31 downto 24):=chrn(31 downto 24)+1;
-											else
-												chrn(23 downto 16):=x"01";
-											end if;
-											-- looking after track/sector from CHRN value (old mecashark_step 18)
-											no_track:=0;
-											no_side:=0;
-											mecashark_step:=19;
-										else
-											output_A:=input_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
-											meca_spi_A<=output_A;
-											meca_spi_Rdo<='1';
-											mecashark_step:=14;
-										end if;
-									else
-										output_A:=output_A+(PREFIX & x"00000008");
-										meca_spi_A<=output_A;
-										meca_spi_Rdo<='1';
-										mecashark_step:=14;
-									end if;
-								else
-									-- here we are :)
-									mecashark_step:=12;
-								end if;
+								no_sect_current(mecashark_face):=no_sect;
+								mecashark_step:=12;
 							else
 								-- on passe au suivant.
-								no_sect:=no_sect+1;
-								is_first_sector_of_track:=false;
-								if no_sect>=nb_sects then
-									-- sector not found
-									is_sector_or_track_not_found:=true;
-									no_sect := nb_sects-1;
-									chrn(15 downto 8):=spi_Din; -- R
-									mecashark_step:=12;
-								else
-									-- goto next sector info
-									-- sizeof(SectorInfo) = 8
-									output_A:=output_A+(PREFIX & x"00000008");
-									meca_spi_A<=output_A;
-									meca_spi_Rdo<='1';
+								
+								-- is_multitrack : pas ici, peut-Ãªtre lors du skip ?
+								--if is_multitrack and nb_sides(mecashark_face)=2 then
+								--	-- switch head, and relaunch search track.
+								--	if no_side_current(mecashark_face)=0 then
+								--		no_side_current(mecashark_face):=1;
+								--	else
+								--		no_side_current(mecashark_face):=0;
+								--		no_sect_current(mecashark_face):=no_sect_current(mecashark_face)+1;
+								--		if no_sect_current(mecashark_face)>=nb_sects(mecashark_face) then
+								--			no_sect_current(mecashark_face):=0;
+								--		end if;
+								--		no_track_current(mecashark_face):=no_track_current(mecashark_face)+1;
+								--		if no_track_current(mecashark_face)>=nb_tracks(mecashark_face) then
+								--			no_track_current(mecashark_face):=0;
+								--		end if;
+								--	end if;
+								--	-- rescanner track/side
+								--	TrackInfo_A:=mecashark_addr_mem+(PREFIX & x"00000100");
+								--	no_track:=0;
+								--	no_side:=0;
+								--	mecashark_step:=19;
+								--else
+									no_sect:=no_sect+1;
+									if no_sect>=nb_sects then
+										if is_overrun then
+											no_sect:=0; -- back to sector 0 of this current track.
+											no_sect_current(mecashark_face):=no_sect;
+											is_sector_or_track_not_found:=true;
+											is_overrun:=true;
+											SectorInfo_A:=TrackInfo_A+(PREFIX & x"00000018");
+											Sector_A:=SectorInfo_A+(PREFIX & x"00000002");
+											meca_spi_A<=Sector_A;
+											meca_spi_Rdo<='1';
+										else
+											no_sect:=0; -- back to sector 0 of this current track.
+											if is_readtrack then
+												-- go further !
+												if no_sect_current(mecashark_face)>=nb_sects then
+													no_sect_current(mecashark_face):=no_sect_current(mecashark_face)-nb_sects;
+												--else
+												--	is_overrun:=true;
+												--	no_sect:=0; -- back to sector 0 of this current track.
+												--	no_sect_current(mecashark_face):=no_sect;
+												--	is_sector_or_track_not_found:=true;
+												end if;
+											else
+												is_overrun:=true;
+											end if;
+											SectorInfo_A:=TrackInfo_A+(PREFIX & x"00000018");
+											Sector_A:=SectorInfo_A+(PREFIX & x"00000002");
+											meca_spi_A<=Sector_A;
+											meca_spi_Rdo<='1';
+										end if;
+									else
+										-- goto next sector info
+										-- sizeof(SectorInfo) = 8
+										SectorInfo_A:=SectorInfo_A+(PREFIX & x"00000008");
+										Sector_A:=SectorInfo_A+(PREFIX & x"00000002");
+										meca_spi_A<=Sector_A;
+										meca_spi_Rdo<='1';
+									end if;
+								--end if;
+								
+
+							end if;
+						when 12=>
+							-- sector_sector_track
+							Sector_A:=SectorInfo_A+(PREFIX & x"00000000");
+							meca_spi_A<=Sector_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=33;
+						when 33=>
+							-- sector_sector_track
+							-- FDCTEST.ASM &2D &2E
+							if doGOTO then
+								if not(is_searching_track) and not(is_sector_or_track_not_found) then
+									-- READ ID (but not SEEK :p)
+									-- FDCTEST.ASM &49 read_id_de
+									chrn(31 downto 24):=spi_Din;
+								end if;
+							elsif chrn_build(31 downto 24)/=spi_Din and not(is_readtrack or chrn_build(7 downto 0)=x"00") then
+								-- or chrn_build(7 downto 0)=x"00") then => FDCTEST.ASM &5E check_dtl3 : don't care about logical track while DTL
+								-- bad logical track
+								-- FDCTEST.ASM &39 read_data_mt7
+								is_sector_or_track_not_found:=true;
+								if spi_Din=x"FF" then
+									-- FDCTEST.ASM &4E bad2_cylinder
+									is_bad_cylinder:=true;
 								end if;
 							end if;
-						when 14=>-- doGOTO !is_searching_track "I want the new one"
-							chrn(15 downto 8):=spi_Din;
-							mecashark_step:=12;
-						when 12=> -- sector_sector_size
-							output_A:=output_A+(PREFIX & x"00000001");
-							meca_spi_A<=output_A;
+							-- sector_side
+							Sector_A:=SectorInfo_A+(PREFIX & x"00000001");
+							meca_spi_A<=Sector_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=13;
 						when 13=>
+							-- sector_sector_side
+							sector_sector_side:=spi_Din;
+							if doGOTO then
+								if not(is_searching_track) and not(is_sector_or_track_not_found) then
+									-- READ ID (but not SEEK :p)
+									-- FDCTEST.ASM &49 read_id_de
+									chrn(23 downto 16):=spi_Din;
+								end if;
+							elsif chrn_build(23 downto 16)/=sector_sector_side and not(is_readtrack) then
+								-- bad logical head
+								-- FDCTEST.ASM &11 read_data2
+								-- FDCTEST.ASM 3C read_data_mt10
+								is_sector_or_track_not_found:=true;
+							end if;
+							-- sector_sector_size
+							Sector_A:=SectorInfo_A+(PREFIX & x"00000003");
+							meca_spi_A<=Sector_A;
+							meca_spi_Rdo<='1';
+							mecashark_step:=14;
+						when 14=>
 							-- sector_sector_size
 							sector_sector_size:=spi_Din;
+							if doGOTO then
+								if not(is_searching_track) and not(is_sector_or_track_not_found) then
+									-- READ ID (but not SEEK :p)
+									-- FDCTEST.ASM &49 read_id_de
+									chrn(7 downto 0):=spi_Din;
+								end if;
+							end if;
 							-- FDC ST1
-							output_A:=output_A+(PREFIX & x"00000001");
-							meca_spi_A<=output_A;
+							Sector_A:=SectorInfo_A+(PREFIX & x"00000004");
+							meca_spi_A<=Sector_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=15;
 						when 15=>
-							if is_sector_or_track_not_found then
-								megashark_INFO_ST1_mem:=ST1_NO_DATA or ST1_MISSING_ADDR;
-							elsif is_first_sector_of_track then
-								megashark_INFO_ST1_mem:=spi_Din or ST1_END_OF_CYLINDER;
+							if is_searching_track then
+								-- FDCTEST.ASM &0C seek_test8
+								megashark_INFO_ST1_mem:=x"00"; -- seek 77
+								megashark_INFO_PANIC_mem:="00";
+							elsif is_sector_or_track_not_found then
+								if is_unformated_track_or_low_density then
+									-- unformated track
+									megashark_INFO_ST1_mem:=ST1_MISSING_ADDR; -- FDCTEST.ASM &18 read_data_unform
+									megashark_INFO_PANIC_mem:=PANIC_RAGE_QUIT;
+								elsif chrn_build(23 downto 16)/=sector_sector_side and not(is_readtrack) then
+									-- bad logical head
+									megashark_INFO_ST1_mem:=ST1_NO_DATA;
+									megashark_INFO_PANIC_mem:=PANIC_RAGE_QUIT;
+								elsif is_overrun then
+									-- FDCTEST.ASM &33 read_data_mt
+									megashark_INFO_ST1_mem:=ST1_NO_DATA;
+									--chrn:=chrn_build;
+									megashark_INFO_PANIC_mem:=PANIC_RAGE_QUIT;
+								else
+									-- bad logical track
+									-- FDCTEST.ASM &39 read_data_mt7 ST2_WRONG_CYLINDER
+									megashark_INFO_ST1_mem:=ST1_NO_DATA;
+									megashark_INFO_PANIC_mem:=PANIC_RAGE_QUIT;
+								end if;
+							elsif doGOTO then
+								-- READ ID
+								-- FDCTEST.ASM &49FAIL06
+								megashark_INFO_ST1_mem:=x"00";
+								megashark_INFO_PANIC_mem:="00";
 							else
 								megashark_INFO_ST1_mem:=spi_Din;
+								megashark_INFO_PANIC_mem:="00";
 							end if;
+							
 							-- FDC ST2
-							output_A:=output_A+(PREFIX & x"00000001");
-							meca_spi_A<=output_A;
+							Sector_A:=Sector_A+(PREFIX & x"00000001");
+							meca_spi_A<=Sector_A;
 							meca_spi_Rdo<='1';
 							mecashark_step:=23;
 						when 23=>
-							if is_sector_or_track_not_found then
-								megashark_INFO_ST2_mem:=ST2_MISSING_ADDR;
+							if is_searching_track then
+								-- FDCTEST.ASM &0C seek_test8
+								megashark_INFO_ST2_mem:=x"00";
+								megashark_INFO_ST0_mem:=x"00"; -- seek 77
+							elsif is_sector_or_track_not_found then
+								if is_unformated_track_or_low_density then
+									-- unformated track
+									megashark_INFO_ST2_mem:=x"00"; -- FDCTEST.ASM &18 read_data_unform
+									megashark_INFO_ST0_mem:=ST0_ABNORMAL;
+								elsif chrn_build(23 downto 16)/=sector_sector_side and not(is_readtrack) then
+									-- bad logical head
+									megashark_INFO_ST2_mem:=x"00"; -- FDCTEST.ASM &11 read_data2
+									megashark_INFO_ST0_mem:=ST0_ABNORMAL;
+								elsif is_overrun then
+									-- FDCTEST.ASM &33 read_data_mt
+									megashark_INFO_ST2_mem:=x"00";
+									megashark_INFO_ST0_mem:=ST0_ABNORMAL;
+								else
+									-- FDCTEST.ASM &39 read_data_mt7 ST2_WRONG_CYLINDER
+									if is_bad_cylinder then
+										-- FDCTEST.ASM &4E bad2_cylinder
+										megashark_INFO_ST2_mem:=ST2_WRONG_CYLINDER or ST2_BAD_CYLINDER;
+									else
+										megashark_INFO_ST2_mem:=ST2_WRONG_CYLINDER;
+									end if;
+									megashark_INFO_ST0_mem:=ST0_ABNORMAL;
+								end if;
+							elsif doGOTO then
+								-- READ ID
+								-- FDCTEST.ASM &49FAIL06
+								megashark_INFO_ST2_mem:=x"00";
+								megashark_INFO_ST0_mem:=x"00";
 							else
 								megashark_INFO_ST2_mem:=spi_Din;
+								megashark_INFO_ST0_mem:=x"00";
+								
+								if (megashark_INFO_ST2_mem and ST2_DATA_ERROR) = ST2_DATA_ERROR then
+									
+									
+									
+									--	megashark_INFO_ST1_mem:=ST1_DATA_ERROR;
+									if is_readtrack then
+										-- FDCTEST.ASM &2F read_track12
+										-- FDCTEST.ASM &30 read_track13
+										megashark_INFO_ST1_mem:=megashark_INFO_ST1_mem or ST1_NO_DATA;
+									else
+										-- FDCTEST.ASM &14 read_de_data
+										megashark_INFO_PANIC_mem:=PANIC_SLOW_QUIT;
+									end if;
+									megashark_INFO_ST0_mem:=ST0_ABNORMAL;
+									is_sector_or_track_not_found:=true;
+								end if;
+								
+								--if is_Sk and is_Del then
+								--	-- FDCTEST.ASM : 1A FAIL 06 donc EOT est &40
+								--els
+								--if is_Del then -- FDCTEST.ASM : 20 21 (+ spec definition ST2.D6 (control mark))
+								--	megashark_INFO_ST2_mem(6):=not(megashark_INFO_ST2_mem(6));
+								--end if;
+								
+								if not(doGOTO or doWRITE) then
+									if (not(is_Del) and megashark_INFO_ST2_mem(6)='1')
+										or (is_Del and megashark_INFO_ST2_mem(6)='0') then
+										has_control_mark:=true;
+									end if;
+								end if;
 							end if;
 							
-							-- megashark_INFO_ST2_mem(6) : CONTROL MASK
-							if (is_del and (megashark_INFO_ST2_mem(6)='0'))
-								or (not(is_del) and is_sk and (megashark_INFO_ST2_mem(6)='1')) then
-								-- je suis en READ_DELETED, et je suis sur un DATA !DELETED, donc je zap
-								-- je suis en READ+SK, et je suis sur un DATA DELETED, donc je le SKIP.
+							-- isDeletedData() : megashark_INFO_ST2_mem(6) CONTROL MASK (0x040) = '1'
+							--if (is_Sk and not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
+							if not(doGOTO or doWRITE) and (
+									--FDCTEST.ASM defw read_data_noskip	;; 19 read data, no skip
+									--FDCTEST.ASM defw read_del_data_skip	;; 1A read deleted data sectors with skip
+									--(is_Sk  and not(is_Del) and (megashark_INFO_ST2_mem(6)='1'))
+									--or 
+									--(is_Del and (megashark_INFO_ST2_mem(6)='0'))
+									--(is_Del and not(is_Sk ) and (megashark_INFO_ST2_mem(6)='1'))
+									
+									
+									--defw read_data_skip		;; 1E read data, and skip deleted data sectors! => pourtant control-mark et sector fin.
+									--defw read3_del_data_skip ;; 1C read deleted data, first is deleted, second is data!
+									(not(is_Del) and is_Sk  and (megashark_INFO_ST2_mem(6)='1')) -- FDCTEST.ASM &1E read_data_skip
+									or
+									(is_Del and is_Sk and (megashark_INFO_ST2_mem(6)='0')) -- FDCTEST.ASM &1A read_del_data_skip
+									
+									--(is_Sk  and not(is_Del) and (megashark_INFO_ST2_mem(6)='1')) -- FDCTEST 1F read_data_skip2
+									--or
+									--(is_Del and is_Sk  and (megashark_INFO_ST2_mem(6)='0')) -- FDCTEST.ASM 1A PASS
+								) and not(is_sector_or_track_not_found) --and not(is_overrun and is_sector_or_track_not_found)
+								then
+								---- SK stands for skip deleted data address mark
+								---- je suis en READ+SK, et je suis sur un DATA DELETED, donc je le SKIP.
+								---- je suis en READ_DELETED, et je suis sur un DATA !DELETED, donc je zap
+								---- cas READ_DELETED avec SK stupide, donc ne zap pas ici.
+								-- if ((command & (1 << 5)) == 0) { // skip if deleted data
+								-- if ((command & (1 << 5)) != 0) { // skip if deleted data
+								-- Logiquement des erreurs ÃƒÂ  gÃƒÂ©rer temporairement d'un secteur ÃƒÂ  l'autre via Skip,
+								--donc on va faire sans pour le moment.
+								--  ST2_DATA_ERROR
 								-- Niger Mansell, Orion x46/x66 (commande read avec et sans sk)
 								-- on passe au suivant.
-								no_sect:=no_sect+1;
-								is_first_sector_of_track:=false;
-								if no_sect>=nb_sects then
-									-- sector not found
+								-- sector found by skipped
+								
+								
+								
+								-- is_readtrack / not(is_readtrack) : the same here
+								if megashark_BOT_EOT(7 downto 0)=chrn(15 downto 8) then
+									megashark_INFO_PANIC_mem:=PANIC_RAGE_QUIT; -- EOT skip !
 									is_sector_or_track_not_found:=true;
-									no_sect := nb_sects-1;
-									chrn(15 downto 8):=spi_Din; -- R
-									mecashark_step:=12;
+									megashark_INFO_ST1_mem:=ST1_END_CYL;
+									megashark_INFO_ST0_mem:=ST0_ABNORMAL; -- + ST1_END_CYL
+									mecashark_step:=24;
 								else
-									-- goto next sector info
-									-- sizeof(SectorInfo) = 8
-									-- output_A:=output_A+(PREFIX & x"00000008");
-									-- output_A:=output_A+(PREFIX & x"00000001");
-									-- output_A:=output_A+(PREFIX & x"00000001");
-									-- output_A:=output_A+(PREFIX & x"00000001");
-									-- 8-1-1-1=5
-									output_A:=output_A+(PREFIX & x"00000005");
-									meca_spi_A<=output_A;
-									meca_spi_Rdo<='1';
+									chrn(15 downto 8):=chrn(15 downto 8)+1; -- skip ! (in testbench EOT=BOT+4 and READ_DATA is 2)
+									if is_readtrack then
+										no_sect_current(mecashark_face):=conv_integer(chrn(15 downto 8))-1;
+									end if;
+								end if;
+								--is_readtrack:=true;
+								if megashark_INFO_PANIC_mem="00" then -- not "EOT skip !"
+									no_sect:=no_sect+1; -- skip (myself)
+									if no_sect>=nb_sects then
+										-- normalement on fait un tour complet, et aprÃƒÂ¨s on stop.
+										if is_overrun then
+											no_sect:=0; -- back to sector 0 of this current track.
+											no_sect_current(mecashark_face):=no_sect;
+											is_sector_or_track_not_found:=true;
+											is_overrun:=true;
+											SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+											meca_spi_A<=SectorInfo_A;
+											meca_spi_Rdo<='1';
+										else
+											no_sect:=0; -- back to sector 0 of this current track.
+											if is_readtrack then
+												-- go further !
+												if no_sect_current(mecashark_face)>=nb_sects then
+													no_sect_current(mecashark_face):=no_sect_current(mecashark_face)-nb_sects;
+												--else
+												--	is_overrun:=true;
+												--	no_sect:=0; -- back to sector 0 of this current track.
+												--	no_sect_current(mecashark_face):=no_sect;
+												--	is_sector_or_track_not_found:=true;
+												end if;
+											else
+												is_overrun:=true;
+											end if;
+											SectorInfo_A:=TrackInfo_A+(PREFIX & x"0000001a"); -- +conv_std_logic_vector(no_sect*8,41);
+											meca_spi_A<=SectorInfo_A;
+											meca_spi_Rdo<='1';
+										end if;
+									else
+										-- goto next sector info
+										-- sizeof(SectorInfo) = 8
+										SectorInfo_A:=SectorInfo_A+(PREFIX & x"00000008");
+										meca_spi_A<=SectorInfo_A;
+										meca_spi_Rdo<='1';
+									end if;
+									is_sector_or_track_not_found:=false;
+									is_overrun:=false;
+									mecashark_step:=22;
 								end if;
 							else
-								megashark_INFO_ST1<=megashark_INFO_ST1_mem;
-								megashark_INFO_ST2<=megashark_INFO_ST2_mem;
 								-- go to start of sector list of this track
-								input_A:=input_A + (PREFIX & x"00000100");
+								Sector_A:=TrackInfo_A + (PREFIX & x"00000100");
 								mecashark_step:=24;
 							end if;
+							
+							if mecashark_step=24 and not(doGOTO) then
+							
+								if not(doWRITE)  then
+									if not(is_sk) and not(is_del) and megashark_INFO_ST2_mem(6)='1' then
+										-- FDCTEST.ASM &19 read_data_noskip
+										megashark_INFO_PANIC_mem:=PANIC_SLOW_QUIT;
+										-- FDCTEST.ASM &20 read_deleted_data_using_data
+										--megashark_INFO_ST1_mem:=x"00";
+										--megashark_INFO_ST0_mem:=x"00";
+										is_sector_or_track_not_found:=true;
+										--FDCTEST.ASM &2C
+									elsif not(is_sk) and is_del and megashark_INFO_ST2_mem(6)='0' then
+										-- FDCTEST.ASM &21 read_data_using_deleted_data
+										megashark_INFO_PANIC_mem:=PANIC_SLOW_QUIT;
+										megashark_INFO_ST2_mem(6):='1';
+										--megashark_INFO_ST1_mem:=x"00";
+										--megashark_INFO_ST0_mem:=x"00";
+										is_sector_or_track_not_found:=true;
+									elsif is_sk then
+										--FDCTEST.ASM &1B read2_del_skip
+										--FDCTEST.ASM &1E read_data_skip
+										if has_control_mark then
+											megashark_INFO_ST2_mem(6):='1';
+										else
+											megashark_INFO_ST2_mem(6):='0';
+										end if;
+									end if;
+								end if;
+							
+							
+								if not(is_sector_or_track_not_found) then
+									if (chrn_build(7 downto 0)/=x"02" and chrn_build(7 downto 0)/=x"01" and chrn_build(7 downto 0)/=x"00")
+											or (sector_sector_size/=x"02" and sector_sector_size/=x"01" and sector_sector_size/=x"00") then
+										-- FDCTEST.ASM &12 read_data3
+										if is_readtrack then
+											-- FDCTEST.ASM &31 read_track14
+											megashark_INFO_ST1_mem:=ST1_NO_DATA or ST1_DATA_ERROR;
+											megashark_INFO_ST2_mem:=ST2_DATA_ERROR;
+										else
+											megashark_INFO_PANIC_mem:=PANIC_RAGE_QUIT;
+											megashark_INFO_ST1_mem:=ST1_NO_DATA;
+										end if;
+										megashark_INFO_ST0_mem:=ST0_ABNORMAL;
+										is_sector_or_track_not_found:=true;
+									-- is_readtrack / not(is_readtrack) : the same here
+									elsif megashark_BOT_EOT(7 downto 0)=chrn(15 downto 8) then
+										-- FDCTEST.ASM &0F : read normal data, direct found and EOT, WTF FDCTEST.ASM...
+										--megashark_INFO_PANIC_mem:=PANIC_SLOW_QUIT;
+										if is_readtrack then
+											--if megashark_BOT_EOT(7 downto 0)=x"00" then
+											--	--FDCTEST.ASM &26 read_track0
+											--	megashark_INFO_ST1_mem:=ST1_END_CYL or ST1_NO_DATA;
+											--els
+											if chrn_build(7 downto 0)=x"00" then --if not(has_flag_sector_found) then
+												--FDCTEST.ASM &28 read_track5
+												megashark_INFO_ST1_mem:=ST1_NO_DATA or ST1_DATA_ERROR;
+												megashark_INFO_ST2_mem:=ST2_DATA_ERROR;
+												--is_sector_or_track_not_found:=true;
+											else
+												megashark_INFO_ST1_mem:=ST1_NO_DATA;
+											end if;
+										end if;
+									end if;
+								end if;
+								
+								if (not(is_sector_or_track_not_found) or is_readtrack) and not(is_unformated_track_or_low_density) then
+									if megashark_BOT_EOT(7 downto 0)=chrn(15 downto 8) then
+										if megashark_INFO_PANIC_mem="00" then
+											megashark_INFO_PANIC_mem:=PANIC_SLOW_QUIT;
+										end if;
+										megashark_INFO_ST1_mem:=megashark_INFO_ST1_mem or ST1_END_CYL;
+										megashark_INFO_ST0_mem:=ST0_END_OF_READ_DRIVE_USX; 
+									end if;
+								end if;
+							end if;
+							megashark_INFO_ST2<=megashark_INFO_ST2_mem;
+							megashark_INFO_ST1<=megashark_INFO_ST1_mem;
+							megashark_INFO_ST0<=megashark_INFO_ST0_mem;
+							megashark_INFO_PANIC<=megashark_INFO_PANIC_mem;
 						when 24=>
 							if no_sect>0 then
 								no_sect:=no_sect-1;
-								input_A:=input_A + track_sector_size;
+								Sector_A:=Sector_A + track_sector_size;
 							else
-								mecashark_step:=26; -- input_A is just before concerned data block
+								-- do mark or unmark (ST2.deleted flag update)
+								if doWRITE and not(is_sector_or_track_not_found) and not(IS_ARNOLDEMU_TESTBENCH) then
+									if is_del then
+										megashark_INFO_ST2_mem:=megashark_INFO_ST2_mem or ST2_CONTROL_MARK;
+									else
+										megashark_INFO_ST2_mem:=megashark_INFO_ST2_mem and not(ST2_CONTROL_MARK);
+									end if;
+									meca_spi_Wdo<='1';
+									meca_spi_A<=SectorInfo_A+(PREFIX & x"00000005");
+									meca_spi_Dout<=megashark_INFO_ST2_mem;
+								end if;
+								-- Sector_A is just before concerned data block
+								mecashark_step:=26;
 							end if;
 						
-						when 26=> -- chrn and input_A are great, let's go
-							if doGOTO or (sector_sector_size/=x"02" and sector_sector_size/=x"01") then
+						when 26=> -- chrn and TrackInfo_A are great, let's go
+							if doGOTO or (megashark_INFO_PANIC_mem=PANIC_RAGE_QUIT and not(doWRITE)) then --or (sector_sector_size/=x"02" and sector_sector_size/=x"01") then
 								-- thanks for all, and good bye
+								--if is_searching_track77 then
+								--	chrn
 								megashark_CHRNresult<=chrn;
 								mecashark_step:=29;
 							elsif doWRITE then
-								megashark_A_mem(8 downto 0):=megashark_A;
+								megashark_A_mem(8 downto 0):=megashark_A(8 downto 0);
 								megashark_Dout_mem:=megashark_Dout;
-								output_A:=input_A + megashark_A_mem;
+								output_A:=Sector_A + megashark_A_mem;
 								meca_spi_A<=output_A;
 								meca_spi_Dout<=megashark_Dout_mem;
 								-- spi_Wblock (in block): just fill internal RAM
 								-- spi_Wblock+spi_W (begin of block): do full read into internal and just fill internal RAM
 								-- spi_W (end of block): do write internal block into SPI, writing also last byte given
-								if sector_sector_size=x"01" and megashark_A_mem(8)='1' then
+								if is_sector_or_track_not_found or (sector_sector_size=x"01" and megashark_A_mem(8)='1') or (sector_sector_size=x"00" and megashark_A_mem(8 downto 7)/="00") then
 									-- out of range
+									--FDCTEST.ASM &51 &52 : do write nothing => not implemented.
 								elsif megashark_A_mem = "0" & x"00" then
 									--begin of input block
 									if output_A(8 downto 0) = "1" & x"FF" then
@@ -2232,9 +2732,15 @@ end if;
 										meca_spi_Wdo<='1';
 										meca_spi_Wblock<='1';
 									end if;
+								-- DTL WRITE => less than sector_sector_size => not implemented.
+								-- sector_sector_size => x"00"
+								elsif sector_sector_size=x"00" and megashark_A_mem = "0" & x"7F" then
+									--FDCTEST.ASM &5E check_dtl3
+									-- end of action !
+									meca_spi_Wdo<='1';
 								-- sector_sector_size(1) = 1 => x"02"
 								-- sector_sector_size(1) = 0 => x"01"
-								elsif megashark_A_mem = sector_sector_size(1) & x"FF" then
+								elsif sector_sector_size/=x"00" and megashark_A_mem = sector_sector_size(1) & x"FF" then
 									-- end of action !
 									meca_spi_Wdo<='1';
 								elsif output_A(8 downto 0) = "1" & x"FF" then
@@ -2250,14 +2756,26 @@ end if;
 								megashark_CHRNresult<=chrn;
 								mecashark_step:=29;
 							else
-								megashark_A_mem(8 downto 0):=megashark_A;
-								if sector_sector_size=x"01" then
-									megashark_A_mem(8):='0';
+								-- 1FF = 512 9bit
+								-- 3FF = 1023 10bit 
+								megashark_A_mem(8 downto 0):=megashark_A(8 downto 0);
+								if sector_sector_size=x"01" and megashark_A_mem(8)='1' then
+									megashark_Din_mem:=x"FF";
+									megashark_Din<=megashark_Din_mem;
+									megashark_CHRNresult<=chrn;
+									mecashark_step:=29;
+								elsif sector_sector_size=x"00" and megashark_A_mem(8 downto 7)/="00" then
+									--FDCTEST.ASM &5E check_dtl3
+									megashark_Din_mem:=x"FF";
+									megashark_Din<=megashark_Din_mem;
+									megashark_CHRNresult<=chrn;
+									mecashark_step:=29;
+								else
+									output_A:=Sector_A + megashark_A_mem;
+									meca_spi_A<=output_A;
+									meca_spi_Rdo<='1';
+									mecashark_step:=27;
 								end if;
-								output_A:=input_A + megashark_A_mem;
-								meca_spi_A<=output_A;
-								meca_spi_Rdo<='1';
-								mecashark_step:=27;
 							end if;
 						when 27=> -- read byte
 								megashark_Din_mem:=spi_Din;
@@ -2267,9 +2785,13 @@ end if;
 								--	megashark_Din_mem:=x"E5";
 								--end if;
 								megashark_Din<=megashark_Din_mem;
+--								if is_overrun and is_sector_or_track_not_found then
+--									-- FDCTEST.ASM &14 data_de_read => EOT:=BOT
+--									chrn(15 downto 8):=chrn_build(15 downto 8);
+--								end if;
+								
 								megashark_CHRNresult<=chrn;
 								mecashark_step:=29;
-						when 28=>NULL; -- overrun
 						when 29=> -- DSK command is just executed, CHRN is loaded.
 							megashark_done_s<='1';
 					end case;

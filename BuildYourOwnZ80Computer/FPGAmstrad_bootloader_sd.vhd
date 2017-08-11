@@ -76,17 +76,21 @@ entity FPGAmstrad_bootloader_sd is
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_BOT_EOT : in std_logic_vector(15 downto 0);
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic_vector(2 downto 0);
-			  megashark_doWRITE : in std_logic;
+			  megashark_doREAD : in std_logic_vector(5 downto 0);
+			  megashark_doWRITE : in std_logic_vector(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
-			  megashark_face : in std_logic;
+			  megashark_face : in std_logic_vector(3 downto 0);
 			  megashark_INFO_2SIDES : out std_logic;
+			  megashark_INFO_ST0 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
-			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0)
+			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
+			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0)
+			  --leds8_debug:out std_logic_vector(39 downto 0)
 			 );
 end FPGAmstrad_bootloader_sd;
 
@@ -177,17 +181,22 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
+			  megashark_BOT_EOT : in std_logic_vector(15 downto 0);
 			  megashark_A : in std_logic_vector(8 downto 0); -- sector byte selection
 			  megashark_Din : out std_logic_vector(7 downto 0);
 			  megashark_Dout : in std_logic_vector(7 downto 0);
-			  megashark_doREAD : in std_logic_vector(2 downto 0);
-			  megashark_doWRITE : in std_logic;
+			  megashark_doREAD : in std_logic_vector(5 downto 0);
+			  megashark_doWRITE : in std_logic_vector(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic;
-			  megashark_face : in std_logic;
+			  megashark_face : in std_logic_vector(3 downto 0);
 			  megashark_INFO_2SIDES : out std_logic;
+			  megashark_INFO_ST0 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
-			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0));
+			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
+			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0)
+			  --leds8_debug:out std_logic_vector(39 downto 0)
+			  );
    end component;
    
 	signal dump_button : std_logic:='0';
@@ -249,6 +258,7 @@ begin
 			  megashark_CHRNresult=>megashark_CHRNresult,
 			  megashark_doGOTO=>megashark_doGOTO,
 			  megashark_CHRN=>megashark_CHRN,
+			  megashark_BOT_EOT=>megashark_BOT_EOT,
 			  megashark_A=>megashark_A,
 			  megashark_Din=>megashark_Din,
 			  megashark_Dout=>megashark_Dout,
@@ -258,8 +268,11 @@ begin
 			  megashark_select=>megashark_select,
 			  megashark_face=>megashark_face,
 			  megashark_INFO_2SIDES=>megashark_INFO_2SIDES,
+			  megashark_INFO_ST0=>megashark_INFO_ST0,
 			  megashark_INFO_ST1=>megashark_INFO_ST1,
-			  megashark_INFO_ST2=>megashark_INFO_ST2
+			  megashark_INFO_ST2=>megashark_INFO_ST2,
+			  megashark_INFO_PANIC=>megashark_INFO_PANIC
+			  --leds8_debug=>leds8_debug
 					 );
    
 ram_W_n<=not(XLXN_94);

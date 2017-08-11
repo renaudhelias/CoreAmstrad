@@ -44,6 +44,8 @@ module osd (
 	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
+//	input [39:0] leds8_debug,
+//	input [7:0] leds8,
 	
 	//input [7:0] leds8_spi_cmd,
 	//input [7:0] leds8_spi_cmd_len,
@@ -264,16 +266,19 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_crc_r[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_crc_r[3:0]),.segment(segment[9]));
 
-//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug_chrnR[15:12]),.segment(segment[0]));
-//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug_chrnR[11:8]),.segment(segment[1]));
-//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug_chrn[31:28]),.segment(segment[2]));
-//osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug_chrn[27:24]),.segment(segment[3]));
-//osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug_chrn[23:20]),.segment(segment[4]));
-//osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug_chrn[19:16]),.segment(segment[5]));
-//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug_chrn[15:12]),.segment(segment[6]));
-//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug_chrn[11:8]),.segment(segment[7]));
-//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_chrn[7:4]),.segment(segment[8]));
-//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_chrn[3:0]),.segment(segment[9]));
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8[7:4]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8[3:0]),.segment(segment[1]));
+
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug[39:36]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug[35:32]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug[31:28]),.segment(segment[2]));
+//osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug[27:24]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug[23:20]),.segment(segment[4]));
+//osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug[19:16]),.segment(segment[5]));
+//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug[15:12]),.segment(segment[6]));
+//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug[11:8]),.segment(segment[7]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug[7:4]),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug[3:0]),.segment(segment[9]));
 
 osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
 osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));

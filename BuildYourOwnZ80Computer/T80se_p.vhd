@@ -83,7 +83,6 @@ architecture rtl of T80se_p is
 	signal Wait1_n : std_logic;
 	signal Wait2_n : std_logic;
 	
-	signal do1Continue : boolean:=false;
 begin
 
 	MREQ_n<=buffer_MREQ_n and buffer_MREQ_alone_n;
@@ -122,58 +121,8 @@ begin
 
 	process (RESET_n, CLK_n)
 	
--- original T80se behaviour : same behaviour as Amstrad r003.3 with simple T80 update : no more dsk (IO_RD), but started ok (IO_WR MEM_RD/MEM_WR are OK)
---	constant MEMORY_WAIT_FETCH_INSTRUCTION:integer:=0;
---	constant MEMORY_WAIT_MEM_RD:integer:=0;
---	constant MEMORY_WAIT_MEM_WR:integer:=0;
---	constant MEMORY_WAIT_IO_RD:integer:=0;
---	constant MEMORY_WAIT_IO_WR:integer:=0;
---	
---	constant CONTINUE_1_FETCH_INSTRUCTION:boolean:=false;
---	constant CONTINUE_FETCH_INSTRUCTION:boolean:=false;
---	constant CONTINUE_1_MEM_OP:boolean:=false;
---	constant CONTINUE_MEM_OP:boolean:=false;
---	constant CONTINUE_1_IO_OP:boolean:=false;
---	constant CONTINUE_IO_OP:boolean:=false;
--- 
--- constant TRY_MREQ_ALONE:boolean:=false;
-	
--- ok (tested with please_wait on MEM_WR and M1) -- I think that IO_RD is now in Z80 norm : starting same time as IO_WR <3
--- constant MEMORY_WAIT_FETCH_INSTRUCTION:integer:=0;
---	constant MEMORY_WAIT_MEM_RD:integer:=0;
---	constant MEMORY_WAIT_MEM_WR:integer:=0;
---	constant MEMORY_WAIT_IO_RD:integer:=1;
---	constant MEMORY_WAIT_IO_WR:integer:=0;
---	
---	constant CONTINUE_1_FETCH_INSTRUCTION:boolean:=false;
---	constant CONTINUE_FETCH_INSTRUCTION:boolean:=false;
---	constant CONTINUE_1_MEM_OP:boolean:=false;
---	constant CONTINUE_MEM_OP:boolean:=false;
---	constant CONTINUE_1_IO_OP:boolean:=false;
---	constant CONTINUE_IO_OP:boolean:=true;
--- 
--- constant TRY_MREQ_ALONE:boolean:=false;
-	
-	constant MEMORY_WAIT_FETCH_INSTRUCTION:integer:=0;
-	constant MEMORY_WAIT_MEM_RD:integer:=0;
-	constant MEMORY_WAIT_MEM_WR:integer:=0; -- never reached as TRY_MREQ_ALONE=false
-	constant MEMORY_WAIT_IO_RD:integer:=0;
-	constant MEMORY_WAIT_IO_WR:integer:=0;
-	
-	constant CONTINUE_1_FETCH_INSTRUCTION:boolean:=true;
-	constant CONTINUE_FETCH_INSTRUCTION:boolean:=true;
-	constant CONTINUE_1_MEM_OP:boolean:=true;
-	constant CONTINUE_MEM_OP:boolean:=true;
-	constant CONTINUE_1_IO_OP:boolean:=true; -- as I already AutoWait on IO_WR/IO_RD, this setting seems useless
-	constant CONTINUE_IO_OP:boolean:=true;
-	
-	constant TRY_MREQ_ALONE:boolean:=false; -- to check (if clause seems bad here)
 
-	variable waitFetchInstruction:integer range 0 to MEMORY_WAIT_FETCH_INSTRUCTION:=MEMORY_WAIT_FETCH_INSTRUCTION;
-	variable waitMemRd:integer range 0 to MEMORY_WAIT_MEM_RD:=MEMORY_WAIT_MEM_RD;
-	variable waitMemWr:integer range 0 to MEMORY_WAIT_MEM_WR:=MEMORY_WAIT_MEM_WR;
-	variable waitIoRd:integer range 0 to MEMORY_WAIT_IO_RD:=MEMORY_WAIT_IO_RD;
-	variable waitIoWr:integer range 0 to MEMORY_WAIT_IO_WR:=MEMORY_WAIT_IO_WR;
+
 	variable oldTState:std_logic_vector(2 downto 0);
 	
 	begin
@@ -198,17 +147,9 @@ begin
 							--FETCH_INSTRUCTION
 							buffer_RD_n <= '0';
 							buffer_MREQ_n <= '0';
-							waitFetchInstruction:=0; -- add some waits for fetch instructions
 						elsif TState = "001" then
 							--IO_ACK -- just 1 period here
 							buffer_IORQ_n <= '0';
-						end if;
-					end if;
-					if ((CONTINUE_FETCH_INSTRUCTION and WAIT_n='0') or (CONTINUE_1_FETCH_INSTRUCTION and oldTState="001")) and TState = "010" then
-						if buffer_MREQ_n='0' then
-							-- CONTINUE 1 FETCH_INSTRUCTION
-							buffer_RD_n <= '0';
-							buffer_MREQ_n <= '0';
 						end if;
 					end if;
 					if TState = "011" then
@@ -220,20 +161,10 @@ begin
 							--MEM_RD
 							buffer_RD_n <= '0';
 							buffer_MREQ_n <= '0';
-							waitMemRd:=0;
-							do1Continue<=true;
 						else
 							--IO_RD
 							buffer_RD_n <= '0'; -- trop tard pour l'exterieur
 							buffer_IORQ_n <= '0';
-							waitIoRd:=0; -- add some waits for IO_RD
-							do1Continue<=true; -- as I already AutoWait on IO_RD, this instruction seems useless
-						end if;
-					elsif TRY_MREQ_ALONE and TState = "001" and Write = '1' then
-					   -- sort of MREQ_n coming at T1 without RD_n and WR_n
-						if IORQ='0' then -- no Auto_Wait for MEM_WR, so here I need that
-							buffer_MREQ_alone_n<='0';
-							waitMemWr:=0;
 						end if;
 					end if;
 					
@@ -242,51 +173,17 @@ begin
 							--MEM_WR
 							buffer_WR_n <= '0';
 							buffer_MREQ_n <= '0';
-							--do1Continue<=true; [special : MEM_WR is 1 edge only in doc]
 						else
 							--IO_WR
 							buffer_WR_n <= '0';
 							buffer_IORQ_n <= '0';
-							waitIoWr:=0; -- add some waits for MEM_WR thinking about Auto_Wait (I'm already in >ait(auto) so I can insert Wait here)
-							do1Continue<=true; -- as I already AutoWait on IO_WR, this instruction seems useless
 						end if;
-					end if;
-					
-					-- IO_RD is eating each others (Auto_Wait problem ?)
-					if (buffer_MREQ_n='0' and ((CONTINUE_MEM_OP and Wait2_n='0') or (CONTINUE_1_MEM_OP and do1Continue)) and TState = "010")
-						or (buffer_IORQ_n='0' and ((CONTINUE_IO_OP and Wait2_n='0') or (CONTINUE_1_IO_OP and do1Continue)) and TState = "010") then
-						-- WAIT_n or Auto_Wait !
-						-- + CONTINUE 1 MEM_RD 0 MEM_WR 1 IO_RD 1 IO_WR
-						buffer_RD_n <= buffer_RD_n;
-						buffer_WR_n <= buffer_WR_n;
-						buffer_IORQ_n <= buffer_IORQ_n;
-						buffer_MREQ_n <= buffer_MREQ_n;
 					end if;
 				end if;
 				
-				if waitFetchInstruction<MEMORY_WAIT_FETCH_INSTRUCTION then
-					WAIT1_n<='0';
-					waitFetchInstruction:=waitFetchInstruction+1;
-				elsif waitMemRd<MEMORY_WAIT_MEM_RD then
-					WAIT1_n<='0';
-					waitMemRd:=waitMemRd+1;
-				elsif waitMemWr<MEMORY_WAIT_MEM_WR then
-					WAIT1_n<='0';
-					waitMemWr:=waitMemWr+1;
-				elsif waitIoRd<MEMORY_WAIT_IO_RD then
-					WAIT1_n<='0';
-					waitIoRd:=waitIoRd+1;
-				elsif waitIoWr<MEMORY_WAIT_IO_WR then
-					WAIT1_n<='0';
-					waitIoWr:=waitIoWr+1;
-				else
-					WAIT1_n<='1';
-				end if;
+				WAIT1_n<='1';
 			
 				oldTState:=TState;
-				if do1Continue then
-					do1Continue<=false;
-				end if;
 				
 				if TState = "010" and Wait2_n = '1' then
 					DI_Reg <= DI;

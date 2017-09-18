@@ -75,7 +75,7 @@ use work.T80_Pack.all;
 entity T80se is
 	generic(
 		Mode : integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		T2Write : integer := 0;  -- 0 => WR_n active in T3, /=0 => WR_n active in T2
+		T2Write : integer := 1; --0;  -- 0 => WR_n active in T3, /=0 => WR_n active in T2
 		IOWait : integer := 1   -- 0 => Single cycle I/O, 1 => Std I/O cycle
 	);
 	port(

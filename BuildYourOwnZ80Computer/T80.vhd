@@ -564,7 +564,7 @@ begin
 						-- CCF
 						F(Flag_C) <= not F(Flag_C);
 						F(Flag_Y) <= ACC(5);
-						F(Flag_H) <= F(Flag_C);
+						F(Flag_H) <= not F(Flag_H); --freemac F(Flag_C);
 						F(Flag_X) <= ACC(3);
 						F(Flag_N) <= '0';
 					end if;

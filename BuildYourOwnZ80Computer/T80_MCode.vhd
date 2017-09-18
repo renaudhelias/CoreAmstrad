@@ -180,10 +180,10 @@ architecture rtl of T80_MCode is
 	begin
 		if Mode = 3 then
 			case cc is
-			when "000" => return F(7) = '0'; -- NZ
-			when "001" => return F(7) = '1'; -- Z
-			when "010" => return F(4) = '0'; -- NC
-			when "011" => return F(4) = '1'; -- C
+			when "000" => return F(Flag_S) = '0'; -- NZ
+			when "001" => return F(Flag_S) = '1'; -- Z
+			when "010" => return F(Flag_H) = '0'; -- NC
+			when "011" => return F(Flag_H) = '1'; -- C
 			when "100" => return false;
 			when "101" => return false;
 			when "110" => return false;
@@ -191,14 +191,14 @@ architecture rtl of T80_MCode is
 			end case;
 		else
 			case cc is
-			when "000" => return F(6) = '0'; -- NZ
-			when "001" => return F(6) = '1'; -- Z
-			when "010" => return F(0) = '0'; -- NC
-			when "011" => return F(0) = '1'; -- C
-			when "100" => return F(2) = '0'; -- PO
-			when "101" => return F(2) = '1'; -- PE
-			when "110" => return F(7) = '0'; -- P
-			when "111" => return F(7) = '1'; -- M
+			when "000" => return F(Flag_Z) = '0'; -- NZ
+			when "001" => return F(Flag_Z) = '1'; -- Z
+			when "010" => return F(Flag_C) = '0'; -- NC
+			when "011" => return F(Flag_C) = '1'; -- C
+			when "100" => return F(Flag_P) = '0'; -- PO
+			when "101" => return F(Flag_P) = '1'; -- PE
+			when "110" => return F(Flag_S) = '0'; -- P
+			when "111" => return F(Flag_S) = '1'; -- M
 			end case;
 		end if;
 	end;

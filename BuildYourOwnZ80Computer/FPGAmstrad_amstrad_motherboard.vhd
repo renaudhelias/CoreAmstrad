@@ -460,7 +460,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal RAMBank_DUMMY512 : std_logic_vector (2 downto 0);
 	
 	-- t80_latest.tar.gz (vhdl)
-   component T80se_p
+   component T80se
       port ( RESET_n : in    std_logic; -- under time constraint test
              CLK_n   : in    std_logic; 
              CLKEN   : in    std_logic; 
@@ -714,7 +714,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 begin
 
 do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
-   AmstradT80 : T80se_p
+   AmstradT80 : T80se
       port map (BUSRQ_n=>'1',
                 CLKEN=>'1',
                 CLK_n=>XLXN_802,
@@ -743,7 +743,7 @@ do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
 end generate;
 
 do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
-   AmstradT80 : T80se_p
+   AmstradT80 : T80se
       port map (BUSRQ_n=>'1',
                 CLKEN=>'1',
                 CLK_n=>CLK4MHz, --XLXN_802,

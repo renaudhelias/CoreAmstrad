@@ -41,6 +41,7 @@ entity simple_GateArrayInterrupt is
 	M1_OFFSET:integer :=3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3 =(M1_OFFSET+2)%4
 	LATENCE_MEM_WR:integer:=1; -- 1 (http://www.cpcwiki.eu/forum/emulators/cpc-z80-timing/)
+	LATENCE_M1:integer:=2;
 	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
@@ -284,9 +285,13 @@ VSYNC_out<= VSYNC;
 m1_process:process(reset,nCLK4_1) is
 	variable compteur1MHz:integer range 0 to 3:=0;
 			variable was_M1:boolean:=false;
+			variable was_m:boolean:=false;
 		variable waiting:boolean:=false;
 		variable waiting_MEMWR:integer range 0 to LATENCE_MEM_WR:=LATENCE_MEM_WR;
+		variable waiting_M1:integer range 0 to LATENCE_M1:=LATENCE_M1;
 		variable was_MEMWR:boolean:=false;
+		variable sizeM1:integer range 0 to 5:=0;
+		
 
 begin
 if reset='1' then
@@ -303,8 +308,32 @@ elsif falling_edge(nCLK4_1) then
 				waiting_MEMWR:=0;
 			end if;
 			
+			if (M1_n='0' and IO_ACK='0') and not(was_m) then
+				--begin of M1 (not a IO_ACK one)
+				sizeM1:=1;
+			elsif (M1_n='0' and IO_ACK='0') and not(waiting or waiting_MEMWR<LATENCE_MEM_WR or waiting_M1<LATENCE_M1) and sizeM1>0 then
+				--true M1 (without IO_ACK M1 extension)
+				sizeM1:=sizeM1+1;
+			end if;
+			if not(M1_n='0') and was_m then
+				--end of M1 size count (with IO_ACK M1 extension)
+				if sizeM1=3 then -- T80.TStateEndOfM1 2 or 3 (3 is a T States begin by "(5, ")
+					-- T States begin by "(5, " : M1 is longer than 4.
+					--10  DJNZ, e
+					--C7,CF,D7,DF,E7,EF,F7,FF  RST p
+					--C5,D5,E5,F5  PUSH qq
+					--C0,C8,D0,D8,E0,E8,F0,F8	 RET cc
+					waiting_M1:=0;
+				end if;
+				sizeM1:=0;
+			end if;
+			
+			
 			if (waiting_MEMWR<LATENCE_MEM_WR and ga_shunt='1') then
 				waiting_MEMWR:=waiting_MEMWR+1;
+				WAIT_MEM_n<='0';
+			elsif (waiting_M1<LATENCE_M1 and ga_shunt='1') then
+				waiting_M1:=waiting_M1+1;
 				WAIT_MEM_n<='0';
 			else
 				WAIT_MEM_n<='1';
@@ -363,6 +392,11 @@ elsif falling_edge(nCLK4_1) then
 				was_M1:=true;
 			else
 				was_M1:=false;
+			end if;
+			if M1_n='0' then
+				was_m:=true;
+			else
+				was_m:=false;
 			end if;
 			if MEM_WR='1' then
 				was_MEMWR:=true;

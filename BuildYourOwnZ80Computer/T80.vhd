@@ -1001,6 +1001,7 @@ begin
 		variable wasINT_s_0:boolean:=false;
 		variable just_rising_INT_s:boolean:=false;
 		variable thats_rock:boolean:=false;
+		variable TStateEndOfM1:integer range 0 to 3;
 	begin
 		if RESET_n = '0' then
 			MCycle <= "001";
@@ -1054,7 +1055,14 @@ begin
 			if IntCycle = '1' or NMICycle = '1' then
 				Halt_FF <= '0';
 			end if;
-			if MCycle = "001" and TState = 2 and Wait_n = '1' then
+			-- 10 DJNZ, e 00010000
+			if TStates = "101" then
+				-- T States begin by "(5, " : M1 is longer than 4.
+				TStateEndOfM1:=3;
+			else
+				TStateEndOfM1:=2;
+			end if;
+			if MCycle = "001" and TState = TStateEndOfM1 and Wait_n = '1' then
 				M1_n <= '1';
 			end if;
 			if BusReq_s = '1' and BusAck = '1' then

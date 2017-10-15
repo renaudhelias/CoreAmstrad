@@ -392,8 +392,8 @@ entity FPGAmstrad_amstrad_motherboard is
 			  zram_din : in std_logic_vector(7 downto 0); 
 			  zram_addr : out std_logic_vector(15 downto 0);
 			  zram_rd : out std_logic;
-			  crtc_type: in std_logic;
-			  ga_shunt : in std_logic
+			  crtc_type: in std_logic
+			  --ga_shunt : in std_logic
 
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
@@ -524,12 +524,14 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              IO_ACK        : in    std_logic; 
              M1_n          : in    std_logic; 
              MEM_WR        : in    std_logic; 
+				 MEM_RD        : in    std_logic;
              reset         : in    std_logic; 
 				 crtc_type : in std_logic;
-				 ga_shunt : in std_logic;
+				 --ga_shunt : in std_logic;
              A15_A14_A9_A8 : in    std_logic_vector (3 downto 0); 
              MODE_select   : in    std_logic_vector (1 downto 0); 
              D             : in    std_logic_vector (7 downto 0); 
+				 R2D2             : in    std_logic_vector (7 downto 0);
              crtc_D        : in    std_logic_vector (7 downto 0); 
              Dout          : inout std_logic_vector (7 downto 0);
              crtc_VSYNC    : out   std_logic; 
@@ -820,17 +822,19 @@ end generate;
                 A15_A14_A9_A8(0)=>A(8),
                 crtc_D(7 downto 0)=>zram_din(7 downto 0),
                 D(7 downto 0)=>D(7 downto 0),
+					 R2D2(7 downto 0)=>MIX_DOUT(7 downto 0),
                 IO_ACK=>XLXN_826,
                 IO_REQ_R=>IO_RD,
                 IO_REQ_W=>IO_WR,
                 MEM_WR=>MEM_WR,
+					 MEM_RD=>MEM_RD,
                 MODE_select(1 downto 0)=>XLXN_857(1 downto 0),
                 M1_n=>M1_n,
                 nCLK4_1=>nCLK4MHz,
 					 CLK16MHz=>CLK16MHz,
                 reset=>XLXN_907,
 					 crtc_type=>crtc_type,
-					 ga_shunt=>ga_shunt,
+					 --ga_shunt=>ga_shunt,
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
                 bvram_D(7 downto 0)=>vram_D(7 downto 0),
                 bvram_W=>vram_W,

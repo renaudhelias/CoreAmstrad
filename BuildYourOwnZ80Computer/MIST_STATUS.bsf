@@ -75,8 +75,8 @@ applicable agreement for further details.
 	(port
 		(pt 224 128)
 		(output)
-		(text "ga_shunt" (rect 0 0 36 12)(font "Arial" ))
-		(text "ga_shunt" (rect 167 123 203 135)(font "Arial" ))
+		(text "vramORscandb" (rect 0 0 66 12)(font "Arial" ))
+		(text "vramORscandb" (rect 137 123 203 135)(font "Arial" ))
 		(line (pt 224 128)(pt 208 128)(line_width 1))
 	)
 	(drawing

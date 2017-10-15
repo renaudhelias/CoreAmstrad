@@ -41,7 +41,8 @@ entity MIST_clocks is
 			  sdram_v_clkref : out STD_LOGIC;
 			  --sdram_v_init : out STD_LOGIC;
 			  CLK_PWM: out STD_lOGIC;
-			  CLK16MHz : out STD_LOGIC -- TV mode
+			  CLK16MHz : out STD_LOGIC; -- TV mode
+			  CLK32MHz : out STD_LOGIC -- scandoubler
            );
 end MIST_clocks;
 
@@ -56,6 +57,7 @@ architecture Behavioral of MIST_clocks is
 	signal c1 : std_logic;--27MHz 125/135=25MHz    VGA
 	signal c2 : std_logic;--27MHz 572/135=114.4MHz SDRAM
 	signal c3 : std_logic;--27MHz 1/2250 =12kHz    TV mode 16MHz - (not keyboard finally)
+	signal c4 : std_logic;
 	signal pll_locked : std_logic;
 	
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (4 DOWNTO 0);
@@ -80,6 +82,10 @@ architecture Behavioral of MIST_clocks is
 		clk3_duty_cycle		: NATURAL;
 		clk3_multiply_by		: NATURAL;
 		clk3_phase_shift		: STRING;
+		clk4_divide_by		: NATURAL;
+		clk4_duty_cycle		: NATURAL;
+		clk4_multiply_by		: NATURAL;
+		clk4_phase_shift		: STRING;
 		compensate_clock		: STRING;
 		inclk0_input_frequency		: NATURAL;
 		intended_device_family		: STRING;
@@ -127,6 +133,7 @@ architecture Behavioral of MIST_clocks is
 		port_extclk1		: STRING;
 		port_extclk2		: STRING;
 		port_extclk3		: STRING;
+		port_extclk4		: STRING;
 		self_reset_on_loss_lock		: STRING;
 		width_clock		: NATURAL
 	);
@@ -144,6 +151,7 @@ begin
 	c1    <= sub_wire0(1);--27MHz 125/135=25MHz    VGA
 	c2    <= sub_wire0(2);--27MHz 572/135=114.4MHz SDRAM
 	c3    <= sub_wire0(3);--27MHz 1/2250 =12kHz    TV mode 16MHz - (not keyboard finally)
+	c4    <= sub_wire0(4);
 	inclk0(1) <= '0';
 	inclk0(0) <= CLOCK_27(0);
 
@@ -164,6 +172,7 @@ begin
 	end process;
 	--ps2_clk <=c3;
 	CLK16MHz <=c3;
+	CLK32MHz <=c4;
 	
 	CLK4MHz<=not(c0);
 	nCLK4MHz<=c0; -- not Z80 (under Time Contraints) / synchro 25MHz
@@ -211,6 +220,10 @@ begin
 		clk3_duty_cycle => 50,
 		clk3_multiply_by => 89,
 		clk3_phase_shift => "0",
+		clk4_divide_by => 75,
+		clk4_duty_cycle => 50,
+		clk4_multiply_by => 89,
+		clk4_phase_shift => "0",
 		compensate_clock => "CLK0",
 		inclk0_input_frequency => 37037, -- I'm lying here, so that I can use lower frequencies equation, it's great :)
 		intended_device_family => "Cyclone III",
@@ -246,7 +259,7 @@ begin
 		port_clk1 => "PORT_USED",
 		port_clk2 => "PORT_USED",
 		port_clk3 => "PORT_USED",
-		port_clk4 => "PORT_UNUSED",
+		port_clk4 => "PORT_USED",
 		port_clk5 => "PORT_UNUSED",
 		port_clkena0 => "PORT_UNUSED",
 		port_clkena1 => "PORT_UNUSED",
@@ -258,6 +271,7 @@ begin
 		port_extclk1 => "PORT_UNUSED",
 		port_extclk2 => "PORT_UNUSED",
 		port_extclk3 => "PORT_UNUSED",
+		port_extclk4 => "PORT_UNUSED",
 		self_reset_on_loss_lock => "OFF",
 		width_clock => 5
 	)

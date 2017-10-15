@@ -206,13 +206,6 @@ applicable agreement for further details.
 		(line (pt 0 432)(pt 16 432)(line_width 1))
 	)
 	(port
-		(pt 0 448)
-		(input)
-		(text "ga_shunt" (rect 0 0 36 12)(font "Arial" ))
-		(text "ga_shunt" (rect 21 443 57 455)(font "Arial" ))
-		(line (pt 0 448)(pt 16 448)(line_width 1))
-	)
-	(port
 		(pt 352 32)
 		(output)
 		(text "audio_AB" (rect 0 0 40 12)(font "Arial" ))

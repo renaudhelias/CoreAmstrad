@@ -38,7 +38,9 @@ entity MIST_SCART is
 			  mode : in std_logic;
 			  green_scanlines : in std_logic_vector (1 downto 0);
   			  pclk_in : in std_logic;
-			  pclk_TV_in : in std_logic;
+			  pclk_TV_CLK16MHz_in : in std_logic;
+			  pclk_TV_CLK32MHz_in : in std_logic;
+			  vramORscandb : in std_logic;
 			  pclk_out : out std_logic;
 			  
 			  HSYNC_XOR_out : out STD_logic;
@@ -232,11 +234,48 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 "110100"
 );
 
+
+component scandoubler
+      port ( video_in	: in std_logic_vector(5 downto 0);
+	hsync_in	: in std_logic;
+	vsync_in	: in std_logic;
+	dblclk		: in std_logic;
+	pixclk		: in std_logic;
+	video_out	: out std_logic_vector(5 downto 0);
+	vsync_out	: out std_logic;
+	hsync_out	: out std_logic);
+   end component;
+signal HSYNC_XOR_video_out : STD_logic;
+signal VSYNC_XOR_video_out : STD_logic;
+signal VIDEO_in : std_logic_vector(5 downto 0);
+signal VIDEO_scan : std_logic_vector(5 downto 0);
+signal VSYNC_scan : STD_LOGIC;
+signal HSYNC_scan : STD_LOGIC;
+
 begin
 
-RED_out<=canal_red when mode='0' else canal_redTV;
-GREEN_out<=canal_green when mode='0' else canal_greenTV;
-BLUE_out<=canal_blue when mode='0' else canal_blueTV;
+-- with scandoubler
+scanner : scandoubler
+      port map (video_in=>VIDEO_in,
+                hsync_in=>HSYNC_XOR_video_out,
+                vsync_in=>VSYNC_XOR_video_out,
+					 dblclk=>pclk_TV_CLK32MHz_in,
+                pixclk=>pclk_TV_CLK16MHz_in,
+                video_out=>VIDEO_scan,
+                vsync_out=>VSYNC_scan,
+					 hsync_out=>HSYNC_scan
+					 );
+					 
+VIDEO_in<=canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
+RED_out<=canal_red when mode='0' and vramORscandb='0' else VIDEO_scan(5 downto 4) & "0000" when mode='0' and vramORscandb='1' else canal_redTV;
+GREEN_out<=canal_green when mode='0' and vramORscandb='0' else VIDEO_scan(3 downto 2) & "0000" when mode='0' and vramORscandb='1' else canal_greenTV;
+BLUE_out<=canal_blue when mode='0' and vramORscandb='0' else VIDEO_scan(1 downto 0) & "0000" when mode='0' and vramORscandb='1' else canal_blueTV;
+HSYNC_XOR_out<= canal_hsync when mode='0' and vramORscandb='0' else HSYNC_scan when mode='0' and vramORscandb='1' else not(canal_hsyncTV xor canal_vsyncTV);
+VSYNC_XOR_out<= canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan when mode='0' and vramORscandb='1' else '1';
+
+--RED_out<=canal_red when mode='0' else canal_redTV;
+--GREEN_out<=canal_green when mode='0' else canal_greenTV;
+--BLUE_out<=canal_blue when mode='0' else canal_blueTV;
 
 green_color_vga : process(pclk_in) is
 begin
@@ -270,9 +309,9 @@ begin
 		end if;
 end process green_color_vga;
 
-green_color_tv : process(pclk_TV_in) is
+green_color_tv : process(pclk_TV_CLK16MHz_in) is
 begin
-		if rising_edge(pclk_TV_in) and mode='1' then
+		if rising_edge(pclk_TV_CLK16MHz_in) then
 			if green_scanlines(1)='0' then
 				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
 				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
@@ -285,20 +324,20 @@ begin
 			end if;
 			canal_hsyncTV<=HSYNC_TV_in;
 			canal_vsyncTV<=VSYNC_TV_in;
-			--canal_clkTV<=pclk_TV_in;
+			--canal_clkTV<=pclk_TV_CLK16MHz_in;
 		end if;
 end process green_color_tv;
 
 --assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
 --assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
-HSYNC_out<=canal_hsync when mode='0' else canal_hsyncTV;
-VSYNC_out<=canal_vsync when mode='0' else canal_vsyncTV;
-HSYNC_XOR_out<=canal_hsync when mode='0' else not(canal_hsyncTV xor canal_vsyncTV);
-VSYNC_XOR_out<=canal_vsync when mode='0' else '1';
+HSYNC_out<=canal_hsync when mode='0' and vramORscandb='0' else HSYNC_scan when mode='0' and vramORscandb='1' else canal_hsyncTV;
+VSYNC_out<=canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan when mode='0' and vramORscandb='1' else canal_vsyncTV;
+HSYNC_XOR_video_out<= canal_hsyncTV;
+VSYNC_XOR_video_out<= canal_vsyncTV;
 --pclk_out<=canal_clk when mode='0' else canal_clkTV;
 --HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
 --VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
-pclk_out<=pclk_in when mode='0' else pclk_TV_in;
+pclk_out<=pclk_in when mode='0' and vramORscandb='0' else pclk_TV_CLK16MHz_in;
 
 end Behavioral;
 

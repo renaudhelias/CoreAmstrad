@@ -142,6 +142,13 @@ applicable agreement for further details.
 		(text "CLK16MHz" (rect 172 251 219 263)(font "Arial" ))
 		(line (pt 240 256)(pt 224 256)(line_width 1))
 	)
+	(port
+		(pt 240 272)
+		(output)
+		(text "CLK32MHz" (rect 0 0 48 12)(font "Arial" ))
+		(text "CLK32MHz" (rect 171 267 219 279)(font "Arial" ))
+		(line (pt 240 272)(pt 224 272)(line_width 1))
+	)
 	(drawing
 		(rectangle (rect 16 16 224 288)(line_width 1))
 	)

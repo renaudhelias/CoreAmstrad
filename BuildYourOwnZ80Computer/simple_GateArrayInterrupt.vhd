@@ -41,7 +41,7 @@ entity simple_GateArrayInterrupt is
 	M1_OFFSET:integer :=3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3 =(M1_OFFSET+2)%4
 	LATENCE_MEM_WR:integer:=1; -- 1 (http://www.cpcwiki.eu/forum/emulators/cpc-z80-timing/)
-	LATENCE_M1:integer:=2;
+	LATENCE_2A:integer:=2;
 	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
@@ -112,6 +112,7 @@ entity simple_GateArrayInterrupt is
            A15_A14_A9_A8 : in  STD_LOGIC_VECTOR (3 downto 0);
 			  MODE_select:in STD_LOGIC_VECTOR (1 downto 0);
            D : in  STD_LOGIC_VECTOR (7 downto 0);
+			  R2D2 : in  STD_LOGIC_VECTOR (7 downto 0);
 			  Dout : out  STD_LOGIC_VECTOR (7 downto 0):= (others=>'1');
 			  crtc_VSYNC : out STD_LOGIC:='0';
 			  IO_ACK : in STD_LOGIC;
@@ -123,6 +124,7 @@ entity simple_GateArrayInterrupt is
            int : out  STD_LOGIC:='0'; -- JavaCPC reset init
 			  M1_n : in  STD_LOGIC;
 			  MEM_WR:in std_logic;
+			  MEM_RD:in std_logic;
 			  
 			  -- Z80 4MHz and CRTC 1MHz are produced by GATE_ARRAY normally
 			  -- MA0/CCLK is produced by GATE_ARRAY and does feed Yamaha sound chip.
@@ -140,7 +142,7 @@ entity simple_GateArrayInterrupt is
 			  reset:in  STD_LOGIC;
 			  
 			  crtc_type: in std_logic;
-			  ga_shunt: in std_logic;
+			  --ga_shunt: in std_logic;
 			  
 			  RED_out : out  STD_LOGIC_VECTOR (5 downto 0);
            GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
@@ -288,8 +290,10 @@ m1_process:process(reset,nCLK4_1) is
 			variable was_m:boolean:=false;
 		variable waiting:boolean:=false;
 		variable waiting_MEMWR:integer range 0 to LATENCE_MEM_WR:=LATENCE_MEM_WR;
-		variable waiting_M1:integer range 0 to LATENCE_M1:=LATENCE_M1;
+		variable waiting_2A:integer range 0 to LATENCE_2A:=LATENCE_2A;
 		variable was_MEMWR:boolean:=false;
+		variable was_MEMRD:boolean:=false;
+		variable was_2A:boolean:=false;
 		variable sizeM1:integer range 0 to 5:=0;
 		
 
@@ -308,32 +312,18 @@ elsif falling_edge(nCLK4_1) then
 				waiting_MEMWR:=0;
 			end if;
 			
-			if (M1_n='0' and IO_ACK='0') and not(was_m) then
-				--begin of M1 (not a IO_ACK one)
-				sizeM1:=1;
-			elsif (M1_n='0' and IO_ACK='0') and not(waiting or waiting_MEMWR<LATENCE_MEM_WR or waiting_M1<LATENCE_M1) and sizeM1>0 then
-				--true M1 (without IO_ACK M1 extension)
-				sizeM1:=sizeM1+1;
-			end if;
-			if not(M1_n='0') and was_m then
-				--end of M1 size count (with IO_ACK M1 extension)
-				if sizeM1=3 then -- T80.TStateEndOfM1 2 or 3 (3 is a T States begin by "(5, ")
-					-- T States begin by "(5, " : M1 is longer than 4.
-					--10  DJNZ, e
-					--C7,CF,D7,DF,E7,EF,F7,FF  RST p
-					--C5,D5,E5,F5  PUSH qq
-					--C0,C8,D0,D8,E0,E8,F0,F8	 RET cc
-					waiting_M1:=0;
-				end if;
-				sizeM1:=0;
+			--if (M1_n='0' or was_M1) and MEM_RD='0' and was_MEMRD and R2D2=x"2A" then
+			--if not(was_2A) and R2D2=x"2A" then
+			--if (M1_n='0' or was_M1) and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
+			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
+				waiting_2A:=0;
 			end if;
 			
-			
-			if (waiting_MEMWR<LATENCE_MEM_WR and ga_shunt='1') then
-				waiting_MEMWR:=waiting_MEMWR+1;
+			if waiting_2A<LATENCE_2A then -- and ga_shunt='1'
+				waiting_2A:=waiting_2A+1;
 				WAIT_MEM_n<='0';
-			elsif (waiting_M1<LATENCE_M1 and ga_shunt='1') then
-				waiting_M1:=waiting_M1+1;
+			elsif waiting_MEMWR<LATENCE_MEM_WR then -- and ga_shunt='1'
+				waiting_MEMWR:=waiting_MEMWR+1;
 				WAIT_MEM_n<='0';
 			else
 				WAIT_MEM_n<='1';
@@ -354,7 +344,7 @@ elsif falling_edge(nCLK4_1) then
 				-- si je met --compteur1MHz=3, j'ai HSYNC_width qui est bon dans le test CPCTEST de ArnoldEmu
 				
 				--z80_synchronise	
-				if (M1_n='0' and IO_ACK='0') and not(was_M1) and compteur1MHz=M1_OFFSET then
+				if (M1_n='0') and not(was_M1) and compteur1MHz=M1_OFFSET then -- and IO_ACK='0'
 					-- M---M---M---
 					-- 012301230123
 					-- cool
@@ -365,7 +355,7 @@ elsif falling_edge(nCLK4_1) then
 					WAIT_n<='1';
 				elsif waiting then
 					-- quand on pose un wait, cet idiot il garde M1_n=0 le tour suivant
-				elsif (M1_n='0' and IO_ACK='0') and not(was_M1) then
+				elsif (M1_n='0') and not(was_M1) then -- and IO_ACK='0'
 					-- M--M---M---
 					-- 012301230123
 					-- M--MW---M---
@@ -388,22 +378,28 @@ elsif falling_edge(nCLK4_1) then
 					-- Some instructions has more than 4 Tstate -- validated
 				end if;
 			end if;
-			if M1_n='0' and IO_ACK='0' then
+			if M1_n='0' then --and IO_ACK='0'
 				was_M1:=true;
 			else
 				was_M1:=false;
-			end if;
-			if M1_n='0' then
-				was_m:=true;
-			else
-				was_m:=false;
 			end if;
 			if MEM_WR='1' then
 				was_MEMWR:=true;
 			else
 				was_MEMWR:=false;
 			end if;
-	
+			
+			if MEM_RD='1' then
+				was_MEMRD:=true;
+			else
+				was_MEMRD:=false;
+			end if;
+			
+			if R2D2=x"2A" then
+				was_2A:=true;
+			else
+				was_2A:=false;
+			end if;
 end if;
 end process m1_process;
 

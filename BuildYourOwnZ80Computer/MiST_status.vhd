@@ -28,7 +28,7 @@ entity MIST_STATUS is
 			  green_scanlines : out std_logic_vector(1 downto 0);
 			  green : out std_logic;
 			  crtc_type : out std_logic;
-			  ga_shunt: out std_logic
+			  vramORscandb: out std_logic
 			  --tv : out std_logic
 			  
 			 -- leds_select : out  STD_LOGIC_VECTOR (4 downto 0)
@@ -49,7 +49,7 @@ status_0<=status(0);
 --megashark_select<=status(6);
 ppi_jumpers<='1' & '1' & status(1) & '1';
 crtc_type<=not(status(2));
-ga_shunt<=status(3);
+vramORscandb<=status(3);
 green_scanlines<=status(4) & status(5);
 green<=status(4);
 megashark_select<=status(6);

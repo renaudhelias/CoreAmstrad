@@ -38,7 +38,9 @@ entity MIST_SCART is
 			  mode : in std_logic;
 			  green_scanlines : in std_logic_vector (1 downto 0);
   			  pclk_in : in std_logic;
-			  pclk_TV_in : in std_logic;
+			  pclk_TV_CLK16MHz_in : in std_logic;
+			  pclk_TV_CLK32MHz_in : in std_logic;
+			  vramORscandb : in std_logic;
 			  pclk_out : out std_logic;
 			  
 			  HSYNC_XOR_out : out STD_logic;
@@ -232,7 +234,68 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 "110100"
 );
 
+
+component scandoubler
+      port ( video_in	: in std_logic_vector(5 downto 0);
+	hsync_in	: in std_logic;
+	vsync_in	: in std_logic;
+	dblclk		: in std_logic;
+	pixclk		: in std_logic;
+	bypass		: in std_logic:='1';
+	video_out	: out std_logic_vector(5 downto 0);
+	vsync_out	: out std_logic;
+	hsync_out	: out std_logic);
+   end component;
+	signal VIDEO_scan : std_logic_vector(5 downto 0);
+	signal VIDEO_in : std_logic_vector(5 downto 0);
+   signal VSYNC_scan : STD_LOGIC;
+   signal HSYNC_scan : STD_LOGIC;
+
+
+--signal bypass:std_logic:='0';
+--signal RED_video_out : STD_LOGIC_VECTOR (5 downto 0);
+--signal GREEN_video_out : STD_LOGIC_VECTOR (5 downto 0);
+--signal BLUE_video_out : STD_LOGIC_VECTOR (5 downto 0);
+--signal HSYNC_XOR_video_out : STD_logic;
+--signal VSYNC_XOR_video_out : STD_logic;
+--signal VIDEO_scan : std_logic_vector(5 downto 0);
+--signal VIDEO_in : std_logic_vector(5 downto 0);
+--signal VSYNC_scan : STD_LOGIC;
+--signal HSYNC_scan : STD_LOGIC;
+
 begin
+
+-- vramORscandb 0:vram 1:scandb
+-- mode 0:vram|scandb 1:TV
+
+---- pas (scandb et modeTV)
+--bypass<=not(vramORscandb and mode);
+
+-- with scandoubler
+scanner : scandoubler
+      port map (video_in=>VIDEO_in,
+                hsync_in=>HSYNC_TV_in, --HSYNC_XOR_video_out,
+                vsync_in=>VSYNC_TV_in, --VSYNC_XOR_video_out,
+					 dblclk=>pclk_TV_CLK32MHz_in,
+                pixclk=>pclk_TV_CLK16MHz_in,
+                bypass=>'0', --bypass, --'0', --modeTV,
+                video_out=>VIDEO_scan,
+                vsync_out=>VSYNC_scan,
+					 hsync_out=>HSYNC_scan
+					 );
+					 
+VIDEO_in<=RED_TV_in(5 downto 4) & GREEN_TV_in(5 downto 4) & BLUE_TV_in(5 downto 4);
+--RED_video_out(5 downto 4) & GREEN_video_out(5 downto 4) & BLUE_video_out(5 downto 4);
+RED_out<= VIDEO_scan(5 downto 4) & "0000";
+GREEN_out<= VIDEO_scan(3 downto 2) & "0000";
+BLUE_out<= VIDEO_scan(1 downto 0) & "0000";
+HSYNC_XOR_out<= HSYNC_scan;
+VSYNC_XOR_out<= VSYNC_scan;
+
+
+--RED_out<=canal_red when mode='0' and vramORscandb='0' else canal_redTV;
+--GREEN_out<=canal_green when mode='0' and vramORscandb='0' else canal_greenTV;
+--BLUE_out<=canal_blue when mode='0' and vramORscandb='0' else canal_blueTV;
 
 RED_out<=canal_red when mode='0' else canal_redTV;
 GREEN_out<=canal_green when mode='0' else canal_greenTV;
@@ -270,9 +333,9 @@ begin
 		end if;
 end process green_color_vga;
 
-green_color_tv : process(pclk_TV_in) is
+green_color_tv : process(pclk_TV_CLK16MHz_in) is
 begin
-		if rising_edge(pclk_TV_in) and mode='1' then
+		if rising_edge(pclk_TV_CLK16MHz_in) and mode='1' then
 			if green_scanlines(1)='0' then
 				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
 				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
@@ -285,17 +348,20 @@ begin
 			end if;
 			canal_hsyncTV<=HSYNC_TV_in;
 			canal_vsyncTV<=VSYNC_TV_in;
-			--canal_clkTV<=pclk_TV_in;
+			--canal_clkTV<=pclk_TV_CLK16MHz_in;
 		end if;
 end process green_color_tv;
 
+--assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
+--assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
 HSYNC_out<=canal_hsync when mode='0' else canal_hsyncTV;
 VSYNC_out<=canal_vsync when mode='0' else canal_vsyncTV;
+HSYNC_XOR_out<=canal_hsync when mode='0' else not(canal_hsyncTV xor canal_vsyncTV);
+VSYNC_XOR_out<=canal_vsync when mode='0' else '1';
 --pclk_out<=canal_clk when mode='0' else canal_clkTV;
 --HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
 --VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
-pclk_out<=pclk_in when mode='0' else pclk_TV_in;
-
+pclk_out<=pclk_in when mode='0' else pclk_TV_CLK16MHz_in;
 
 end Behavioral;
 

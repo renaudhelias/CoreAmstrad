@@ -266,10 +266,16 @@ scanner : scandoubler
 					 hsync_out=>HSYNC_scan
 					 );
 					 
-VIDEO_in<=canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
-RED_out<=canal_red when mode='0' and vramORscandb='0' else VIDEO_scan(5 downto 4) & "0000" when mode='0' and vramORscandb='1' else canal_redTV;
-GREEN_out<=canal_green when mode='0' and vramORscandb='0' else VIDEO_scan(3 downto 2) & "0000" when mode='0' and vramORscandb='1' else canal_greenTV;
-BLUE_out<=canal_blue when mode='0' and vramORscandb='0' else VIDEO_scan(1 downto 0) & "0000" when mode='0' and vramORscandb='1' else canal_blueTV;
+VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
+RED_out<=canal_red when mode='0' and vramORscandb='0' else 
+	"000000" when mode='0' and vramORscandb='1' and green_scanlines(1)='1' else
+	VIDEO_scan(5 downto 4) & "0000" when mode='0' and vramORscandb='1' else canal_redTV;
+GREEN_out<=canal_green when mode='0' and vramORscandb='0' else 
+	VIDEO_scan when mode='0' and vramORscandb='1' and green_scanlines(1)='1' else
+	VIDEO_scan(3 downto 2) & "0000" when mode='0' and vramORscandb='1' else canal_greenTV;
+BLUE_out<=canal_blue when mode='0' and vramORscandb='0' else
+	"000000" when mode='0' and vramORscandb='1' and green_scanlines(1)='1' else
+	VIDEO_scan(1 downto 0) & "0000" when mode='0' and vramORscandb='1' else canal_blueTV;
 HSYNC_XOR_out<= canal_hsync when mode='0' and vramORscandb='0' else HSYNC_scan when mode='0' and vramORscandb='1' else not(canal_hsyncTV xor canal_vsyncTV);
 VSYNC_XOR_out<= canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan when mode='0' and vramORscandb='1' else '1';
 

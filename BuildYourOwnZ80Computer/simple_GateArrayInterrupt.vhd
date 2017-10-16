@@ -41,7 +41,6 @@ entity simple_GateArrayInterrupt is
 	M1_OFFSET:integer :=3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3 =(M1_OFFSET+2)%4
 	LATENCE_MEM_WR:integer:=1; -- 1 (http://www.cpcwiki.eu/forum/emulators/cpc-z80-timing/)
-	LATENCE_2A:integer:=2;
 	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
@@ -290,12 +289,37 @@ m1_process:process(reset,nCLK4_1) is
 			variable was_m:boolean:=false;
 		variable waiting:boolean:=false;
 		variable waiting_MEMWR:integer range 0 to LATENCE_MEM_WR:=LATENCE_MEM_WR;
-		variable waiting_2A:integer range 0 to LATENCE_2A:=LATENCE_2A;
+		variable waiting_R2D2:integer range 0 to 2:=0;
 		variable was_MEMWR:boolean:=false;
 		variable was_MEMRD:boolean:=false;
 		variable was_2A:boolean:=false;
 		variable sizeM1:integer range 0 to 5:=0;
-		
+		type LATENCE_ARRAY is array (255 downto 0) of integer range 0 to 2;
+		constant latences:LATENCE_ARRAY :=(
+			16=> 2, --x"10" DJNZ, e
+			34=>0, --x"22" LD (nn), HL, ok using MEM_wr:low ?
+			42=>2, --x"2A" validated LD HL, (nn)
+			192=> 1, --unvalided x"C0" RET nz : RET cc, inverse of RET z.
+			197=>0, --x"C5" PUSH bc : PUSH qq (same as F5), ok using MEM_wr:low
+			199=>1, --x"C7" RST 00h : RST p.
+			200=> 1, --unvalided x"C8" RET z : RET cc.
+			207=>1, --x"CF" RST 08h : RST p.
+			208=> 1, --unvalided x"D0" RET nc : RET cc, inverse of RET c.
+			213=>0, --x"D5" PUSH de : PUSH qq (same as F5), ok using MEM_wr:low
+			215=>1, --x"D7" RST 10h : RST p.
+			216=> 1, --unvalided x"D8" RET c : RET cc.
+			223=>1, --x"DF" RST 18h : RST p.
+			224=> 1, --unvalided x"E0" RET po : RET cc, inverse of RET pe.
+			229=>0, --x"E5" PUSH hl : PUSH qq (same as F5), ok using MEM_wr:low
+			231=>1, --x"E7" RST 20h : RST p.
+			232=> 1, --unvalided x"E8" RET pe : RET cc.
+			239=>1, --x"EF" RST 28h : RST p.
+			240=> 1, --unvalided x"F0" RET p : RET cc, inverse of RET m.
+			245=>0, --x"F5" PUSH af : PUSH qq, ok using MEM_wr:low
+			247=>1, --x"F7" RST 30h : RST p.
+			248=> 1, --unvalided x"F8" RET m : RET cc.
+			255=>1, --x"FF" RST 38h : RST p.
+			others=>0);
 
 begin
 if reset='1' then
@@ -315,12 +339,12 @@ elsif falling_edge(nCLK4_1) then
 			--if (M1_n='0' or was_M1) and MEM_RD='0' and was_MEMRD and R2D2=x"2A" then
 			--if not(was_2A) and R2D2=x"2A" then
 			--if (M1_n='0' or was_M1) and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
-			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
-				waiting_2A:=0;
+			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
+				waiting_R2D2:=latences(conv_integer(R2D2));
 			end if;
 			
-			if waiting_2A<LATENCE_2A then -- and ga_shunt='1'
-				waiting_2A:=waiting_2A+1;
+			if waiting_R2D2>0 then -- and ga_shunt='1'
+				waiting_R2D2:=waiting_R2D2-1;
 				WAIT_MEM_n<='0';
 			elsif waiting_MEMWR<LATENCE_MEM_WR then -- and ga_shunt='1'
 				waiting_MEMWR:=waiting_MEMWR+1;

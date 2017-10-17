@@ -40,7 +40,6 @@ entity simple_GateArrayInterrupt is
 	--crtc_type:std_logic:='1'; -- '0' or '1' :p
 	M1_OFFSET:integer :=3; -- from 0 to 3
 	SOUND_OFFSET:integer :=1; -- from 0 to 3 =(M1_OFFSET+2)%4
-	LATENCE_MEM_WR:integer:=1; -- 1 (http://www.cpcwiki.eu/forum/emulators/cpc-z80-timing/)
 	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
 	-- feel nice policy : interrupt at end of HSYNC
 	--I have HDISP (external port of original Amstrad 6128) so I can determinate true timing and making a fix time generator
@@ -122,7 +121,6 @@ entity simple_GateArrayInterrupt is
 			  crtc_R:out STD_LOGIC:='0'; --ram_A external solve CRTC read scan
            int : out  STD_LOGIC:='0'; -- JavaCPC reset init
 			  M1_n : in  STD_LOGIC;
-			  MEM_WR:in std_logic;
 			  MEM_RD:in std_logic;
 			  
 			  -- Z80 4MHz and CRTC 1MHz are produced by GATE_ARRAY normally
@@ -288,66 +286,113 @@ m1_process:process(reset,nCLK4_1) is
 			variable was_M1:boolean:=false;
 			variable was_m:boolean:=false;
 		variable waiting:boolean:=false;
-		variable waiting_MEMWR:integer range 0 to LATENCE_MEM_WR:=LATENCE_MEM_WR;
 		variable waiting_R2D2:integer range 0 to 2:=0;
-		variable was_MEMWR:boolean:=false;
 		variable was_MEMRD:boolean:=false;
-		variable was_2A:boolean:=false;
 		variable sizeM1:integer range 0 to 5:=0;
-		type LATENCE_ARRAY is array (255 downto 0) of integer range 0 to 2;
+		type LATENCE_ARRAY is array (255 downto 0) of integer range 0 to 7;
 		constant latences:LATENCE_ARRAY :=(
 			16=> 2, --x"10" DJNZ, e
-			34=>0, --x"22" LD (nn), HL, ok using MEM_wr:low ?
+			34=>  2, --x"22" LD (nn), HL, ok using MEM_wr:low ?
 			42=>2, --x"2A" validated LD HL, (nn)
-			192=> 1, --unvalided x"C0" RET nz : RET cc, inverse of RET z.
-			197=>0, --x"C5" PUSH bc : PUSH qq (same as F5), ok using MEM_wr:low
-			199=>1, --x"C7" RST 00h : RST p.
-			200=> 1, --unvalided x"C8" RET z : RET cc.
-			207=>1, --x"CF" RST 08h : RST p.
-			208=> 1, --unvalided x"D0" RET nc : RET cc, inverse of RET c.
-			213=>0, --x"D5" PUSH de : PUSH qq (same as F5), ok using MEM_wr:low
-			215=>1, --x"D7" RST 10h : RST p.
-			216=> 1, --unvalided x"D8" RET c : RET cc.
-			223=>1, --x"DF" RST 18h : RST p.
-			224=> 1, --unvalided x"E0" RET po : RET cc, inverse of RET pe.
-			229=>0, --x"E5" PUSH hl : PUSH qq (same as F5), ok using MEM_wr:low
-			231=>1, --x"E7" RST 20h : RST p.
-			232=> 1, --unvalided x"E8" RET pe : RET cc.
-			239=>1, --x"EF" RST 28h : RST p.
-			240=> 1, --unvalided x"F0" RET p : RET cc, inverse of RET m.
-			245=>0, --x"F5" PUSH af : PUSH qq, ok using MEM_wr:low
-			247=>1, --x"F7" RST 30h : RST p.
-			248=> 1, --unvalided x"F8" RET m : RET cc.
-			255=>1, --x"FF" RST 38h : RST p.
+			192=>  1, --calibrating T80_MCode, unvalided x"C0" RET nz : RET cc, inverse of RET z.
+			197=>  2, --x"C5" PUSH bc : PUSH qq (same as F5), ok using MEM_wr:low
+			199=>  2, --x"C7" RST 00h : RST p.
+			200=>  1, --unvalided x"C8" RET z : RET cc.
+			207=>  2, --x"CF" RST 08h : RST p.
+			208=>  1, --unvalided x"D0" RET nc : RET cc, inverse of RET c.
+			213=>  2, --x"D5" PUSH de : PUSH qq (same as F5), ok using MEM_wr:low
+			215=>  2, --x"D7" RST 10h : RST p.
+			216=>  1, --unvalided x"D8" RET c : RET cc.
+			223=>  2, --x"DF" RST 18h : RST p.
+			224=>  1, --unvalided x"E0" RET po : RET cc, inverse of RET pe.
+			227=>  2, --x"E3" new challenger
+			229=>  2, --x"E5" PUSH hl : PUSH qq (same as F5), ok using MEM_wr:low
+			231=>  2, --x"E7" RST 20h : RST p.
+			232=>  1, --unvalided x"E8" RET pe : RET cc.
+			239=>  2, --x"EF" RST 28h : RST p.
+			240=>  1, --unvalided x"F0" RET p : RET cc, inverse of RET m.
+			245=>  2, --x"F5" PUSH af : PUSH qq, ok using MEM_wr:low
+			247=>  2, --x"F7" RST 30h : RST p.
+			248=>  1, --unvalided x"F8" RET m : RET cc.
+			255=>  2, --x"FF" RST 38h : RST p.
 			others=>0);
 
+			constant latences_CB:LATENCE_ARRAY :=(
+			others=>0);
+			
+			constant latences_DD:LATENCE_ARRAY :=(
+			16=> 1, --x"10"
+--				17=> 7, --x"11"
+			34=>  1, --x"22"
+			42=>1, --x"2A"
+			54=>2, --x"36"
+			197=>  2, --x"C5"
+			199=>  2, --x"C7"
+			207=>  2, --x"CF"
+			213=>  2, --x"D5"
+			215=>  2, --x"D7"
+			223=>  2, --x"DF"
+			227=>  2, --x"E3"
+			229=>  2, --x"E5"
+			231=>  2, --x"E7"
+			239=>  2, --x"EF"
+			245=>  2, --x"F5"
+			247=>  2, --x"F7"
+			255=>  2, --x"FF"
+			others=>0);
+			
+			constant latences_ED:LATENCE_ARRAY :=(
+			67 => 1, --x"43"
+			75 => 1, --x"4B"
+			83 => 1, --x"53"
+			91 => 1, --x"5B"
+			99 => 1, --x"63"
+			107 => 1, --x"6B"
+			115 => 1, --x"73"
+			123 => 1, --x"7B"
+			160 => 1, --x"A0"
+			168 => 1, --x"A8"
+			176 => 1, --x"B0"
+			184 => 1, --x"B8"
+			others=>0);
+			
+			constant latences_DD_CB:LATENCE_ARRAY :=(
+			others=>2);
+			
+		variable prefix_CB:boolean:=false;
+		variable prefix_ED:boolean:=false;
+		variable prefix_DD_FD:boolean:=false;
+		variable prefix_DD_FD_CB:boolean:=false;
+			
 begin
 if reset='1' then
 WAIT_MEM_n<='1';
 WAIT_n<='1';
 waiting:=false;
-was_MEMWR:=false;
+--was_MEMWR:=false;
 was_M1:=false;
 elsif falling_edge(nCLK4_1) then
 	compteur1MHz:=compteur1MHz_signal;
 	
-	
-			if not(was_MEMWR) and MEM_WR='1' then
-				waiting_MEMWR:=0;
-			end if;
-			
 			--if (M1_n='0' or was_M1) and MEM_RD='0' and was_MEMRD and R2D2=x"2A" then
 			--if not(was_2A) and R2D2=x"2A" then
 			--if (M1_n='0' or was_M1) and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
 			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
-				waiting_R2D2:=latences(conv_integer(R2D2));
+				if prefix_CB then
+					waiting_R2D2:=latences_CB(conv_integer(R2D2));
+				elsif prefix_ED then
+					waiting_R2D2:=latences_ED(conv_integer(R2D2));
+				elsif prefix_DD_FD then
+					waiting_R2D2:=latences_DD(conv_integer(R2D2));
+				elsif prefix_DD_FD_CB then
+					waiting_R2D2:=latences_DD_CB(conv_integer(R2D2));
+				else
+					waiting_R2D2:=latences(conv_integer(R2D2));
+				end if;
 			end if;
 			
 			if waiting_R2D2>0 then -- and ga_shunt='1'
 				waiting_R2D2:=waiting_R2D2-1;
-				WAIT_MEM_n<='0';
-			elsif waiting_MEMWR<LATENCE_MEM_WR then -- and ga_shunt='1'
-				waiting_MEMWR:=waiting_MEMWR+1;
 				WAIT_MEM_n<='0';
 			else
 				WAIT_MEM_n<='1';
@@ -402,15 +447,47 @@ elsif falling_edge(nCLK4_1) then
 					-- Some instructions has more than 4 Tstate -- validated
 				end if;
 			end if;
+			
+			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
+				if R2D2=x"CB" and prefix_DD_FD then
+					-- DD CB or FD CB
+					prefix_CB:=false;
+					prefix_ED:=false;
+					prefix_DD_FD:=false;
+					prefix_DD_FD_CB:=true;
+				elsif R2D2=x"CB" then
+					prefix_CB:=true;
+					prefix_ED:=false;
+					prefix_DD_FD:=false;
+					prefix_DD_FD_CB:=false;
+				elsif R2D2=x"ED" then
+					prefix_CB:=false;
+					prefix_ED:=true;
+					prefix_DD_FD:=false;
+					prefix_DD_FD_CB:=false;
+				elsif R2D2=x"DD" then
+					prefix_CB:=false;
+					prefix_ED:=false;
+					prefix_DD_FD:=true;
+					prefix_DD_FD_CB:=false;
+				elsif R2D2=x"FD" then
+					prefix_CB:=false;
+					prefix_ED:=false;
+					prefix_DD_FD:=true;
+					prefix_DD_FD_CB:=false;
+				else
+					prefix_CB:=false;
+					prefix_ED:=false;
+					prefix_DD_FD:=false;
+					prefix_DD_FD_CB:=false;
+				end if;
+			end if;
+
+			
 			if M1_n='0' then --and IO_ACK='0'
 				was_M1:=true;
 			else
 				was_M1:=false;
-			end if;
-			if MEM_WR='1' then
-				was_MEMWR:=true;
-			else
-				was_MEMWR:=false;
 			end if;
 			
 			if MEM_RD='1' then
@@ -419,11 +496,6 @@ elsif falling_edge(nCLK4_1) then
 				was_MEMRD:=false;
 			end if;
 			
-			if R2D2=x"2A" then
-				was_2A:=true;
-			else
-				was_2A:=false;
-			end if;
 end if;
 end process m1_process;
 

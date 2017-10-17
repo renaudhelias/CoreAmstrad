@@ -1277,6 +1277,7 @@ begin
 				when 3 =>
 					Jump <= '1';
 					IncDec_16 <= "0111";
+					TStates <= "101"; --plustest.dsk
 				when others => null;
 				end case;
 			end if;

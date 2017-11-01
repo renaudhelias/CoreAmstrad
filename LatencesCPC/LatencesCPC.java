@@ -2173,8 +2173,14 @@ public class LatencesCPC {
 		int nbArrange1T2 = 0;
 		int nbArrange2T2 = 0;
 		int nbArrange3T2 = 0;
+		
+		int nbArrangeFloor=0;
+		int nbArrangeFloorArrange=0;
+		int nbArrangeCeil=0;
+		int nbArrangeCeilArrange=0;
 		for (LATENCE_TYPE l : LATENCE_TYPE.values()) {
 			for (int i = 0; i < 256; i++) {
+				boolean arrange1=false;boolean arrange2=false;
 				if (!latences1.get(l).containsKey(i) && !plustest1.get(l).containsKey(i)) {
 					nbMissingBoth++;
 				} else if (!latences1.get(l).containsKey(i)) {
@@ -2188,6 +2194,7 @@ public class LatencesCPC {
 						nbCata++;
 					} else if (p1 > (int) Math.ceil(((double) l1) / 4.0)) {
 						nbArrange++;
+						arrange1=true;
 						int distance = p1 - (int) Math.ceil(((double) l1) / 4.0);
 						if (distance != 1) {
 							nbArrangeNotOne++;
@@ -2219,6 +2226,7 @@ public class LatencesCPC {
 						nbCata2++;
 					} else if (p2 > (int) Math.ceil(((double) l2) / 4.0)) {
 						nbArrange2++;
+						arrange2=true;
 						int distance = p2 - (int) Math.ceil(((double) l2) / 4.0);
 						if (distance != 1) {
 							nbArrangeNotOne2++;
@@ -2234,6 +2242,23 @@ public class LatencesCPC {
 								throw new Error();
 							}
 						}
+					}
+				}
+				if (!arrange1 && arrange2) {
+					nbArrangeFloor++;
+					int l1 = latences1.get(l).get(i);
+					int p1 = plustest1.get(l).get(i);
+					int distance = 4*p1 - 3 - l1;
+					if (distance<=2) {
+						nbArrangeFloorArrange++;
+					}
+				} else if (arrange1 && !arrange2) {
+					nbArrangeCeil++;
+					int l2 = latences2.get(l).get(i);
+					int p2 = plustest2.get(l).get(i);
+					int distance = 4*p2 - 3 - l2;
+					if (distance<=2) {
+						nbArrangeCeilArrange++;
 					}
 				}
 			}
@@ -2257,6 +2282,11 @@ public class LatencesCPC {
 		System.out.println("nbArrange1T2="+nbArrange1T2);
 		System.out.println("nbArrange2T2="+nbArrange2T2);
 		System.out.println("nbArrange3T2="+nbArrange3T2);
+		System.out.println("");
+		System.out.println("nbArrangeFloor="+nbArrangeFloor);
+		System.out.println("nbArrangeFloorArrange="+nbArrangeFloorArrange);
+		System.out.println("nbArrangeCeil="+nbArrangeCeil);
+		System.out.println("nbArrangeCeilArrange="+nbArrangeCeilArrange);
 	}
 
 	private List<Integer> binary2Int(String binary) {

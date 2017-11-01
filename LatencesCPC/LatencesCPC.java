@@ -2175,9 +2175,9 @@ public class LatencesCPC {
 		int nbArrange3T2 = 0;
 		
 		int nbArrangeFloor=0;
-		int nbArrangeFloorArrange=0;
+		int nbArrangeFloorArrange2T=0;
 		int nbArrangeCeil=0;
-		int nbArrangeCeilArrange=0;
+		int nbArrangeCeilArrange2T=0;
 		for (LATENCE_TYPE l : LATENCE_TYPE.values()) {
 			for (int i = 0; i < 256; i++) {
 				boolean arrange1=false;boolean arrange2=false;
@@ -2250,7 +2250,7 @@ public class LatencesCPC {
 					int p1 = plustest1.get(l).get(i);
 					int distance = 4*p1 - 3 - l1;
 					if (distance<=2) {
-						nbArrangeFloorArrange++;
+						nbArrangeFloorArrange2T++;
 					}
 				} else if (arrange1 && !arrange2) {
 					nbArrangeCeil++;
@@ -2258,7 +2258,7 @@ public class LatencesCPC {
 					int p2 = plustest2.get(l).get(i);
 					int distance = 4*p2 - 3 - l2;
 					if (distance<=2) {
-						nbArrangeCeilArrange++;
+						nbArrangeCeilArrange2T++;
 					}
 				}
 			}
@@ -2284,9 +2284,9 @@ public class LatencesCPC {
 		System.out.println("nbArrange3T2="+nbArrange3T2);
 		System.out.println("");
 		System.out.println("nbArrangeFloor="+nbArrangeFloor);
-		System.out.println("nbArrangeFloorArrange="+nbArrangeFloorArrange);
+		System.out.println("nbArrangeFloorArrange2T="+nbArrangeFloorArrange2T);
 		System.out.println("nbArrangeCeil="+nbArrangeCeil);
-		System.out.println("nbArrangeCeilArrange="+nbArrangeCeilArrange);
+		System.out.println("nbArrangeCeilArrange2T="+nbArrangeCeilArrange2T);
 	}
 
 	private List<Integer> binary2Int(String binary) {

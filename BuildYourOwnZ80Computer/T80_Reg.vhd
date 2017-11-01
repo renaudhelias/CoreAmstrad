@@ -105,7 +105,7 @@ begin
 
 	process (Clk)
 	begin
-		if Clk'event and Clk = '1' then
+		if rising_edge(Clk) then --Clk'event and Clk = '1' then
 			if CEN = '1' then
 				if WEH = '1' then
 					RegsH(to_integer(unsigned(AddrA))) <= DIH;

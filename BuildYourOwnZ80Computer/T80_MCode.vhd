@@ -14,7 +14,6 @@
 -- ****
 -- T80(b) core. In an effort to merge and maintain bug fixes ....
 --
---
 -- Ver 303 add undocumented DDCB and FDCB opcodes by TobiFlex 20.04.2010
 -- Ver 302 fixed IO cycle timing, tested thanks to Alessandro.
 -- Ver 300 started tidyup
@@ -22,13 +21,10 @@
 -- Latest version from www.fpgaarcade.com (original www.opencores.org)
 --
 -- ****
---
 -- Z80 compatible microprocessor core
 --
 -- Version : 0242
---
 -- Copyright (c) 2001-2002 Daniel Wallner (jesus@opencores.org)
---
 -- All rights reserved
 --
 -- Redistribution and use in source and synthezised forms, with or without
@@ -69,21 +65,13 @@
 -- File history :
 --
 --      0208 : First complete release
---
 --      0211 : Fixed IM 1
---
 --      0214 : Fixed mostly flags, only the block instructions now fail the zex regression test
---
 --      0235 : Added IM 2 fix by Mike Johnson
---
 --      0238 : Added NoRead signal
---
 --      0238b: Fixed instruction timing for POP and DJNZ
---
 --      0240 : Added (IX/IY+d) states, removed op-codes from mode 2 and added all remaining mode 3 op-codes
-
 --      0240mj1 fix for HL inc/dec for INI, IND, INIR, INDR, OUTI, OUTD, OTIR, OTDR
---
 --      0242 : Fixed I/O instruction timing, cleanup
 --
 
@@ -1277,7 +1265,7 @@ begin
 				when 3 =>
 					Jump <= '1';
 					IncDec_16 <= "0111";
-					TStates <= "101"; --plustest.dsk
+					--TStates <= "101"; --plustest.dsk
 				when others => null;
 				end case;
 			end if;
@@ -1339,7 +1327,6 @@ begin
 -- MULTIBYTE INSTRUCTIONS
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
-
 		when "11001011" =>
 			if Mode /= 2 then
 				Prefix <= "01";
@@ -1364,7 +1351,6 @@ begin
 --      CB prefixed instructions
 --
 ------------------------------------------------------------------------------
-
 			Set_BusA_To(2 downto 0) <= IR(2 downto 0);
 			Set_BusB_To(2 downto 0) <= IR(2 downto 0);
 
@@ -1580,7 +1566,6 @@ begin
 --      ED prefixed instructions
 --
 ------------------------------------------------------------------------------
-
 			case IRB is
 			when "00000000"|"00000001"|"00000010"|"00000011"|"00000100"|"00000101"|"00000110"|"00000111"
 				|"00001000"|"00001001"|"00001010"|"00001011"|"00001100"|"00001101"|"00001110"|"00001111"
@@ -1998,7 +1983,6 @@ begin
 				TStates <= "011";
 			end if;
 		end if;
-
 		if Mode = 3 then
 			if MCycle = "001" then
 --              TStates <= "100";
@@ -2006,7 +1990,6 @@ begin
 				TStates <= "100";
 			end if;
 		end if;
-
 		if Mode < 2 then
 			if MCycle = "110" then
 				Inc_PC <= '1';
@@ -2039,5 +2022,4 @@ begin
 		end if;
 
 	end process;
-
 end;

@@ -332,7 +332,7 @@ use ieee.numeric_std.ALL;
 entity FPGAmstrad_amstrad_motherboard is
 	generic (
 			 USE_AZ80:boolean:=false;
-			 HACK_Z80:boolean:=true
+			 HACK_Z80:boolean:=false
 	);
    port ( CLK4MHz    : in    std_logic; 
           init_A     : in    std_logic_vector (22 downto 0); 
@@ -438,11 +438,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal RD      : std_logic;
    signal XLXN_802      : std_logic;
    signal WAIT_n      : std_logic;
-   signal WAIT_MEM_n      : std_logic;
    signal INT_n      : std_logic;
    signal XLXN_824      : std_logic;
    signal XLXN_826      : std_logic;
-   signal XLXN_830      : std_logic;
    signal XLXN_835      : std_logic;
    signal M1_n      : std_logic;
    signal XLXN_857      : std_logic_vector (1 downto 0);
@@ -537,7 +535,6 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              bvram_W       : out   std_logic; 
              crtc_R        : out   std_logic; 
              int           : out   std_logic;
-             WAIT_MEM_n    : out   std_logic;
              WAIT_n        : out   std_logic;
 				 SOUND_CLK     : out   std_logic;
              palette_W     : out   std_logic; 
@@ -738,7 +735,7 @@ do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
 
    XLXI_568 : please_wait
       port map (CLK_n=>CLK4MHz,
-                WAIT_n=>XLXN_830,
+                WAIT_n=>WAIT_n,
                 CLK_WAIT_n=>XLXN_802);
    
 end generate;
@@ -752,7 +749,7 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
                 INT_n=>INT_n,
                 NMI_n=>'1',
                 RESET_n=>RESET_n, -- '1'der time constraint test
-                WAIT_n=>XLXN_830, --'1',
+                WAIT_n=>WAIT_n, --'1',
                 A(15 downto 0)=>A(15 downto 0),
                 BUSAK_n=>open,
                 DO(7 downto 0)=>D(7 downto 0),
@@ -767,16 +764,14 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
 
 --   XLXI_568 : please_wait
 --      port map (CLK_n=>CLK4MHz,
---                WAIT_n=>XLXN_830,
+--                WAIT_n=>WAIT_n,
 --                CLK_WAIT_n=>XLXN_802);
    
 end generate;
 
-XLXN_830<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
-	
 do_az80:if USE_AZ80 generate
 b2v_inst : z80_top_direct_n
-PORT MAP(nWAIT => XLXN_830,
+PORT MAP(nWAIT => WAIT_n,
 			nINT => INT_n,
 			nNMI => '1',
 			nRESET => RESET_n,
@@ -843,7 +838,6 @@ end generate;
                 palette_A(13 downto 0)=>palette_A(13 downto 0),
                 palette_D(7 downto 0)=>palette_D(7 downto 0),
                 palette_W=>palette_W,
-                WAIT_MEM_n=>WAIT_MEM_n,
                 WAIT_n=>WAIT_n,
 					 SOUND_CLK=>SOUND_CLK,
                 Dout(7 downto 0)=>MIX_DOUT0(7 downto 0), --inout

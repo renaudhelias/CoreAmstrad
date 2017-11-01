@@ -14,7 +14,6 @@
 -- ****
 -- T80(b) core. In an effort to merge and maintain bug fixes ....
 --
---
 -- Ver 303 add undocumented DDCB and FDCB opcodes by TobiFlex 20.04.2010
 -- Ver 302 fixed IO cycle timing, tested thanks to Alessandro.
 -- Ver 301 parity flag is just parity for 8080, also overflow for Z80, by Sean Riddle
@@ -24,13 +23,10 @@
 -- Latest version from www.fpgaarcade.com (original www.opencores.org)
 --
 -- ****
---
 -- Z80 compatible microprocessor core
 --
 -- Version : 0247
---
 -- Copyright (c) 2001-2002 Daniel Wallner (jesus@opencores.org)
---
 -- All rights reserved
 --
 -- Redistribution and use in source and synthezised forms, with or without
@@ -71,25 +67,15 @@
 -- File history :
 --
 --      0208 : First complete release
---
 --      0210 : Fixed wait and halt
---
 --      0211 : Fixed Refresh addition and IM 1
---
 --      0214 : Fixed mostly flags, only the block instructions now fail the zex regression test
---
 --      0232 : Removed refresh address output for Mode > 1 and added DJNZ M1_n fix by Mike Johnson
---
 --      0235 : Added clock enable and IM 2 fix by Mike Johnson
---
 --      0237 : Changed 8080 I/O address output, added IntE output
---
 --      0238 : Fixed (IX/IY+d) timing and 16 bit ADC and SBC zero flag
---
 --      0240 : Added interrupt ack fix by Mike Johnson, changed (IX/IY+d) timing and changed flags in GB mode
---
 --      0242 : Added I/O wait, fixed refresh address, moved some registers to RAM
---
 --      0247 : Fixed bus req/ack cycle
 --
 
@@ -406,7 +392,7 @@ begin
 			PreserveC_r <= '0';
 			XY_Ind <= '0';
 
-		elsif CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 
 			if ClkEn = '1' then
 
@@ -739,7 +725,7 @@ begin
 ---------------------------------------------------------------------------
 	process (CLK_n)
 	begin
-		if CLK_n'event and CLK_n = '1' then
+		if rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 			if ClkEn = '1' then
 				-- Bus A / Write
 				RegAddrA_r <= Alternate & Set_BusA_To(2 downto 1);
@@ -876,7 +862,7 @@ begin
 ---------------------------------------------------------------------------
 	process (CLK_n)
 	begin
-		if CLK_n'event and CLK_n = '1' then
+		if rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 			if ClkEn = '1' then
 			case Set_BusB_To is
 			when "0111" =>
@@ -944,7 +930,7 @@ begin
 	begin
 		if RESET_n = '0' then
 			RFSH_n <= '1';
-		elsif CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 			if CEN = '1' then
 			if MCycle = "001" and ((TState = 2  and Wait_n = '1') or TState = 3) then
 				RFSH_n <= '0';
@@ -978,7 +964,7 @@ begin
 			INT_s <= '0';
 			NMI_s <= '0';
 			OldNMI_n := '0';
-		elsif CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 			if CEN = '1' then
 			BusReq_s <= not BUSRQ_n;
 			INT_s <= not INT_n;
@@ -1016,7 +1002,7 @@ begin
 			Auto_Wait_t1 <= '0';
 			Auto_Wait_t2 <= '0';
 			M1_n <= '1';
-		elsif CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 		
 			if INT_s = '1' and wasINT_s_0 then
 				just_rising_INT_s:=true;

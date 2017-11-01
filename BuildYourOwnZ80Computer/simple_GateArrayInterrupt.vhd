@@ -127,7 +127,6 @@ entity simple_GateArrayInterrupt is
 			  -- MA0/CCLK is produced by GATE_ARRAY and does feed Yamaha sound chip.
 			  -- WAIT<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
 			  -- please_wait(4MHz,WAIT)=>4MHz is a clock hack as Z80 does not implement correclty the WAIT purpose (Z80 is encapsulating a Z8080 and so corrupt this purpose)
-			  WAIT_MEM_n : out  STD_LOGIC:='1';
            WAIT_n : out  STD_LOGIC:='1';
 			  -- YM2149 is using rising_edge(CLK)
 			  SOUND_CLK : out  STD_LOGIC; -- calibrated with Sim City/Abracadabra et les voleurs du temps/CPCRulez -CIRCLES demo
@@ -272,6 +271,131 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	
 	
 	signal compteur1MHz_signal : integer range 0 to 3:=0;
+	
+	type LATENCE_ARRAY is array (255 downto 0) of std_logic;
+constant latences:LATENCE_ARRAY :=(
+    16 => '1', -- "10"
+    34 => '1', -- "22"
+    42 => '1', -- "2a"
+	 
+	 
+	 --192 => '1', -- "c0"
+	 
+	 
+    197 => '1', -- "c5"
+    213 => '1', -- "d5"
+    227 => '1', -- "e3"
+    229 => '1', -- "e5"
+    245 => '1', -- "f5"
+others=>'0');
+constant latences_CB:LATENCE_ARRAY :=(
+others=>'0');
+constant latences_DD:LATENCE_ARRAY :=(
+    34 => '1', -- "22"
+    42 => '1', -- "2a"
+    54 => '1', -- "36"
+    227 => '1', -- "e3"
+    229 => '1', -- "e5"
+others=>'0');
+constant latences_ED:LATENCE_ARRAY :=(
+    67 => '1', -- "43"
+    75 => '1', -- "4b"
+    83 => '1', -- "53"
+    91 => '1', -- "5b"
+    99 => '1', -- "63"
+    107 => '1', -- "6b"
+    115 => '1', -- "73"
+    123 => '1', -- "7b"
+    160 => '1', -- "a0"
+    168 => '1', -- "a8"
+    176 => '1', -- "b0"
+    184 => '1', -- "b8"
+others=>'0');
+constant latences_FD:LATENCE_ARRAY :=(
+    34 => '1', -- "22"
+    42 => '1', -- "2a"
+    54 => '1', -- "36"
+    227 => '1', -- "e3"
+    229 => '1', -- "e5"
+others=>'0');
+constant latences_DDCB:LATENCE_ARRAY :=(
+    6 => '1', -- "6"
+    14 => '1', -- "e"
+    22 => '1', -- "16"
+    30 => '1', -- "1e"
+    38 => '1', -- "26"
+    46 => '1', -- "2e"
+    62 => '1', -- "3e"
+    70 => '1', -- "46"
+    78 => '1', -- "4e"
+    86 => '1', -- "56"
+    94 => '1', -- "5e"
+    102 => '1', -- "66"
+    110 => '1', -- "6e"
+    118 => '1', -- "76"
+    126 => '1', -- "7e"
+    134 => '1', -- "86"
+    142 => '1', -- "8e"
+    150 => '1', -- "96"
+    158 => '1', -- "9e"
+    166 => '1', -- "a6"
+    174 => '1', -- "ae"
+    182 => '1', -- "b6"
+    190 => '1', -- "be"
+    198 => '1', -- "c6"
+    206 => '1', -- "ce"
+    214 => '1', -- "d6"
+    222 => '1', -- "de"
+    230 => '1', -- "e6"
+    238 => '1', -- "ee"
+    246 => '1', -- "f6"
+    254 => '1', -- "fe"
+others=>'0');
+constant latences_FDCB:LATENCE_ARRAY :=(
+    6 => '1', -- "6"
+    14 => '1', -- "e"
+    22 => '1', -- "16"
+    30 => '1', -- "1e"
+    38 => '1', -- "26"
+    46 => '1', -- "2e"
+    62 => '1', -- "3e"
+    70 => '1', -- "46"
+    78 => '1', -- "4e"
+    86 => '1', -- "56"
+    94 => '1', -- "5e"
+    102 => '1', -- "66"
+    110 => '1', -- "6e"
+    118 => '1', -- "76"
+    126 => '1', -- "7e"
+    134 => '1', -- "86"
+    142 => '1', -- "8e"
+    150 => '1', -- "96"
+    158 => '1', -- "9e"
+    166 => '1', -- "a6"
+    174 => '1', -- "ae"
+    182 => '1', -- "b6"
+    190 => '1', -- "be"
+    198 => '1', -- "c6"
+    206 => '1', -- "ce"
+    214 => '1', -- "d6"
+    222 => '1', -- "de"
+    230 => '1', -- "e6"
+    238 => '1', -- "ee"
+    246 => '1', -- "f6"
+    254 => '1', -- "fe"
+others=>'0');
+	
+	signal WAIT_n_0: std_logic:='1';
+	signal WAIT_n_0_ack: boolean:=false;
+	--signal WAIT_n_0_ackM1: std_logic:='1';
+	signal WAIT_n_D: std_logic:='0';
+	signal WAIT_n_1: std_logic:='1';
+	
+	signal prefix_CB:boolean:=false;
+	signal prefix_ED:boolean:=false;
+	signal prefix_DD_FD:boolean:=false;
+	signal prefix_DD_FD_CB:boolean:=false;
+	
 begin
 
 ---- without scandoubler
@@ -281,125 +405,81 @@ BLUE_out<= BLUE & "0000";
 HSYNC_out<= HSYNC;
 VSYNC_out<= VSYNC;
 
+
+WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
+				else latences_ED(conv_integer(R2D2)) when prefix_ED
+				else latences_DD(conv_integer(R2D2)) when prefix_DD_FD
+				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
+				else latences(conv_integer(R2D2));
+--WAIT_n_D <= latences(conv_integer(R2D2));
+				
+-- au début la valeur est fausse, puis à un moment elle devient vrai, puis enfin elle est traitée (c'est-y pas une formule de warrior ça ?)
+WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+
+--WAIT_n_0_ackM1<=not(M1_n) and not(WAIT_n_0_ack);
+
+--WAIT_n_0 <= not(not(not(WAIT_n_D(0)) and not(WAIT_n_D(1))) and not(M1_n) and MEM_RD and WAIT_n_0_ackM1);
+WAIT_n<=WAIT_n_0 and WAIT_n_1 when not(WAIT_n_0_ack) else WAIT_n_1;
+
 m1_process:process(reset,nCLK4_1) is
-	variable compteur1MHz:integer range 0 to 3:=0;
+	variable compteur1MHz:integer range 0 to 3:=2;
 			variable was_M1:boolean:=false;
 			variable was_m:boolean:=false;
 		variable waiting:boolean:=false;
-		variable waiting_R2D2:integer range 0 to 2:=0;
+		variable waiting_R2D2:std_logic:='0';
 		variable was_MEMRD:boolean:=false;
 		variable sizeM1:integer range 0 to 5:=0;
-		type LATENCE_ARRAY is array (255 downto 0) of integer range 0 to 7;
-		constant latences:LATENCE_ARRAY :=(
-			16=> 2, --x"10" DJNZ, e
-			34=>  2, --x"22" LD (nn), HL, ok using MEM_wr:low ?
-			42=>2, --x"2A" validated LD HL, (nn)
-			192=>  1, --calibrating T80_MCode, unvalided x"C0" RET nz : RET cc, inverse of RET z.
-			197=>  2, --x"C5" PUSH bc : PUSH qq (same as F5), ok using MEM_wr:low
-			199=>  2, --x"C7" RST 00h : RST p.
-			200=>  1, --unvalided x"C8" RET z : RET cc.
-			207=>  2, --x"CF" RST 08h : RST p.
-			208=>  1, --unvalided x"D0" RET nc : RET cc, inverse of RET c.
-			213=>  2, --x"D5" PUSH de : PUSH qq (same as F5), ok using MEM_wr:low
-			215=>  2, --x"D7" RST 10h : RST p.
-			216=>  1, --unvalided x"D8" RET c : RET cc.
-			223=>  2, --x"DF" RST 18h : RST p.
-			224=>  1, --unvalided x"E0" RET po : RET cc, inverse of RET pe.
-			227=>  2, --x"E3" new challenger
-			229=>  2, --x"E5" PUSH hl : PUSH qq (same as F5), ok using MEM_wr:low
-			231=>  2, --x"E7" RST 20h : RST p.
-			232=>  1, --unvalided x"E8" RET pe : RET cc.
-			239=>  2, --x"EF" RST 28h : RST p.
-			240=>  1, --unvalided x"F0" RET p : RET cc, inverse of RET m.
-			245=>  2, --x"F5" PUSH af : PUSH qq, ok using MEM_wr:low
-			247=>  2, --x"F7" RST 30h : RST p.
-			248=>  1, --unvalided x"F8" RET m : RET cc.
-			255=>  2, --x"FF" RST 38h : RST p.
-			others=>0);
+		variable conflit_WAIT:boolean:=false;
+		variable pang_WAIT:boolean:=false;
 
-			constant latences_CB:LATENCE_ARRAY :=(
-			others=>0);
 			
-			constant latences_DD:LATENCE_ARRAY :=(
-			16=> 1, --x"10"
---				17=> 7, --x"11"
-			34=>  1, --x"22"
-			42=>1, --x"2A"
-			54=>2, --x"36"
-			197=>  2, --x"C5"
-			199=>  2, --x"C7"
-			207=>  2, --x"CF"
-			213=>  2, --x"D5"
-			215=>  2, --x"D7"
-			223=>  2, --x"DF"
-			227=>  2, --x"E3"
-			229=>  2, --x"E5"
-			231=>  2, --x"E7"
-			239=>  2, --x"EF"
-			245=>  2, --x"F5"
-			247=>  2, --x"F7"
-			255=>  2, --x"FF"
-			others=>0);
 			
-			constant latences_ED:LATENCE_ARRAY :=(
-			67 => 1, --x"43"
-			75 => 1, --x"4B"
-			83 => 1, --x"53"
-			91 => 1, --x"5B"
-			99 => 1, --x"63"
-			107 => 1, --x"6B"
-			115 => 1, --x"73"
-			123 => 1, --x"7B"
-			160 => 1, --x"A0"
-			168 => 1, --x"A8"
-			176 => 1, --x"B0"
-			184 => 1, --x"B8"
-			others=>0);
-			
-			constant latences_DD_CB:LATENCE_ARRAY :=(
-			others=>2);
-			
-		variable prefix_CB:boolean:=false;
-		variable prefix_ED:boolean:=false;
-		variable prefix_DD_FD:boolean:=false;
-		variable prefix_DD_FD_CB:boolean:=false;
+		variable prefix_CB_mem:boolean:=false;
+		variable prefix_ED_mem:boolean:=false;
+		variable prefix_DD_FD_mem:boolean:=false;
+		variable prefix_DD_FD_CB_mem:boolean:=false;
 			
 begin
 if reset='1' then
-WAIT_MEM_n<='1';
-WAIT_n<='1';
+WAIT_n_1<='1';
+WAIT_n_0_ack<=false;
 waiting:=false;
+conflit_WAIT:=false;
+pang_WAIT:=false;
 --was_MEMWR:=false;
 was_M1:=false;
-elsif falling_edge(nCLK4_1) then
-	compteur1MHz:=compteur1MHz_signal;
+elsif rising_edge(nCLK4_1) then
+	--compteur1MHz:=compteur1MHz_signal;
+	compteur1MHz:=(compteur1MHz+1) mod 4;
+	
+		if WAIT_n_1='0' and WAIT_n_0='0' and not(WAIT_n_0_ack) then
+			-- conflit : WAIT_n_0 n'a servit à rien.
+			conflit_WAIT:=true;
+		end if;
+		
+			
 	
 			--if (M1_n='0' or was_M1) and MEM_RD='0' and was_MEMRD and R2D2=x"2A" then
 			--if not(was_2A) and R2D2=x"2A" then
 			--if (M1_n='0' or was_M1) and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
 			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
-				if prefix_CB then
-					waiting_R2D2:=latences_CB(conv_integer(R2D2));
-				elsif prefix_ED then
-					waiting_R2D2:=latences_ED(conv_integer(R2D2));
-				elsif prefix_DD_FD then
-					waiting_R2D2:=latences_DD(conv_integer(R2D2));
-				elsif prefix_DD_FD_CB then
-					waiting_R2D2:=latences_DD_CB(conv_integer(R2D2));
-				else
-					waiting_R2D2:=latences(conv_integer(R2D2));
+				if WAIT_n_D = '1' then
+					pang_WAIT:=true;
 				end if;
+				WAIT_n_0_ack<=true;
+			end if;
+			if MEM_RD='0' then
+				WAIT_n_0_ack<=false;
 			end if;
 			
-			if waiting_R2D2>0 then -- and ga_shunt='1'
-				waiting_R2D2:=waiting_R2D2-1;
-				WAIT_MEM_n<='0';
-			else
-				WAIT_MEM_n<='1';
+			--if waiting_R2D2='1' then -- and ga_shunt='1'
+			--	waiting_R2D2:='0';
+			--	WAIT_n_1<='0';
+			--else
 				if waiting then
-					WAIT_n<='0';
+					WAIT_n_1<='0';
 				else
-					WAIT_n<='1';
+					WAIT_n_1<='1';
 				end if;
 
 				--compteur1MHz=0
@@ -414,74 +494,87 @@ elsif falling_edge(nCLK4_1) then
 				
 				--z80_synchronise	
 				if (M1_n='0') and not(was_M1) and compteur1MHz=M1_OFFSET then -- and IO_ACK='0'
-					-- M---M---M---
-					-- 012301230123
+					-- M - - - M - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3
 					-- cool
 					waiting:=false;
-					WAIT_n<='1';
+					WAIT_n_1<='1';
 				elsif waiting and compteur1MHz=M1_OFFSET then
 					waiting:=false;
-					WAIT_n<='1';
+					WAIT_n_1<='1';
 				elsif waiting then
 					-- quand on pose un wait, cet idiot il garde M1_n=0 le tour suivant
 				elsif (M1_n='0') and not(was_M1) then -- and IO_ACK='0'
-					-- M--M---M---
-					-- 012301230123
-					-- M--MW---M---
-					-- 012301230123
+					-- M - - M - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3
+					-- M - - M W - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3
 					
-					-- M-M---M---
-					-- 012301230123
-					-- M-MWW---M---
-					-- 012301230123
+					-- M - M - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3
+					-- M - M W W - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3
 				
-					-- M----M---M---
-					-- 0123012301230123
-					-- M----MWWW---M---
-					-- 0123012301230123
+					-- M - - - - M - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 3
+					-- M - - - - M W W W - - - M - - -
+					-- 0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 3
 				
 					-- pas cool
-					WAIT_n<='0';
+					WAIT_n_1<='0';
 					waiting:=true;
 				elsif compteur1MHz=M1_OFFSET and not(waiting) then
 					-- Some instructions has more than 4 Tstate -- validated
 				end if;
+			--end if;
+			
+			if not(waiting) and conflit_WAIT then
+				WAIT_n_1<='0'; -- 1st T replayed
+				conflit_WAIT:=false;
+			elsif not(waiting) and pang_WAIT then
+				WAIT_n_1<='0'; -- 2nd T played
+				pang_WAIT:=false;
 			end if;
 			
 			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
-				if R2D2=x"CB" and prefix_DD_FD then
+				if R2D2=x"CB" and prefix_DD_FD_mem then
 					-- DD CB or FD CB
-					prefix_CB:=false;
-					prefix_ED:=false;
-					prefix_DD_FD:=false;
-					prefix_DD_FD_CB:=true;
+					prefix_CB_mem:=false;
+					prefix_ED_mem:=false;
+					prefix_DD_FD_mem:=false;
+					prefix_DD_FD_CB_mem:=true;
 				elsif R2D2=x"CB" then
-					prefix_CB:=true;
-					prefix_ED:=false;
-					prefix_DD_FD:=false;
-					prefix_DD_FD_CB:=false;
+					prefix_CB_mem:=true;
+					prefix_ED_mem:=false;
+					prefix_DD_FD_mem:=false;
+					prefix_DD_FD_CB_mem:=false;
 				elsif R2D2=x"ED" then
-					prefix_CB:=false;
-					prefix_ED:=true;
-					prefix_DD_FD:=false;
-					prefix_DD_FD_CB:=false;
+					prefix_CB_mem:=false;
+					prefix_ED_mem:=true;
+					prefix_DD_FD_mem:=false;
+					prefix_DD_FD_CB_mem:=false;
 				elsif R2D2=x"DD" then
-					prefix_CB:=false;
-					prefix_ED:=false;
-					prefix_DD_FD:=true;
-					prefix_DD_FD_CB:=false;
+					prefix_CB_mem:=false;
+					prefix_ED_mem:=false;
+					prefix_DD_FD_mem:=true;
+					prefix_DD_FD_CB_mem:=false;
 				elsif R2D2=x"FD" then
-					prefix_CB:=false;
-					prefix_ED:=false;
-					prefix_DD_FD:=true;
-					prefix_DD_FD_CB:=false;
+					prefix_CB_mem:=false;
+					prefix_ED_mem:=false;
+					prefix_DD_FD_mem:=true;
+					prefix_DD_FD_CB_mem:=false;
 				else
-					prefix_CB:=false;
-					prefix_ED:=false;
-					prefix_DD_FD:=false;
-					prefix_DD_FD_CB:=false;
+					prefix_CB_mem:=false;
+					prefix_ED_mem:=false;
+					prefix_DD_FD_mem:=false;
+					prefix_DD_FD_CB_mem:=false;
 				end if;
 			end if;
+			
+			prefix_CB<=prefix_CB_mem;
+			prefix_ED<=prefix_ED_mem;
+			prefix_DD_FD<=prefix_DD_FD_mem;
+			prefix_DD_FD_CB<=prefix_DD_FD_CB_mem;
 
 			
 			if M1_n='0' then --and IO_ACK='0'

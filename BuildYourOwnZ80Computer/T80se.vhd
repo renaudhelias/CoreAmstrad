@@ -1,21 +1,17 @@
 -- ****
 -- T80(b) core. In an effort to merge and maintain bug fixes ....
 --
---
 -- Ver 300 started tidyup
 -- MikeJ March 2005
 -- Latest version from www.fpgaarcade.com (original www.opencores.org)
 --
 -- ****
---
 -- Z80 compatible microprocessor core, synchronous top level with clock enable
 -- Different timing than the original z80
 -- Inputs needs to be synchronous and outputs may glitch
 --
 -- Version : 0240
---
 -- Copyright (c) 2001-2002 Daniel Wallner (jesus@opencores.org)
---
 -- All rights reserved
 --
 -- Redistribution and use in source and synthezised forms, with or without
@@ -54,17 +50,11 @@
 -- Limitations :
 --
 -- File history :
---
 --      0235 : First release
---
 --      0236 : Added T2Write generic
---
 --      0237 : Fixed T2Write with wait state
---
 --      0238 : Updated for T80 interface change
---
 --      0240 : Updated for T80 interface change
---
 --      0242 : Updated for T80 interface change
 --
 library IEEE;
@@ -147,7 +137,7 @@ begin
 			IORQ_n <= '1';
 			MREQ_n <= '1';
 			DI_Reg <= "00000000";
-		elsif CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
 			if CLKEN = '1' then
 				RD_n <= '1';
 				WR_n <= '1';

@@ -2155,22 +2155,28 @@ public class LatencesCPC {
 			System.out.print("plustest1(" + l + ") :" + plustest1.get(l).keySet().size());
 			System.out.println(", plustest2(" + l + ") :" + plustest2.get(l).keySet().size());
 		}
-		int nbMissing = 0;
+		int nbMissingBoth = 0;
 		int nbMissingLatence = 0;
 		int nbMissingPlustest = 0;
 		int nbCata = 0;
 		int nbArrange = 0;
 		int nbArrangeNotOne = 0;
-		int nbMissing2 = 0;
+		int nbArrange1T = 0;
+		int nbArrange2T = 0;
+		int nbArrange3T = 0;
+		int nbMissingBoth2 = 0;
 		int nbMissingLatence2 = 0;
 		int nbMissingPlustest2 = 0;
 		int nbCata2 = 0;
 		int nbArrange2 = 0;
 		int nbArrangeNotOne2 = 0;
+		int nbArrange1T2 = 0;
+		int nbArrange2T2 = 0;
+		int nbArrange3T2 = 0;
 		for (LATENCE_TYPE l : LATENCE_TYPE.values()) {
 			for (int i = 0; i < 256; i++) {
 				if (!latences1.get(l).containsKey(i) && !plustest1.get(l).containsKey(i)) {
-					nbMissing++;
+					nbMissingBoth++;
 				} else if (!latences1.get(l).containsKey(i)) {
 					nbMissingLatence++;
 				} else if (!plustest1.get(l).containsKey(i)) {
@@ -2185,12 +2191,23 @@ public class LatencesCPC {
 						int distance = p1 - (int) Math.ceil(((double) l1) / 4.0);
 						if (distance != 1) {
 							nbArrangeNotOne++;
+						} else {
+							int distance2 = 4*p1 - 3-l1;
+							if (distance2 == 1) {
+								nbArrange1T++;
+							} else if (distance2 == 2) {
+								nbArrange2T++;
+							}else if (distance2 == 3) {
+								nbArrange3T++;
+							} else {
+								throw new Error(""+distance2+" "+p1+" "+l1);
+							}
 						}
 					}
 				}
 
 				if (!latences2.get(l).containsKey(i) && !plustest2.get(l).containsKey(i)) {
-					nbMissing2++;
+					nbMissingBoth2++;
 				} else if (!latences2.get(l).containsKey(i)) {
 					nbMissingLatence2++;
 				} else if (!plustest2.get(l).containsKey(i)) {
@@ -2205,24 +2222,41 @@ public class LatencesCPC {
 						int distance = p2 - (int) Math.ceil(((double) l2) / 4.0);
 						if (distance != 1) {
 							nbArrangeNotOne2++;
+						} else {
+							int distance2 = 4*p2 - 3 - l2;
+							if (distance2 == 1) {
+								nbArrange1T2++;
+							} else if (distance2 == 2) {
+								nbArrange2T2++;
+							}else if (distance2 == 3) {
+								nbArrange3T2++;
+							} else {
+								throw new Error();
+							}
 						}
 					}
 				}
 			}
 		}
 		System.out.println("CHECK RESULTS :");
-		System.out.println("nbMissing=" + nbMissing);
+		System.out.println("nbMissingBoth=" + nbMissingBoth);
 		System.out.println("nbMissingLatence=" + nbMissingLatence);
 		System.out.println("nbMissingPlustest=" + nbMissingPlustest);
 		System.out.println("nbCata=" + nbCata);
 		System.out.println("nbArrange=" + nbArrange);
 		System.out.println("nbArrangeNotOne=" + nbArrangeNotOne);
-		System.out.println("nbMissing2=" + nbMissing2);
+		System.out.println("nbArrange1T="+nbArrange1T);
+		System.out.println("nbArrange2T="+nbArrange2T);
+		System.out.println("nbArrange3T="+nbArrange3T);
+		System.out.println("nbMissingBoth2=" + nbMissingBoth2);
 		System.out.println("nbMissingLatence2=" + nbMissingLatence2);
 		System.out.println("nbMissingPlustest2=" + nbMissingPlustest2);
 		System.out.println("nbCata2=" + nbCata2);
 		System.out.println("nbArrange2=" + nbArrange2);
 		System.out.println("nbArrangeNotOne2=" + nbArrangeNotOne2);
+		System.out.println("nbArrange1T2="+nbArrange1T2);
+		System.out.println("nbArrange2T2="+nbArrange2T2);
+		System.out.println("nbArrange3T2="+nbArrange3T2);
 	}
 
 	private List<Integer> binary2Int(String binary) {

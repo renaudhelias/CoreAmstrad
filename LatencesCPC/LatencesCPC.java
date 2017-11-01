@@ -2210,6 +2210,10 @@ public class LatencesCPC {
 								throw new Error(""+distance2+" "+p1+" "+l1);
 							}
 						}
+					} else {
+						if (l==LATENCE_TYPE.FDCB || l==LATENCE_TYPE.DDCB) {
+							throw new Error();
+						}
 					}
 				}
 
@@ -2241,6 +2245,10 @@ public class LatencesCPC {
 							} else {
 								throw new Error();
 							}
+						}
+					} else {
+						if (l==LATENCE_TYPE.FDCB || l==LATENCE_TYPE.DDCB) {
+							throw new Error();
 						}
 					}
 				}

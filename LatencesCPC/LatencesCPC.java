@@ -2145,6 +2145,13 @@ public class LatencesCPC {
 			plustest2.put(l, new HashMap<Integer, Integer>());
 		}
 	}
+	
+	Map<LATENCE_TYPE,List<Integer>> resultat = new HashMap<LATENCE_TYPE,List<Integer>>();
+	{
+		for (LATENCE_TYPE l : LATENCE_TYPE.values()) {
+			resultat.put(l, new ArrayList<Integer>());
+		}
+	}
 
 	private void brain() {
 		for (LATENCE_TYPE l : LATENCE_TYPE.values()) {
@@ -2229,6 +2236,7 @@ public class LatencesCPC {
 					if (p2 * 4 < l2) {
 						nbCata2++;
 					} else if (p2 > (int) Math.ceil(((double) l2) / 4.0)) {
+						resultat.get(l).add(i);
 						nbArrange2++;
 						arrange2=true;
 						int distance = p2 - (int) Math.ceil(((double) l2) / 4.0);
@@ -2295,6 +2303,33 @@ public class LatencesCPC {
 		System.out.println("nbArrangeFloorArrange2T="+nbArrangeFloorArrange2T);
 		System.out.println("nbArrangeCeil="+nbArrangeCeil);
 		System.out.println("nbArrangeCeilArrange2T="+nbArrangeCeilArrange2T);
+		
+		pouitch();
+	}
+
+	private void pouitch() {
+		
+		for (LATENCE_TYPE l : LATENCE_TYPE.values()) {
+			if (resultat.get(l).size()==256) {
+				if (l==LATENCE_TYPE._) {
+					System.out.println("constant latences:LATENCE_ARRAY :=(");				
+				} else {
+					System.out.println("constant latences_"+l+":LATENCE_ARRAY :=(");
+				}
+				System.out.println("others=>'1');");
+				
+			} else {
+				if (l==LATENCE_TYPE._) {
+					System.out.println("constant latences:LATENCE_ARRAY :=(");				
+				} else {
+					System.out.println("constant latences_"+l+":LATENCE_ARRAY :=(");
+				}
+				for (int i : resultat.get(l)) {
+					System.out.println("    " + i + " => '1', -- \""+Integer.toHexString(i)+"\"");
+				}
+				System.out.println("others=>'0');");
+			}
+		}
 	}
 
 	private List<Integer> binary2Int(String binary) {

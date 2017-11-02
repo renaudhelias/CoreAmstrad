@@ -16,8 +16,8 @@ public class LatencesCPC {
 		// on ne peux pas se fier au testbench
 		// un tableau de temps, peut avoir deux variantes
 		// deux operands, c'est le second MCycle en fait
-		// Si prefix, alors il y a un M1 ensuite => à checker le moment de
-		// lecture d'un prefix... il est supposé en dehors de l'instruction,
+		// Si prefix, alors il y a un M1 ensuite => ï¿½ checker le moment de
+		// lecture d'un prefix... il est supposï¿½ en dehors de l'instruction,
 		// donc a son propre M1
 		// latence normales
 		// latence("00000000", 4, 4, "NOP");
@@ -321,6 +321,30 @@ public class LatencesCPC {
 		latenceFD("11101001", 4 + 4, null, "JP (IY)");
 		latence("00010000", 5 + 3 + 5, 5 + 3, "DJNZ, e");
 		// Call and Return Group (page 294)
+		latence("11001101", 4 + 3 + 4 + 3 + 3, null, "CALL nn");
+		latence("11XXX100", 4 + 3 + 4 + 3 + 3, 4 + 3 + 3, "CALL cc, nn");
+		latence("11001001", 4 + 3 + 3, null, "RET");
+		latence("11XXX000", 5 + 3 + 3, 5, "RET cc");
+		latenceED("01001101", 4 + 4 + 3 + 3, null, "RETI");
+		latenceED("01000101", 4 + 4 + 3 + 3, null, "RETN");
+		latence("11XXX111", 5 + 3 + 3, null, "RST p");
+		// Input and Output Group (page 308)
+		latence("11011011", 4 + 3 + 4, null, "IN A,(n)");
+		latenceED("01XXX000", 4 + 4 + 4, null, "IN r (C)");
+		latenceED("10100010", 4 + 5 + 3 + 4, null, "INI");
+		latenceED("10110010", 4 + 5 + 3 + 4 + 5, 4 + 5 + 3 + 4, "INIR");
+		latenceED("10101010", 4 + 5 + 3 + 4, null, "IND");
+		latenceED("10111010", 4 + 5 + 3 + 4 + 5, 4 + 5 + 3 + 4, "INDR");
+		latence("11010011", 4 + 3 + 4, null, "OUT (n), A");
+		for (String r1 : ABCDEHL) {
+			latenceED("01"+r1+"001", 4 + 4 + 4, null, "OUT (C), r");
+		}
+		latenceED("10100011", 4 + 5 + 3 + 4, null, "OUTI");
+		latenceED("10110011", 4 + 5 + 3 + 4 + 5, 4 + 5 + 3 + 4, "OTIR");
+		latenceED("10101011", 4 + 5 + 3 + 4, null, "OUTD");
+		latenceED("10111011", 4 + 5 + 3 + 4 + 5, 4 + 5 + 3 + 4, "OTDR");
+		// Customer Support (page 317)
+		
 
 		// selon plustest.dsk
 		plustest("00", 1, null);
@@ -2201,6 +2225,9 @@ public class LatencesCPC {
 						nbCata++;
 					} else if (p1 > (int) Math.ceil(((double) l1) / 4.0)) {
 						nbArrange++;
+						if (!resultat.get(l).contains(i)) {
+							resultat.get(l).add(i);
+						}
 						arrange1=true;
 						int distance = p1 - (int) Math.ceil(((double) l1) / 4.0);
 						if (distance != 1) {
@@ -2236,7 +2263,9 @@ public class LatencesCPC {
 					if (p2 * 4 < l2) {
 						nbCata2++;
 					} else if (p2 > (int) Math.ceil(((double) l2) / 4.0)) {
-						resultat.get(l).add(i);
+						if (!resultat.get(l).contains(i)) {
+							resultat.get(l).add(i);
+						}
 						nbArrange2++;
 						arrange2=true;
 						int distance = p2 - (int) Math.ceil(((double) l2) / 4.0);

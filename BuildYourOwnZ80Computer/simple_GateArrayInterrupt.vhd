@@ -2701,12 +2701,12 @@ end if;
 		variable InterruptSyncCount:integer range 0 to 2:=2;
 		variable etat_hsync_old : STD_LOGIC:=DO_NOTHING;
 		variable etat_vsync_old : STD_LOGIC:=DO_NOTHING;
-		variable IO_ACK_old : STD_LOGIC:='0';
+		--variable IO_ACK_old : STD_LOGIC:='0';
 	begin
 		if reset='1' then
 			InterruptLineCount:=(others=>'0');
 			InterruptSyncCount:=2;
-			IO_ACK_old:='0';
+			--IO_ACK_old:='0';
 			etat_hsync_old:=DO_NOTHING;
 			etat_vsync_old:=DO_NOTHING;
 			int<='0';
@@ -2720,8 +2720,8 @@ end if;
 		--it's Z80 time !
 		elsif rising_edge(nCLK4_1) then
 
-
-		if IO_ACK='1' and IO_ACK_old='0' then
+		-- no IO_ACK_old => CPCTEST ok
+		if IO_ACK='1' then --and IO_ACK_old='0' then
 --the Gate Array will reset bit5 of the counter
 --Once the Z80 acknowledges the interrupt, the GA clears bit 5 of the scan line counter.
 -- When the interrupt is acknowledged, this is sensed by the Gate-Array. The top bit (bit 5), of the counter is set to "0" and the interrupt request is cleared. This prevents the next interrupt from occuring closer than 32 HSYNCs time. http://cpctech.cpc-live.com/docs/ints.html
@@ -2732,7 +2732,7 @@ end if;
 -- the interrupt request remains active until the Z80 acknowledges it. http://cpctech.cpc-live.com/docs/ints.html
 			int<='0'; -- following JavaCPC 2015
 		end if;
-		IO_ACK_old:=IO_ACK;
+		--IO_ACK_old:=IO_ACK;
 		
 		
 		-- InterruptLineCount begin

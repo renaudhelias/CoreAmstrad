@@ -1,0 +1,6 @@
+A sd_card.v patched with CRC16 write, in order to patch others cores using sdcard write access.
+It is in case that some cores doesn't run ok (doesn't has write access on sdcard) with amstrad_150729_r003.10.crc16.firmware.upg
+
+localparam CRC16_WRITE = 1'b1;
+
+Tested only on CoreAmstrad.

@@ -187,7 +187,7 @@ begin
 	sdram_v_clk<=c2;
 	sdram_v_clkref<=c0; -- esclave Z80, executant de bootloader
 	--sdram_v_init<=not(pll_locked); -- si 1 alors reset sdram.
-	CLK_PWM<=c1; --CLK25MHz --c0; --nCLK4MHz 
+	CLK_PWM<=c4; --CLK32MHz c1; --CLK25MHz --c0; --nCLK4MHz 
 	
 -- c0 27MHz 89/600=4.005 Z80
 -- c1 27MHz 89/96=25,03125MHz VGA

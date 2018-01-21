@@ -685,26 +685,26 @@ begin
 		
 		
 		
-		if horizontal_counter>=HTot then
+		if horizontal_counter>=HTot-1 then
 			horizontal_counter:=0;
 		else
 			horizontal_counter:=horizontal_counter+1;
 		end if;
 		if horizontal_counter=0 then
-			if vertical_counter>=VTot then
+			if vertical_counter>=VTot-1 then
 				vertical_counter:=0;
 			else
 				vertical_counter:=vertical_counter+1;
 			end if;
 		end if;
 		
-		if palette_horizontal_counter>=HTot then
+		if palette_horizontal_counter>=HTot-1 then
 			palette_horizontal_counter:=0;
 		else
 			palette_horizontal_counter:=palette_horizontal_counter+1;
 		end if;
 		if palette_horizontal_counter=0 then
-			if palette_vertical_counter>=VTot then
+			if palette_vertical_counter>=VTot-1 then
 				palette_vertical_counter:=0;
 				palette_A_mem:=(others=>'0');
 			else

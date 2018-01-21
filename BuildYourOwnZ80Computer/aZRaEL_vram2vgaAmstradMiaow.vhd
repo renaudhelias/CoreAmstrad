@@ -216,26 +216,12 @@ entity aZRaEL_vram2vgaAmstradMiaow is
 
 --   --ModeLine "800x600@72" 50.00 800 856 976 1040 600 637 643 666 +HSync +VSync
 
---              label_modeline  :string:="800x600@72";--(ignored  by  svgalib) mainly there to be compatible with XF86Config.   I  use  the  format  "Width  x   Height   @   Vert.Refresh", but that's just personal taste...
---              pxcl:string:="50.00"; -- the pixel clock in MHz
---              HDsp:integer:=800; -- size of the visible area (horizontal/vertical)
---              HSS:integer:=856; -- Sync start (horizontal/vertical)
-						-- 916 entre HSS et HSE +8 = 924
---              HSE:integer:=976; -- Sync end (horizontal/vertical)
---              HTot:integer:=1040; -- Total width/height (end of back porch)
---              VDsp:integer:=600; -- size of the visible area (horizontal/vertical)
---              VSS:integer:=637; -- Sync start (horizontal/vertical)
---              VSE:integer:=643; -- Sync end (horizontal/vertical)
---              VTot:integer:=666; -- Total width/height (end of back porch)
---				  nvsync:std_logic:='0';--flags  +vsync -vsync
---				  nhsync:std_logic:='0'; --flags  +hsync -hsync
-				  
---				 label_modeline  :string:="800x600@71.18";
+--				 label_modeline  :string:="800x600@72";
               pxcl:string:="50.00"; -- the pixel clock in MHz
               HDsp:integer:=800; -- size of the visible area (horizontal/vertical)
-				  HSS:integer:=857; -- Sync start (horizontal/vertical)
-				  HSE:integer:=937; -- Sync end (horizontal/vertical)
-              HTot:integer:=1056; -- Total width/height (end of back porch)
+				  HSS:integer:=856; -- Sync start (horizontal/vertical)
+				  HSE:integer:=976; -- Sync end (horizontal/vertical)
+              HTot:integer:=1040; -- Total width/height (end of back porch)
               VDsp:integer:=600; -- size of the visible area (horizontal/vertical)
               VSS:integer:=637; -- Sync start (horizontal/vertical)
               VSE:integer:=643; -- Sync end (horizontal/vertical)
@@ -332,13 +318,11 @@ aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 
 	constant PALETTE_H_OFFSET:integer:=32-1;--16+1  +1;
 	constant PALETTE_V_OFFSET:integer:=VOFFSET_PALETTE; --((600-480)/2)/2;
-	constant HMax:integer:=HTot-1;
-	constant VMax:integer:=VTot-1;
 	
-	variable horizontal_counter : integer range 0 to 1024-1 :=0;
+	variable horizontal_counter : integer range 0 to 2048-1 :=0;
 	variable vertical_counter : integer range 0 to 1024-1 :=0;
 	
-	variable palette_horizontal_counter : integer range 0 to 1024-1:=PALETTE_H_OFFSET;
+	variable palette_horizontal_counter : integer range 0 to 2048-1:=PALETTE_H_OFFSET;
 	variable palette_vertical_counter : integer range 0 to 1024-1:=PALETTE_V_OFFSET;
 	constant DO_NADA:integer range 0 to 4:=0;
 	constant DO_MODE:integer range 0 to 4:=1;
@@ -364,7 +348,7 @@ aZRaEL_vram2vgaAmstrad_process : process(CLK_25MHz) is
 	variable cursor_pixel : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
 	variable cursor_pixel_retard : integer range 0 to NB_PIXEL_PER_OCTET_MAX-1;
 	variable pair_line_retard : std_logic;
-	variable v:integer range 0 to 512-1;
+	variable v:integer range 0 to 1024-1;
 	variable h:integer range 0 to 1024-1;
 	variable new_h:integer range 0 to 1024/CHAR_WIDTH-1;
 	variable NB_PIXEL_PER_OCTET:integer range NB_PIXEL_PER_OCTET_MIN to NB_PIXEL_PER_OCTET_MAX;
@@ -701,26 +685,26 @@ begin
 		
 		
 		
-		if horizontal_counter>=HMax then
+		if horizontal_counter>=HTot then
 			horizontal_counter:=0;
 		else
 			horizontal_counter:=horizontal_counter+1;
 		end if;
 		if horizontal_counter=0 then
-			if vertical_counter>=VMax then
+			if vertical_counter>=VTot then
 				vertical_counter:=0;
 			else
 				vertical_counter:=vertical_counter+1;
 			end if;
 		end if;
 		
-		if palette_horizontal_counter>=HMax then
+		if palette_horizontal_counter>=HTot then
 			palette_horizontal_counter:=0;
 		else
 			palette_horizontal_counter:=palette_horizontal_counter+1;
 		end if;
 		if palette_horizontal_counter=0 then
-			if palette_vertical_counter>=VMax then
+			if palette_vertical_counter>=VTot then
 				palette_vertical_counter:=0;
 				palette_A_mem:=(others=>'0');
 			else

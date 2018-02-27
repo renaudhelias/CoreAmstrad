@@ -138,7 +138,7 @@ entity simple_GateArrayInterrupt is
 			  reset:in  STD_LOGIC;
 			  
 			  crtc_type: in std_logic;
-			  --ga_shunt: in std_logic;
+			  ga_shunt: in std_logic;
 			  
 			  RED_out : out  STD_LOGIC_VECTOR (5 downto 0);
            GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
@@ -261,6 +261,8 @@ architecture Behavioral of simple_GateArrayInterrupt is
 	signal pen:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
 	signal border:integer range 0 to 31;
 	
+	signal newMode:STD_LOGIC_VECTOR (1 downto 0);
+	
 	-- action aZRaEL : disp !
 	constant DO_NOTHING_OUT : integer range 0 to 2:=0;
 	constant DO_READ : integer range 0 to 2:=1;
@@ -278,27 +280,37 @@ constant latences:LATENCE_ARRAY :=(
     16 => '1', -- "10"
     34 => '1', -- "22"
     42 => '1', -- "2a"
-    192 => '1', -- "c0"
-    197 => '1', -- "c5"
-    199 => '1', -- "c7"
-    200 => '1', -- "c8"
-    207 => '1', -- "cf"
-    208 => '1', -- "d0"
-    213 => '1', -- "d5"
-    215 => '1', -- "d7"
-    216 => '1', -- "d8"
-    223 => '1', -- "df"
-    224 => '1', -- "e0"
-    227 => '1', -- "e3"
-    229 => '1', -- "e5"
-    231 => '1', -- "e7"
-    232 => '1', -- "e8"
-    239 => '1', -- "ef"
-    240 => '1', -- "f0"
-    245 => '1', -- "f5"
-    247 => '1', -- "f7"
-    248 => '1', -- "f8"
-    255 => '1', -- "ff"
+		50 => '1', --"32"
+		58 => '1', --"3a"
+    192 => '1', -- "c0" -- ?
+		196 => '1', -- "c4"
+    197 => '1', -- "c5" -- ?
+    199 => '1', -- "c7" -- ?
+    200 => '1', -- "c8" -- ?
+		204 => '1', -- "cc"
+		205 => '1', -- "cd"
+    207 => '1', -- "cf" -- ?
+    208 => '1', -- "d0" -- ?
+		212 => '1', -- "d4"
+    213 => '1', -- "d5" -- ?
+    215 => '1', -- "d7" -- ?
+    216 => '1', -- "d8" -- ?
+		220 => '1', -- "dc"
+    223 => '1', -- "df" -- ?
+    224 => '1', -- "e0" -- ?
+    227 => '1', -- "e3" -- ?
+		228 => '1', -- "e4"
+    229 => '1', -- "e5" -- ?
+    231 => '1', -- "e7" -- ?
+    232 => '1', -- "e8" -- ?
+    239 => '1', -- "ef" -- ?
+    240 => '1', -- "f0" -- ?
+		244 => '1', -- "f4"
+    245 => '1', -- "f5" -- ?
+    247 => '1', -- "f7" -- ?
+    248 => '1', -- "f8" -- ?
+		252 => '1', -- "fc"
+    255 => '1', -- "ff" -- ?
     -- "cb" NOT TESTED
     -- "dd" NOT TESTED
     -- "ed" NOT TESTED
@@ -315,11 +327,42 @@ constant latences_CB:LATENCE_ARRAY :=(
     55 => '0', -- "37" UNDOCUMENTED
 others=>'0');
 constant latences_DD:LATENCE_ARRAY :=(
+16 => '1', -- "10"
     34 => '1', -- "22"
     42 => '1', -- "2a"
-    54 => '1', -- "36"
-    227 => '1', -- "e3"
-    229 => '1', -- "e5"
+50 => '1', -- "32"
+    54 => '1', -- "36" -- ?
+58 => '1', -- "3a"
+192 => '1', -- "c0" -- ?
+196 => '1', -- "c4"
+197 => '1', -- "c5"
+199 => '1', -- "c7"
+200 => '1', -- "c8"
+204 => '1', -- "cc"
+205 => '1', -- "cd"
+207 => '1', -- "cf"
+208 => '1', -- "d0"
+212 => '1', -- "d4"
+213 => '1', -- "d5"
+215 => '1', -- "d7"
+216 => '1', -- "d8"
+220 => '1', -- "dc"
+223 => '1', -- "df"
+224 => '1', -- "e0"
+    227 => '1', -- "e3" --?
+228 => '1', -- "e4"
+    229 => '1', -- "e5" -- ?
+231 => '1', -- "e7"
+232 => '1', -- "e8"
+236 => '1', -- "ec"
+239 => '1', -- "ef"
+240 => '1', -- "f0"
+244 => '1', -- "f4"
+245 => '1', -- "f5"
+247 => '1', -- "f7"
+248 => '1', -- "f8"
+252 => '1', -- "fc"
+255 => '1', -- "ff"
     0 => '0', -- "00" UNDOCUMENTED
     1 => '0', -- "01" UNDOCUMENTED
     2 => '0', -- "02" UNDOCUMENTED
@@ -335,7 +378,6 @@ constant latences_DD:LATENCE_ARRAY :=(
     13 => '0', -- "0d" UNDOCUMENTED
     14 => '0', -- "0e" UNDOCUMENTED
     15 => '0', -- "0f" UNDOCUMENTED
-    16 => '0', -- "10" UNDOCUMENTED
     17 => '0', -- "11" UNDOCUMENTED
     18 => '0', -- "12" UNDOCUMENTED
     19 => '0', -- "13" UNDOCUMENTED
@@ -362,11 +404,9 @@ constant latences_DD:LATENCE_ARRAY :=(
     47 => '0', -- "2f" UNDOCUMENTED
     48 => '0', -- "30" UNDOCUMENTED
     49 => '0', -- "31" UNDOCUMENTED
-    50 => '0', -- "32" UNDOCUMENTED
     51 => '0', -- "33" UNDOCUMENTED
     55 => '0', -- "37" UNDOCUMENTED
     56 => '0', -- "38" UNDOCUMENTED
-    58 => '0', -- "3a" UNDOCUMENTED
     59 => '0', -- "3b" UNDOCUMENTED
     60 => '0', -- "3c" UNDOCUMENTED
     61 => '0', -- "3d" UNDOCUMENTED
@@ -478,61 +518,34 @@ constant latences_DD:LATENCE_ARRAY :=(
     188 => '0', -- "bc" UNDOCUMENTED
     189 => '0', -- "bd" UNDOCUMENTED
     191 => '0', -- "bf" UNDOCUMENTED
-    192 => '0', -- "c0" UNDOCUMENTED
     193 => '0', -- "c1" UNDOCUMENTED
     194 => '0', -- "c2" UNDOCUMENTED
     195 => '0', -- "c3" UNDOCUMENTED
-    196 => '0', -- "c4" UNDOCUMENTED
-    197 => '0', -- "c5" UNDOCUMENTED
     198 => '0', -- "c6" UNDOCUMENTED
-    199 => '0', -- "c7" UNDOCUMENTED
-    200 => '0', -- "c8" UNDOCUMENTED
     201 => '0', -- "c9" UNDOCUMENTED
     202 => '0', -- "ca" UNDOCUMENTED
-    204 => '0', -- "cc" UNDOCUMENTED
-    205 => '0', -- "cd" UNDOCUMENTED
     206 => '0', -- "ce" UNDOCUMENTED
-    207 => '0', -- "cf" UNDOCUMENTED
-    208 => '0', -- "d0" UNDOCUMENTED
     209 => '0', -- "d1" UNDOCUMENTED
     210 => '0', -- "d2" UNDOCUMENTED
     211 => '0', -- "d3" UNDOCUMENTED
-    212 => '0', -- "d4" UNDOCUMENTED
-    213 => '0', -- "d5" UNDOCUMENTED
     214 => '0', -- "d6" UNDOCUMENTED
-    215 => '0', -- "d7" UNDOCUMENTED
-    216 => '0', -- "d8" UNDOCUMENTED
     217 => '0', -- "d9" UNDOCUMENTED
     218 => '0', -- "da" UNDOCUMENTED
     219 => '0', -- "db" UNDOCUMENTED
-    220 => '0', -- "dc" UNDOCUMENTED
     222 => '0', -- "de" UNDOCUMENTED
-    223 => '0', -- "df" UNDOCUMENTED
-    224 => '0', -- "e0" UNDOCUMENTED
     226 => '0', -- "e2" UNDOCUMENTED
-    228 => '0', -- "e4" UNDOCUMENTED
     230 => '0', -- "e6" UNDOCUMENTED
-    231 => '0', -- "e7" UNDOCUMENTED
-    232 => '0', -- "e8" UNDOCUMENTED
+    233 => '0', -- "e9" UNDOCUMENTED
     234 => '0', -- "ea" UNDOCUMENTED
     235 => '0', -- "eb" UNDOCUMENTED
-    236 => '0', -- "ec" UNDOCUMENTED
     238 => '0', -- "ee" UNDOCUMENTED
-    239 => '0', -- "ef" UNDOCUMENTED
-    240 => '0', -- "f0" UNDOCUMENTED
     241 => '0', -- "f1" UNDOCUMENTED
     242 => '0', -- "f2" UNDOCUMENTED
     243 => '0', -- "f3" UNDOCUMENTED
-    244 => '0', -- "f4" UNDOCUMENTED
-    245 => '0', -- "f5" UNDOCUMENTED
     246 => '0', -- "f6" UNDOCUMENTED
-    247 => '0', -- "f7" UNDOCUMENTED
-    248 => '0', -- "f8" UNDOCUMENTED
     250 => '0', -- "fa" UNDOCUMENTED
     251 => '0', -- "fb" UNDOCUMENTED
-    252 => '0', -- "fc" UNDOCUMENTED
     254 => '0', -- "fe" UNDOCUMENTED
-    255 => '0', -- "ff" UNDOCUMENTED
     -- "cb" NOT TESTED
     -- "dd" NOT TESTED
     -- "ed" NOT TESTED
@@ -542,15 +555,19 @@ constant latences_ED:LATENCE_ARRAY :=(
     64 => '1', -- "40"
     65 => '1', -- "41"
     67 => '1', -- "43"
+71 => '1', -- "47"
     72 => '1', -- "48"
     73 => '1', -- "49"
     75 => '1', -- "4b"
+79 => '1', -- "4f"
     80 => '1', -- "50"
     81 => '1', -- "51"
     83 => '1', -- "53"
+87 => '1', -- "57"
     88 => '1', -- "58"
     89 => '1', -- "59"
     91 => '1', -- "5b"
+95 => '1', -- "5f"
     96 => '1', -- "60"
     97 => '1', -- "61"
     99 => '1', -- "63"
@@ -558,6 +575,7 @@ constant latences_ED:LATENCE_ARRAY :=(
     105 => '1', -- "69"
     107 => '1', -- "6b"
     112 => '1', -- "70"
+113 => '1', -- "71"
     115 => '1', -- "73"
     120 => '1', -- "78"
     121 => '1', -- "79"
@@ -569,9 +587,11 @@ constant latences_ED:LATENCE_ARRAY :=(
     170 => '1', -- "aa"
     171 => '1', -- "ab"
     176 => '1', -- "b0"
+177 => '1', -- "b1"
     178 => '1', -- "b2"
     179 => '1', -- "b3"
     184 => '1', -- "b8"
+185 => '1', -- "b9"
     186 => '1', -- "ba"
     187 => '1', -- "bb"
     0 => '0', -- "00" UNDOCUMENTED
@@ -650,7 +670,6 @@ constant latences_ED:LATENCE_ARRAY :=(
     108 => '0', -- "6c" UNDOCUMENTED
     109 => '0', -- "6d" UNDOCUMENTED
     110 => '0', -- "6e" UNDOCUMENTED
-    113 => '0', -- "71" UNDOCUMENTED
     116 => '0', -- "74" UNDOCUMENTED
     117 => '0', -- "75" UNDOCUMENTED
     118 => '0', -- "76" UNDOCUMENTED
@@ -773,11 +792,42 @@ constant latences_ED:LATENCE_ARRAY :=(
     255 => '0', -- "ff" UNDOCUMENTED
 others=>'0');
 constant latences_FD:LATENCE_ARRAY :=(
+16 => '1', -- "10"
     34 => '1', -- "22"
     42 => '1', -- "2a"
-    54 => '1', -- "36"
-    227 => '1', -- "e3"
-    229 => '1', -- "e5"
+50 => '1', -- "32"
+    54 => '1', -- "36" -- ?
+58 => '1', -- "3a"
+192 => '1', -- "c0"
+196 => '1', -- "c4"
+197 => '1', -- "c5"
+199 => '1', -- "c7"
+200 => '1', -- "c8"
+204 => '1', -- "cc"
+205 => '1', -- "cd"
+207 => '1', -- "cf"
+208 => '1', -- "d0"
+212 => '1', -- "d4"
+213 => '1', -- "d5"
+215 => '1', -- "d7"
+216 => '1', -- "d8"
+220 => '1', -- "dc"
+223 => '1', -- "df"
+224 => '1', -- "e0"
+    227 => '1', -- "e3" -- ?
+228 => '1', -- "e4"
+    229 => '1', -- "e5" -- ?
+231 => '1', -- "e7"
+232 => '1', -- "e8"
+236 => '1', -- "ec"
+239 => '1', -- "ef"
+240 => '1', -- "f0"
+244 => '1', -- "f4"
+245 => '1', -- "f5"
+247 => '1', -- "f7"
+248 => '1', -- "f8"
+252 => '1', -- "fc"
+255 => '1', -- "ff"
     0 => '0', -- "00" UNDOCUMENTED
     1 => '0', -- "01" UNDOCUMENTED
     2 => '0', -- "02" UNDOCUMENTED
@@ -793,7 +843,6 @@ constant latences_FD:LATENCE_ARRAY :=(
     13 => '0', -- "0d" UNDOCUMENTED
     14 => '0', -- "0e" UNDOCUMENTED
     15 => '0', -- "0f" UNDOCUMENTED
-    16 => '0', -- "10" UNDOCUMENTED
     17 => '0', -- "11" UNDOCUMENTED
     18 => '0', -- "12" UNDOCUMENTED
     19 => '0', -- "13" UNDOCUMENTED
@@ -820,11 +869,9 @@ constant latences_FD:LATENCE_ARRAY :=(
     47 => '0', -- "2f" UNDOCUMENTED
     48 => '0', -- "30" UNDOCUMENTED
     49 => '0', -- "31" UNDOCUMENTED
-    50 => '0', -- "32" UNDOCUMENTED
     51 => '0', -- "33" UNDOCUMENTED
     55 => '0', -- "37" UNDOCUMENTED
     56 => '0', -- "38" UNDOCUMENTED
-    58 => '0', -- "3a" UNDOCUMENTED
     59 => '0', -- "3b" UNDOCUMENTED
     60 => '0', -- "3c" UNDOCUMENTED
     61 => '0', -- "3d" UNDOCUMENTED
@@ -936,61 +983,33 @@ constant latences_FD:LATENCE_ARRAY :=(
     188 => '0', -- "bc" UNDOCUMENTED
     189 => '0', -- "bd" UNDOCUMENTED
     191 => '0', -- "bf" UNDOCUMENTED
-    192 => '0', -- "c0" UNDOCUMENTED
     193 => '0', -- "c1" UNDOCUMENTED
     194 => '0', -- "c2" UNDOCUMENTED
     195 => '0', -- "c3" UNDOCUMENTED
-    196 => '0', -- "c4" UNDOCUMENTED
-    197 => '0', -- "c5" UNDOCUMENTED
     198 => '0', -- "c6" UNDOCUMENTED
-    199 => '0', -- "c7" UNDOCUMENTED
-    200 => '0', -- "c8" UNDOCUMENTED
     201 => '0', -- "c9" UNDOCUMENTED
     202 => '0', -- "ca" UNDOCUMENTED
-    204 => '0', -- "cc" UNDOCUMENTED
-    205 => '0', -- "cd" UNDOCUMENTED
     206 => '0', -- "ce" UNDOCUMENTED
-    207 => '0', -- "cf" UNDOCUMENTED
-    208 => '0', -- "d0" UNDOCUMENTED
     209 => '0', -- "d1" UNDOCUMENTED
     210 => '0', -- "d2" UNDOCUMENTED
     211 => '0', -- "d3" UNDOCUMENTED
-    212 => '0', -- "d4" UNDOCUMENTED
-    213 => '0', -- "d5" UNDOCUMENTED
     214 => '0', -- "d6" UNDOCUMENTED
-    215 => '0', -- "d7" UNDOCUMENTED
-    216 => '0', -- "d8" UNDOCUMENTED
     217 => '0', -- "d9" UNDOCUMENTED
     218 => '0', -- "da" UNDOCUMENTED
     219 => '0', -- "db" UNDOCUMENTED
-    220 => '0', -- "dc" UNDOCUMENTED
     222 => '0', -- "de" UNDOCUMENTED
-    223 => '0', -- "df" UNDOCUMENTED
-    224 => '0', -- "e0" UNDOCUMENTED
     226 => '0', -- "e2" UNDOCUMENTED
-    228 => '0', -- "e4" UNDOCUMENTED
     230 => '0', -- "e6" UNDOCUMENTED
-    231 => '0', -- "e7" UNDOCUMENTED
-    232 => '0', -- "e8" UNDOCUMENTED
     234 => '0', -- "ea" UNDOCUMENTED
     235 => '0', -- "eb" UNDOCUMENTED
-    236 => '0', -- "ec" UNDOCUMENTED
     238 => '0', -- "ee" UNDOCUMENTED
-    239 => '0', -- "ef" UNDOCUMENTED
-    240 => '0', -- "f0" UNDOCUMENTED
     241 => '0', -- "f1" UNDOCUMENTED
     242 => '0', -- "f2" UNDOCUMENTED
     243 => '0', -- "f3" UNDOCUMENTED
-    244 => '0', -- "f4" UNDOCUMENTED
-    245 => '0', -- "f5" UNDOCUMENTED
     246 => '0', -- "f6" UNDOCUMENTED
-    247 => '0', -- "f7" UNDOCUMENTED
-    248 => '0', -- "f8" UNDOCUMENTED
     250 => '0', -- "fa" UNDOCUMENTED
     251 => '0', -- "fb" UNDOCUMENTED
-    252 => '0', -- "fc" UNDOCUMENTED
     254 => '0', -- "fe" UNDOCUMENTED
-    255 => '0', -- "ff" UNDOCUMENTED
     -- "cb" NOT TESTED
     -- "dd" NOT TESTED
     -- "ed" NOT TESTED
@@ -1591,7 +1610,7 @@ elsif rising_edge(nCLK4_1) then
 			--if not(was_2A) and R2D2=x"2A" then
 			--if (M1_n='0' or was_M1) and MEM_RD='1' and not(was_MEMRD) and R2D2=x"2A" then
 			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
-				if WAIT_n_D = '1' then
+				if WAIT_n_D = '1' and ga_shunt='1' then
 					pang_WAIT:=true;
 				end if;
 				WAIT_n_0_ack<=true;
@@ -1665,7 +1684,12 @@ elsif rising_edge(nCLK4_1) then
 			end if;
 			
 			if M1_n='0' and MEM_RD='1' and not(was_MEMRD) then
-				if R2D2=x"CB" and prefix_DD_FD_mem then
+				if ga_shunt='0' then
+					prefix_CB_mem:=false;
+					prefix_ED_mem:=false;
+					prefix_DD_FD_mem:=false;
+					prefix_DD_FD_CB_mem:=false;
+				elsif R2D2=x"CB" and prefix_DD_FD_mem then
 					-- DD CB or FD CB
 					prefix_CB_mem:=false;
 					prefix_ED_mem:=false;
@@ -2620,7 +2644,7 @@ if in_V then
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
 		elsif palette_horizontal_counter<2 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
-			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & MODE_select;
+			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "0" & newMode;
 			palette_D<=palette_D_tictac_mem;
 			palette_W<='1';
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -2657,7 +2681,7 @@ if in_V then
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
 		elsif palette_horizontal_counter<2 then
 			palette_A<=palette_A_tictac_mem(13 downto 0);
-			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & MODE_select;
+			palette_D_tictac_mem:=conv_std_logic_vector(border,5) & "1" & newMode;
 			palette_D<=palette_D_tictac_mem;
 			palette_W<='1';
 			palette_A_tictac_mem:=palette_A_tictac_mem+1;
@@ -2702,6 +2726,7 @@ end if;
 		variable etat_hsync_old : STD_LOGIC:=DO_NOTHING;
 		variable etat_vsync_old : STD_LOGIC:=DO_NOTHING;
 		--variable IO_ACK_old : STD_LOGIC:='0';
+		variable newMode_mem : STD_LOGIC_VECTOR(1 downto 0);
 	begin
 		if reset='1' then
 			InterruptLineCount:=(others=>'0');
@@ -2787,6 +2812,9 @@ end if;
 						InterruptLineCount:=(others=>'0');
 					end if;
 				end if;
+				
+				newMode_mem:=MODE_select;
+				newMode<=newMode_mem;
 			end if;
 			
 			--vSyncStart()
@@ -2886,15 +2914,15 @@ end if;
 				BLUE<="00";
 			elsif etat_rgb_mem = DO_READ then
 			
-				if MODE_select="10" then
+				if newMode="10" then
 					NB_PIXEL_PER_OCTET:=8;
 					cursor_pixel_ref:=(compteur1MHz_16 / 1) mod 8;
 					cursor_pixel:=cursor_pixel_ref; -- hide one pixel on both
-				elsif MODE_select="01" then
+				elsif newMode="01" then
 					NB_PIXEL_PER_OCTET:=4;
 					cursor_pixel_ref:=(compteur1MHz_16 / 2) mod 8; -- ok
 					cursor_pixel:=cursor_pixel_ref; -- target correction... data more slow than address coming : one tic
-				else --if MODE_select="00" or MODE_select="11" then
+				else --if newMode="00" or newMode="11" then
 					NB_PIXEL_PER_OCTET:=2;
 					cursor_pixel_ref:=(compteur1MHz_16 / 4) mod 8;
 					cursor_pixel:=cursor_pixel_ref;
@@ -2916,7 +2944,7 @@ end if;
 					RED<=palette(pen(conv_integer(color(3 downto 2))))(5 downto 4);
 					GREEN<=palette(pen(conv_integer(color(3 downto 2))))(3 downto 2);
 					BLUE<=palette(pen(conv_integer(color(3 downto 2))))(1 downto 0);
-				else --if MODE_select="00" then + MODE 11
+				else --if newMode="00" then + MODE 11
 					color_patch:=color(3) & color(1) & color(2) & color(0); -- wtf xD
 					RED<=palette(pen(conv_integer(color_patch)))(5 downto 4);
 					GREEN<=palette(pen(conv_integer(color_patch)))(3 downto 2);

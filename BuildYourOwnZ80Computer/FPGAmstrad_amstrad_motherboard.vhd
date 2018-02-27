@@ -392,8 +392,8 @@ entity FPGAmstrad_amstrad_motherboard is
 			  zram_din : in std_logic_vector(7 downto 0); 
 			  zram_addr : out std_logic_vector(15 downto 0);
 			  zram_rd : out std_logic;
-			  crtc_type: in std_logic
-			  --ga_shunt : in std_logic
+			  crtc_type: in std_logic;
+			  ga_shunt : in std_logic
 
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
@@ -524,7 +524,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 				 MEM_RD        : in    std_logic;
              reset         : in    std_logic; 
 				 crtc_type : in std_logic;
-				 --ga_shunt : in std_logic;
+				 ga_shunt : in std_logic;
              A15_A14_A9_A8 : in    std_logic_vector (3 downto 0); 
              MODE_select   : in    std_logic_vector (1 downto 0); 
              D             : in    std_logic_vector (7 downto 0); 
@@ -827,7 +827,7 @@ end generate;
 					 CLK16MHz=>CLK16MHz,
                 reset=>XLXN_907,
 					 crtc_type=>crtc_type,
-					 --ga_shunt=>ga_shunt,
+					 ga_shunt=>ga_shunt,
                 bvram_A(14 downto 0)=>vram_A(14 downto 0),
                 bvram_D(7 downto 0)=>vram_D(7 downto 0),
                 bvram_W=>vram_W,

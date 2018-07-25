@@ -1570,9 +1570,9 @@ WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 WAIT_n<=WAIT_n_0 and WAIT_n_1 when not(WAIT_n_0_ack) else WAIT_n_1;
 
 m1_process:process(reset,nCLK4_1) is
-	variable compteur1MHz:integer range 0 to 3:=2;
+	variable compteur1MHz:integer range 0 to 3:=0;
 			variable was_M1:boolean:=false;
-			variable was_m:boolean:=false;
+			--variable was_m:boolean:=false;
 		variable waiting:boolean:=false;
 		variable waiting_LATENCE:boolean:=false;
 		--variable waiting_R2D2:std_logic:='0';

@@ -416,6 +416,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal portC         : std_logic_vector (7 downto 0);
    signal WR_n       : std_logic;
    signal MREQ_n       : std_logic;
+   signal RFSH_n       : std_logic;
    signal IORQ_n       : std_logic;
    signal RD_n       : std_logic;
    signal XLXN_180      : std_logic;
@@ -729,7 +730,7 @@ do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
                 MREQ_n=>MREQ_n,
                 M1_n=>M1_n,
                 RD_n=>RD_n,
-                RFSH_n=>open,
+                RFSH_n=>RFSH_n,
                 WR_n=>WR_n);
 
 
@@ -758,7 +759,7 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
                 MREQ_n=>MREQ_n,
                 M1_n=>M1_n,
                 RD_n=>RD_n,
-                RFSH_n=>open,
+                RFSH_n=>RFSH_n,
                 WR_n=>WR_n);
 
 
@@ -783,7 +784,7 @@ PORT MAP(nWAIT => WAIT_n,
 			nIORQ =>IORQ_n,
 			nRD =>RD_n,
 			nWR =>WR_n,
-			nRFSH =>open,
+			nRFSH =>RFSH_n,
 			nHALT =>open,
 			nBUSACK =>open,
 			A =>A(15 downto 0));
@@ -893,7 +894,8 @@ MEM_WR<=WR and MREQ;
                 wr_z80=>MEM_WR,
                 ram_A(22 downto 0)=>xram_A(22 downto 0));
    
-MREQ<=not(MREQ_n);
+-- Sorgelig formula : wire acc = (MREQ_n | ~RFSH_n) & IORQ_n;
+MREQ<=not(MREQ_n or not(RFSH_n));
 IO_REQ<=not(IORQ_n);
 IO_WR<=IO_REQ and WR;
 RD<=not(RD_n);

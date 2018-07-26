@@ -1840,9 +1840,7 @@ begin
 					I_RLD <= '1';
 					NoRead <= '1';
 					Set_Addr_To <= aXY;
-					Save_ALU <= '1';
 				when 4 =>
-					I_RLD <= '1';
 					Write <= '1';
 				when others =>
 				end case;
@@ -1867,8 +1865,25 @@ begin
 					Write <= '1';
 				when others =>
 				end case;
-			when "01000101"|"01001101"|"01010101"|"01011101"|"01100101"|"01101101"|"01110101"|"01111101" =>
-				-- RETI, RETN
+			when "01001101" =>
+				-- RETI
+				MCycles <= "011";
+				case to_integer(unsigned(MCycle)) is
+				when 1 =>
+					--TStates <= "101";
+					Set_Addr_TO <= aSP;
+				when 2 =>
+					IncDec_16 <= "0111";
+					Set_Addr_To <= aSP;
+					LDZ <= '1';
+				when 3 =>
+					Jump <= '1';
+					IncDec_16 <= "0111";
+				when others => null;
+				end case;
+				
+			when "01000101"|"01010101"|"01011101"|"01100101"|"01101101"|"01110101"|"01111101" =>
+				-- RETN
 				MCycles <= "011";
 				case to_integer(unsigned(MCycle)) is
 				when 1 =>
@@ -1935,10 +1950,8 @@ begin
 					Set_Addr_To <= aXY;
 				when 3 =>
 					if IR(3) = '0' then
-						--IncDec_16 <= "0010";
 						IncDec_16 <= "0110";
 					else
-						--IncDec_16 <= "1010";
 						IncDec_16 <= "1110";
 					end if;
 					TStates <= "100";
@@ -1951,8 +1964,6 @@ begin
 				end case;
 			when "10100011" | "10101011" | "10110011" | "10111011" =>
 				-- OUTI, OUTD, OTIR, OTDR
-				-- note B is decremented BEFORE being put on the bus.
-				-- mikej fix for hl inc
 				MCycles <= "100";
 				case to_integer(unsigned(MCycle)) is
 				when 1 =>
@@ -1968,9 +1979,9 @@ begin
 					Set_Addr_To <= aBC;
 				when 3 =>
 					if IR(3) = '0' then
-						IncDec_16 <= "0110"; -- mikej
+						IncDec_16 <= "0110";
 					else
-						IncDec_16 <= "1110"; -- mikej
+						IncDec_16 <= "1110";
 					end if;
 					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 					IORQ <= '1';

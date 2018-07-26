@@ -83,6 +83,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.STD_LOGIC_UNSIGNED.all;
 use work.T80_Pack.all;
 
 entity T80 is
@@ -368,6 +369,7 @@ begin
 		ALU_Q;
 
 	process (RESET_n, CLK_n)
+		variable n : std_logic_vector(7 downto 0);
 	begin
 		if RESET_n = '0' then
 			PC <= (others => '0');  -- Program Counter
@@ -400,7 +402,7 @@ begin
 			XY_Ind <= '0';
 			I_RXDD <= '0';
 
-		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then
 
 			if ClkEn = '1' then
 
@@ -558,7 +560,7 @@ begin
 						-- CCF
 						F(Flag_C) <= not F(Flag_C);
 						F(Flag_Y) <= ACC(5);
-						F(Flag_H) <= not F(Flag_H); --freemac F(Flag_C);
+						F(Flag_H) <= F(Flag_C);
 						F(Flag_X) <= ACC(3);
 						F(Flag_N) <= '0';
 					end if;
@@ -630,9 +632,36 @@ begin
 					when "00" =>
 						ACC <= I;
 						F(Flag_P) <= IntE_FF2;
+						F(Flag_S) <= I(7);
+						
+						if I = x"00" then 
+							F(Flag_Z) <= '1';
+						else
+							F(Flag_Z) <= '0';
+						end if;
+
+						F(Flag_Y) <= I(5);
+						F(Flag_H) <= '0';
+						F(Flag_X) <= I(3);
+						F(Flag_N) <= '0';
+
+
 					when "01" =>
 						ACC <= std_logic_vector(R);
 						F(Flag_P) <= IntE_FF2;
+						F(Flag_S) <= R(7);
+						
+						if R = x"00" then 
+							F(Flag_Z) <= '1';
+						else
+							F(Flag_Z) <= '0';
+						end if;
+						
+						F(Flag_Y) <= R(5);
+						F(Flag_H) <= '0';
+						F(Flag_X) <= R(3);
+						F(Flag_N) <= '0';
+
 					when "10" =>
 						I <= ACC;
 					when others =>
@@ -700,6 +729,11 @@ begin
 				F(Flag_H) <= '0';
 				F(Flag_N) <= '0';
 			end if;
+			if TState = 1 and I_BC = '1' then
+				n := ALU_Q - ("0000000" & F_Out(Flag_H));
+				F(Flag_X) <= n(3);
+				F(Flag_Y) <= n(1);
+			end if;
 			if I_BC = '1' or I_BT = '1' then
 				F(Flag_P) <= IncDecZ;
 			end if;
@@ -737,7 +771,7 @@ begin
 ---------------------------------------------------------------------------
 	process (CLK_n)
 	begin
-		if rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
+		if rising_edge(CLK_n) then
 			if ClkEn = '1' then
 				-- Bus A / Write
 				RegAddrA_r <= Alternate & Set_BusA_To(2 downto 1);
@@ -875,7 +909,7 @@ begin
 ---------------------------------------------------------------------------
 	process (CLK_n)
 	begin
-		if rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
+		if rising_edge(CLK_n) then
 			if ClkEn = '1' then
 			case Set_BusB_To is
 			when "0111" =>
@@ -943,7 +977,7 @@ begin
 	begin
 		if RESET_n = '0' then
 			RFSH_n <= '1';
-		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then
 			if CEN = '1' then
 			if MCycle = "001" and ((TState = 2  and Wait_n = '1') or TState = 3) then
 				RFSH_n <= '0';
@@ -977,7 +1011,7 @@ begin
 			INT_s <= '0';
 			NMI_s <= '0';
 			OldNMI_n := '0';
-		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
+		elsif rising_edge(CLK_n) then
 			if CEN = '1' then
 				BusReq_s <= not BUSRQ_n;
 				INT_s <= not INT_n;
@@ -1015,8 +1049,8 @@ begin
 			Auto_Wait_t1 <= '0';
 			Auto_Wait_t2 <= '0';
 			M1_n <= '1';
-		elsif rising_edge(CLK_n) then --CLK_n'event and CLK_n = '1' then
-		
+		elsif rising_edge(CLK_n) then
+			
 			if INT_s = '1' and wasINT_s_0 then
 				just_rising_INT_s:=true;
 			end if;
@@ -1026,12 +1060,13 @@ begin
 				wasINT_s_0:=false;
 			end if;
 			if CEN = '1' then
+				Auto_Wait_t2 <= Auto_Wait_t1;
 				if T_Res = '1' then
 					Auto_Wait_t1 <= '0';
+					Auto_Wait_t2 <= '0';
 				else
 					Auto_Wait_t1 <= Auto_Wait or IORQ_i;
 				end if;
-				Auto_Wait_t2 <= Auto_Wait_t1;
 				No_BTR <= (I_BT and (not IR(4) or not F(Flag_P))) or
 						(I_BC and (not IR(4) or F(Flag_Z) or not F(Flag_P))) or
 						(I_BTR and (not IR(4) or F(Flag_Z)));
@@ -1039,16 +1074,6 @@ begin
 					if SetEI = '1' then
 						IntE_FF1 <= '1';
 						IntE_FF2 <= '1';
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 					end if;
 					if I_RETN = '1' then
 						IntE_FF1 <= IntE_FF2;

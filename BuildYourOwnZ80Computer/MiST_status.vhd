@@ -25,6 +25,7 @@ entity MIST_STATUS is
 			  --lowerVRAM : out std_logic_vector(1 downto 0);
 			  --upperVRAM : out std_logic_vector(1 downto 0);
 			  ppi_jumpers : out std_logic_vector(3 downto 0);
+			  green_scanlines : out std_logic_vector(1 downto 0);
 			  green : out std_logic;
 			  crtc_type : out std_logic;
 			  ga_shunt: out std_logic;
@@ -50,9 +51,10 @@ status_0<=status(0);
 ppi_jumpers<='1' & '1' & status(1) & '1';
 crtc_type<=not(status(2));
 ga_shunt<=status(3);
-vramORscandb<=status(4);
-green<=status(5);
-megashark_select<=status(6);
+vramORscandb<=status(5); -- 1X scandb50Hz
+green_scanlines<=status(6) & (not(status(5)) and status(4)); -- 01 scanlines72Hz
+green<=status(6);
+megashark_select<=status(7);
 --tv<=status(7);
 end Behavioral;
 

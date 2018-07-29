@@ -825,13 +825,13 @@ begin
 					Set_Addr_To <= aSP;
 					Set_BusB_To <= "1101";
 				when 2 =>
-					TStates <= "100";
+					--TStates <= "100";
 					Write <= '1';
 					IncDec_16 <= "1111";
 					Set_Addr_To <= aSP;
 					Set_BusB_To <= "1100";
 				when 3 =>
-					TStates <= "100";
+					--TStates <= "100";
 					Write <= '1';
 				when 4 =>
 					Inc_PC <= '1';
@@ -1168,7 +1168,7 @@ begin
 			MCycles <= "011";
 			case to_integer(unsigned(MCycle)) is
 			when 1 =>
-				TStates <= "101";
+				--TStates <= "101";
 				Set_Addr_TO <= aSP;
 			when 2 =>
 				IncDec_16 <= "0111";
@@ -1265,7 +1265,6 @@ begin
 				when 3 =>
 					Jump <= '1';
 					IncDec_16 <= "0111";
-					--TStates <= "101"; --plustest.dsk
 				when others => null;
 				end case;
 			end if;
@@ -1301,7 +1300,6 @@ begin
 				when 3 =>
 					Read_To_Acc <= '1';
 					IORQ <= '1';
-					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 				when others => null;
 				end case;
 			end if;
@@ -1317,7 +1315,6 @@ begin
 				when 3 =>
 					Write <= '1';
 					IORQ <= '1';
-					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 				when others => null;
 				end case;
 			end if;
@@ -1735,7 +1732,7 @@ begin
 				when 3 =>
 					NoRead <= '1';
 					I_BC <= '1';
-					TStates <= "101";
+					TStates <= "110";
 				when 4 =>
 					NoRead <= '1';
 					TStates <= "101";
@@ -1905,7 +1902,6 @@ begin
 				when 1 =>
 					Set_Addr_To <= aBC;
 				when 2 =>
-					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 					IORQ <= '1';
 					if IR(5 downto 3) /= "110" then
 						Read_To_Reg <= '1';
@@ -1926,17 +1922,16 @@ begin
 						Set_BusB_To(3) <= '1';
 					end if;
 				when 2 =>
-					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 					Write <= '1';
 					IORQ <= '1';
 				when others =>
 				end case;
 			when "10100010" | "10101010" | "10110010" | "10111010" =>
 				-- INI, IND, INIR, INDR
-				-- note B is decremented AFTER being put on the bus
 				MCycles <= "100";
 				case to_integer(unsigned(MCycle)) is
 				when 1 =>
+					TStates <= "101";
 					Set_Addr_To <= aBC;
 					Set_BusB_To <= "1010";
 					Set_BusA_To <= "0000";
@@ -1944,7 +1939,6 @@ begin
 					Save_ALU <= '1';
 					ALU_Op <= "0010";
 				when 2 =>
-					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 					IORQ <= '1';
 					Set_BusB_To <= "0110";
 					Set_Addr_To <= aXY;
@@ -1954,7 +1948,6 @@ begin
 					else
 						IncDec_16 <= "1110";
 					end if;
-					TStates <= "100";
 					Write <= '1';
 					I_BTR <= '1';
 				when 4 =>
@@ -1983,7 +1976,6 @@ begin
 					else
 						IncDec_16 <= "1110";
 					end if;
-					TStates <= "100"; -- MIKEJ should be 4 for IO cycle
 					IORQ <= '1';
 					Write <= '1';
 					I_BTR <= '1';

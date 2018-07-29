@@ -896,6 +896,8 @@ MEM_WR<=WR and MREQ;
    
 -- Sorgelig formula : wire acc = (MREQ_n | ~RFSH_n) & IORQ_n;
 MREQ<=not(MREQ_n or not(RFSH_n));
+-- Sorgelig formula v2 : .wait_n((phase == 0) | (IORQ_n & MREQ_n) | no_wait)
+--MREQ<=not(MREQ_n);
 IO_REQ<=not(IORQ_n);
 IO_WR<=IO_REQ and WR;
 RD<=not(RD_n);

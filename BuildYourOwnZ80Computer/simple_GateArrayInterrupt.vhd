@@ -38,7 +38,7 @@ entity simple_GateArrayInterrupt is
 	--UM6845R 	UMC 		1 UM6845R_WriteMaskTable type 1 in JavaCPC <==
 	--MC6845 	Motorola	2 
 	--crtc_type:std_logic:='1'; -- '0' or '1' :p
-	M1_OFFSET:integer :=3; -- from 0 to 3
+	M1_OFFSET:integer :=3; -- from 0 to 3 -- 0<=>6px 1<=>4px 2<=>2px 3<=>0px : Seascape.dsk (flower petal - after middle triangle rock is already calibrated)
 	SOUND_OFFSET:integer :=1; -- from 0 to 3 =(M1_OFFSET+2)%4
 	NB_LINEH_BY_VSYNC:integer:=24+1; --4--5-- VSYNC normally 4 HSYNC
 	-- feel nice policy : interrupt at end of HSYNC
@@ -1772,10 +1772,164 @@ ctrcConfig_process:process(reset,nCLK4_1) is
 	
 	variable pen_mem:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
 	variable border_mem:integer range 0 to 31;
+	variable pen_mem2:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
+	variable border_mem2:integer range 0 to 31;
+	variable pen_mem3:pen_type:=(4,12,21,28,24,29,12,5,13,22,6,23,30,0,31,14);
+	variable border_mem3:integer range 0 to 31;
 begin
 	if reset='1' then
 		Dout<=(others=>'1');
 	elsif rising_edge(nCLK4_1) then
+	
+	
+	
+	
+	
+	
+	
+	
+		-- rien ici de pertinant...
+		-- see arnoldemu's crtc.c file :
+		-- CRTC0_UpdateState
+		-- CRTC1_UpdateState
+		-- CRTC2_UpdateState
+		-- ASICCRTC_UpdateState
+		-- JavaCPC Basic6845[CRTC].setRegister().setEvents()
+		
+		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
+		-- Seascape.dsk (delay of WRITE REGISTER)
+		case reg_select is
+			when 0=>
+				RHtot<=registres(0);
+				--hChars = reg[0] + 1;
+				--halfR0 = hChars >> 1;
+				halfR0_mem:=registres(0)+1;
+				halfR0<="0" & halfR0_mem(7 downto 1);
+			when 1=>
+				RHdisp<=registres(1);
+			when 2=>
+				RHsyncpos<=registres(2);
+			when 3=>
+-- following DataSheet and Arnold emulator (Arnold says it exists a conversion table HSYNC crtc.c.GA_HSyncWidth)
+				--hSyncWidth = value & 0x0f;
+				RHwidth<=registres(3)(3 downto 0); -- DataSheet
+				--RVwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula
+-- Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111";
+-- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
+				-- RVwidth<=registres(3)(7 downto 4); -- JavaCPC 2015 puis freemac
+				-- http://quasar.cpcscene.net/doku.php?id=coding:test_crtc#fn__24
+				
+				-- VSync width can only be changed on type 3 and 4 (???)
+				-- The Vsync has a fixed length for CRTC 2, which is 16 scan lines (and not 8 as programmed by the firmware, implicitly using CRTC 0). 
+				--http://cpctech.cpc-live.com/source/split.html
+				if crtc_type='1' then
+					--CRTC1 MC6845/MC6845R/UM6845R have a fixed Vertical Sync Width of 16 scanlines.
+					--vSyncWidth = 0;
+					RVwidth<=x"0"; --registres(3)(6 downto 4) & "0";
+				else
+					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
+					--vSyncWidth = (value >> 4) & 0x0f;
+					RVwidth<=registres(3)(7 downto 4);
+				end if;
+				
+				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
+				--CRTC1 MC6845/UM6845: Note for UM6845: When the Horizontal Sync width is set to 0, then no Horizontal Syncs will be generated. (This feature can be used to distinguish between the UM6845 and MC6845).
+				
+				
+				--CRTC0 Programming Horizontal Sync Width with 0: HD6845S: The data sheets says that the Horizontal Sync Width cannot be programmed with 0. The effect of doing this is not documented. MC6845: If the Horizontal Sync Width register is programmed with 0, no horizontal syncs are generated.
+				
+			when 4=>
+				-- Validation des registres 9 et 4 aprÃƒÆ’Ã‚Â¨s reprogrammation (Pendant que C4 = 0, buffÃƒÆ’Ã‚Â©risÃƒÆ’Ã‚Â©s sinon)
+				-- Rupture ligne-ÃƒÆ’Ã‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
+				RVtot<=registres(4) and x"7f";
+			when 5=>
+				RVtotAdjust<=registres(5) and x"1f";
+			when 6=>
+				--The DISPTMG (Activation du split-border) can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
+				RVdisp<=registres(6) and x"7f";
+			when 7=>
+				RVsyncpos<=registres(7) and x"7f";
+			when 8=>-- and x"f3"; and x"03" (type 1)
+				-- interlace & skew
+				-- arnoldemu's crtc.c
+				-- Delay = (CRTCRegisters[8]>>4) & 0x03;
+				-- CRTC_InternalState.HDelayReg8 = (unsigned char)Delay;
+				--There are only two bits in R8:
+				-- bit 0: interlace enable.
+				-- bit 1: interlace type (when enabled)
+				--Interlace and Skew 	xxxxxx00
+				-- 00 : No interlace
+				-- 01 : Interlace Sync Raster Scan Mode
+				-- 10 : No Interlace
+				-- 11 : Interlace Sync and Video Raster Scan Mode 
+				
+				-- CRTC0 HD6845S: Register 8: Interlace and Skew Bit 7 Cursor Display timing Skew Bit 1 Bit 6 Cursor Display timing Skew Bit 0 Bit 5 Display timing Skew Bit 1 (DTSKB1) Bit 4 Display timing SKew Bit 0 (DTSKB0) Bit 3 not used Bit 2 not used Bit 1 Video Mode Bit 0 Interlace Sync Mode Display timing skew: The data can be skewed by 0 characters, 1 character or 2 characters. When both bits are 1 the display is stopped and border is displayed. This is used in the BSC Megademo in the Crazy Cars II part. 
+				-- CRTC1 MC6845/UM6845 : Bit 1 Video Mode Bit 0 Interlace Sync Mode
+				
+				-- Type 0,1a (and 4 ?) have an extra feature in R8, which seems to be the basis for the "register 8 border technique". These CRTCs use bits 4 and 5 of R8 for character delay: that is, to account for the fact, that in a typical low-cost system, the memory fetches (RAM and then font ROM) would be slow and would make the raster out of sync with "Display Enable" (DE, the frame, or border) which is wired directly to the color generator. 
+				-- So they implemented a programmable DE delay (the "Skew") which is to be set a the duration of the raster fetch (counted in CRTC clock cycles, or mode 1 characters). The same thing is done for the "Cursor" line, because it is also shorter than the raster data-path. 
+				--To implement this, you can by-pass or enable couple of registers on the concerned lines. Because these registers probably get reset when they're bypassed, if you reenable them while DE is true, it will take them as many characters as the DE delay, before they echo "true": you get a bit of border color in the middle of the screen ! 
+				--Of course, when the delay is elapsed, the raster comes back, but you could repeatedly turn the delay on and off. 
+				--interlace = (value & 0x01) != 0;
+				interlace<=registres(8)(0);
+				--interlaceVideo = (value & 0x03) == 3 ? 1 : 0;
+				interlaceVideo<=registres(8)(1);
+				--scanAdd = interlaceVideo + 1;
+				if registres(8)(1) = '0' then
+					scanAdd<=x"01";
+				else
+					scanAdd<=x"02";
+				end if;
+				--maxRaster = reg[9] | interlaceVideo;
+				RRmax<=(registres(9) and x"1f") or "0000000" & registres(8)(1);
+				--CRTC3 hDispDelay = ((reg[8] >> 4) & 0x04);
+				Skew<=registres(8)(5 downto 4);
+				
+				
+			when 9=> -- max raster adress
+				-- Validation des registres 9 et 4 aprÃƒÆ’Ã‚Â¨s reprogrammation (Pendant que C4 = 0, buffÃƒÆ’Ã‚Â©risÃƒÆ’Ã‚Â©s sinon)
+				--maxRaster = value | interlaceVideo;
+				RRmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
+			when 10=>NULL; -- and x"7f";
+				-- cursor start raster 
+			when 11=>NULL; -- and x"1f";
+				-- cursor end raster
+			when 12=>
+				--Validation de l'offset aprÃƒÆ’Ã‚Â¨s reprogrammation des registres 12 et 13 : >>ImmÃƒÆ’Ã‚Â©diatement<< (Pendant que C4 = 0, ÃƒÆ’Ã‚Â  l'ÃƒÆ’Ã‚Â©cran suivant sinon)
+				
+				--NULL;  (read/write type 0) (write only type 1)
+				-- start adress H
+				--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
+				-- and x"3f" donc (5 downto 0)
+				ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
+			when 13=> --NULL;  (read/write type 0) (write only type 1)
+				-- start adress L
+				--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
+				ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
+			when 14=>NULL; -- and x"3f"
+				-- cursor H (read/write)
+			when 15=>NULL;
+				-- cursor L (read/write)
+			when 16=>NULL;
+				--light pen H (read only)
+			when 17=>NULL;
+				--light pen L (read only)
+		end case;
+	
+		-- Seascape.dsk (delay of WRITE PEN/BORDER)
+		pen<=pen_mem3; -- Seascape.dsk
+		border<=border_mem3; -- Seascape.dsk
+		pen_mem3:=pen_mem2; -- Seascape.dsk applying palette on pixel delay ?
+		border_mem3:=border_mem2; -- Seascape.dsk  applying palette on pixel delay ?
+		pen_mem2:=pen_mem; -- Seascape.dsk applying palette on pixel delay ?
+		border_mem2:=border_mem; -- Seascape.dsk  applying palette on pixel delay ?
+	
+	
+	
+	
+	
+	
+	
 	
 		if IO_REQ_W='1' and A15_A14_A9_A8(3) = '0' and A15_A14_A9_A8(2) = '1' then
 			if D(7) ='0' then
@@ -1787,10 +1941,8 @@ begin
 					ink_color:=D(4 downto 0);
 					if border_ink='0' then
 						pen_mem(conv_integer(ink)):=conv_integer(ink_color);
-						pen<=pen_mem;
 					else
 						border_mem:=conv_integer(ink_color);
-						border<=border_mem;
 					end if;
 				end if;
 			end if;
@@ -1834,133 +1986,6 @@ begin
 						registres(reg_select):=x"FF";
 					end if;
 					
-					-- rien ici de pertinant...
-					-- see arnoldemu's crtc.c file :
-					-- CRTC0_UpdateState
-					-- CRTC1_UpdateState
-					-- CRTC2_UpdateState
-					-- ASICCRTC_UpdateState
-					-- JavaCPC Basic6845[CRTC].setRegister().setEvents()
-					
-					--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
-					
-					case reg_select is
-						when 0=>
-							RHtot<=registres(0);
-							--hChars = reg[0] + 1;
-							--halfR0 = hChars >> 1;
-							halfR0_mem:=registres(0)+1;
-							halfR0<="0" & halfR0_mem(7 downto 1);
-						when 1=>
-							RHdisp<=registres(1);
-						when 2=>
-							RHsyncpos<=registres(2);
-						when 3=>
--- following DataSheet and Arnold emulator (Arnold says it exists a conversion table HSYNC crtc.c.GA_HSyncWidth)
-							--hSyncWidth = value & 0x0f;
-							RHwidth<=registres(3)(3 downto 0); -- DataSheet
-							--RVwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula
--- Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111";
--- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
-							-- RVwidth<=registres(3)(7 downto 4); -- JavaCPC 2015 puis freemac
-							-- http://quasar.cpcscene.net/doku.php?id=coding:test_crtc#fn__24
-							
-							-- VSync width can only be changed on type 3 and 4 (???)
-							-- The Vsync has a fixed length for CRTC 2, which is 16 scan lines (and not 8 as programmed by the firmware, implicitly using CRTC 0). 
-							--http://cpctech.cpc-live.com/source/split.html
-							if crtc_type='1' then
-								--CRTC1 MC6845/MC6845R/UM6845R have a fixed Vertical Sync Width of 16 scanlines.
-								--vSyncWidth = 0;
-								RVwidth<=x"0"; --registres(3)(6 downto 4) & "0";
-							else
-								--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
-								--vSyncWidth = (value >> 4) & 0x0f;
-								RVwidth<=registres(3)(7 downto 4);
-							end if;
-							
-							--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
-							--CRTC1 MC6845/UM6845: Note for UM6845: When the Horizontal Sync width is set to 0, then no Horizontal Syncs will be generated. (This feature can be used to distinguish between the UM6845 and MC6845).
-							
-							
-							--CRTC0 Programming Horizontal Sync Width with 0: HD6845S: The data sheets says that the Horizontal Sync Width cannot be programmed with 0. The effect of doing this is not documented. MC6845: If the Horizontal Sync Width register is programmed with 0, no horizontal syncs are generated.
-							
-						when 4=>
-							-- Validation des registres 9 et 4 aprÃƒÆ’Ã‚Â¨s reprogrammation (Pendant que C4 = 0, buffÃƒÆ’Ã‚Â©risÃƒÆ’Ã‚Â©s sinon)
-							-- Rupture ligne-ÃƒÆ’Ã‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
-							RVtot<=registres(4) and x"7f";
-						when 5=>
-							RVtotAdjust<=registres(5) and x"1f";
-						when 6=>
-							--The DISPTMG (Activation du split-border) can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
-							RVdisp<=registres(6) and x"7f";
-						when 7=>
-							RVsyncpos<=registres(7) and x"7f";
-						when 8=>-- and x"f3"; and x"03" (type 1)
-							-- interlace & skew
-							-- arnoldemu's crtc.c
-							-- Delay = (CRTCRegisters[8]>>4) & 0x03;
-							-- CRTC_InternalState.HDelayReg8 = (unsigned char)Delay;
-							--There are only two bits in R8:
-							-- bit 0: interlace enable.
-							-- bit 1: interlace type (when enabled)
-							--Interlace and Skew 	xxxxxx00
-							-- 00 : No interlace
-							-- 01 : Interlace Sync Raster Scan Mode
-							-- 10 : No Interlace
-							-- 11 : Interlace Sync and Video Raster Scan Mode 
-							
-							-- CRTC0 HD6845S: Register 8: Interlace and Skew Bit 7 Cursor Display timing Skew Bit 1 Bit 6 Cursor Display timing Skew Bit 0 Bit 5 Display timing Skew Bit 1 (DTSKB1) Bit 4 Display timing SKew Bit 0 (DTSKB0) Bit 3 not used Bit 2 not used Bit 1 Video Mode Bit 0 Interlace Sync Mode Display timing skew: The data can be skewed by 0 characters, 1 character or 2 characters. When both bits are 1 the display is stopped and border is displayed. This is used in the BSC Megademo in the Crazy Cars II part. 
-							-- CRTC1 MC6845/UM6845 : Bit 1 Video Mode Bit 0 Interlace Sync Mode
-							
-							-- Type 0,1a (and 4 ?) have an extra feature in R8, which seems to be the basis for the "register 8 border technique". These CRTCs use bits 4 and 5 of R8 for character delay: that is, to account for the fact, that in a typical low-cost system, the memory fetches (RAM and then font ROM) would be slow and would make the raster out of sync with "Display Enable" (DE, the frame, or border) which is wired directly to the color generator. 
-							-- So they implemented a programmable DE delay (the "Skew") which is to be set a the duration of the raster fetch (counted in CRTC clock cycles, or mode 1 characters). The same thing is done for the "Cursor" line, because it is also shorter than the raster data-path. 
-							--To implement this, you can by-pass or enable couple of registers on the concerned lines. Because these registers probably get reset when they're bypassed, if you reenable them while DE is true, it will take them as many characters as the DE delay, before they echo "true": you get a bit of border color in the middle of the screen ! 
-							--Of course, when the delay is elapsed, the raster comes back, but you could repeatedly turn the delay on and off. 
-							--interlace = (value & 0x01) != 0;
-							interlace<=registres(8)(0);
-							--interlaceVideo = (value & 0x03) == 3 ? 1 : 0;
-							interlaceVideo<=registres(8)(1);
-							--scanAdd = interlaceVideo + 1;
-							if registres(8)(1) = '0' then
-								scanAdd<=x"01";
-							else
-								scanAdd<=x"02";
-							end if;
-							--maxRaster = reg[9] | interlaceVideo;
-							RRmax<=(registres(9) and x"1f") or "0000000" & registres(8)(1);
-							--CRTC3 hDispDelay = ((reg[8] >> 4) & 0x04);
-							Skew<=registres(8)(5 downto 4);
-							
-							
-						when 9=> -- max raster adress
-							-- Validation des registres 9 et 4 aprÃƒÆ’Ã‚Â¨s reprogrammation (Pendant que C4 = 0, buffÃƒÆ’Ã‚Â©risÃƒÆ’Ã‚Â©s sinon)
-							--maxRaster = value | interlaceVideo;
-							RRmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
-						when 10=>NULL; -- and x"7f";
-							-- cursor start raster 
-						when 11=>NULL; -- and x"1f";
-							-- cursor end raster
-						when 12=>
-							--Validation de l'offset aprÃƒÆ’Ã‚Â¨s reprogrammation des registres 12 et 13 : >>ImmÃƒÆ’Ã‚Â©diatement<< (Pendant que C4 = 0, ÃƒÆ’Ã‚Â  l'ÃƒÆ’Ã‚Â©cran suivant sinon)
-							
-						   --NULL;  (read/write type 0) (write only type 1)
-							-- start adress H
-							--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
-							-- and x"3f" donc (5 downto 0)
-							ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
-						when 13=> --NULL;  (read/write type 0) (write only type 1)
-							-- start adress L
-							--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
-							ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
-						when 14=>NULL; -- and x"3f"
-							-- cursor H (read/write)
-						when 15=>NULL;
-							-- cursor L (read/write)
-						when 16=>NULL;
-							--light pen H (read only)
-						when 17=>NULL;
-							--light pen L (read only)
-					end case;
 				end if;
 			elsif A15_A14_A9_A8(2)='0' and A15_A14_A9_A8(1)='1' then-- A9_READ
 				-- type 0 : status is not implemented
@@ -2185,6 +2210,10 @@ bvram_W<='0';
 			-- z80 mode 1 : the byte need no be sent, as the z80 restarts at logical address x38 regardless(z80 datasheet)
 			case compteur1MHz is
 			when 0=>
+crtc_VSYNC<=etat_vsync;
+vsync_int<=etat_vsync;
+hsync_int<=etat_hsync; -- Seascape.dsk
+			
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
 
@@ -2604,9 +2633,9 @@ end if;
 				bvram_D<=DATA_mem;
 				
 				crtc_R<=dispH and dispV and disp_VRAM;
-crtc_VSYNC<=etat_vsync;
-vsync_int<=etat_vsync;
-hsync_int<=etat_hsync;
+--crtc_VSYNC<=etat_vsync;
+--vsync_int<=etat_vsync;
+--hsync_int<=etat_hsync;
 				
 			when 1=>
 				-- Daisy relaxing (zsdram.v)

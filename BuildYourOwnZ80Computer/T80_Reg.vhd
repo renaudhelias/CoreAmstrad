@@ -12,6 +12,15 @@
 -- FPGAmstrad_amstrad_motherboard.T80se_p.T80.T80_Reg
 --------------------------------------------------------------------------------
 -- ****
+-- T80(c) core. Attempt to finish all undocumented features and provide
+--              accurate timings.
+-- Version 350.
+-- Copyright (c) 2018 Sorgelig
+--  Test passed: ZEXDOC, ZEXALL, Z80Full(*), Z80memptr
+--  (*) Currently only SCF and CCF instructions aren't passed X/Y flags check as
+--      correct implementation is still unclear.
+--
+-- ****
 -- T80(b) core. In an effort to merge and maintain bug fixes ....
 --
 --

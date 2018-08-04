@@ -393,8 +393,9 @@ entity FPGAmstrad_amstrad_motherboard is
 			  zram_addr : out std_logic_vector(15 downto 0);
 			  zram_rd : out std_logic;
 			  crtc_type: in std_logic;
-			  ga_shunt : in std_logic
+			  ga_shunt : in std_logic;
 
+			  PS2_MOUSE_DATA : in std_logic_vector(7 downto 0)
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
@@ -420,6 +421,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal IORQ_n       : std_logic;
    signal RD_n       : std_logic;
    signal XLXN_180      : std_logic;
+	signal MIX_DOUT_MOUSE : std_logic_vector (7 downto 0):=(others=>'1');
 	signal MIX_DOUT : std_logic_vector (7 downto 0):=(others=>'1');
 	signal MIX_DOUT0 : std_logic_vector (7 downto 0):=(others=>'1');
 	signal MIX_DOUT1 : std_logic_vector (7 downto 0):=(others=>'1');
@@ -746,7 +748,7 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
       port map (BUSRQ_n=>'1',
                 CLKEN=>'1',
                 CLK_n=>CLK4MHz, --XLXN_802,
-                DI(7 downto 0)=>MIX_DOUT(7 downto 0),
+                DI(7 downto 0)=>MIX_DOUT_MOUSE(7 downto 0),
                 INT_n=>INT_n,
                 NMI_n=>'1',
                 RESET_n=>RESET_n, -- '1'der time constraint test
@@ -762,6 +764,13 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
                 RFSH_n=>RFSH_n,
                 WR_n=>WR_n);
 
+					 -- #FBEE	%xxxxx0x1 xxx0xxx0	Kempston Mouse - 8bit X position
+					 -- #FBEF	%xxxxx0x1 xxx0xxx1	Kempston Mouse - 8bit Y position
+					 -- #FAEF	%xxxxx0x0 xxx0xxxx	Kempston Mouse - Mouse Buttons
+					 -- #FB7E	%xxxxx0x1 0xxxxxx0	765 FDC (internal) Status Register
+					 -- #FB7F	%xxxxx0x1 0xxxxxx1	765 FDC (internal) Data Register
+					 -- #FA7E	%xxxxx0x0 0xxxxxxx	Floppy Motor Control (for 765 FDC)
+					 MIX_DOUT_MOUSE <= PS2_MOUSE_DATA when IO_RD='1' and A(10)='0' and A(4)='0' else MIX_DOUT;
 
 --   XLXI_568 : please_wait
 --      port map (CLK_n=>CLK4MHz,

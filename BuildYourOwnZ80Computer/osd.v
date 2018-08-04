@@ -47,9 +47,7 @@ module osd (
 //	input [39:0] leds8_debug,
 //	input [7:0] leds8,
 	
-	//input [7:0] leds8_spi_cmd,
-	//input [7:0] leds8_spi_cmd_len,
-	//input [7:0] leds8_spi_reply,
+	//input [16:0] leds_mouse_data,
 	
 	//input [7:0] leds8_fat32,
 	//input [255:0] dir_entry,
@@ -228,6 +226,13 @@ wire [2:0] osd_color = OSD_COLOR;
 //assign blue_out  = !osd_de?blue_in: {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
 
 wire [6:0] segment [9:0];
+
+//osd_HEXA_7SEG my7segConverter0(.halfByte(3'b000 & leds_mouse_data[16]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds_mouse_data[15:12]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds_mouse_data[11:8]),.segment(segment[2]));
+//osd_HEXA_7SEG my7segConverter3(.halfByte(leds_mouse_data[7:4]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(leds_mouse_data[3:0]),.segment(segment[4]));
+
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(dir_entry[255:252]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(dir_entry[251:248]),.segment(segment[1]));

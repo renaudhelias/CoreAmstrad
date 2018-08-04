@@ -213,6 +213,13 @@ applicable agreement for further details.
 		(line (pt 0 448)(pt 16 448)(line_width 1))
 	)
 	(port
+		(pt 0 464)
+		(input)
+		(text "PS2_MOUSE_DATA[7..0]" (rect 0 0 113 12)(font "Arial" ))
+		(text "PS2_MOUSE_DATA[7..0]" (rect 21 459 134 471)(font "Arial" ))
+		(line (pt 0 464)(pt 16 464)(line_width 3))
+	)
+	(port
 		(pt 352 32)
 		(output)
 		(text "audio_AB" (rect 0 0 40 12)(font "Arial" ))

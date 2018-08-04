@@ -70,9 +70,9 @@ module user_io #(parameter STRLEN=0) (
 	// ps2 keyboard emulation
 	input 	  		ps2_clk,				// 12-16khz provided by core
 	output	 		ps2_kbd_clk,
-	output reg 		ps2_kbd_data
-	//output	 		ps2_mouse_clk,
-	//output reg 		ps2_mouse_data,
+	output reg 		ps2_kbd_data,
+	output	 		ps2_mouse_clk,
+	output reg 		ps2_mouse_data
 
 	// serial com port 
 	//input [7:0]		serial_data,
@@ -227,64 +227,64 @@ reg [PS2_FIFO_BITS-1:0] ps2_mouse_wptr;
 reg [PS2_FIFO_BITS-1:0] ps2_mouse_rptr;
 
 // ps2 transmitter state machine
-//reg [3:0] ps2_mouse_tx_state;
-//reg [7:0] ps2_mouse_tx_byte;
-//reg ps2_mouse_parity;
-//
-//assign ps2_mouse_clk = ps2_clk || (ps2_mouse_tx_state == 0);
+reg [3:0] ps2_mouse_tx_state;
+reg [7:0] ps2_mouse_tx_byte;
+reg ps2_mouse_parity;
+
+assign ps2_mouse_clk = ps2_clk || (ps2_mouse_tx_state == 0);
 
 // ps2 transmitter
 // Takes a byte from the FIFO and sends it in a ps2 compliant serial format.
-//reg ps2_mouse_r_inc;
-//always@(posedge ps2_clk) begin
-//	ps2_mouse_r_inc <= 1'b0;
-//	
-//	if(ps2_mouse_r_inc)
-//		ps2_mouse_rptr <= ps2_mouse_rptr + 1;
-//
-//	// transmitter is idle?
-//	if(ps2_mouse_tx_state == 0) begin
-//		// data in fifo present?
-//		if(ps2_mouse_wptr != ps2_mouse_rptr) begin
-//			// load tx register from fifo
-//			ps2_mouse_tx_byte <= ps2_mouse_fifo[ps2_mouse_rptr];
-//			ps2_mouse_r_inc <= 1'b1;
-//			
-//			// reset parity
-//			ps2_mouse_parity <= 1'b1;
-//			
-//			// start transmitter
-//			ps2_mouse_tx_state <= 4'd1;
-//
-//			// put start bit on data line
-//			ps2_mouse_data <= 1'b0;			// start bit is 0
-//		end
-//	end else begin
-//	
-//		// transmission of 8 data bits
-//		if((ps2_mouse_tx_state >= 1)&&(ps2_mouse_tx_state < 9)) begin
-//			ps2_mouse_data <= ps2_mouse_tx_byte[0];			  // data bits
-//			ps2_mouse_tx_byte[6:0] <= ps2_mouse_tx_byte[7:1]; // shift down
-//			if(ps2_mouse_tx_byte[0]) 
-//				ps2_mouse_parity <= !ps2_mouse_parity;
-//		end
-//
-//		// transmission of parity
-//		if(ps2_mouse_tx_state == 9)
-//			ps2_mouse_data <= ps2_mouse_parity;
-//			
-//		// transmission of stop bit
-//		if(ps2_mouse_tx_state == 10)
-//			ps2_mouse_data <= 1'b1;			// stop bit is 1
-//
-//		// advance state machine
-//		if(ps2_mouse_tx_state < 11)
-//			ps2_mouse_tx_state <= ps2_mouse_tx_state + 4'd1;
-//		else	
-//			ps2_mouse_tx_state <= 4'd0;
-//	
-//	end
-//end
+reg ps2_mouse_r_inc;
+always@(posedge ps2_clk) begin
+	ps2_mouse_r_inc <= 1'b0;
+	
+	if(ps2_mouse_r_inc)
+		ps2_mouse_rptr <= ps2_mouse_rptr + 1;
+
+	// transmitter is idle?
+	if(ps2_mouse_tx_state == 0) begin
+		// data in fifo present?
+		if(ps2_mouse_wptr != ps2_mouse_rptr) begin
+			// load tx register from fifo
+			ps2_mouse_tx_byte <= ps2_mouse_fifo[ps2_mouse_rptr];
+			ps2_mouse_r_inc <= 1'b1;
+			
+			// reset parity
+			ps2_mouse_parity <= 1'b1;
+			
+			// start transmitter
+			ps2_mouse_tx_state <= 4'd1;
+
+			// put start bit on data line
+			ps2_mouse_data <= 1'b0;			// start bit is 0
+		end
+	end else begin
+	
+		// transmission of 8 data bits
+		if((ps2_mouse_tx_state >= 1)&&(ps2_mouse_tx_state < 9)) begin
+			ps2_mouse_data <= ps2_mouse_tx_byte[0];			  // data bits
+			ps2_mouse_tx_byte[6:0] <= ps2_mouse_tx_byte[7:1]; // shift down
+			if(ps2_mouse_tx_byte[0]) 
+				ps2_mouse_parity <= !ps2_mouse_parity;
+		end
+
+		// transmission of parity
+		if(ps2_mouse_tx_state == 9)
+			ps2_mouse_data <= ps2_mouse_parity;
+			
+		// transmission of stop bit
+		if(ps2_mouse_tx_state == 10)
+			ps2_mouse_data <= 1'b1;			// stop bit is 1
+
+		// advance state machine
+		if(ps2_mouse_tx_state < 11)
+			ps2_mouse_tx_state <= ps2_mouse_tx_state + 4'd1;
+		else	
+			ps2_mouse_tx_state <= 4'd0;
+	
+	end
+end
 
 // fifo to receive serial data from core to be forwarded to io controller
 //
@@ -363,11 +363,11 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 				if(cmd == 8'h03)
 					joystick_1 <= { sbuf[4:0], SPI_MOSI };
 				 
-//				if(cmd == 8'h04) begin
-//					// store incoming ps2 mouse bytes 
-//					ps2_mouse_fifo[ps2_mouse_wptr] <= { sbuf, SPI_MOSI }; 
-//					ps2_mouse_wptr <= ps2_mouse_wptr + 1;
-//				end
+				if(cmd == 8'h04) begin
+					// store incoming ps2 mouse bytes 
+					ps2_mouse_fifo[ps2_mouse_wptr] <= { sbuf, SPI_MOSI }; 
+					ps2_mouse_wptr <= ps2_mouse_wptr + 1;
+				end
 
 				if(cmd == 8'h05) begin
 					// store incoming ps2 keyboard bytes 

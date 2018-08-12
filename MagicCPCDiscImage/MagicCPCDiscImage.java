@@ -131,10 +131,10 @@ public class MagicCPCDiscImage extends DiscImage {
 
     public void init(String path) {
     	File f = new File(path);
-        this.path = f.getParent();
         createSectorStructure();
         if (f.isFile() && f.getName().endsWith(".properties")) {
-        	try {
+        	this.path = f.getParent();
+            	try {
             	Properties prop = new Properties();
 				prop.load(new FileInputStream(f));
 				propFile=prop;
@@ -143,6 +143,7 @@ public class MagicCPCDiscImage extends DiscImage {
 				e.printStackTrace();
 			}
         } else {
+        	this.path = path;
             listDir();
         }
     }

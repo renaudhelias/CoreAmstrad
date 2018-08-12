@@ -6,9 +6,13 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
+
 import jemu.core.device.Computer;
 
 import jemu.ui.cpcgamescd.CPCFileSystem;
@@ -44,6 +48,7 @@ public class MagicCPCDiscImage extends DiscImage {
 
     CPCFileSystem system;
     String path;
+    Properties propFile;
     int[][][][] ids;
     byte[][][][] sectors;
     int lastCylinder = 79;
@@ -125,9 +130,21 @@ public class MagicCPCDiscImage extends DiscImage {
     }
 
     public void init(String path) {
-        this.path = path;
+    	File f = new File(path);
+        this.path = f.getParent();
         createSectorStructure();
-        listDir();
+        if (f.isFile() && f.getName().endsWith(".properties")) {
+        	try {
+            	Properties prop = new Properties();
+				prop.load(new FileInputStream(f));
+				propFile=prop;
+	            listDir();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+        } else {
+            listDir();
+        }
     }
 
     private void createSectorStructure() {
@@ -165,9 +182,12 @@ public class MagicCPCDiscImage extends DiscImage {
         System.arraycopy(empty, 0, sectors[0][0][3], 0, 512);
     }
 
+    
     public void copyAsDSK() {
-
-        system.get(path + "/MAGIC_OUTPUT.DSK");
+    	copyAsDSK("MAGIC_OUTPUT.DSK");
+    }
+    public void copyAsDSK(String name) {
+        system.get(path + "/" + name);
         try {
             File folder = new File(path);
             if (folder.isDirectory()) {
@@ -175,26 +195,16 @@ public class MagicCPCDiscImage extends DiscImage {
                     if (sf.isDirectory() || sf.length() > 0x0FFFF || sf.length() < 0x00001) {
                         continue; // ignore directories & larger files than 64k & smaller files than 1 byte
                     }
-                    String cpcname = sf.getName().toUpperCase();
                     String realname = sf.getName().toUpperCase();
-                    if (cpcname.contains(".")) {
-                        int point = cpcname.indexOf(".");
-                        String filename = cpcname.substring(0, point);
-                        filename = filename + "        ";
-                        filename = filename.substring(0, 8);
-                        String extension = cpcname.substring(point + 1,
-                                cpcname.length());
-                        extension = extension + "   ";
-                        extension = extension.substring(0, 3);
-
-                        cpcname = filename + extension;
-                    } else {
-                        cpcname = cpcname + "        " + "   ";
-                        cpcname = cpcname.substring(0, 8 + 3);
+                    String cpcname = realname2cpcname(realname);
+                    if (propFile != null) {
+                    	if (!propFile.containsKey(cpcname2realname(cpcname))) {
+                    		System.out.println("ignoring "+cpcname);
+                    		continue;
+                    	}
                     }
                     system.DIR();
-                    system.copyToDSK(path + "/", realname, path + "/MAGIC_OUTPUT.DSK");
-
+                    system.copyToDSK(path + "/", realname, path + "/" +name);
                 }
             }
         } catch (Exception e) {
@@ -216,23 +226,16 @@ public class MagicCPCDiscImage extends DiscImage {
                     if (sf.isDirectory() || sf.length() > 0x1FFFF + 0x80 || sf.length() < 0x00001) {
                         continue; // ignore directories & larger files than 128k + AMSDOS header & smaller files than 1 byte
                     }
-                    String cpcname = sf.getName().toUpperCase();
                     String realname = sf.getName().toUpperCase();
-                    if (cpcname.contains(".")) {
-                        int point = cpcname.indexOf(".");
-                        String filename = cpcname.substring(0, point);
-                        filename = filename + "        ";
-                        filename = filename.substring(0, 8);
-                        String extension = cpcname.substring(point + 1,
-                                cpcname.length());
-                        extension = extension + "   ";
-                        extension = extension.substring(0, 3);
-
-                        cpcname = filename + extension;
-                    } else {
-                        cpcname = cpcname + "        " + "   ";
-                        cpcname = cpcname.substring(0, 8 + 3);
+                    String cpcname = realname2cpcname(realname);
+                                        
+                    if (propFile != null) {
+                    	if (!propFile.containsKey(cpcname2realname(cpcname))) {
+                    		System.out.println("ignoring "+cpcname);
+                    		continue;
+                    	}
                     }
+                    
 //                    System.out.println("#DIR : " + cpcname);
                     // FIXME Dangerous : all files are renamed at begin of process, into Amstrad CPC filename style.
                     // This will not be corrected on this "experimental" version :P
@@ -241,11 +244,23 @@ public class MagicCPCDiscImage extends DiscImage {
 //                    sf.renameTo(fSuperAmstradName);
                     dirContent.put(cpcname, fSuperAmstradName);
                     dirContentKeys.add(cpcname);
+                    System.out.println("adding "+cpcname);
 //                    copyAsDSK();
 
                 }
 
             }
+            if (propFile != null) {
+            	Enumeration<?> e = propFile.propertyNames();
+        		while (e.hasMoreElements()) {
+        			String key = (String) e.nextElement();
+        			if (!dirContentKeys.contains(realname2cpcname(key))) {
+	        			String value = propFile.getProperty(key);
+	        			System.out.println("MagicProps - missing Key : " + key + " (cpcname="+realname2cpcname(key)+"), Value : " + value);
+        			}
+        		}
+            }
+            
             resetSectorContent();
             byte line[] = new byte[32];
             for (int j = 0; j < 32; j++) {
@@ -387,6 +402,32 @@ public class MagicCPCDiscImage extends DiscImage {
         scanNames = doScanAllNamesFromSectors();
     }
 
+    private String realname2cpcname(String realname) {
+    	String cpcname = realname.toUpperCase();
+    	if (cpcname.contains(".")) {
+            int point = cpcname.indexOf(".");
+            String filename = cpcname.substring(0, point);
+            filename = filename + "        ";
+            filename = filename.substring(0, 8);
+            String extension = cpcname.substring(point + 1,
+                    cpcname.length());
+            extension = extension + "   ";
+            extension = extension.substring(0, 3);
+
+            cpcname = filename + extension;
+        } else {
+            cpcname = cpcname + "        " + "   ";
+            cpcname = cpcname.substring(0, 8 + 3);
+        }
+    	return cpcname;
+    }
+    
+    private String cpcname2realname(String cpcname) {
+    	String realname=cpcname.substring(0,8)+"."+cpcname.substring(8,11);
+    	realname=realname.replaceAll(" ", "");
+    	return realname;
+    }
+    
     protected static int sectorSize(int n) {
         return n > 5 ? 0x1800 : 0x80 << n;
     }

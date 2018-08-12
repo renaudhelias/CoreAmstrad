@@ -3,10 +3,12 @@ package jemu.system.cpc;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.util.Arrays;
 
 import org.junit.Test;
+
+import jemu.ui.Switches;
+import jemu.ui.selectDSK;
 
 /**
  * CPCDiskXP -File moustache.bin -AddAmsdosHeader 100 -AddToNewDsk jdvpa6_moustache.dsk
@@ -15,68 +17,79 @@ import org.junit.Test;
  * CPCDiskXP -File chat3.scr -AddToExistingDsk jdvpa6_moustache.dsk
  */
 public class MagicCPCDiscImageTest {
-	public static final int MAX_FILE_SIZE = 1024 * 1024 * 13;  // 1024K maximum
 	
+
+	@Test
+	public void testNewDATA40() {
+		int format = Arrays.asList(selectDSK.DSKImage).indexOf("dataDS40");
+        String discimage = selectDSK.DSKImages[format];
+        int discsize = selectDSK.DSKSizes[format];
+        byte[] bufferdsk = selectDSK.copyResource("dskutil/file/" + discimage, discsize);
+        String name="resources/magic_test/empty_DATA40.dsk";
+		CPCDiscImage image = new CPCDiscImage(name, bufferdsk);
+		Switches.uncompressed=true;
+		image.saveImage(new File(name));
+	}
+	
+	@Test
+	public void testNewDATA80() {
+		int format = Arrays.asList(selectDSK.DSKImage).indexOf("dataDS80");
+        String discimage = selectDSK.DSKImages[format];
+        int discsize = selectDSK.DSKSizes[format];
+        byte[] bufferdsk = selectDSK.copyResource("dskutil/file/" + discimage, discsize);
+        String name="resources/magic_test/empty_DATA80.dsk";
+		CPCDiscImage image = new CPCDiscImage(name, bufferdsk);
+		Switches.uncompressed=true;
+		image.saveImage(new File(name));
+	}
+
+	@Test
+	public void testNewDOSD2() {
+		int format = Arrays.asList(selectDSK.DSKImage).indexOf("romdosD2");
+        String discimage = selectDSK.DSKImages[format];
+        int discsize = selectDSK.DSKSizes[format];
+        byte[] bufferdsk = selectDSK.copyResource("dskutil/file/" + discimage, discsize);
+        String name="resources/magic_test/empty_romdosD2.dsk";
+		CPCDiscImage image = new CPCDiscImage(name, bufferdsk);
+		Switches.uncompressed=true;
+		image.saveImage(new File(name));
+	}
+	
+	@Test
+	public void testAmsHeader() {
+		// do extract them, and print a report
+		
+	}
+
 	@Test
 	public void test1() {
 		String name="resources/magic_test/jdvpa6_moustache.dsk";
-		byte[] data = getFile(name);
+		byte[] data = MagicCPCDiscImageUtils.getFile(name);
 		//DSK_Load(name, data);
 		CPCDiscImage image = new CPCDiscImage(name, data);
 		//transform CPCDiscImage en CPCMagicDiscImage
 		//transform CPCMagicDiscImage en CPCDiscImage
 		assertNotNull(image);
-		image.saveImage();
+		//image.saveImage();
+		Switches.uncompressed=true;
+		image.saveImage(new File(new File(name).getParent(), "jdvpa6_moustache_saved.dsk"));
 	}
 	
 	@Test
-	public void test2() {
-		String name="magic_test/jdvpa6_moustache.dsk.properties";
-		name="magic_test/";
+	public void testMagicProps() {
+		String name="resources/magic_test/jdvpa6_moustache.dsk.properties";
 		MagicCPCDiscImage image = new MagicCPCDiscImage(name);
 		//transform CPCMagicDiscImage en CPCDiscImage
-		//image.saveImage();
 		assertNotNull(image);
+		image.copyAsDSK("MAGIC_OUTPUT_PROPS.DSK");
+	}
+	
+	@Test
+	public void testMagicDir() {
+		String name="resources/magic_test/";
+		MagicCPCDiscImage image = new MagicCPCDiscImage(name);
+		assertNotNull(image);
+		image.copyAsDSK("MAGIC_OUTPUT.DSK");
 	}
 
-    public static byte[] getFile(String name) {
-        return getFile(name, MAX_FILE_SIZE, true);
-    }
-
-	public static byte[] getFile(String name, int size, boolean crop) {
-	    byte[] buffer = new byte[size];
-	    int offs = 0;
-	    try {
-	      InputStream stream = null;
-	      try {
-	        stream = openFile(name);
-	        while (size > 0) {
-	          int read = stream.read(buffer,offs,size);
-	          if (read == -1)
-	            break;
-	          else {
-	            offs += read;
-	            size -= read;
-	          }
-	        }
-	      } finally {
-	        if (stream != null)
-	          stream.close();
-	      }
-	    } catch (Exception e) {
-	      e.printStackTrace();
-	    }
-	    if (crop && offs < buffer.length) {
-	      byte[] result = new byte[offs];
-	      System.arraycopy(buffer,0,result,0,offs);
-	      buffer = result;
-	    }
-	    return buffer;
-	  }
-	
-	public static InputStream openFile(String name) throws Exception {
-		File file = new File(name);
-		assertTrue(file.exists());
-		return new FileInputStream(file);
-    }
 }

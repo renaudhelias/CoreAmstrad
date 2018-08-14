@@ -44,7 +44,7 @@ import jemu.core.device.floppy.*;
  * save"file",p => protected file, with '*' in cat
  *
  */
-public class MagicCPCDiscImage extends DiscImage {
+public class MagicCPCDiscImage extends CPCDiscImageModel {
 
     CPCFileSystem system;
     String path;
@@ -53,6 +53,7 @@ public class MagicCPCDiscImage extends DiscImage {
     byte[][][][] sectors;
     int lastCylinder = 79;
     int headMask = 1;
+	private String name;
 
     public static final int SECTS = 9;
     public static final int CYLS = 40; // x28
@@ -66,42 +67,9 @@ public class MagicCPCDiscImage extends DiscImage {
 
     }
 
-    public void writeSector(int a, int b, int c, int d, int e, int f, byte[] g) {
-
-    }
-
-    public void addSectorToTrack(int a, int b, int c, int d, int e, int f, int g) {
-
-    }
-    
-    public int getGap(int track){
-        return 0;
-    }
 
     public int getNoOfTracks() {
         return lastCylinder;
-    }
-
-    public void removeAllSectorsFromTrack(int a, int b) {
-
-    }
-
-    public void setST1ForSector(int a, int b, int c, int d, int e, int f, int g) {
-
-    }
-
-    public void setST2ForSector(int a, int b, int c, int d, int e, int f, int g) {
-
-    }
-
-    public int getST1ForSector(int a, int b, int c, int d, int e, int f) {
-        return 0;
-
-    }
-
-    public int getST2ForSector(int a, int b, int c, int d, int e, int f) {
-        return 0;
-
     }
 
     public class BadScanNameMomentException extends Exception {
@@ -124,9 +92,14 @@ public class MagicCPCDiscImage extends DiscImage {
      * Creates a new instance of CPCDiscImage
      */
     public MagicCPCDiscImage(String dir) {
-        super("MagicCPCDiscImage");
+        this.name="MagicCPCDiscImage";
         system = new CPCFileSystem();
         init(dir);
+    }
+    
+    @Override
+    public String getName() {
+    	return name;
     }
 
     public void init(String path) {

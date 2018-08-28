@@ -33,7 +33,7 @@ import jemu.core.device.floppy.UPD765A;
  * 
  * @author Roland.Barthel
  */
-public class CPCDiscImageForMerge extends DiscImage {
+public class CPCDiscImageForMerge extends CPCDiscImageModel {
 
 //  public  void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n){
 //      
@@ -82,7 +82,7 @@ public class CPCDiscImageForMerge extends DiscImage {
     /** name of creator. */
     private final String creator;
     /** number of tracks. */
-    private final int numberOfTracks;
+//    private final int numberOfTracks;
     /** number of sides. */
     private final int numberOfSides;
     /** size of a track . */
@@ -104,9 +104,9 @@ public class CPCDiscImageForMerge extends DiscImage {
         return new CPCDiscImageForMerge(name, load(is));
     }
 
-    public int getNoOfTracks(){
-        return numberOfTracks;
-    }
+//    public int getNoOfTracks(){
+//        return numberOfTracks;
+//    }
     /**
      * Create an empty AMSDOS disc image.
      *
@@ -139,9 +139,9 @@ public class CPCDiscImageForMerge extends DiscImage {
         }
     }
 
-    public int getGap(int track){
-        return 0;
-    }
+//    public int getGap(int track){
+//        return 0;
+//    }
     /**
      * Creates a new instance of CPCDiscImage.
      *
@@ -271,28 +271,28 @@ public class CPCDiscImageForMerge extends DiscImage {
         return null;
     }
 
-    //@Override
-    public int[] getSectorID(final int track, final int side, final int index) {
-        return this.tracks[track][side & SIDE_MASK].getSectorIDs(index);
-    }
-
-    //@Override
-    public int getSectorCount(final int track, final int side) {
-        return track > MAX_TRACK ? 0 : this.tracks[track][side & SIDE_MASK].getSectorCount();
-    }
-
-    //@Override
-    public void writeSector(final int track,
-            final int side,
-            final int c,
-            final int h,
-            final int r,
-            final int n,
-            final byte[] data) {
-        final CPCDiscImageTrack td = this.tracks[track][side & SIDE_MASK];
-        td.setSectorData(c, h, r, n, data); // n = UPD765A size
-        saveImage();
-    }
+//    //@Override
+//    public int[] getSectorID(final int track, final int side, final int index) {
+//        return this.tracks[track][side & SIDE_MASK].getSectorIDs(index);
+//    }
+//
+//    //@Override
+//    public int getSectorCount(final int track, final int side) {
+//        return track > MAX_TRACK ? 0 : this.tracks[track][side & SIDE_MASK].getSectorCount();
+//    }
+//
+//    //@Override
+//    public void writeSector(final int track,
+//            final int side,
+//            final int c,
+//            final int h,
+//            final int r,
+//            final int n,
+//            final byte[] data) {
+//        final CPCDiscImageTrack td = this.tracks[track][side & SIDE_MASK];
+//        td.setSectorData(c, h, r, n, data); // n = UPD765A size
+//        saveImage();
+//    }
 
     /**
      * @return disc info if

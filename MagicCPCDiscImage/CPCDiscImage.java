@@ -18,7 +18,6 @@ import java.util.zip.*;
 import jemu.core.samples.Samples;
 
 import jemu.core.device.Device;
-import jemu.core.device.floppy.DiscImage;
 import jemu.core.device.floppy.UPD765A;
 import jemu.ui.Switches;
 
@@ -53,14 +52,11 @@ public class CPCDiscImage extends CPCDiscImageModel {
     private static final String ENCODING = "UTF-8";
     private static final String TRACK_INFO = "Track-Info\r\n";
     private static final int BUFFER_SIZE = 8192;
-    private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC3, 0xC5, 0xC7, 0xC9, 0xC2, 0xC4, 0xC6, 0xC8};
     /**
      * new image or loaded?
      */
     private final boolean newImage;
     public int sectSize = 0;
-    public int statusregisterA;
-    public int statusregisterB;
     // standard disc information block (256 bytes):
     // 00-21 disc info (34 bytes)
     // 22-2F name of creator (14 bytes)
@@ -88,10 +84,6 @@ public class CPCDiscImage extends CPCDiscImageModel {
      * name of creator.
      */
     private final String creator;
-    /**
-     * number of sides.
-     */
-    private final int numberOfSides;
     /**
      * size of a track .
      */
@@ -131,21 +123,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
         this.statusregisterB = 0;
         this.sizeOfTrack = Math.max(1, Math.min(2, numberOfSides));
         this.extended = true;
-        this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
-        final int sectorSize = UPD765A.getCommandSize(512);
-        for (int track = 0; track < this.numberOfTracks; track++) {
-            for (int side = 0; side < this.numberOfSides; side++) {
-                this.tracks[track][side] = new CPCDiscImageTrack(track, side, 9 * 512, 9);
-                for (int sector = 0; sector < 9; sector++) {
-                    final byte[] data = new byte[512];
-                    for (int i = 0; i < data.length; i++) {
-                        data[i] = 0;
-                    }
-                    this.tracks[track][side].setSector(new CPCDiscImageSector(track, side, AMSDOS_SECTOR_IDS[sector], sectorSize,
-                            data, statusregisterA, statusregisterB), sector);
-                }
-            }
-        }
+        createSectorStructure();
     }
 
     /**
@@ -226,7 +204,8 @@ public class CPCDiscImage extends CPCDiscImageModel {
         // let's check the dsk image for bad track number information
         checkImage(data, name);
 
-        this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
+        createSectorStructure();
+        //this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
         if (isCpcDisc) {
 
             // track size information
@@ -254,7 +233,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
                         GAP[track] = data[offs + 0x16] & 0xff;
 
                         int sectorInformationPos = offs + 0x18;
-                        this.tracks[track][side] = new CPCDiscImageTrack(track, side, trackLength, numberOfSectors);
+                        //this.tracks[track][side] = new CPCDiscImageTrack(track, side, trackLength, numberOfSectors);
 
                         // read sector data
                         offs += 0x100;
@@ -287,7 +266,10 @@ public class CPCDiscImage extends CPCDiscImageModel {
                                 return;
                             }
                             offs += bytes;
-                            this.tracks[track][side].setSector(new CPCDiscImageSector(sectTrack, sectSide, sectId, sectSize, sectData, statusregisterA, statusregisterB), sect);
+                            writeSector(track, sectSide, sectTrack, sectSide, sectId, sectSize, sectData);
+                            setST1ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterA);
+                            setST2ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterB);
+                            //this.tracks[track][side].setSector(new CPCDiscImageSector(sectTrack, sectSide, sectId, sectSize, sectData, statusregisterA, statusregisterB), sect);
                         }
                         if (!winape) {
                             offs = sot + trackLength;
@@ -330,15 +312,31 @@ public class CPCDiscImage extends CPCDiscImageModel {
         }
 
         // set track data
-        this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
-        for (int i = 0; i < firstImage.numberOfTracks; i++) {
-            this.tracks[i][0] = firstImage.tracks[i][0];
+        createSectorStructure();
+        //this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
+        
+        for (int sectTrack = 0; sectTrack < this.numberOfTracks; sectTrack++) {
+            //for (int sectSide = 0; sectSide < this.numberOfSides; sectSide++) {
+        		int sectSide=0;
+                for (int sector = 0; sector < 9; sector++) {
+                	writeSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize,readSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize));
+                }
+                sectSide=1;
+                for (int sector = 0; sector < 9; sector++) {
+                	writeSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize,readSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize));
+                }
+            //}
         }
-        for (int i = 0; i < secondImage.numberOfTracks; i++) {
-            final CPCDiscImageTrack track = secondImage.tracks[i][0];
-            track.setSide(1);
-            this.tracks[i][1] = track;
-        }
+        
+        
+//        for (int i = 0; i < firstImage.numberOfTracks; i++) {
+//            this.tracks[i][0] = firstImage.tracks[i][0];
+//        }
+//        for (int i = 0; i < secondImage.numberOfTracks; i++) {
+//            final CPCDiscImageTrack track = secondImage.tracks[i][0];
+//            track.setSide(1);
+//            this.tracks[i][1] = track;
+//        }
 
     }
 
@@ -420,12 +418,12 @@ public class CPCDiscImage extends CPCDiscImageModel {
         return this.extended;
     }
 
-    /**
-     * @return track data for both sides
-     */
-    public CPCDiscImageTrack[][] getTracks() {
-        return this.tracks;
-    }
+//    /**
+//     * @return track data for both sides
+//     */
+//    public CPCDiscImageTrack[][] getTracks() {
+//        return this.tracks;
+//    }
 
     /**
      * Save CPC disc image as EXTENDED DSK image.
@@ -499,7 +497,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
             for (int track = 0; track < this.numberOfTracks; track++) {
                 for (int side = 0; side < this.numberOfSides; side++) {
                     try {
-                        final int trackLength = this.tracks[track][side].getLength();
+                        final int trackLength = getTrack(track,side).getLength();
                         bos.write((trackLength / 256) & 0xFF);
                     } catch (Exception e) {
                     }
@@ -513,7 +511,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
             // track data
             for (int track = 0; track < this.numberOfTracks; track++) {
                 for (int side = 0; side < this.numberOfSides; side++) {
-                    final CPCDiscImageTrack td = this.tracks[track][side];
+                    final CPCDiscImageTrack td = getTrack(track,side);
                     if (td == null) {
                         Samples.CORRUPT.play();
                         return;
@@ -596,7 +594,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
             for (int track = 0; track < this.numberOfTracks; track++) {
                 for (int side = 0; side < this.numberOfSides; side++) {
                     try {
-                        final int trackLength = this.tracks[track][side].getLength();
+                        final int trackLength = getTrack(track,side).getLength();
                         predata[prepos++] = (byte) ((trackLength / 256) & 0xFF);
                     } catch (Exception e) {
                     }
@@ -610,7 +608,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
             // track data
             for (int track = 0; track < this.numberOfTracks; track++) {
                 for (int side = 0; side < this.numberOfSides; side++) {
-                    final CPCDiscImageTrack td = this.tracks[track][side];
+                    final CPCDiscImageTrack td = getTrack(track,side);
                     // track information block
                     dat = (TRACK_INFO.getBytes(ENCODING));
                     System.arraycopy(dat, 0, predata, prepos, dat.length);
@@ -704,7 +702,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
             // track size table
             for (int track = 0; track < this.numberOfTracks; track++) {
                 for (int side = 0; side < this.numberOfSides; side++) {
-                    final int trackLength = this.tracks[track][side].getLength();
+                    final int trackLength = getTrack(track,side).getLength();
                     bos.write((trackLength / 256) & 0xFF);
                 }
             }
@@ -716,7 +714,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
             // track data
             for (int track = 0; track < this.numberOfTracks; track++) {
                 for (int side = 0; side < this.numberOfSides; side++) {
-                    final CPCDiscImageTrack td = this.tracks[track][side];
+                    final CPCDiscImageTrack td = getTrack(track,side);
                     // track information block
                     bos.write(TRACK_INFO.getBytes(ENCODING));
                     bos.write(0); // track info end

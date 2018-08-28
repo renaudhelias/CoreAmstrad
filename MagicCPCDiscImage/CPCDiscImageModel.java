@@ -3,6 +3,7 @@ package jemu.system.cpc;
 
 import jemu.core.device.floppy.DiscImage;
 import jemu.core.device.floppy.IDiscImage;
+import jemu.core.device.floppy.UPD765A;
 
 /**
  * CPCDiscImage Model, in a point of view of IDiscImage (IO)
@@ -13,22 +14,49 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
 
 	private static final int SIDE_MASK = 1;
     private static final int MAX_TRACK = 79;
+    private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC3, 0xC5, 0xC7, 0xC9, 0xC2, 0xC4, 0xC6, 0xC8};
 
+    /**
+     * number of sides.
+     */
+    protected int numberOfSides;
     /**
      * number of tracks.
      */
     protected int numberOfTracks;
+    protected int statusregisterA;
+    protected int statusregisterB;
     protected int[] GAP = new int[168];
+
     protected int oldst1, oldst2;
     /**
      * the tracks.
      */
-    protected CPCDiscImageTrack[][] tracks = null;
+    private CPCDiscImageTrack[][] tracks = null;
 
     public CPCDiscImageModel() {
     	// nothing (it's a model)
     }
 
+    @Override
+    public void createSectorStructure() {
+        this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
+        final int sectorSize = UPD765A.getCommandSize(512);
+        for (int track = 0; track < this.numberOfTracks; track++) {
+            for (int side = 0; side < this.numberOfSides; side++) {
+                this.tracks[track][side] = new CPCDiscImageTrack(track, side, 9 * 512, 9);
+                for (int sector = 0; sector < 9; sector++) {
+                    final byte[] data = new byte[512];
+                    for (int i = 0; i < data.length; i++) {
+                        data[i] = 0;
+                    }
+                    this.tracks[track][side].setSector(new CPCDiscImageSector(track, side, AMSDOS_SECTOR_IDS[sector], sectorSize,
+                            data, statusregisterA, statusregisterB), sector);
+                }
+            }
+        }
+
+    }
     
     @Override
     public int getNoOfTracks() {
@@ -70,6 +98,10 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
     	}
     	return true;
     }
+    
+    public CPCDiscImageTrack getTrack(final int track, final int side) {
+    	return this.tracks[track][side & SIDE_MASK];
+    }
 
     @Override
     public byte[] readSector(final int track, final int side, final int c, final int h, final int r, final int n) {
@@ -96,6 +128,7 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
             final int r,
             final int n,
             final byte[] data) {
+    	this.tracks[track][side & SIDE_MASK].setSectorData(c, h, r, n,data);
     }
 
     

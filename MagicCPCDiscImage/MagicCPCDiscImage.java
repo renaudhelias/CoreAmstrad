@@ -121,7 +121,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         }
     }
 
-    private void createSectorStructure() {
+    public void createSectorStructure() {
         ids = new int[2][80][0][];
         sectors = new byte[2][80][][];
         for (int cyl = 0; cyl < CYLS; cyl++) {

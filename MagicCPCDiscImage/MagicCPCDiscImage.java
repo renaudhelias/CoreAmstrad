@@ -49,8 +49,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     CPCFileSystem system;
     String path;
     Properties propFile;
-    int[][][][] ids;
-    byte[][][][] sectors;
+//    int[][][][] ids;
+//    byte[][][][] sectors;
     int lastCylinder = 79;
     int headMask = 1;
 	private String name;
@@ -104,6 +104,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
 
     public void init(String path) {
     	File f = new File(path);
+    	this.numberOfTracks=80;
+    	this.numberOfSides=2;
         createSectorStructure();
         if (f.isFile() && f.getName().endsWith(".properties")) {
         	this.path = f.getParent();
@@ -121,39 +123,44 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         }
     }
 
-    public void createSectorStructure() {
-        ids = new int[2][80][0][];
-        sectors = new byte[2][80][][];
-        for (int cyl = 0; cyl < CYLS; cyl++) {
-            for (int head = 0; head < HEADS; head++) {
-
-                ids[head][cyl] = new int[SECTS][4];
-                sectors[head][cyl] = new byte[SECTS][];
-                for (int sect = 0; sect < SECTS; sect++) {
-                    int[] sectId = ids[head][cyl][sect];
-                    sectId[0] = cyl; // C
-                    sectId[1] = 0; // H
-                    sectId[2] = 0xC1 + sect; // R
-                    sectId[3] = 0x02; // N
-                    int size = sectorSize(sectId[3]);
-                    byte[] sectData = sectors[head][cyl][sect] = new byte[size];
-                    for (int i = 0; i < size; i++) {
-                        sectData[i] = (byte) 0xe5;
-                    }
-                }
-            }
-        }
-    }
+//    @Override
+//    public void createSectorStructure() {
+//        ids = new int[2][80][0][];
+//        sectors = new byte[2][80][][];
+//        for (int cyl = 0; cyl < CYLS; cyl++) {
+//            for (int head = 0; head < HEADS; head++) {
+//
+//                ids[head][cyl] = new int[SECTS][4];
+//                sectors[head][cyl] = new byte[SECTS][];
+//                for (int sect = 0; sect < SECTS; sect++) {
+//                    int[] sectId = ids[head][cyl][sect];
+//                    sectId[0] = cyl; // C
+//                    sectId[1] = 0; // H
+//                    sectId[2] = 0xC1 + sect; // R
+//                    sectId[3] = 0x02; // N
+//                    int size = sectorSize(sectId[3]);
+//                    byte[] sectData = sectors[head][cyl][sect] = new byte[size];
+//                    for (int i = 0; i < size; i++) {
+//                        sectData[i] = (byte) 0xe5;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private void resetSectorContent() {
         byte empty[] = new byte[512];
         for (int j = 0; j < 512; j++) {
             empty[j] = (byte) 0xE5;
         }
-        System.arraycopy(empty, 0, sectors[0][0][0], 0, 512);
-        System.arraycopy(empty, 0, sectors[0][0][1], 0, 512);
-        System.arraycopy(empty, 0, sectors[0][0][2], 0, 512);
-        System.arraycopy(empty, 0, sectors[0][0][3], 0, 512);
+        writeSector(0, 0 , 0, 0, getSectorID(0, 0, 0)[2], 512, empty);
+        writeSector(0, 0 , 0, 0, getSectorID(0, 0, 1)[2], 512, empty);
+        writeSector(0, 0 , 0, 0, getSectorID(0, 0, 2)[2], 512, empty);
+        writeSector(0, 0 , 0, 0, getSectorID(0, 0, 3)[2], 512, empty);
+//        System.arraycopy(empty, 0, sectors[0][0][0], 0, 512);
+//        System.arraycopy(empty, 0, sectors[0][0][1], 0, 512);
+//        System.arraycopy(empty, 0, sectors[0][0][2], 0, 512);
+//        System.arraycopy(empty, 0, sectors[0][0][3], 0, 512);
     }
 
     
@@ -264,7 +271,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
 //                        throw new MagicCPCDiscImageException(MagicCPCDiscImageException.FILE_STRUCTDIR_TOO_BIG);
                 }
                 ii = i % 16;
-                byte[] sectData = sectors[0][0][noSect];
+                byte[] sectData = readSector(0,0,0,0, getSectorID(0, 0, noSect)[2], 512); //sectors[0][0][noSect];
 
                 File f = dirContent.get(name);
                 long fileLength = f.length();
@@ -283,7 +290,10 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     FileInputStream fis = new FileInputStream(f);
                     while (fis.read(selectedFileContent) > 0) {
                         System.arraycopy(selectedFileContent, 0,
-                                sectors[writeH][writeC][writeR], 0, 512);
+                        		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
+                                //sectors[writeH][writeC][writeR]
+                                		
+                                		, 0, 512);
                         teaForTwo = !teaForTwo;
                         writeR++;
                         if (writeR >= SECTS) {
@@ -330,7 +340,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     }
 
                     ii = (i + n) % 16;
-                    sectData = sectors[0][0][noSect];
+                    sectData = readSector(0,0,0,0, getSectorID(0,0, noSect)[2], 512);// sectors[0][0][noSect];
 
                     System.arraycopy(line, 0, sectData, ii * 0x20, 32);
                     System.arraycopy(name.getBytes(), 0, sectData,
@@ -416,26 +426,29 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         return -1;
     }
 
-    public byte[] readSector(int cylinder, int head, int c, int h, int r, int n) {
-        head &= headMask;
-        byte[] result = null;
-        if (cylinder <= lastCylinder) {
-            int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
-            if (index != -1) {
-                result = sectors[head][cylinder][index];
-            }
-        }
-        return result;
-    }
+//    public byte[] readSector(int cylinder, int head, int c, int h, int r, int n) {
+//        head &= headMask;
+//        byte[] result = null;
+//        if (cylinder <= lastCylinder) {
+//            int index = getSectorIndex(r);//ids[head][cylinder], c, h, r, n);
+//            if (index != -1) {
+//            	//result = readSector(cylinder,head,cylinder,head, getSectorID(cylinder,head, index)[2], 512);
+//                result = readSector(cylinder,head,cylinder,head, getSectorID(cylinder,head, index)[2], 512);
+//            }
+//        }
+//        return result;
+//    }
 
-    public int[] getSectorID(int cylinder, int head, int index) {
-        return ids[head & headMask][cylinder][index];
-    }
-
-    public int getSectorCount(int cylinder, int head) {
-        return cylinder > lastCylinder ? 0
-                : ids[head & headMask][cylinder].length;
-    }
+//    @Override
+//    public int[] getSectorID(int cylinder, int head, int index) {
+//        return ids[head & headMask][cylinder][index];
+//    }
+//
+//    @Override
+//    public int getSectorCount(int cylinder, int head) {
+//        return cylinder > lastCylinder ? 0
+//                : ids[head & headMask][cylinder].length;
+//    }
 
     boolean isData = false;
     boolean isBank = true;
@@ -451,7 +464,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n) {
         head &= headMask;
         if (cylinder <= lastCylinder) {
-            int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
+            int index = getSectorIndex(r);//ids[head][cylinder], c, h, r, n);
             if (index != -1) {
 
                 if (head == 0 && cylinder == 0 && index < 4) {
@@ -517,7 +530,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     private List<String> doScanAllNamesFromSectors() {
         List<String> flatScanNames = new ArrayList<String>();
         for (int index = 0; index < 4; index++) {
-            byte[] result = sectors[0][0][index];
+            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512); //sectors[0][0][index];
 //            System.out.println("\n#DIRSTRUCT SCAN " + index);
             for (int i = 0; i < result.length / 32; i++) {
                 byte[] filename = new byte[8 + 3];
@@ -818,7 +831,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n) {
         head &= headMask;
         if (cylinder <= lastCylinder) {
-            int index = getSectorIndex(ids[head][cylinder], c, h, r, n);
+            int index = getSectorIndex(r);//ids[head][cylinder], c, h, r, n);
             if (index != -1) {
                 if (head == 0 && cylinder == 0 && beginOfSector && index < 4) {
                     doScanNames(true, head, cylinder, index);

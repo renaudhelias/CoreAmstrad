@@ -37,6 +37,15 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
     public CPCDiscImageModel() {
     	// nothing (it's a model)
     }
+    
+    int getSectorIndex(int r) {
+    	for (int i = 0;i<AMSDOS_SECTOR_IDS.length;i++) {
+    		if (AMSDOS_SECTOR_IDS[i] == r) {
+    			return i;
+    		}
+    	}
+    	return 0;
+    }
 
     @Override
     public void createSectorStructure() {

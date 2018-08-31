@@ -51,8 +51,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     Properties propFile;
 //    int[][][][] ids;
 //    byte[][][][] sectors;
-    int lastCylinder = 79;
-    int headMask = 1;
+    final int lastCylinder = 79;
+    final int headMask = 1;
 	private String name;
 
     public static final int SECTS = 9;
@@ -104,8 +104,24 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
 
     public void init(String path) {
     	File f = new File(path);
-    	this.numberOfTracks=80;
-    	this.numberOfSides=2;
+//    	this.numberOfTracks=80;
+//    	this.numberOfSides=2;
+    	
+    	
+    	
+    	
+//        this.discId = EXTENDED_DESCRIPTION;
+//        this.creator = CREATOR_DATA;
+        this.numberOfTracks = 80;
+        this.numberOfSides = 1;
+        this.statusregisterA = 0;
+        this.statusregisterB = 0;
+//        this.sizeOfTrack = Math.max(1, Math.min(2, numberOfSides));
+//        this.extended = true;
+    	
+    	
+    	
+    	
         createSectorStructure();
         if (f.isFile() && f.getName().endsWith(".properties")) {
         	this.path = f.getParent();

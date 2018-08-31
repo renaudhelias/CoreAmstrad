@@ -14,7 +14,8 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
 
 	private static final int SIDE_MASK = 1;
     private static final int MAX_TRACK = 79;
-    private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC3, 0xC5, 0xC7, 0xC9, 0xC2, 0xC4, 0xC6, 0xC8};
+    //private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC3, 0xC5, 0xC7, 0xC9, 0xC2, 0xC4, 0xC6, 0xC8};
+    private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9};
 
     /**
      * number of sides.
@@ -57,7 +58,7 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
                 for (int sector = 0; sector < 9; sector++) {
                     final byte[] data = new byte[512];
                     for (int i = 0; i < data.length; i++) {
-                        data[i] = 0;
+                        data[i] = (byte) 0xe5;
                     }
                     this.tracks[track][side].setSector(new CPCDiscImageSector(track, side, AMSDOS_SECTOR_IDS[sector], sectorSize,
                             data, statusregisterA, statusregisterB), sector);

@@ -58,7 +58,13 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     public static final int SECTS = 9;
     public static final int CYLS = 40; // x28
     public static final int HEADS = 1;
-
+    
+    public static final byte FILETYPE_BASIC=(byte)0x00;
+    public static final byte FILETYPE_PROTECTED=(byte)0x01;
+    public static final byte FILETYPE_BINARY=(byte)0x02;
+    public static final String PROPS_BINARY="bin";
+    public static final String PROPS_BASIC="bas";
+    
     public byte[] getImage() {
         return null;
     }
@@ -210,10 +216,14 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     }
     HashMap<String, File> dirContent = new HashMap<String, File>();
     List<String> dirContentKeys = new ArrayList<String>();
+    List<String> dirContentBasic = new ArrayList<String>();
+    List<String> dirContentBinary = new ArrayList<String>();
 
     private void listDir() {
         dirContent.clear();
         dirContentKeys.clear();
+        dirContentBasic.clear();
+        dirContentBinary.clear();
         int ii = 0;
         int noSect = 0;
         try {
@@ -240,6 +250,16 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     		entry=entry.replaceAll("\\*", ".*");
                     		if (cpcname2realname(cpcname).matches(entry)) {
                     			trouve =true;
+                    			String value=propFile.getProperty((String) entryO);
+                    			String[] values = value.split(",");
+                    			for (int v=0;v<values.length;v++) {
+                    				if (PROPS_BASIC.equals(values[v])) {
+                    					dirContentBasic.add(cpcname);
+                    				}
+                    				if (PROPS_BINARY.equals(values[v])) {
+                    					dirContentBinary.add(cpcname);
+                    				}
+                    			}
                     			break;
                     		}
                     	}
@@ -322,12 +342,51 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                 try {
                     byte[] selectedFileContent = new byte[512];
                     FileInputStream fis = new FileInputStream(f);
+                    if (dirContentBasic.contains(name) || dirContentBinary.contains(name)) {
+                        byte[] selectedFileContentBegin= new byte[128+256];
+                        if (fis.read(selectedFileContentBegin) > 0) {
+                        	byte[] header = buildHeader(name, dirContentBasic.contains(name) ? FILETYPE_BASIC : FILETYPE_BINARY,(int)fileLength);
+                    		for (int c = 0; c <128;c++) {
+                    			System.out.print(" "+String.format("%02X ", header[c]));
+                    			//System.out.print(" "+(int)(header[c] & 0xFF));
+                    			if (c%16==15) System.out.println("");
+                    		}
+                             System.arraycopy(header, 0,
+                              		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
+                                      //sectors[writeH][writeC][writeR]
+                                      		
+                                      		, 0, 128);
+                             System.arraycopy(selectedFileContentBegin, 0,
+                             		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
+                                     //sectors[writeH][writeC][writeR]
+                                     		
+                                     		, 128, 128+256);
+                             System.out.println("BLOCK 1");
+                             for (int c = 0; c <512;c++) {
+                            	 
+                     			System.out.print(" "+String.format("%02X ", readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)[c]));
+                     			//System.out.print(" "+(int)(header[c] & 0xFF));
+                     			if (c%16==15) System.out.println("");
+                     		}
+                             teaForTwo = !teaForTwo;
+                             writeR++;
+                             if (writeR >= SECTS) {
+                                 writeR = 0;
+                                 writeC++;
+                                 if (writeC >= CYLS) {
+                                     break;
+                                 }
+                             }
+                        }
+                    }
                     while (fis.read(selectedFileContent) > 0) {
+                    	
                         System.arraycopy(selectedFileContent, 0,
                         		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
                                 //sectors[writeH][writeC][writeR]
                                 		
                                 		, 0, 512);
+                    	
                         teaForTwo = !teaForTwo;
                         writeR++;
                         if (writeR >= SECTS) {
@@ -358,6 +417,10 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                 }
                 // a file of 64Kb filled with x"20" (space chat) : 65536bytes
 
+                if (dirContentBasic.contains(name) || dirContentBinary.contains(name)) {
+                	fileLength+=128; // header
+                }
+                
                 long m = fileLength / (16 * 1024); // number of this file DIREntry
                 long mm = fileLength % (16 * 1024); // data referenced by last DIREntry (if not a full data DIREntry)
                 if (mm > 0) {
@@ -420,7 +483,61 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         scanNames = doScanAllNamesFromSectors();
     }
 
-    private String realname2cpcname(String realname) {
+    /**
+     * 
+     * @param filename
+     * @param fileType FILETYPE_BASIC,FILETYPE_PROTECTED,FILETYPE_BINARY
+     * @return
+     */
+    private byte[] buildHeader(String filename, byte fileType, int fileLengh) {
+    	int checksum0066=0;
+    	byte[] header = new byte[128];
+//    	Byte 00: User number (value from 0 to 15 or #E5 for deleted entries)
+    	header[0]=(byte) 0x00;
+//    	Byte 01 to 08: filename (fill unused char with spaces)
+    	header[1]=(byte) filename.charAt(0);checksum0066+=(int)(header[1]&0xFF);
+    	header[2]=(byte) filename.charAt(1);checksum0066+=(int)(header[2]&0xFF);
+    	header[3]=(byte) filename.charAt(2);checksum0066+=(int)(header[3]&0xFF);
+    	header[4]=(byte) filename.charAt(3);checksum0066+=(int)(header[4]&0xFF);
+    	header[5]=(byte) filename.charAt(4);checksum0066+=(int)(header[5]&0xFF);
+    	header[6]=(byte) filename.charAt(5);checksum0066+=(int)(header[6]&0xFF);
+    	header[7]=(byte) filename.charAt(6);checksum0066+=(int)(header[7]&0xFF);
+    	header[8]=(byte) filename.charAt(7);checksum0066+=(int)(header[8]&0xFF);
+//    	Byte 09 to 11: Extension (fill unused char with spaces)
+    	header[9]=(byte) filename.charAt(8);checksum0066+=(int)(header[9]&0xFF);
+    	header[10]=(byte) filename.charAt(9);checksum0066+=(int)(header[10]&0xFF);
+    	header[11]=(byte) filename.charAt(10);checksum0066+=(int)(header[11]&0xFF);
+//    	Byte 16: first block (tape only)
+    	header[16]=(byte) 0x00;
+//    	Byte 17: first block (tape only)
+    	header[17]=(byte) 0x00;
+//    	Byte 18: file type (0:basic 1:protected 2:binary)
+    	header[18]=fileType;checksum0066+=(int)(header[18]&0xFF);
+		header[19]=(byte) (fileLengh%256);checksum0066+=(int)(header[19]&0xFF);
+		header[20]=(byte) (fileLengh/256);checksum0066+=(int)(header[20]&0xFF);
+//    	Byte 21 and 22: loading address LSB first
+    	header[21]=(byte) 0x00;
+		header[22]=(byte) 0x01;checksum0066+=(int)(header[22]&0xFF);
+//    	Byte 23: first block (tape only?)
+		header[23]=(byte) 0x00;
+//    	Byte 24 and 25: file length LSB first
+		header[24]=(byte) (fileLengh%256);checksum0066+=(int)(header[24]&0xFF);
+		header[25]=(byte) (fileLengh/256);checksum0066+=(int)(header[25]&0xFF);
+//    	Byte 26 and 27: execution address for machine code program LSB first
+    	header[26]=(byte) 0x00;
+		header[27]=(byte) 0x01;checksum0066+=(int)(header[27]&0xFF);
+//    	Byte 64 and 66: 24 bits file length LSB first. Just a copy, not used!
+		header[64]=(byte) (fileLengh%256);checksum0066+=(int)(header[64]&0xFF);
+		header[65]=(byte) (fileLengh/256);checksum0066+=(int)(header[65]&0xFF);
+//    	Byte 67 and 68: checksum for bytes 00-66 stored LSB first
+		//To calculate the checksum just add all bytes from 00 up to and including byte 66 together.
+		header[67]=(byte) (checksum0066%256);
+		header[68]=(byte) (checksum0066/256);
+//    	Byte 69 to 127: undefined content, free to use
+		return header;
+	}
+
+	private String realname2cpcname(String realname) {
     	String cpcname = realname.toUpperCase();
     	if (cpcname.contains(".")) {
             int point = cpcname.indexOf(".");

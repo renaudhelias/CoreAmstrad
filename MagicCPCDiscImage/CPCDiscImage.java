@@ -35,13 +35,13 @@ import jemu.ui.Switches;
  */
 public class CPCDiscImage extends CPCDiscImageModel {
 
-//    public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n) {
-//
-//    }
-//
-//    public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n) {
-//
-//    }
+    public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n) {
+
+    }
+
+    public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n) {
+
+    }
     protected boolean DEBUG = false;
     private static String SAVED_DSK = "";
     private static final String WIN_APE_EYECATCHER = "Win APE 32 1.0";

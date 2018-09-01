@@ -3083,7 +3083,7 @@ public final class CPC extends Computer implements ActionListener {
     }
 
     public void checkDF0() {
-        this.storeMagicAsDSK();
+//        this.storeMagicAsDSK();
         if (Switches.checksave && !disableSave[0]) {
             if (df0mod) {
                 int ok = JOptionPane.showConfirmDialog(new Frame(),
@@ -3099,7 +3099,7 @@ public final class CPC extends Computer implements ActionListener {
     }
 
     public void checkDF1() {
-        this.storeMagicAsDSK();
+//        this.storeMagicAsDSK();
         if (Switches.checksave && !disableSave[1]) {
             if (df1mod) {
                 int ok = JOptionPane.showConfirmDialog(new Frame(),
@@ -3115,7 +3115,7 @@ public final class CPC extends Computer implements ActionListener {
     }
 
     public void checkDF2() {
-        this.storeMagicAsDSK();
+//        this.storeMagicAsDSK();
         if (Switches.checksave && !disableSave[2]) {
             if (df2mod) {
                 int ok = JOptionPane.showConfirmDialog(new Frame(),
@@ -3131,7 +3131,7 @@ public final class CPC extends Computer implements ActionListener {
     }
 
     public void checkDF3() {
-        this.storeMagicAsDSK();
+//        this.storeMagicAsDSK();
         if (Switches.checksave && !disableSave[3]) {
             if (df3mod) {
                 int ok = JOptionPane.showConfirmDialog(new Frame(),
@@ -3147,7 +3147,7 @@ public final class CPC extends Computer implements ActionListener {
     }
 
     public void checkSave() {
-        this.storeMagicAsDSK();
+//        this.storeMagicAsDSK();
         if (Switches.checksave) {
             if (df0mod && !disableSave[0]) {
                 int ok = JOptionPane.showConfirmDialog(new Frame(),
@@ -3192,7 +3192,7 @@ public final class CPC extends Computer implements ActionListener {
     }
 
     public void checkSaveOnExit() {
-        this.storeMagicAsDSK();
+//        this.storeMagicAsDSK();
         shouldquit = true;
         if (Switches.checksave) {
             if (df0mod && !disableSave[0]) {

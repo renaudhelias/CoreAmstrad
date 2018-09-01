@@ -35,12 +35,12 @@ import jemu.core.device.floppy.UPD765A;
  */
 public class CPCDiscImageForMerge extends CPCDiscImageModel {
 
-//  public  void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n){
-//      
-//  }
-//  public  void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n){
-//      
-//  }
+  public  void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n){
+      
+  }
+  public  void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n){
+      
+  }
     public boolean addSectorToTrack(int a, int b, int c, int d, int e, int f, int g){return false;}
     public boolean removeAllSectorsFromTrack(int a, int b){return false;}
 

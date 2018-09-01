@@ -123,7 +123,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     	
     	
         createSectorStructure();
-        if (f.isFile() && f.getName().endsWith(".properties")) {
+        if (f.isFile() && f.getName().endsWith(".dsk.properties")) {
         	this.path = f.getParent();
             	try {
             	Properties prop = new Properties();
@@ -227,7 +227,23 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     String cpcname = realname2cpcname(realname);
                                         
                     if (propFile != null) {
-                    	if (!propFile.containsKey(cpcname2realname(cpcname))) {
+                    	boolean trouve = false;
+                		if (cpcname2realname(cpcname).endsWith(".dsk") || cpcname2realname(cpcname).endsWith(".dsk.properties")) {
+                			// no recursive
+                    		System.out.println("ignoring recursing "+cpcname);
+                    		continue;
+                		}
+                    	for (Object entryO : propFile.keySet()) {
+                    		String entry=(String) entryO;
+                    		entry=entry.toUpperCase();
+                    		entry=entry.replaceAll("\\.", "\\.");
+                    		entry=entry.replaceAll("\\*", ".*");
+                    		if (cpcname2realname(cpcname).matches(entry)) {
+                    			trouve =true;
+                    			break;
+                    		}
+                    	}
+                    	if (!trouve) {
                     		System.out.println("ignoring "+cpcname);
                     		continue;
                     	}
@@ -251,6 +267,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
             	Enumeration<?> e = propFile.propertyNames();
         		while (e.hasMoreElements()) {
         			String key = (String) e.nextElement();
+        			key=key.toLowerCase();
+        			if (key.contains("*")) { continue; }
         			if (!dirContentKeys.contains(realname2cpcname(key))) {
 	        			String value = propFile.getProperty(key);
 	        			System.out.println("MagicProps - missing Key : " + key + " (cpcname="+realname2cpcname(key)+"), Value : " + value);

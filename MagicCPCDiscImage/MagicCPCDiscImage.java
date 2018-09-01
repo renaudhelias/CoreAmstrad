@@ -17,8 +17,6 @@ import jemu.core.device.Computer;
 
 import jemu.ui.cpcgamescd.CPCFileSystem;
 
-import jemu.core.device.floppy.*;
-
 /**
  * Title: JavaCPC Description: The Java Amstrad CPC Emulator Copyright:
  * Copyright (c) 2006-2015 Company:
@@ -49,8 +47,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     CPCFileSystem system;
     String path;
     Properties propFile;
-//    int[][][][] ids;
-//    byte[][][][] sectors;
+
     final int lastCylinder = 79;
     final int headMask = 1;
 	private String name;
@@ -110,23 +107,11 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
 
     public void init(String path) {
     	File f = new File(path);
-//    	this.numberOfTracks=80;
-//    	this.numberOfSides=2;
     	
-    	
-    	
-    	
-//        this.discId = EXTENDED_DESCRIPTION;
-//        this.creator = CREATOR_DATA;
         this.numberOfTracks = 80;
         this.numberOfSides = 1;
         this.statusregisterA = 0;
         this.statusregisterB = 0;
-//        this.sizeOfTrack = Math.max(1, Math.min(2, numberOfSides));
-//        this.extended = true;
-    	
-    	
-    	
     	
         createSectorStructure();
         if (f.isFile() && f.getName().endsWith(".dsk.properties")) {
@@ -145,31 +130,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         }
     }
 
-//    @Override
-//    public void createSectorStructure() {
-//        ids = new int[2][80][0][];
-//        sectors = new byte[2][80][][];
-//        for (int cyl = 0; cyl < CYLS; cyl++) {
-//            for (int head = 0; head < HEADS; head++) {
-//
-//                ids[head][cyl] = new int[SECTS][4];
-//                sectors[head][cyl] = new byte[SECTS][];
-//                for (int sect = 0; sect < SECTS; sect++) {
-//                    int[] sectId = ids[head][cyl][sect];
-//                    sectId[0] = cyl; // C
-//                    sectId[1] = 0; // H
-//                    sectId[2] = 0xC1 + sect; // R
-//                    sectId[3] = 0x02; // N
-//                    int size = sectorSize(sectId[3]);
-//                    byte[] sectData = sectors[head][cyl][sect] = new byte[size];
-//                    for (int i = 0; i < size; i++) {
-//                        sectData[i] = (byte) 0xe5;
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     private void resetSectorContent() {
         byte empty[] = new byte[512];
         for (int j = 0; j < 512; j++) {
@@ -179,10 +139,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         writeSector(0, 0 , 0, 0, getSectorID(0, 0, 1)[2], 512, empty);
         writeSector(0, 0 , 0, 0, getSectorID(0, 0, 2)[2], 512, empty);
         writeSector(0, 0 , 0, 0, getSectorID(0, 0, 3)[2], 512, empty);
-//        System.arraycopy(empty, 0, sectors[0][0][0], 0, 512);
-//        System.arraycopy(empty, 0, sectors[0][0][1], 0, 512);
-//        System.arraycopy(empty, 0, sectors[0][0][2], 0, 512);
-//        System.arraycopy(empty, 0, sectors[0][0][3], 0, 512);
     }
 
     
@@ -269,17 +225,10 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     	}
                     }
                     
-//                    System.out.println("#DIR : " + cpcname);
-                    // FIXME Dangerous : all files are renamed at begin of process, into Amstrad CPC filename style.
-                    // This will not be corrected on this "experimental" version :P
-                    // comment: Fixed!
                     File fSuperAmstradName = new File(path + "/" + realname);
-//                    sf.renameTo(fSuperAmstradName);
                     dirContent.put(cpcname, fSuperAmstradName);
                     dirContentKeys.add(cpcname);
                     System.out.println("adding "+cpcname);
-//                    copyAsDSK();
-
                 }
 
             }
@@ -348,24 +297,18 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                         	byte[] header = buildHeader(name, dirContentBasic.contains(name) ? FILETYPE_BASIC : FILETYPE_BINARY,(int)fileLength);
                     		for (int c = 0; c <128;c++) {
                     			System.out.print(" "+String.format("%02X ", header[c]));
-                    			//System.out.print(" "+(int)(header[c] & 0xFF));
                     			if (c%16==15) System.out.println("");
                     		}
                              System.arraycopy(header, 0,
                               		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
-                                      //sectors[writeH][writeC][writeR]
-                                      		
                                       		, 0, 128);
                              System.arraycopy(selectedFileContentBegin, 0,
                              		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
-                                     //sectors[writeH][writeC][writeR]
-                                     		
                                      		, 128, 128+256);
                              System.out.println("BLOCK 1");
                              for (int c = 0; c <512;c++) {
                             	 
                      			System.out.print(" "+String.format("%02X ", readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)[c]));
-                     			//System.out.print(" "+(int)(header[c] & 0xFF));
                      			if (c%16==15) System.out.println("");
                      		}
                              teaForTwo = !teaForTwo;
@@ -383,8 +326,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     	
                         System.arraycopy(selectedFileContent, 0,
                         		readSector(writeC,writeH,writeC,writeH, getSectorID(writeC,writeH, writeR)[2], 512)
-                                //sectors[writeH][writeC][writeR]
-                                		
                                 		, 0, 512);
                     	
                         teaForTwo = !teaForTwo;
@@ -413,7 +354,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     fis.close();
                 } catch (Exception e) {
                     break;
-//                    e.printStackTrace();
                 }
                 // a file of 64Kb filled with x"20" (space chat) : 65536bytes
 
@@ -433,7 +373,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     if (noSect >= 4) {
                         System.out.println(MagicCPCDiscImageException.FILE_STRUCTDIR_TOO_BIG);
                         break;
-//                        throw new MagicCPCDiscImageException(MagicCPCDiscImageException.FILE_STRUCTDIR_TOO_BIG);
                     }
 
                     ii = (i + n) % 16;
@@ -567,40 +506,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         return n > 5 ? 0x1800 : 0x80 << n;
     }
 
-    protected int getSectorIndex(int[][] ids, int c, int h, int r, int n) {
-        for (int i = 0; i < ids.length; i++) {
-            int[] id = ids[i];
-            if (id[0] == c && id[1] == h && id[2] == r && id[3] == n) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-//    public byte[] readSector(int cylinder, int head, int c, int h, int r, int n) {
-//        head &= headMask;
-//        byte[] result = null;
-//        if (cylinder <= lastCylinder) {
-//            int index = getSectorIndex(r);//ids[head][cylinder], c, h, r, n);
-//            if (index != -1) {
-//            	//result = readSector(cylinder,head,cylinder,head, getSectorID(cylinder,head, index)[2], 512);
-//                result = readSector(cylinder,head,cylinder,head, getSectorID(cylinder,head, index)[2], 512);
-//            }
-//        }
-//        return result;
-//    }
-
-//    @Override
-//    public int[] getSectorID(int cylinder, int head, int index) {
-//        return ids[head & headMask][cylinder][index];
-//    }
-//
-//    @Override
-//    public int getSectorCount(int cylinder, int head) {
-//        return cylinder > lastCylinder ? 0
-//                : ids[head & headMask][cylinder].length;
-//    }
-
     boolean isData = false;
     boolean isBank = true;
     List<String> scanNames = new ArrayList<String>();
@@ -681,8 +586,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     private List<String> doScanAllNamesFromSectors() {
         List<String> flatScanNames = new ArrayList<String>();
         for (int index = 0; index < 4; index++) {
-            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512); //sectors[0][0][index];
-//            System.out.println("\n#DIRSTRUCT SCAN " + index);
+            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512);
             for (int i = 0; i < result.length / 32; i++) {
                 byte[] filename = new byte[8 + 3];
                 System.arraycopy(result, i * 0x20 + 1, filename, 0,
@@ -741,7 +645,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                     fos.close();
                     buffer.clear();
                     checkFile(f);
-//                    copyAsDSK();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -794,7 +697,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
                 if (f.exists()) {
                     f.delete();
                 }
-//                copyAsDSK();
                 CPC.protect = true;
             }
             // renamed file or else nothing : that's ok to turn this page.

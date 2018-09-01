@@ -205,7 +205,6 @@ public class CPCDiscImage extends CPCDiscImageModel {
         checkImage(data, name);
 
         createSectorStructure();
-        //this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
         if (isCpcDisc) {
 
             // track size information
@@ -233,7 +232,6 @@ public class CPCDiscImage extends CPCDiscImageModel {
                         GAP[track] = data[offs + 0x16] & 0xff;
 
                         int sectorInformationPos = offs + 0x18;
-                        //this.tracks[track][side] = new CPCDiscImageTrack(track, side, trackLength, numberOfSectors);
 
                         // read sector data
                         offs += 0x100;
@@ -269,7 +267,6 @@ public class CPCDiscImage extends CPCDiscImageModel {
                             writeSector(track, sectSide, sectTrack, sectSide, sectId, sectSize, sectData);
                             setST1ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterA);
                             setST2ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterB);
-                            //this.tracks[track][side].setSector(new CPCDiscImageSector(sectTrack, sectSide, sectId, sectSize, sectData, statusregisterA, statusregisterB), sect);
                         }
                         if (!winape) {
                             offs = sot + trackLength;
@@ -313,31 +310,17 @@ public class CPCDiscImage extends CPCDiscImageModel {
 
         // set track data
         createSectorStructure();
-        //this.tracks = new CPCDiscImageTrack[this.numberOfTracks][this.numberOfSides];
         
         for (int sectTrack = 0; sectTrack < this.numberOfTracks; sectTrack++) {
-            //for (int sectSide = 0; sectSide < this.numberOfSides; sectSide++) {
-        		int sectSide=0;
-                for (int sector = 0; sector < 9; sector++) {
-                	writeSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize,readSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize));
-                }
-                sectSide=1;
-                for (int sector = 0; sector < 9; sector++) {
-                	writeSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize,readSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize));
-                }
-            //}
+    		int sectSide=0;
+            for (int sector = 0; sector < 9; sector++) {
+            	writeSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize,readSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize));
+            }
+            sectSide=1;
+            for (int sector = 0; sector < 9; sector++) {
+            	writeSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize,readSector(sectTrack, sectSide,  sectTrack, sectSide, getSectorID(sectTrack, sectSide, sector)[2], sectSize));
+            }
         }
-        
-        
-//        for (int i = 0; i < firstImage.numberOfTracks; i++) {
-//            this.tracks[i][0] = firstImage.tracks[i][0];
-//        }
-//        for (int i = 0; i < secondImage.numberOfTracks; i++) {
-//            final CPCDiscImageTrack track = secondImage.tracks[i][0];
-//            track.setSide(1);
-//            this.tracks[i][1] = track;
-//        }
-
     }
 
 
@@ -417,13 +400,6 @@ public class CPCDiscImage extends CPCDiscImageModel {
     public boolean isExtended() {
         return this.extended;
     }
-
-//    /**
-//     * @return track data for both sides
-//     */
-//    public CPCDiscImageTrack[][] getTracks() {
-//        return this.tracks;
-//    }
 
     /**
      * Save CPC disc image as EXTENDED DSK image.

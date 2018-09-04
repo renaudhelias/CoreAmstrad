@@ -133,7 +133,7 @@ public class CPCDiscImage extends CPCDiscImageModel {
      * @param name file name
      * @param data image data
      */
-    protected final void checkImage(byte[] data, String name) {
+    private void checkImage(byte[] data, String name) {
         try {
             byte[] info = ("Track-Info" + (char) 0x0d + (char) 0x0a + (char) 0 + (char) 0).getBytes("UTF-8");
             int hasTracks = 0;

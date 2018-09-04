@@ -81,7 +81,8 @@ public class MagicCPCDiscImageTest {
 		MagicCPCDiscImage image = new MagicCPCDiscImage(name);
 		//transform CPCMagicDiscImage en CPCDiscImage
 		assertNotNull(image);
-		image.copyAsDSK("MAGIC_OUTPUT_PROPS.DSK");
+//		image.copyAsDSK("MAGIC_OUTPUT_PROPS.DSK");
+		image.saveImage(new File("MAGIC_OUTPUT_PROPS.DSK"));
 	}
 	
 	@Test
@@ -89,7 +90,8 @@ public class MagicCPCDiscImageTest {
 		String name="resources/magic_test/";
 		MagicCPCDiscImage image = new MagicCPCDiscImage(name);
 		assertNotNull(image);
-		image.copyAsDSK("MAGIC_OUTPUT.DSK");
+//		image.copyAsDSK("MAGIC_OUTPUT.DSK");
+		image.saveImage(new File("MAGIC_OUTPUT.DSK"));
 	}
 
 }

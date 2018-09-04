@@ -3,6 +3,7 @@ package jemu.system.cpc;
 import JCPC.core.device.Device;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,7 +15,9 @@ import java.util.List;
 import java.util.Properties;
 
 import jemu.core.device.Computer;
-
+import jemu.core.device.floppy.UPD765A;
+import jemu.core.samples.Samples;
+import jemu.ui.Switches;
 import jemu.ui.cpcgamescd.CPCFileSystem;
 
 /**
@@ -44,8 +47,11 @@ import jemu.ui.cpcgamescd.CPCFileSystem;
  */
 public class MagicCPCDiscImage extends CPCDiscImageModel {
 
+	private static final String ENCODING = "UTF-8";
+	
     CPCFileSystem system;
     String path;
+    CPCDiscImageDesc dskDesc;
     Properties propFile;
 
     final int lastCylinder = 79;
@@ -65,11 +71,6 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     public byte[] getImage() {
         return null;
     }
-
-    public void saveImage(File file) {
-
-    }
-
 
     public int getNoOfTracks() {
         return lastCylinder;
@@ -100,6 +101,278 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         init(dir);
     }
     
+    /**
+     * Creates a new instance of CPCDiscImage.
+     *
+     * @param name file name
+     * @param data image data
+     */
+    private void initDskData(byte[] data) {
+        jemu.core.device.floppy.UPD765A.error = false;
+        //this.newImage = false;
+        dskDesc= new CPCDiscImageDesc();
+        
+        dskDesc.setDiscId(new String(data, 0, 0x22));
+        dskDesc.setCreator(new String(data, 0x22, 0x0E));
+        this.numberOfTracks = data[0x30] & 0xff;
+        GAP = new int[numberOfTracks];
+        Switches.numberOfTracks = numberOfTracks;
+//        System.out.println("Numberof tracks is:" + numberOfTracks);
+        this.numberOfSides = data[0x31] & 0xff;
+        dskDesc.setSizeOfTrack(Device.getWord(data, 0x32));
+        dskDesc.setExtended(dskDesc.getDiscId().toUpperCase().startsWith(CPCDiscImageDesc.EXTENDED_EYECATCHER));
+        final boolean isCpcDisc = dskDesc.isExtended() || dskDesc.getDiscId().toUpperCase().startsWith(CPCDiscImageDesc.MV_CPC_EYECATCHER);
+        final boolean winape = dskDesc.getCreator().equalsIgnoreCase(CPCDiscImageDesc.WIN_APE_EYECATCHER);
+
+        // let's check the dsk image for bad track number information
+        checkImage(data, name);
+
+        createSectorStructure();
+        if (isCpcDisc) {
+
+        	int sectSize;
+        	
+            // track size information
+            final byte[] trackSizes = new byte[256];
+            if (dskDesc.isExtended()) {
+                System.arraycopy(data, 0x34, trackSizes, 0, this.numberOfTracks * this.numberOfSides);
+            }
+
+            // scan track data
+            int offs = 0x100;
+            for (int track = 0; track < this.numberOfTracks; track++) {
+                for (int side = 0; side < this.numberOfSides; side++) {
+
+                    // track length
+                    int trackLength = dskDesc.getSizeOfTrack();
+                    if (dskDesc.isExtended()) {
+                        trackLength = (trackSizes[track * this.numberOfSides + side] & 0xff) * 0x100;
+//                        System.err.println(trackLength);
+//                        System.exit(0);
+                    }
+                    if (trackLength != 0 && offs < data.length) {
+                        // track information block
+                        final int sot = offs;
+                        final int numberOfSectors = data[offs + 0x15] & 0xff;
+                        GAP[track] = data[offs + 0x16] & 0xff;
+
+                        int sectorInformationPos = offs + 0x18;
+
+                        // read sector data
+                        offs += 0x100;
+                        for (int sect = 0; sect < numberOfSectors; sect++) {
+
+                            // sector information list
+                            final int sectTrack = data[sectorInformationPos++] & 0xff; // C
+                            final int sectSide = data[sectorInformationPos++] & 0xff; // H
+                            final int sectId = data[sectorInformationPos++] & 0xff; // R
+                            sectSize = data[sectorInformationPos++] & 0xff; // N
+                            statusregisterA = data[sectorInformationPos++] & 0xff; // regA
+                            statusregisterB = data[sectorInformationPos++] & 0xff; // regB
+//                            sectorInformationPos += 2; // FDC status register 1/2
+                            int bytes = UPD765A.getSectorSize(sectSize);
+                            if (dskDesc.isExtended() && !winape) {
+                                final int sz = Device.getWord(data, sectorInformationPos);
+                                if (sz != 0) {
+                                    bytes = sz;
+                                    sectSize = UPD765A.getCommandSize(bytes);
+                                }
+                            }
+                            sectorInformationPos += 2;
+                            final byte[] sectData = new byte[bytes];
+                            try {
+                                System.arraycopy(data, offs, sectData, 0, bytes);
+                            } catch (Exception e) {
+                                System.err.println("Corrupt DSK image...");
+                                Samples.CORRUPT.play();
+                                jemu.core.device.floppy.UPD765A.error = true;
+                                return;
+                            }
+                            offs += bytes;
+                            writeSector(track, sectSide, sectTrack, sectSide, sectId, sectSize, sectData);
+                            setST1ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterA);
+                            setST2ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterB);
+                        }
+                        if (!winape) {
+                            offs = sot + trackLength;
+                        }
+                    }
+                }
+            }
+        }
+        for (int sect = 0; sect < GAP.length; sect++) {
+            if (GAP[sect] == 0) {
+                GAP[sect] = 78;
+            }
+        }
+    }
+    
+    /**
+     * Checks a disk image for real existing number of tracks, comparing to
+     * given number in dsk header If different, the disk image is being fixed.
+     *
+     * @param name file name
+     * @param data image data
+     */
+    private void checkImage(byte[] data, String name) {
+        try {
+            byte[] info = ("Track-Info" + (char) 0x0d + (char) 0x0a + (char) 0 + (char) 0).getBytes("UTF-8");
+            int hasTracks = 0;
+            for (int i = 0; i < data.length - info.length; i++) {
+                boolean foundTrack = false;
+                for (int k = 0; k < info.length; k++) {
+                    if (data[i + k] == info[k]) {
+                        foundTrack = true;
+                    } else {
+                        foundTrack = false;
+                        break;
+                    }
+                }
+                if (foundTrack) {
+                    hasTracks++;
+                    i += info.length;
+                }
+            }
+            hasTracks /= numberOfSides;
+            if (numberOfTracks != hasTracks && hasTracks >= 36 && hasTracks <= 80) {
+                System.out.println("Corrupt DSK image. Fixing header...");
+                System.out.println("Tracks in header: " + numberOfTracks + " - " + "Real tracks found in DSK: " + hasTracks);
+//                Samples.FIXTRACKS.play();
+                try {
+                    File a = new File(name + ".bak");
+                    BufferedOutputStream bos;
+                    if (!a.exists()) {
+                        bos = new BufferedOutputStream(new FileOutputStream(a));
+                        bos.write(data);
+                        bos.close();
+                    }
+                    a = new File(name);
+                    bos = new BufferedOutputStream(new FileOutputStream(a));
+                    data[0x030] = (byte) hasTracks;
+                    bos.write(data);
+                    bos.close();
+                } catch (Exception ex) {
+                }
+                numberOfTracks = hasTracks & 0xff;
+                Switches.numberOfTracks = numberOfTracks;
+            }
+        } catch (Exception e) {
+        }
+    }
+    
+    /**
+     * Save image.
+     *
+     * @param savedImage save file
+     */
+    //@Override
+    public synchronized void saveImage(File savedImage) {
+//        if (!Switches.uncompressed) {
+//            saveDSZImage(savedImage);
+//            return;
+//        }
+        if (System.getSecurityManager() != null) {
+            try {
+                System.getSecurityManager().checkWrite(savedImage.getAbsolutePath());
+            } catch (final SecurityException sex) {
+                // don't save
+                return;
+            }
+        }
+
+//        System.out.println("store dsk file to " + savedImage);
+        this.name = savedImage.getAbsolutePath();
+        if (name.toLowerCase().endsWith(".zip")) {
+            name = name + "_" + Switches.choosenname;
+        }
+        if (!name.toLowerCase().endsWith(".dsk")) {
+            name = name + ".dsk";
+        }
+        // save data to file
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            // disc information block
+            bos.write(CPCDiscImageDesc.EXTENDED_DESCRIPTION.getBytes(ENCODING));
+            bos.write(CPCDiscImageDesc.CREATOR_DATA.getBytes(ENCODING));
+            bos.write(this.numberOfTracks);
+            bos.write(this.numberOfSides);
+            bos.write(0);
+            bos.write(0);
+
+            // track size table
+            for (int track = 0; track < this.numberOfTracks; track++) {
+                for (int side = 0; side < this.numberOfSides; side++) {
+                    try {
+                        final int trackLength = getTrack(track,side).getLength();
+                        bos.write((trackLength / 256) & 0xFF);
+                    } catch (Exception e) {
+                    }
+                }
+            }
+            int unused = 0x100 - 0x34 - this.numberOfTracks * this.numberOfSides;
+            for (int i = 0; i < unused; i++) {
+                bos.write(0);
+            }
+
+            // track data
+            for (int track = 0; track < this.numberOfTracks; track++) {
+                for (int side = 0; side < this.numberOfSides; side++) {
+                    final CPCDiscImageTrack td = getTrack(track,side);
+                    if (td == null) {
+                        Samples.CORRUPT.play();
+                        return;
+                    }
+                    // track information block
+                    bos.write(CPCDiscImageDesc.TRACK_INFO.getBytes(ENCODING));
+                    bos.write(0); // track info end
+                    bos.write(0); // unused
+                    bos.write(0); // unused
+                    bos.write(0); // unused
+                    bos.write(td.getTrack());
+                    bos.write(td.getSide());
+                    bos.write(0); // unused
+                    bos.write(0); // unused
+                    bos.write(td.getSector(0).getSize()); // UPD765A size
+                    final int numberOfSectors = td.getSectorCount();
+                    bos.write(numberOfSectors);
+                    bos.write(0x4e); // GAP#3 length
+                    bos.write(0xe5); // filler byte
+
+                    // sector information list
+                    for (int sector = 0; sector < numberOfSectors; sector++) {
+                        final CPCDiscImageSector sd = td.getSector(sector);
+                        bos.write(sd.getTrack());
+                        bos.write(sd.getSide());
+                        bos.write(sd.getId());
+                        bos.write(sd.getSize()); // UPD765A size
+                        bos.write(sd.getST1()); // FDC status register 1
+                        bos.write(sd.getST2()); // FDC status register 2
+                        final int dataSize = sd.getData().length;
+                        bos.write(dataSize & 0xFF);
+                        bos.write((dataSize / 256) & 0xFF);
+                        // System.out.println("sec " + sd.getTrack() + "/" + sd.getSide() + "/" + sd.getId() + "/"
+                        // + UPD765A.getCommandSize(sd.getSize()) + " size=" + sd.getData().length);
+                        // System.out.println(" -> " + (dataSize & 0xFF) + " / " + ((dataSize / 256) & 0xFF));
+                    }
+                    unused = 0x100 - 0x18 - 8 * numberOfSectors;
+                    for (int i = 0; i < unused; i++) {
+                        bos.write(0);
+                    }
+                    for (int sector = 0; sector < numberOfSectors; sector++) {
+                        bos.write(td.getSector(sector).getData());
+                    }
+                }
+            }
+            bos.close();
+            final BufferedOutputStream baos = new BufferedOutputStream(new FileOutputStream(name));
+            baos.write(bos.toByteArray());
+            baos.close();
+
+        } catch (final IOException iox) {
+//            System.out.println("can't write to file " + savedImage + ": " + iox.getMessage());
+        }
+    }
+    
     @Override
     public String getName() {
     	return name;
@@ -114,7 +387,10 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         this.statusregisterB = 0;
     	
         createSectorStructure();
-        if (f.isFile() && f.getName().endsWith(".dsk.properties")) {
+        if (f.isFile() && f.getName().endsWith(".dsk")) {
+        	this.path=f.getParent();
+        	initDskData(MagicCPCDiscImageUtils.getFile(f.getAbsolutePath()));
+        } else if (f.isFile() && f.getName().endsWith(".dsk.properties")) {
         	this.path = f.getParent();
             	try {
             	Properties prop = new Properties();
@@ -142,34 +418,34 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     }
 
     
-    public void copyAsDSK() {
-    	copyAsDSK("MAGIC_OUTPUT.DSK");
-    }
-    public void copyAsDSK(String name) {
-        system.get(path + "/" + name);
-        try {
-            File folder = new File(path);
-            if (folder.isDirectory()) {
-                for (File sf : folder.listFiles()) {
-                    if (sf.isDirectory() || sf.length() > 0x0FFFF || sf.length() < 0x00001) {
-                        continue; // ignore directories & larger files than 64k & smaller files than 1 byte
-                    }
-                    String realname = sf.getName().toUpperCase();
-                    String cpcname = realname2cpcname(realname);
-                    if (propFile != null) {
-                    	if (!propFile.containsKey(cpcname2realname(cpcname))) {
-                    		System.out.println("ignoring "+cpcname);
-                    		continue;
-                    	}
-                    }
-                    system.DIR();
-                    system.copyToDSK(path + "/", realname, path + "/" +name);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public void copyAsDSK() {
+//    	copyAsDSK("MAGIC_OUTPUT.DSK");
+//    }
+//    public void copyAsDSK(String name) {
+//        system.get(path + "/" + name);
+//        try {
+//            File folder = new File(path);
+//            if (folder.isDirectory()) {
+//                for (File sf : folder.listFiles()) {
+//                    if (sf.isDirectory() || sf.length() > 0x0FFFF || sf.length() < 0x00001) {
+//                        continue; // ignore directories & larger files than 64k & smaller files than 1 byte
+//                    }
+//                    String realname = sf.getName().toUpperCase();
+//                    String cpcname = realname2cpcname(realname);
+//                    if (propFile != null) {
+//                    	if (!propFile.containsKey(cpcname2realname(cpcname))) {
+//                    		System.out.println("ignoring "+cpcname);
+//                    		continue;
+//                    	}
+//                    }
+//                    system.DIR();
+//                    system.copyToDSK(path + "/", realname, path + "/" +name);
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
     HashMap<String, File> dirContent = new HashMap<String, File>();
     List<String> dirContentKeys = new ArrayList<String>();
     List<String> dirContentBasic = new ArrayList<String>();

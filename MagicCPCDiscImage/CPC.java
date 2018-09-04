@@ -2204,7 +2204,7 @@ public final class CPC extends Computer implements ActionListener {
                 if (f.isDirectory()) {
                     return true;
                 } else {
-                    return f.getName().toLowerCase().endsWith(".dsk.properties");
+                    return f.getName().toLowerCase().endsWith(".dsk");
                 }
             }
         });
@@ -2240,13 +2240,13 @@ public final class CPC extends Computer implements ActionListener {
         null
     };
 
-    public void storeMagicAsDSK() {
-        for (int i = 0; i < 4; i++) {
-            if (magicimage[i] != null) {
-                magicimage[i].copyAsDSK();
-            }
-        }
-    }
+//    public void storeMagicAsDSK() {
+//        for (int i = 0; i < 4; i++) {
+//            if (magicimage[i] != null) {
+//                magicimage[i].copyAsDSK();
+//            }
+//        }
+//    }
 
     public void loadMagicCPCDisk(int drive, String path) {
         if (path == null) {

@@ -53,6 +53,11 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     String path;
     CPCDiscImageDesc dskDesc;
     Properties propFile;
+    
+    /**
+     * If it's magic, then generate also dsk, dsk.properties and files themself !
+     */
+    boolean magic;
 
     final int lastCylinder = 79;
     final int headMask = 1;
@@ -265,7 +270,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
      */
     public void saveImage() {
         // create file name '_saved'
-        final File discImage = new File(this.name);
+        final File discImage = new File(this.path+File.separator+this.name+".dsk");
         String saveFileName = discImage.getName();
 //        if (Switches.neverOverwrite) {
 //            SAVED_DSK = "_saved";
@@ -286,14 +291,10 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
 //                }
 //            }
 //        }
-        if (saveFileName.endsWith(".dsk.properties")) {
-        	saveFileName=saveFileName.substring(0,saveFileName.length()-".properties".length());
-        }
-        if (discImage.isDirectory()) {
-        	saveFileName=saveFileName+"/"+discImage.getName()+".dsk";
-            saveImage(new File(discImage, saveFileName));
-        } else {
-            saveImage(new File(discImage.getParent(), saveFileName));
+        saveImage(new File(discImage.getParent(), saveFileName));
+        
+        if (magic) {
+        	writeProperties();
         }
     }
     
@@ -318,7 +319,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         }
 
 //        System.out.println("store dsk file to " + savedImage);
-        this.name = savedImage.getAbsolutePath();
+        String name = savedImage.getAbsolutePath();
         if (name.toLowerCase().endsWith(".zip")) {
             name = name + "_" + Switches.choosenname;
         }
@@ -426,24 +427,55 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         createSectorStructure();
         if (f.isFile() && f.getName().endsWith(".dsk")) {
         	this.path=f.getParent();
+        	this.name=f.getName().substring(0,f.getName().length()-".dsk".length());
         	initDskData(MagicCPCDiscImageUtils.getFile(f.getAbsolutePath()));
+        	// not magic, but... has a sort of CRUD :p
+        	listProperties();
+        	magic=false;
         } else if (f.isFile() && f.getName().endsWith(".dsk.properties")) {
         	this.path = f.getParent();
+        	this.name=f.getName().substring(0,f.getName().length()-".dsk.properties".length());
             	try {
             	Properties prop = new Properties();
 				prop.load(new FileInputStream(f));
 				propFile=prop;
 	            listDir();
+	            saveImage();
+	        	magic=true;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
         } else {
         	this.path = path;
+        	this.name=f.getName();
+        	listProperties();
             listDir();
+            saveImage();
+            magic=true;
         }
     }
 
-    private void resetSectorContent() {
+    /**
+     * If it's magic, then generate also dsk, dsk.properties and files themself !
+     */
+    private void writeProperties() {
+    	File f = new File(this.path+File.separator+this.name+".dsk.properties");
+    	try {
+			propFile.store(new FileOutputStream(f), "writen by MagicCPCDiscImage (JavaCPC)");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+     * like dir (magic), but for properties
+     */
+    private void listProperties() {
+    	propFile=new Properties();
+    	propFile.setProperty("*.*", "");
+	}
+
+	private void resetSectorContent() {
         byte empty[] = new byte[512];
         for (int j = 0; j < 512; j++) {
             empty[j] = (byte) 0xE5;
@@ -740,7 +772,13 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     private String[] actualMagicDir;
     private long[] lastMagicSizes;
     private long[] actualMagicSizes;
+    /**
+     * Do refresh disc content when file outside does change (from themself)
+     */
     public void checkMagic() {
+    	if (!magic) {
+    		return;
+    	}
         magiccheck = new File(path);
         if (magiccheck.isFile()) {
         	magiccheck=magiccheck.getParentFile();
@@ -814,6 +852,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
             System.out.println("Re-scanning directory in " + path);
             //loadMagicSilent(drive, path);
             init(path);
+            System.out.println("And write changes also on disk+properties");
+            saveImage();
         }
     }
     

@@ -11,7 +11,6 @@ import java.awt.image.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import jemu.core.samples.Samples;
 import jemu.core.*;
@@ -20,7 +19,9 @@ import jemu.core.device.Computer;
 import jemu.core.device.DeviceMapping;
 import jemu.ui.Switches;
 import jemu.core.device.crtc.Basic6845;
+import jemu.core.device.floppy.DiscImage;
 import jemu.core.device.floppy.Drive;
+import jemu.core.device.floppy.IDiscImage;
 import jemu.core.device.floppy.UPD765A;
 import jemu.core.device.io.PPI8255;
 import jemu.core.device.memory.Memory;
@@ -48,261 +49,6 @@ import jemu.ui.*;
 
 import net.sourceforge.lhadecompressor.*;
 import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
-import static jemu.system.cpc.GateArray.setPalette;
-import static jemu.ui.JEMU.desktop;
 import jemu.util.ass.EditorPanel;
 
 /**
@@ -714,11 +460,11 @@ public final class CPC extends Computer implements ActionListener {
         0xEE
     };
     public static boolean FDCReset = false;
-    public CPCDiscImage dskImage;
-    public CPCDiscImage dskImageA;
-    public CPCDiscImage dskImageB;
-    public CPCDiscImage dskImageC;
-    public CPCDiscImage dskImageD;
+    public IDiscImage dskImage;
+    public IDiscImage dskImageA;
+    public IDiscImage dskImageB;
+    public IDiscImage dskImageC;
+    public IDiscImage dskImageD;
     protected static GridBagConstraints gbcConstraints = null;
     static String[] Palette = new String[33];
     public static Color[] Greencols = {
@@ -2232,13 +1978,13 @@ public final class CPC extends Computer implements ActionListener {
         }
     }
 
-    String[] magics = new String[4];
-    MagicCPCDiscImage[] magicimage = {
-        null,
-        null,
-        null,
-        null
-    };
+//    String[] magics = new String[4];
+//    MagicCPCDiscImage[] magicimage = {
+//        null,
+//        null,
+//        null,
+//        null
+//    };
 
 //    public void storeMagicAsDSK() {
 //        for (int i = 0; i < 4; i++) {
@@ -2252,134 +1998,66 @@ public final class CPC extends Computer implements ActionListener {
         if (path == null) {
             return;
         }
-        magics[drive] = path;
+        IDiscImage image = new MagicCPCDiscImage(path);
+        if (drive == 0) {
+            checkDF0();
+            dskImageA = image;
+            df0mod = false;
+        }
+        if (drive == 1) {
+            checkDF1();
+            dskImageB = image;
+            df1mod = false;
+        }
+        if (drive == 2) {
+            checkDF2();
+            dskImageC = image;
+            df2mod = false;
+        }
+        if (drive == 3) {
+            checkDF3();
+            dskImageD = image;
+            df3mod = false;
+        }
+        
+        
         floppies[drive].setSides(2);
         fdc.setDrive(drive, floppies[drive]);
         
-        magicimage[drive] = new MagicCPCDiscImage(path);
-        fdc.getDrive(drive).setDisc(Drive.BOTH_HEADS, magicimage[drive]);
+//        magicimage[drive] = new MagicCPCDiscImage(path);
+        fdc.getDrive(drive).setDisc(Drive.BOTH_HEADS, (DiscImage) image);
         disableSave[drive] = true;
         jemu.ui.Desktop.checkdrives = true;
     }
 
-    File magiccheck;
-    String[][] lastMagicDir = new String[4][];
-    String[][] actualMagicDir = new String[4][];
-    long[][] lastMagicSizes = new long[4][];
-    long[][] actualMagicSizes = new long[4][];
 
     public static boolean protect;
 
-    protected void scanActualFiles(int drive) {
-        for (int i = 0; i < actualMagicDir[drive].length; i++) {
-            File c = new File(magiccheck + "\\" + actualMagicDir[drive][i]);
-            actualMagicSizes[drive][i] = c.length();
-        }
-    }
 
-    protected void scanLastFiles(int drive) {
-        for (int i = 0; i < lastMagicSizes[drive].length; i++) {
-            File c = new File(magiccheck + "\\" + lastMagicDir[drive][i]);
-            lastMagicSizes[drive][i] = c.length();
-        }
-    }
+   
 
-    public void checkMagic(int drive) {
-        magiccheck = new File(magics[drive]);
-        if (magiccheck.isFile()) {
-        	magiccheck=magiccheck.getParentFile();
-        }
-        if (actualMagicDir[drive] == null) {
-            actualMagicDir[drive] = magiccheck.list();
-            actualMagicSizes[drive] = new long[actualMagicDir[drive].length];
-            scanActualFiles(drive);
-            return;
-        }
-        boolean reload = false;
-        lastMagicDir[drive] = magiccheck.list();
-        lastMagicSizes[drive] = new long[lastMagicDir[drive].length];
-        scanLastFiles(drive);
-        if (lastMagicDir[drive].length != actualMagicDir[drive].length) {
-            actualMagicDir[drive] = magiccheck.list();
-            actualMagicSizes[drive] = new long[actualMagicDir[drive].length];
-            scanActualFiles(drive);
-            reload = true;
-        }
-        if (!reload) {
-            for (int i = 0; i < lastMagicDir[drive].length; i++) {
-                try {
-                    if (!lastMagicDir[drive][i].equals(actualMagicDir[drive][i])) {
-                        actualMagicDir[drive] = magiccheck.list();
-                        scanActualFiles(drive);
-                        reload = true;
-                        break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    actualMagicDir[drive] = magiccheck.list();
-                    lastMagicDir[drive] = magiccheck.list();
-                    actualMagicSizes[drive] = new long[actualMagicDir[drive].length];
-                    lastMagicSizes[drive] = new long[lastMagicDir[drive].length];
-                    scanActualFiles(drive);
-                    scanLastFiles(drive);
-                    reload = true;
-                    break;
-                }
-            }
-        }
-        if (!reload) {
-            for (int i = 0; i < lastMagicSizes[drive].length; i++) {
-                try {
-                    if (lastMagicSizes[drive][i] != actualMagicSizes[drive][i]) {
-                        actualMagicDir[drive] = magiccheck.list();
-                        scanActualFiles(drive);
-                        reload = true;
-                        break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    actualMagicDir[drive] = magiccheck.list();
-                    lastMagicDir[drive] = magiccheck.list();
-                    actualMagicSizes[drive] = new long[actualMagicDir[drive].length];
-                    lastMagicSizes[drive] = new long[lastMagicDir[drive].length];
-                    scanActualFiles(drive);
-                    scanLastFiles(drive);
-                    reload = true;
-                    break;
-                }
-            }
-        }
-        if (reload) {
-            if (protect) {
-                System.out.println("Re-read of disk is not possible! Internal disk access!");
-                protect = false;
-                return;
-            }
-            System.out.println("Re-scanning directory in " + magics[drive]);
-            loadMagicSilent(drive, magics[drive]);
-        }
-    }
+//    public void loadMagicSilent(int drive, String path) {
+//        if (path == null) {
+//            return;
+//        }
+//        MagicCPCDiscImage dsk=(MagicCPCDiscImage) floppies[drive].getDisc(0);
+//        dsk.
+//        //magicimage[drive] = new MagicCPCDiscImage(path);
+//        fdc.getDrive(drive).setDisc(Drive.BOTH_HEADS, dsk);
+//        disableSave[drive] = true;
+//    }
 
-    public void loadMagicSilent(int drive, String path) {
-        if (path == null) {
-            return;
-        }
-        magicimage[drive] = new MagicCPCDiscImage(path);
-        fdc.getDrive(drive).setDisc(Drive.BOTH_HEADS, magicimage[drive]);
-        disableSave[drive] = true;
-    }
-
-    public void unloadMagicCPCDisk(int drive) {
-        if (magicimage[drive] == null) {
-            return;
-        }
-        Settings.set(Settings.MAGICCPCDISKIMAGE + drive, "empty");
-        magics[drive] = null;
-        magicimage[drive] = null;
-        fdc.setDrive(drive, null);
-        disableSave[drive] = false;
-        jemu.ui.Desktop.checkdrives = true;
-    }
+//    public void unloadMagicCPCDisk(int drive) {
+//        if (magicimage[drive] == null) {
+//            return;
+//        }
+//        Settings.set(Settings.MAGICCPCDISKIMAGE + drive, "empty");
+//        magics[drive] = null;
+//        magicimage[drive] = null;
+//        fdc.setDrive(drive, null);
+//        disableSave[drive] = false;
+//        jemu.ui.Desktop.checkdrives = true;
+//    }
 
     static boolean[] disableSave = new boolean[4];
 
@@ -2738,13 +2416,13 @@ public final class CPC extends Computer implements ActionListener {
             checkDF0();
             dskImageA = null;
             df0mod = false;
-            this.unloadMagicCPCDisk(0);
+//            this.unloadMagicCPCDisk(0);
         }
         if (drive == 1) {
             checkDF1();
             dskImageB = null;
             df1mod = false;
-            this.unloadMagicCPCDisk(1);
+//            this.unloadMagicCPCDisk(1);
         }
         if (drive == 2) {
             checkDF2();
@@ -4530,17 +4208,17 @@ public final class CPC extends Computer implements ActionListener {
         magicscheck++;
         if (magicscheck >= 10) {
             magicscheck = 0;
-            if (magics[0] != null) {
-                checkMagic(0);
+            if (dskImageA instanceof MagicCPCDiscImage) {
+                ((MagicCPCDiscImage)dskImageA).checkMagic();
             }
-            if (magics[1] != null) {
-                checkMagic(1);
+            if (dskImageB instanceof MagicCPCDiscImage) {
+            	((MagicCPCDiscImage)dskImageB).checkMagic();
             }
-            if (magics[2] != null) {
-                checkMagic(2);
+            if (dskImageC instanceof MagicCPCDiscImage) {
+            	((MagicCPCDiscImage)dskImageC).checkMagic();
             }
-            if (magics[3] != null) {
-                checkMagic(3);
+            if (dskImageD instanceof MagicCPCDiscImage) {
+            	((MagicCPCDiscImage)dskImageD).checkMagic();
             }
         }
 
@@ -5336,7 +5014,7 @@ public final class CPC extends Computer implements ActionListener {
             floppies[drive].setSides(dskImage.getNumberOfSides());
             int heads = dskImage.getNumberOfSides() == 1 ? Drive.HEAD_0 : Drive.BOTH_HEADS;
             fdc.setDrive(drive, floppies[drive]);
-            fdc.getDrive(drive).setDisc(heads, dskImage);
+            fdc.getDrive(drive).setDisc(heads, (DiscImage) dskImage);
             dskImage.saveImage();
         } else {
             System.out.println("Failed to save... Probably drive empty?");
@@ -5352,7 +5030,7 @@ public final class CPC extends Computer implements ActionListener {
             floppies[drive].setSides(dskImage.getNumberOfSides());
             int heads = dskImage.getNumberOfSides() == 1 ? Drive.HEAD_0 : Drive.BOTH_HEADS;
             fdc.setDrive(drive, floppies[drive]);
-            fdc.getDrive(drive).setDisc(heads, dskImage);
+            fdc.getDrive(drive).setDisc(heads, (DiscImage)dskImage);
             dskImage.saveImage();
         } else {
             System.out.println("Failed to save... Probably drive empty?");

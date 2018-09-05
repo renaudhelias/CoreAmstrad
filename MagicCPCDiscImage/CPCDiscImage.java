@@ -381,13 +381,6 @@ public class CPCDiscImage extends CPCDiscImageModel {
     }
 
     /**
-     * @return number of sides
-     */
-    public int getNumberOfSides() {
-        return this.numberOfSides;
-    }
-
-    /**
      * @return the track size
      */
     public int getSizeOfTrack() {

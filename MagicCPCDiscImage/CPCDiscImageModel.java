@@ -176,5 +176,13 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
         } catch (Exception e) {
         }
     }
+    
+    /**
+     * @return number of sides
+     */
+    @Override
+    public int getNumberOfSides() {
+    	return numberOfSides;
+    }
 
 }

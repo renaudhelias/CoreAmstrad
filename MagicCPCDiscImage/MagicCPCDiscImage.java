@@ -261,6 +261,43 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
     }
     
     /**
+     * Save CPC disc image as EXTENDED DSK image.
+     */
+    public void saveImage() {
+        // create file name '_saved'
+        final File discImage = new File(this.name);
+        String saveFileName = discImage.getName();
+//        if (Switches.neverOverwrite) {
+//            SAVED_DSK = "_saved";
+//        } else {
+//            SAVED_DSK = "";
+//        }
+//        if (!this.newImage && SAVED_DSK.length() > 0) {
+//            final int dotPos = saveFileName.lastIndexOf('.');
+//            if (dotPos == -1) {
+//                if (!saveFileName.endsWith(SAVED_DSK)) {
+//                    saveFileName += SAVED_DSK;
+//                    saveFileName = checkNewSaveFile(discImage.getParent(), saveFileName, "");
+//                }
+//            } else {
+//                final String ext = saveFileName.substring(dotPos);
+//                if (!saveFileName.endsWith(SAVED_DSK + ext)) {
+//                    saveFileName = checkNewSaveFile(discImage.getParent(), saveFileName.substring(0, dotPos) + SAVED_DSK, ext);
+//                }
+//            }
+//        }
+        if (saveFileName.endsWith(".dsk.properties")) {
+        	saveFileName=saveFileName.substring(0,saveFileName.length()-".properties".length());
+        }
+        if (discImage.isDirectory()) {
+        	saveFileName=saveFileName+"/"+discImage.getName()+".dsk";
+            saveImage(new File(discImage, saveFileName));
+        } else {
+            saveImage(new File(discImage.getParent(), saveFileName));
+        }
+    }
+    
+    /**
      * Save image.
      *
      * @param savedImage save file
@@ -698,6 +735,103 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         scanNames = doScanAllNamesFromSectors();
     }
 
+    private File magiccheck;
+    private String[] lastMagicDir;
+    private String[] actualMagicDir;
+    private long[] lastMagicSizes;
+    private long[] actualMagicSizes;
+    public void checkMagic() {
+        magiccheck = new File(path);
+        if (magiccheck.isFile()) {
+        	magiccheck=magiccheck.getParentFile();
+        }
+        if (actualMagicDir == null) {
+            actualMagicDir = magiccheck.list();
+            actualMagicSizes = new long[actualMagicDir.length];
+            scanActualFiles();
+            return;
+        }
+        boolean reload = false;
+        lastMagicDir = magiccheck.list();
+        lastMagicSizes = new long[lastMagicDir.length];
+        scanLastFiles();
+        if (lastMagicDir.length != actualMagicDir.length) {
+            actualMagicDir = magiccheck.list();
+            actualMagicSizes = new long[actualMagicDir.length];
+            scanActualFiles();
+            reload = true;
+        }
+        if (!reload) {
+            for (int i = 0; i < lastMagicDir.length; i++) {
+                try {
+                    if (!lastMagicDir[i].equals(actualMagicDir[i])) {
+                        actualMagicDir = magiccheck.list();
+                        scanActualFiles();
+                        reload = true;
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    actualMagicDir = magiccheck.list();
+                    lastMagicDir = magiccheck.list();
+                    actualMagicSizes = new long[actualMagicDir.length];
+                    lastMagicSizes = new long[lastMagicDir.length];
+                    scanActualFiles();
+                    scanLastFiles();
+                    reload = true;
+                    break;
+                }
+            }
+        }
+        if (!reload) {
+            for (int i = 0; i < lastMagicSizes.length; i++) {
+                try {
+                    if (lastMagicSizes[i] != actualMagicSizes[i]) {
+                        actualMagicDir = magiccheck.list();
+                        scanActualFiles();
+                        reload = true;
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    actualMagicDir = magiccheck.list();
+                    lastMagicDir = magiccheck.list();
+                    actualMagicSizes = new long[actualMagicDir.length];
+                    lastMagicSizes = new long[lastMagicDir.length];
+                    scanActualFiles();
+                    scanLastFiles();
+                    reload = true;
+                    break;
+                }
+            }
+        }
+        if (reload) {
+//            if (protect) {
+//                System.out.println("Re-read of disk is not possible! Internal disk access!");
+//                protect = false;
+//                return;
+//            }
+            System.out.println("Re-scanning directory in " + path);
+            //loadMagicSilent(drive, path);
+            init(path);
+        }
+    }
+    
+    private void scanActualFiles() {
+        for (int i = 0; i < actualMagicDir.length; i++) {
+            File c = new File(magiccheck + "\\" + actualMagicDir[i]);
+            actualMagicSizes[i] = c.length();
+        }
+    }
+
+    private void scanLastFiles() {
+        for (int i = 0; i < lastMagicSizes.length; i++) {
+            File c = new File(magiccheck + "\\" + lastMagicDir[i]);
+            lastMagicSizes[i] = c.length();
+        }
+    }
+
+    
     /**
      * 
      * @param filename

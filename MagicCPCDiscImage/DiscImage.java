@@ -39,11 +39,11 @@ public abstract class DiscImage implements IDiscImage {
 
     public abstract byte[] getImage();
 
-	public final void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n) {
+	public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n) {
 		// useless :p
 	}
 
-	public final void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n) {
+	public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n) {
 		// useless :p
 	}
 }

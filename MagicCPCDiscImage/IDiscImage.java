@@ -8,9 +8,9 @@ package jemu.core.device.floppy;
 public interface IDiscImage {
 
 	
-	//public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n);
+	public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n);
 
-	//public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n);
+	public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n);
 
     public int getNoOfTracks();
     public int getGap(int track);
@@ -29,6 +29,21 @@ public interface IDiscImage {
 
     public int getST2ForSector(int cylinder, int head, int c, int h, int r, int n);
     public void setST2ForSector(int cylinder, int head, int c, int h, int r, int n, int st2);
+
+    public void createSectorStructure();
+	public void saveImage();
+
+    /**
+     * For some human message asks
+     * @return
+     */
+	public String getName();
+
+	/**
+	 * Some really lot used CPCDiscImageDesc fields
+	 * @return
+	 */
+	public int getNumberOfSides();
 
 
 }

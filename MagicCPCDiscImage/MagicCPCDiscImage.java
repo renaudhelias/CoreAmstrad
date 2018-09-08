@@ -45,7 +45,7 @@ import jemu.ui.cpcgamescd.CPCFileSystem;
  * save"file",p => protected file, with '*' in cat
  *
  */
-public class MagicCPCDiscImage extends CPCDiscImageModel {
+public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMidnightCommander {
 
 	private static final String ENCODING = "UTF-8";
 	
@@ -1343,5 +1343,32 @@ public class MagicCPCDiscImage extends CPCDiscImageModel {
         }
 
     }
+
+	@Override
+	public List<String> crudList() {
+		List<String> files = new ArrayList<String>();
+		for (Object o : propFile.keySet()) {
+			files.add(String.valueOf(o));
+		}
+		return files;
+	}
+
+	@Override
+	public MagicCPCFile crudRead(String magicFileName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void crudAdd(MagicCPCFile magicFile) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void crudRemove(String magicFileName) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

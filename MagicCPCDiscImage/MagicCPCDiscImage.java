@@ -1094,7 +1094,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
                     	byte sizeByte=result[i * 0x20 + 15];
                     	// 0x80 => 16KB
                     	int dataLength=((16*1024)/0x80)*sizeByte;
-                    	data.addAll(readDataSector(index*(512/32)*16*1024 + i *16*1024 + 4 *16*1024,dataLength));
+                    	data.addAll(readDataSector(index*(512/32)*512 + i *512 + 4 *512,dataLength));
                     }
                 }
             }
@@ -1102,9 +1102,9 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
         return data;
     }
     
-    List<Byte> readDataSector(int offset, int lenght) {
+    List<Byte> readDataSector(long offset, int lenght) {
     	List<Byte> dataExtracted = new ArrayList<Byte>();
-    	int offsetLeft=offset;
+    	long offsetLeft=offset;
     	int lenghtLeft=lenght;
     	for (int head=0;head<numberOfSides;head++) {
     		for (int cylinder=0;cylinder<numberOfTracks;cylinder++) {

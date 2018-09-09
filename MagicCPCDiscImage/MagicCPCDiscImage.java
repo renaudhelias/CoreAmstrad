@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -1155,7 +1156,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
                     	for (int d=0;d<32;d++) {
                     		result[i * 0x20+d]=(byte) 0xE5;
                     	}
-                    	writeSector(0,0,0,0, getSectorID(0,0, index)[2], 512, result);
+//                    	writeSector(0,0,0,0, getSectorID(0,0, index)[2], 512, result);
                     }
                 }
             }
@@ -1477,9 +1478,107 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 
 	@Override
 	public void crudAdd(MagicCPCFile magicFile) {
+		
+		List<Integer> freeCatalog = nextFreeCatalogFromSectors();
+		Iterator<Integer> it = freeCatalog.iterator();
+		Iterator<Byte> itData = magicFile.getData().iterator();
+		int c=0;
+		if ((freeCatalog.size()/2) * 16*1024 >=magicFile.getData().size()) {
+			// can do it
+			
+			while (it.hasNext()) {
+				int index=it.next();
+				int i=it.next();
+				
+				// catalog
+				byte line[] = new byte[32];
+				for (int j = 0; j < 32; j++) {
+				     line[j] = 0x00;
+				}
+				byte [] sectCatalog = readSector(0,0,0,0, getSectorID(0, 0, index)[2], 512);
+				
+				System.arraycopy(line, 0, sectCatalog, i * 0x20, 32);
+				System.arraycopy(name.getBytes(), 0, sectCatalog,
+				         i * 0x20 + 1, 8 + 3);
+				
+//				writeSector(0,0,0,0, getSectorID(0, 0, index)[2], 512,sectCatalog);
+				
+				// data
+				byte[]data = new byte[512];
+				int cylinder=0;
+				int head=0;
+				int sector=0;
+				
+				for (int b=0;b<16*2;b++) {
+					if (itData.hasNext()) {
+						for (int bb=0;bb<512;bb++) {
+							if (itData.hasNext()) {
+								data[bb]=itData.next();
+							} else {
+								data[bb]=(byte)0xE5;
+							}
+						}
+//						writeSector(cylinder, head, cylinder, head, getSectorID(cylinder, head, sector)[2], 512, data);
+						int nbSector=getSectorCount(cylinder,head);
+						sector=(sector+1)%nbSector;
+						if (sector==0) {
+							cylinder=(cylinder+1)%numberOfTracks;
+							if (cylinder==0) {
+								head=(head+1)%numberOfSides;
+							}
+						}
+					}
+				}
+			}
+			
+			
+		}
+		
+//		// prepare, in packs of 512
+//		int nbBlocks=magicFile.getData().size()/512;
+//		int lastBlockSize=magicFile.getData().size()%512;
+//		if (lastBlockSize>0) {
+//			nbBlocks++;
+//		}
+//		int nbCatalogEntries=nbBlocks/(16 * (1024/512));
+//		int lastCatalogSize=nbBlocks%(16 * (1024/512));
+//		if (lastCatalogSize>0) {
+//			nbCatalogEntries++;
+//		}
+//		for (int c=0;c<nbCatalogEntries;c++) {
+//			
+//		}
+		
 		// trouver la fin du catalog.
 		// insérer le data
 		// injecter une entrée dans le catalog
+	}
+
+	/**
+	 * 
+	 * @return (index,i) pushed (index,i,index,i,index,i)
+	 */
+	private List<Integer> nextFreeCatalogFromSectors() {
+		List<Integer> indexIs = new ArrayList<Integer>();
+        for (int index = 0; index < 4; index++) {
+            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512);
+            for (int i = 0; i < result.length / 32; i++) {
+                byte[] filename = new byte[8 + 3];
+                System.arraycopy(result, i * 0x20 + 1, filename, 0,
+                        8 + 3);
+                for (int f=0;f<8+3;f++) {
+                	if (filename[f]!=0xE5) {
+                		break;
+                	} else if (f==8-3-1) {
+                		// push index
+                		indexIs.add(index);
+                		// push i
+                		indexIs.add(i);
+                	}
+                }
+            }
+        }
+        return indexIs;
 	}
 
 	@Override

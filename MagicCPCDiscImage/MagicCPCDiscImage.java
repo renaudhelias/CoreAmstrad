@@ -492,6 +492,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
         writeSector(0, 0 , 0, 0, getSectorID(0, 0, 2)[2], 512, empty);
         writeSector(0, 0 , 0, 0, getSectorID(0, 0, 3)[2], 512, empty);
     }
+	
+	
 
     
 //    public void copyAsDSK() {
@@ -1134,6 +1136,31 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
     	}
     	return dataExtracted;
     }
+    
+    private void doEraseFileFromSectors(String cpcfilename) {
+        for (int index = 0; index < 4; index++) {
+            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512);
+            for (int i = 0; i < result.length / 32; i++) {
+                byte[] filename = new byte[8 + 3];
+                System.arraycopy(result, i * 0x20 + 1, filename, 0,
+                        8 + 3);
+                // toto.$$$ : temporary file.
+                if (result[i * 0x20] != -27
+                        && filename[8 + 3 - 1] != -27 && filename[8 + 3 - 1] != '$') {
+                    String s = "";
+                    for (int j = 0; j < 8 + 3; j++) {
+                        s += (char) filename[j];
+                    }
+                    if (cpcfilename.equals(s)) {
+                    	for (int d=0;d<32;d++) {
+                    		result[i * 0x20+d]=(byte) 0xE5;
+                    	}
+                    	writeSector(0,0,0,0, getSectorID(0,0, index)[2], 512, result);
+                    }
+                }
+            }
+        }
+    }
 
     
     /**
@@ -1459,6 +1486,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 	public void crudRemove(String magicRealFileName) {
 		// supprimer le data.
 		// retire l'entrée dans le catalog
+		doEraseFileFromSectors(realname2cpcname(magicRealFileName));
 	}
 
 }

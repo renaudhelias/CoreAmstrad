@@ -1054,6 +1054,76 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
         }
         return flatScanNames;
     }
+    
+    /**
+     * @return list of all filenames in DIRStruct sectors, flat.
+     */
+    private List<Byte> doScanDataFromSectors(String name) {
+    	List<Byte> data = new ArrayList<Byte>();
+    	byte lastCheckByte=(byte) 0xFF;
+        for (int index = 0; index < 4; index++) {
+            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512);
+            for (int i = 0; i < result.length / 32; i++) {
+                byte[] filename = new byte[8 + 3];
+                System.arraycopy(result, i * 0x20 + 1, filename, 0,
+                        8 + 3);
+                // toto.$$$ : temporary file.
+                if (result[i * 0x20] != -27
+                        && filename[8 + 3 - 1] != -27 && filename[8 + 3 - 1] != '$') {
+                    String s = "";
+                    for (int j = 0; j < 8 + 3; j++) {
+                        s += (char) filename[j];
+                    }
+                    if (name.equals(s)) {
+                    	byte checkByte=result[i * 0x20 + 12];
+                    	if (lastCheckByte+1!=checkByte) {
+                    		System.out.println("doScanDataFromSectors("+name+") bad checkByte (disorder on files >16KB ?)");
+                    	}
+                    	lastCheckByte=checkByte;
+                    	// 0x00 to 0x80
+                    	byte sizeByte=result[i * 0x20 + 15];
+                    	// 0x80 => 16KB
+                    	int dataLength=((16*1024)/0x80)*sizeByte;
+                    	data.addAll(readDataSector(index*(512/32)*16*1024 + i *16*1024 + 4 *16*1024,dataLength));
+                    }
+                }
+            }
+        }
+        return data;
+    }
+    
+    List<Byte> readDataSector(int offset, int lenght) {
+    	List<Byte> dataExtracted = new ArrayList<Byte>();
+    	int offsetLeft=offset;
+    	int lenghtLeft=lenght;
+    	for (int head=0;head<numberOfSides;head++) {
+    		for (int cylinder=0;cylinder<numberOfTracks;cylinder++) {
+    			int count = getSectorCount(cylinder, head);
+    			for (int index=0;index<count;index++) {
+    				if (offsetLeft>0) {
+    					offsetLeft=offsetLeft-512;
+    				} else if (lenghtLeft>0) {
+    					byte [] data; 
+    					if (lenghtLeft>=512) {
+    						data=readSector(cylinder,head,cylinder,head, getSectorID(cylinder,head, index)[2], 512);
+            				for (int l=0;l<512;l++) {
+            					dataExtracted.add(data[l]);
+            				}
+    					} else {
+    						data=readSector(cylinder,head,cylinder,head, getSectorID(cylinder,head, index)[2], lenghtLeft);
+            				for (int l=0;l<lenghtLeft;l++) {
+            					dataExtracted.add(data[l]);
+            				}
+    					}
+        				lenghtLeft=lenghtLeft-512;
+    				} else {
+    					return dataExtracted;
+    				}
+    			}
+    		}
+    	}
+    	return dataExtracted;
+    }
 
     /**
      * Before a read or after a write on DIRStruct sectors (index<4)
@@ -1346,29 +1416,35 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 
 	@Override
 	public List<String> crudList() {
-		List<String> files = new ArrayList<String>();
-		for (Object o : propFile.keySet()) {
-			files.add(String.valueOf(o));
-		}
+		List<String> files = doScanAllNamesFromSectors();
+		//for (Object o : propFile.keySet()) {
+		//	files.add(String.valueOf(o));
+		//}
 		return files;
 	}
 
+	// faut trouver la taille permettant de dépasser un catalog.
+	// et faire des comparaisons d'opérations DskManager
+	
 	@Override
 	public MagicCPCFile crudRead(String magicFileName) {
-		// TODO Auto-generated method stub
-		return null;
+		MagicCPCFile magicFile = new MagicCPCFile();
+		magicFile.setName(magicFileName);
+		magicFile.setData(doScanDataFromSectors(magicFileName));
+		return magicFile;
 	}
 
 	@Override
 	public void crudAdd(MagicCPCFile magicFile) {
-		// TODO Auto-generated method stub
-		
+		// trouver la fin du catalog.
+		// insérer le data
+		// injecter une entrée dans le catalog
 	}
 
 	@Override
 	public void crudRemove(String magicFileName) {
-		// TODO Auto-generated method stub
-		
+		// supprimer le data.
+		// retire l'entrée dans le catalog
 	}
 
 }

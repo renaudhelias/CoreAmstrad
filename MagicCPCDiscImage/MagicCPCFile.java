@@ -1,10 +1,11 @@
 package jemu.system.cpc;
 
+import java.util.List;
+
 public class MagicCPCFile {
 
 	private String name;
-	private String path;
-	private byte[] data;
+	private List<Byte> data;
 
 	public void setName(String name) {
 		this.name=name;
@@ -12,16 +13,10 @@ public class MagicCPCFile {
 	public String getName() {
 		return name;
 	}
-	public void setPath(String path) {
-		this.path=path;
-	}
-	public String getPath() {
-		return path;
-	}
-	public void setData(byte[] data) {
+	public void setData(List<Byte> data) {
 		this.data=data;
 	}
-	public byte[] getData() {
+	public List<Byte> getData() {
 		return data;
 	}
 }

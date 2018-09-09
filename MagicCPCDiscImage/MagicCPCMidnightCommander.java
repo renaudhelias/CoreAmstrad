@@ -11,6 +11,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
@@ -423,12 +426,16 @@ public class MagicCPCMidnightCommander extends JFrame {
 		MagicCPCFile magicFile = new MagicCPCFile();
 		try {
 			magicFile.setName(file.getName());
-			magicFile.setPath(file.getParent());
+//			magicFile.setPath(file.getParent());
 			FileInputStream fis = new FileInputStream(file);
 			byte [] data = new byte[(int) file.length()];
 			fis.read(data);
 			fis.close();
-			magicFile.setData(data);
+			List<Byte> dataArray = new ArrayList<Byte>();
+			for (int l=0;l<data.length;l++) {
+				dataArray.add(data[l]);
+			}
+			magicFile.setData(dataArray);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -440,7 +447,11 @@ public class MagicCPCMidnightCommander extends JFrame {
 		File f = new File(file.getParent()+File.separator+magicFile.getName());
 		try {
 			FileOutputStream fos = new FileOutputStream(f);
-			fos.write(magicFile.getData());
+			byte [] data = new byte[magicFile.getData().size()];
+			for (int l=0;l<data.length;l++) {
+				data[l]=magicFile.getData().get(l);
+			}
+			fos.write(data);
 			fos.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -464,12 +475,18 @@ public class MagicCPCMidnightCommander extends JFrame {
 	
 	void refreshListOfFiles() {
 		leftDisc = getLeftDisc();
-		for (String file : leftDisc.crudList()) {
-			leftModel.addElement(file);
+		leftModel.removeAllElements();
+		if (leftDisc!=null) {
+			for (String file : leftDisc.crudList()) {
+				leftModel.addElement(file);
+			}
 		}
 		rightDisc = getRightDisc();
-		for (String file : rightDisc.crudList()) {
-			rightModel.addElement(file);
+		rightModel.removeAllElements();
+		if (rightDisc!=null) {
+			for (String file : rightDisc.crudList()) {
+				rightModel.addElement(file);
+			}
 		}
 	}
 	

@@ -933,7 +933,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 		return header;
 	}
 
-	private String realname2cpcname(String realname) {
+	public static String realname2cpcname(String realname) {
     	String cpcname = realname.toUpperCase();
     	if (cpcname.contains(".")) {
             int point = cpcname.indexOf(".");
@@ -953,7 +953,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
     	return cpcname;
     }
     
-    private String cpcname2realname(String cpcname) {
+    public static String cpcname2realname(String cpcname) {
     	String realname=cpcname.substring(0,8)+"."+cpcname.substring(8,11);
     	realname=realname.replaceAll(" ", "");
     	return realname;
@@ -975,7 +975,8 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 
     @Override
     public void notifyWriteSector(byte data, int cylinder, int head, int c, int h, int r, int n) {
-        head &= headMask;
+    	if (!magic) return;
+    	head &= headMask;
         if (cylinder <= lastCylinder) {
             int index = getSectorIndex(r);//ids[head][cylinder], c, h, r, n);
             if (index != -1) {
@@ -1055,7 +1056,9 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
                     for (int j = 0; j < 8 + 3; j++) {
                         s += (char) filename[j];
                     }
-                    flatScanNames.add(s);
+                    if (!flatScanNames.contains(s)) {
+                    	flatScanNames.add(s);
+                    }
                 }
             }
         }
@@ -1132,6 +1135,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
     	return dataExtracted;
     }
 
+    
     /**
      * Before a read or after a write on DIRStruct sectors (index<4)
      */
@@ -1140,17 +1144,18 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
         try {
             String filename = checkNewFile(scanNames, newScanNames);
             if (filename != null) {
-                String first = filename;
-                String ext = filename;
-                while (first.length() > 8) {
-                    first = first.substring(0, first.length() - 1);
-                }
-                while (ext.length() > 3) {
-                    ext = ext.substring(1);
-                }
-                first = first.replace(" ", "");
-                ext = ext.replace(" ", "");
-                filename = first + "." + ext;
+//                String first = filename;
+//                String ext = filename;
+//                while (first.length() > 8) {
+//                    first = first.substring(0, first.length() - 1);
+//                }
+//                while (ext.length() > 3) {
+//                    ext = ext.substring(1);
+//                }
+//                first = first.replace(" ", "");
+//                ext = ext.replace(" ", "");
+//                filename = first + "." + ext;
+                filename = cpcname2realname(filename);
                 System.out.println("FILE ADDED (isWrite=" + isWrite + ") : " + filename);
                 File f = new File(path + "/" + filename);
 
@@ -1409,6 +1414,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 
     @Override
     public void notifyReadSector(boolean beginOfSector, int cylinder, int head, int c, int h, int r, int n) {
+    	if (!magic) return;
         head &= headMask;
         if (cylinder <= lastCylinder) {
             int index = getSectorIndex(r);//ids[head][cylinder], c, h, r, n);
@@ -1423,21 +1429,22 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 
 	@Override
 	public List<String> crudList() {
+		List<String> filesRealNames = new ArrayList<String>();
 		List<String> files = doScanAllNamesFromSectors();
-		//for (Object o : propFile.keySet()) {
-		//	files.add(String.valueOf(o));
-		//}
-		return files;
+		for (String file : files) {
+			filesRealNames.add(cpcname2realname(file));
+		}
+		return filesRealNames;
 	}
 
 	// faut trouver la taille permettant de dépasser un catalog.
 	// et faire des comparaisons d'opérations DskManager
 	
 	@Override
-	public MagicCPCFile crudRead(String magicFileName) {
+	public MagicCPCFile crudRead(String magicRealFileName) {
 		MagicCPCFile magicFile = new MagicCPCFile();
-		magicFile.setName(magicFileName);
-		magicFile.setData(doScanDataFromSectors(magicFileName));
+		magicFile.setName(magicRealFileName);
+		magicFile.setData(doScanDataFromSectors(realname2cpcname(magicRealFileName)));
 		return magicFile;
 	}
 
@@ -1449,7 +1456,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 	}
 
 	@Override
-	public void crudRemove(String magicFileName) {
+	public void crudRemove(String magicRealFileName) {
 		// supprimer le data.
 		// retire l'entrée dans le catalog
 	}

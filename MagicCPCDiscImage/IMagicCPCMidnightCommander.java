@@ -11,10 +11,10 @@ public interface IMagicCPCMidnightCommander {
 
 	List<String> crudList();
 
-	MagicCPCFile crudRead(String magicFileName);
+	MagicCPCFile crudRead(String magicRealFileName);
 
 	void crudAdd(MagicCPCFile magicFile);
 
-	void crudRemove(String magicFileName);
+	void crudRemove(String magicRealFileName);
 
 }

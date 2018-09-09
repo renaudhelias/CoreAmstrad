@@ -1482,33 +1482,45 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 		List<Integer> freeCatalog = nextFreeCatalogFromSectors();
 		Iterator<Integer> it = freeCatalog.iterator();
 		Iterator<Byte> itData = magicFile.getData().iterator();
-		int c=0;
+		int noCatalog=0;
 		if ((freeCatalog.size()/2) * 16*1024 >=magicFile.getData().size()) {
 			// can do it
 			
-			while (it.hasNext()) {
+			while (it.hasNext() && itData.hasNext()) {
 				int index=it.next();
 				int i=it.next();
 				
 				// catalog
-				byte line[] = new byte[32];
-				for (int j = 0; j < 32; j++) {
-				     line[j] = 0x00;
-				}
+				byte line[] = buildFileEntry(realname2cpcname(magicFile.getName()),noCatalog, magicFile.getData().size()-noCatalog*16*1024,i+index*(512/32));
+				noCatalog++;
 				byte [] sectCatalog = readSector(0,0,0,0, getSectorID(0, 0, index)[2], 512);
-				
 				System.arraycopy(line, 0, sectCatalog, i * 0x20, 32);
-				System.arraycopy(name.getBytes(), 0, sectCatalog,
-				         i * 0x20 + 1, 8 + 3);
-				
-//				writeSector(0,0,0,0, getSectorID(0, 0, index)[2], 512,sectCatalog);
 				
 				// data
 				byte[]data = new byte[512];
 				int cylinder=0;
 				int head=0;
-				int sector=0;
+				int sector=4; // start after end of catalog
+				long fireOffset=(i+index*(512/32))*16*(1024/512);
+//				boolean teaForTwo=false;
+				while (fireOffset>0) {
+//					if (teaForTwo) {
+						// go to begin of data block
+						int nbSector=getSectorCount(cylinder,head);
+						nbSector=AMSDOS_SECTOR_IDS.length;
+						sector=(sector+1)%nbSector;
+						if (sector==0) {
+							cylinder=(cylinder+1)%numberOfTracks;
+							if (cylinder==0) {
+								head=(head+1)%numberOfSides;
+							}
+						}
+//					}
+//					teaForTwo=!teaForTwo;
+					fireOffset--;
+				}
 				
+				// fill the 16KB data block
 				for (int b=0;b<16*2;b++) {
 					if (itData.hasNext()) {
 						for (int bb=0;bb<512;bb++) {
@@ -1518,8 +1530,9 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 								data[bb]=(byte)0xE5;
 							}
 						}
-//						writeSector(cylinder, head, cylinder, head, getSectorID(cylinder, head, sector)[2], 512, data);
+						writeSector(cylinder, head, cylinder, head, getSectorID(cylinder, head, sector)[2], 512, data);
 						int nbSector=getSectorCount(cylinder,head);
+						nbSector=AMSDOS_SECTOR_IDS.length;
 						sector=(sector+1)%nbSector;
 						if (sector==0) {
 							cylinder=(cylinder+1)%numberOfTracks;
@@ -1534,24 +1547,33 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 			
 		}
 		
-//		// prepare, in packs of 512
-//		int nbBlocks=magicFile.getData().size()/512;
-//		int lastBlockSize=magicFile.getData().size()%512;
-//		if (lastBlockSize>0) {
-//			nbBlocks++;
-//		}
-//		int nbCatalogEntries=nbBlocks/(16 * (1024/512));
-//		int lastCatalogSize=nbBlocks%(16 * (1024/512));
-//		if (lastCatalogSize>0) {
-//			nbCatalogEntries++;
-//		}
-//		for (int c=0;c<nbCatalogEntries;c++) {
-//			
-//		}
 		
 		// trouver la fin du catalog.
 		// insérer le data
 		// injecter une entrée dans le catalog
+	}
+
+	private byte[] buildFileEntry(String cpcname, int noCatalog, long leftDataLenght, int offset) {
+		byte [] line = new byte[32];
+		for (int j = 0; j < 32; j++) {
+		     line[j] = 0x00;
+		}
+		System.arraycopy(cpcname.getBytes(), 0, line, 1, 8 + 3);
+		line[12]=(byte)noCatalog;
+		if (leftDataLenght>=16*1024) {
+			line[15]=(byte)0x80;
+		} else {
+			line[15]=(byte) (((int)(leftDataLenght/(16*(1024/128)))) & 0xFF);
+			if (leftDataLenght%(16*(1024/128))>0) {
+				line[15]++;
+			}
+		}
+		for (int i=0;i<16;i++) {
+			if (i*128<line[15]*16) {
+				line[16+i]=(byte) (0x02+i+offset);
+			}
+		}
+		return line;
 	}
 
 	/**
@@ -1567,7 +1589,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
                 System.arraycopy(result, i * 0x20 + 1, filename, 0,
                         8 + 3);
                 for (int f=0;f<8+3;f++) {
-                	if (filename[f]!=0xE5) {
+                	if (filename[f]!=(byte)0xE5) {
                 		break;
                 	} else if (f==8-3-1) {
                 		// push index

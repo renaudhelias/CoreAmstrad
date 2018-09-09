@@ -286,7 +286,7 @@ public class MagicCPCMidnightCommander extends JFrame {
 				JFileChooser fileDlg = new JFileChooser();
 				fileDlg.setDialogTitle("Select file to import into LEFT disc");
 		        fileDlg.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		        fileDlg.setAcceptAllFileFilterUsed(false);
+//		        fileDlg.setAcceptAllFileFilterUsed(false);
 		        fileDlg.addChoosableFileFilter(new javax.swing.filechooser.FileFilter() {
 					public String getDescription() {
 		                return "file to import (*.*)";
@@ -294,7 +294,7 @@ public class MagicCPCMidnightCommander extends JFrame {
 		         
 		            public boolean accept(File f) {
 		                if (f.isDirectory()) {
-		                    return false;
+		                    return true;
 		                } else {
 		                	for (String badExtension: BAD_FILE_EXTENSIONS) {
 			                    if (f.getName().toLowerCase().endsWith("."+badExtension)) {
@@ -316,9 +316,11 @@ public class MagicCPCMidnightCommander extends JFrame {
 		exportLeft.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				String magicFileName = leftModel.getElementAt(leftList.getSelectedIndex());
 				JFileChooser fileDlg = new JFileChooser();
 				fileDlg.setDialogTitle("Save file exported from LEFT disc");
 		        fileDlg.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		        fileDlg.setName(magicFileName);
 //		        fileDlg.setAcceptAllFileFilterUsed(false);
 //		        fileDlg.addChoosableFileFilter(new javax.swing.filechooser.FileFilter() {
 //					public String getDescription() {
@@ -340,7 +342,6 @@ public class MagicCPCMidnightCommander extends JFrame {
 //		        });
 		        File file = fileDlg.showSaveDialog(new JFrame()) == JFileChooser.APPROVE_OPTION ? fileDlg.getSelectedFile() : null;
 		        if (file != null) {
-					String magicFileName = leftModel.getElementAt(leftList.getSelectedIndex());
 					MagicCPCFile magicFile= leftDisc.crudRead(magicFileName);
 		        	transformMagicCPCFileToFile(magicFile,file);
 		        }

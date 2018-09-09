@@ -1546,7 +1546,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 			
 			
 		}
-		
+		saveImage();
 		
 		// trouver la fin du catalog.
 		// insérer le data
@@ -1608,6 +1608,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 		// supprimer le data.
 		// retire l'entrée dans le catalog
 		doEraseFileFromSectors(realname2cpcname(magicRealFileName));
+		saveImage();
 	}
 
 }

@@ -1478,7 +1478,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 
 	@Override
 	public void crudAdd(MagicCPCFile magicFile) {
-		
+		scanUsedDataBlocs();
 		List<Integer> freeCatalog = nextFreeCatalogFromSectors();
 		Iterator<Integer> it = freeCatalog.iterator();
 		Iterator<Byte> itData = magicFile.getData().iterator();
@@ -1497,32 +1497,23 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 				System.arraycopy(line, 0, sectCatalog, i * 0x20, 32);
 				
 				// data
-				byte[]data = new byte[512];
+				int sectorSize=2; // 512 (UPD765A size)
+				
 				int cylinder=0;
 				int head=0;
 				int sector=4; // start after end of catalog
-				long fireOffset=(i+index*(512/32))*16*(1024/512);
-//				boolean teaForTwo=false;
-				while (fireOffset>0) {
-//					if (teaForTwo) {
-						// go to begin of data block
-						int nbSector=getSectorCount(cylinder,head);
-						nbSector=AMSDOS_SECTOR_IDS.length;
-						sector=(sector+1)%nbSector;
-						if (sector==0) {
-							cylinder=(cylinder+1)%numberOfTracks;
-							if (cylinder==0) {
-								head=(head+1)%numberOfSides;
-							}
-						}
-//					}
-//					teaForTwo=!teaForTwo;
-					fireOffset--;
-				}
 				
 				// fill the 16KB data block
 				for (int b=0;b<16*2;b++) {
+					byte data2Bloc=line[16+b/2];
+					int teaForTwo = b%2;
+					Iterator<Integer> research= searchSector(data2Bloc,teaForTwo).iterator();
+					head=research.next();
+					cylinder=research.next();
+					sector=research.next();
+					
 					if (itData.hasNext()) {
+						byte[]data = new byte[512];
 						for (int bb=0;bb<512;bb++) {
 							if (itData.hasNext()) {
 								data[bb]=itData.next();
@@ -1530,16 +1521,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 								data[bb]=(byte)0xE5;
 							}
 						}
-						writeSector(cylinder, head, cylinder, head, getSectorID(cylinder, head, sector)[2], 512, data);
-						int nbSector=getSectorCount(cylinder,head);
-						nbSector=AMSDOS_SECTOR_IDS.length;
-						sector=(sector+1)%nbSector;
-						if (sector==0) {
-							cylinder=(cylinder+1)%numberOfTracks;
-							if (cylinder==0) {
-								head=(head+1)%numberOfSides;
-							}
-						}
+						writeSector(cylinder, head, cylinder, head, getSectorID(cylinder, head, sector)[2], sectorSize, data);
 					}
 				}
 			}
@@ -1551,6 +1533,35 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 		// trouver la fin du catalog.
 		// insérer le data
 		// injecter une entrée dans le catalog
+	}
+
+	private List<Integer> searchSector(byte data2Bloc, int teaForTwo) {
+		List<Integer> result=new ArrayList<Integer>();
+		int bloc512=data2Bloc & 0xFF;
+		bloc512*=2;
+		bloc512+=teaForTwo;
+		
+		int head=0;
+		int cylinder=0;
+		int sector=0;
+		int fireOffset=0;
+		while (fireOffset<bloc512 ) {
+			// go to begin of data block
+			int nbSector=getSectorCount(cylinder,head);
+			nbSector=AMSDOS_SECTOR_IDS.length;
+			sector=(sector+1)%nbSector;
+			if (sector==0) {
+				cylinder=(cylinder+1)%numberOfTracks;
+				if (cylinder==0) {
+					head=(head+1)%numberOfSides;
+				}
+			}
+			fireOffset++;
+		}
+		result.add(head);
+		result.add(cylinder);
+		result.add(sector);
+		return result;
 	}
 
 	private byte[] buildFileEntry(String cpcname, int noCatalog, long leftDataLenght, int offset) {
@@ -1570,7 +1581,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
 		}
 		for (int i=0;i<16;i++) {
 			if (i*128<line[15]*16) {
-				line[16+i]=(byte) (0x02+i+offset);
+				line[16+i]=(byte) nextFreeDataBloc();
 			}
 		}
 		return line;
@@ -1603,6 +1614,32 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
         return indexIs;
 	}
 
+	List<Integer> usedDataBlocs = new ArrayList<Integer>();
+	int lastDataBloc;
+	private int scanUsedDataBlocs() {
+		usedDataBlocs = new ArrayList<Integer>();
+        for (int index = 0; index < 4; index++) {
+            byte[] result = readSector(0,0,0,0, getSectorID(0,0, index)[2], 512);
+            for (int i = 0; i < result.length / 32; i++) {
+            	for (int b=0;b<16;b++) {
+            		int block =result[i * 0x20+16+b] & 0xFF;
+            		if (!usedDataBlocs.contains(block)) {
+            			usedDataBlocs.add(block);
+            		}
+            	}
+            }
+        }
+        lastDataBloc=2;
+        return usedDataBlocs.size();
+	}
+	private int nextFreeDataBloc() {
+        while (usedDataBlocs.contains(lastDataBloc)) {
+        	lastDataBloc++;
+        }
+        usedDataBlocs.add(lastDataBloc);
+        return lastDataBloc;
+	}
+	
 	@Override
 	public void crudRemove(String magicRealFileName) {
 		// supprimer le data.

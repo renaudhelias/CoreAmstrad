@@ -12,11 +12,13 @@ import jemu.core.device.floppy.UPD765A;
  */
 public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage {
 
-	private static final int SIDE_MASK = 1;
+	protected static final int SIDE_MASK = 1;
     private static final int MAX_TRACK = 79;
     //private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC3, 0xC5, 0xC7, 0xC9, 0xC2, 0xC4, 0xC6, 0xC8};
-    private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9};
-
+    //private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9};
+    // like CPCDiskXP
+    private static final int[] AMSDOS_SECTOR_IDS = {0xC1, 0xC6, 0xC2, 0xC7, 0xC3, 0xC8, 0xC4, 0xC9, 0xC5};
+    
     /**
      * number of sides.
      */
@@ -54,7 +56,9 @@ public abstract class CPCDiscImageModel extends DiscImage implements IDiscImage 
         final int sectorSize = UPD765A.getCommandSize(512);
         for (int track = 0; track < this.numberOfTracks; track++) {
             for (int side = 0; side < this.numberOfSides; side++) {
-                this.tracks[track][side] = new CPCDiscImageTrack(track, side, 9 * 512, 9);
+            	//"size of track" is used to calculate the location of the data for a chosen track.
+            	//"size of track" includes the &100 byte Track Information Block.
+                this.tracks[track][side] = new CPCDiscImageTrack(track, side, AMSDOS_SECTOR_IDS.length * 512 + 256, AMSDOS_SECTOR_IDS.length);
                 for (int sector = 0; sector < 9; sector++) {
                     final byte[] data = new byte[512];
                     for (int i = 0; i < data.length; i++) {

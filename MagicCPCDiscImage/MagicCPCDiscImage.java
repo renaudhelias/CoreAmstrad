@@ -194,9 +194,16 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
                                 return;
                             }
                             offs += bytes;
-                            writeSector(track, sectSide, sectTrack, sectSide, sectId, sectSize, sectData);
-                            setST1ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterA);
-                            setST2ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterB);
+                            try {
+	                            writeSector(track, sectSide, sectTrack, sectSide, sectId, sectSize, sectData);
+	                            setST1ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterA);
+	                            setST2ForSector(track, sectSide,  sectTrack, sectSide, sectId, sectSize,statusregisterB);
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                            	System.out.println("ERROR DURING WRITE INTO : track "+track+" side "+(sectSide & SIDE_MASK)+" sector "+(sectId & 0xFF)+" size "+sectSize);
+                            	Samples.CORRUPT.play();
+                                jemu.core.device.floppy.UPD765A.error = true;
+                                return;
+                            }
                         }
                         if (!winape) {
                             offs = sot + trackLength;
@@ -419,7 +426,7 @@ public class MagicCPCDiscImage extends CPCDiscImageModel implements IMagicCPCMid
     public void init(String path) {
     	File f = new File(path);
     	
-        this.numberOfTracks = 80;
+        this.numberOfTracks = 40;
         this.numberOfSides = 1;
         this.statusregisterA = 0;
         this.statusregisterB = 0;

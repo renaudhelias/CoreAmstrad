@@ -1,0 +1,584 @@
+--    {@{@{@{@{@{@
+--  {@{@{@{@{@{@{@{@  This code is covered by CoreAmstrad synthesis r004
+--  {@    {@{@    {@  A core of Amstrad CPC 6128 running on MiST-board platform
+--  {@{@{@{@{@{@{@{@
+--  {@  {@{@{@{@  {@  CoreAmstrad is implementation of FPGAmstrad on MiST-board
+--  {@{@        {@{@   Contact : renaudhelias@gmail.com
+--  {@{@{@{@{@{@{@{@   @see http://code.google.com/p/mist-board/
+--    {@{@{@{@{@{@     @see FPGAmstrad at CPCWiki
+--
+--
+--------------------------------------------------------------------------------
+-- FPGAmstrad_amstrad_motherboard.simple_DSK
+-- jacquie version : direct read/write access to sdcard.
+--
+-- State machine : PHASE_* (one-to-one with FDC "state" responses to Z80)
+-- Crossing state machine : etat_*
+-- Global state : etat_wait '1:busy' : goto PHASE_*_WAIT, '0:not busy' : do leave PHASE_*_WAIT (one-to-one with FDC "ST0/ST1/ST2/ST3" responses to Z80)
+-- Bonus : is_dskReady(current_face), at '1' when a dsk is selected/inserted
+--
+-- see SDRAM_FAT32_LOADER.vhd jacquie
+-- TODO : do fix PARADOS.ROM second drive ?
+-- READ_TRACK (&02) does use michel_BOT_EOT output and R as BOT input containing skips or not.
+--------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.std_logic_arith.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+--http://www.cpcwiki.eu/index.php/8255#Port_Usage
+--PPI Port B : 7	CAS.IN	Cassette data input
+--PPI Port C : 5	Cassette Write data	Cassette Out (sometimes also used as Printer Bit7, see 8bit Printer Ports)
+--PPI Port C : 4	Cassette Motor Control	set bit to "1" for motor on, or "0" for motor off
+
+-- Caprice32 has a nice tape.c implementation, in fact blocks are just read bit by bit (byte is shifted), at a certain speed. Perhaps starting with a fix CDT small file, reading blocks in loop, cool be a nice approach around that.
+-- Some has tryed reading sound directly (on emulator), switching to '1' when level (from 0.0 to 1.0) does pass over 0.5+0.1 and to '0' when level does pass below 0.5-0.1, that's the way @ralferoo uses, but @ralferoo seems also interested around CDT. ZX-Uno 464 is also using an audio jack input.
+
+
+
+--(FDCTEST.ASM) arnoldemu's response : Please don't use those old tests. The 'acid test' disc tests are much better and more reliable.
+--http://www.cpctech.org.uk/test.zip
+--
+--See "disc" directory.
+--I need to go back and improve some of the tests because the result is different on some fdcs and I need to test on 664 and ddi-1.
+--
+--These are all good:
+-- - seek, recalibrate, sense interrupt status, sense drive status, write protect
+
+
+--Garbage research notes (it's a doc copy/paste)
+--
+--Before accessing a disk you should first "Recalibrate" the drive, that moves the head backwards until it reaches Track 0. (The Track 0 signal from the drive is sensed by the FDC and it initializes it's internal track counter for that drive to 0).
+--On a 80 track drive you may need to repeat that twice because some models of the FDC stop after 77 steps and if your recalibrating from track 80 it will not recalibrate fully.
+--Now if you want to format, read or write a sector on a specific track you must first Seek that track (command 0Fh). That'll move the read/write head to the physical track number. If you don't do that, then the FDC will attempt to read/write data to/from the current physical track, independenly of the specified logical Track-ID.
+--The Track-, Sector-, and Head-IDs are logical IDs only. These logical IDs are defined when formatting the disk, and aren't required to be identical to the physical Track, Sector, or Head numbers. However, when reading or writing a sector you must specify the same IDs that have been used during formatting.
+--Despite the confusing name, a sector with a "Deleted Data Address Mark" (DAM) is not deleted. The DAM-flag is just another ID-bit, and (if that ID-bit is specified correctly in the command) it can be read/written like normal data sectors.
+--At the end of a successful read/write command, the program should send a Terminal Count (TC) signal to the FDC. However, in the CPC the TC pin isn't connected to the I/O bus, making it impossible for the program to confirm a correct operation. For that reason, the FDC will assume that the command has failed, and it'll return both Bit 6 in Status Register 0 and Bit 7 in Status Register 1 set. The program should ignore this error message.
+--The CPC doesn't support floppy DMA transfers, and the FDCs Interrupt signal isn't used in the CPC also.
+--Usually single sided 40 Track 3" disk drives are used in CPCs, whereas 40 tracks is the official specification, practically 42 tracks could be used (the limit is specific to the FDD, some support more tracks. 42 is a good maximum). The FDC controller can be used to control 80 tracks, and/or double sided drives also, even though AMSDOS isn't supporting such formats. AMSDOS is supporting a maximum of two disk drives only. 
+
+entity simple_CDT is
+    Port ( nCLK4_1 : in  STD_LOGIC;
+           reset : in STD_LOGIC;
+
+			  cassette_input : in STD_LOGIC;
+			  cassette_output : out STD_LOGIC;
+			  cassette_motor : in STD_LOGIC;
+			  
+			  jacquie_phase : in STD_LOGIC_VECTOR(2 downto 0);
+			  jacquie_length : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_count : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count, or data bit count of byte to play
+			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
+			  jacquie_do : in STD_LOGIC;
+			  jacquie_done : out STD_LOGIC:='1';
+			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
+			  
+			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
+			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0);
+			  
+			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  );
+end simple_CDT;
+
+architecture Behavioral of simple_CDT is
+
+	constant JACQUIE_PHASE_PILOT:integer:=0;
+	constant JACQUIE_PHASE_PULSE:integer:=1; -- SYNC1 or SYNC2 or several distinct PULSE
+	constant JACQUIE_PHASE_BIT0 :integer:=2;
+	constant JACQUIE_PHASE_BIT1 :integer:=3;
+	constant JACQUIE_PHASE_BLOCK:integer:=4;
+	constant JACQUIE_PHASE_BLOCK_CONTINUE:integer:=5;
+	constant JACQUIE_PHASE_PAUSE:integer:=6;
+	
+	signal play_push:boolean:=false;
+	signal play_push_done:boolean:=true;
+	signal play_output:integer:=0;
+	signal play_toggle:boolean:=false;
+	
+	signal jacquie_done_s:std_logic:='1';
+	
+--public class Sinus {
+--	public static void main(String args[]) {
+--		System.out.println("sin(0)="+Math.sin(0));
+--		System.out.println("sin(PI/2)="+Math.sin(Math.PI/2));
+--		System.out.println("sin(PI)="+Math.sin(Math.PI));
+--		System.out.println("sin(PI+PI/2)="+Math.sin(Math.PI+Math.PI/2));
+--		System.out.println("sin(2PI)="+Math.sin(Math.PI*2));
+--		for (int i=0;i<256;i++) {
+--			double value=Math.sin((i/256.0)*2.0*Math.PI);
+--			double value01=((value/2.0)+0.5);
+--			double value256=value01*(256.0);
+--			int value256int=(int)value256;
+--			if(value256int<0) value256int=0;
+--			if(value256int>255) value256int=255;
+--			String hex = Integer.toHexString(value256int);
+--			if (hex.length()<2) hex="0"+hex;
+--			if (hex.length()<2) hex="0"+hex;
+--			System.out.print("x\""+hex+"\",");
+--			if (i==63 || i==127 || i==191 || i==255) System.out.println();
+--		}
+--	}
+--}
+	type sinus_type is array (0 to 255) of std_logic_vector(7 downto 0);
+	constant sinus:sinus_type:= (
+	x"80",x"83",x"86",x"89",x"8c",x"8f",x"92",x"95",x"98",x"9c",x"9f",x"a2",x"a5",x"a8",x"ab",x"ae",x"b0",x"b3",x"b6",x"b9",x"bc",x"bf",x"c1",x"c4",x"c7",x"c9",x"cc",x"ce",x"d1",x"d3",x"d5",x"d8",x"da",x"dc",x"de",x"e0",x"e2",x"e4",x"e6",x"e8",x"ea",x"ec",x"ed",x"ef",x"f0",x"f2",x"f3",x"f5",x"f6",x"f7",x"f8",x"f9",x"fa",x"fb",x"fc",x"fc",x"fd",x"fe",x"fe",x"ff",x"ff",x"ff",x"ff",x"ff",
+	x"ff",x"ff",x"ff",x"ff",x"ff",x"ff",x"fe",x"fe",x"fd",x"fc",x"fc",x"fb",x"fa",x"f9",x"f8",x"f7",x"f6",x"f5",x"f3",x"f2",x"f0",x"ef",x"ed",x"ec",x"ea",x"e8",x"e6",x"e4",x"e2",x"e0",x"de",x"dc",x"da",x"d8",x"d5",x"d3",x"d1",x"ce",x"cc",x"c9",x"c7",x"c4",x"c1",x"bf",x"bc",x"b9",x"b6",x"b3",x"b0",x"ae",x"ab",x"a8",x"a5",x"a2",x"9f",x"9c",x"98",x"95",x"92",x"8f",x"8c",x"89",x"86",x"83",
+	x"80",x"7c",x"79",x"76",x"73",x"70",x"6d",x"6a",x"67",x"63",x"60",x"5d",x"5a",x"57",x"54",x"51",x"4f",x"4c",x"49",x"46",x"43",x"40",x"3e",x"3b",x"38",x"36",x"33",x"31",x"2e",x"2c",x"2a",x"27",x"25",x"23",x"21",x"1f",x"1d",x"1b",x"19",x"17",x"15",x"13",x"12",x"10",x"0f",x"0d",x"0c",x"0a",x"09",x"08",x"07",x"06",x"05",x"04",x"03",x"03",x"02",x"01",x"01",x"00",x"00",x"00",x"00",x"00",
+	x"00",x"00",x"00",x"00",x"00",x"00",x"01",x"01",x"02",x"03",x"03",x"04",x"05",x"06",x"07",x"08",x"09",x"0a",x"0c",x"0d",x"0f",x"10",x"12",x"13",x"15",x"17",x"19",x"1b",x"1d",x"1f",x"21",x"23",x"25",x"27",x"2a",x"2c",x"2e",x"31",x"33",x"36",x"38",x"3b",x"3e",x"40",x"43",x"46",x"49",x"4c",x"4f",x"51",x"54",x"57",x"5a",x"5d",x"60",x"63",x"67",x"6a",x"6d",x"70",x"73",x"76",x"79",x"7c"
+	);
+	
+--	--double value01=((value/4.0)+0.5);
+--	constant sinus_div2:sinus_type:= (
+--	x"80",x"81",x"83",x"84",x"86",x"87",x"89",x"8a",x"8c",x"8e",x"8f",x"91",x"92",x"94",x"95",x"97",x"98",x"99",x"9b",x"9c",x"9e",x"9f",x"a0",x"a2",x"a3",x"a4",x"a6",x"a7",x"a8",x"a9",x"aa",x"ac",x"ad",x"ae",x"af",x"b0",x"b1",x"b2",x"b3",x"b4",x"b5",x"b6",x"b6",x"b7",x"b8",x"b9",x"b9",x"ba",x"bb",x"bb",x"bc",x"bc",x"bd",x"bd",x"be",x"be",x"be",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",
+--	x"c0",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",x"be",x"be",x"be",x"bd",x"bd",x"bc",x"bc",x"bb",x"bb",x"ba",x"b9",x"b9",x"b8",x"b7",x"b6",x"b6",x"b5",x"b4",x"b3",x"b2",x"b1",x"b0",x"af",x"ae",x"ad",x"ac",x"aa",x"a9",x"a8",x"a7",x"a6",x"a4",x"a3",x"a2",x"a0",x"9f",x"9e",x"9c",x"9b",x"99",x"98",x"97",x"95",x"94",x"92",x"91",x"8f",x"8e",x"8c",x"8a",x"89",x"87",x"86",x"84",x"83",x"81",
+--	x"80",x"7e",x"7c",x"7b",x"79",x"78",x"76",x"75",x"73",x"71",x"70",x"6e",x"6d",x"6b",x"6a",x"68",x"67",x"66",x"64",x"63",x"61",x"60",x"5f",x"5d",x"5c",x"5b",x"59",x"58",x"57",x"56",x"55",x"53",x"52",x"51",x"50",x"4f",x"4e",x"4d",x"4c",x"4b",x"4a",x"49",x"49",x"48",x"47",x"46",x"46",x"45",x"44",x"44",x"43",x"43",x"42",x"42",x"41",x"41",x"41",x"40",x"40",x"40",x"40",x"40",x"40",x"40",
+--	x"40",x"40",x"40",x"40",x"40",x"40",x"40",x"40",x"41",x"41",x"41",x"42",x"42",x"43",x"43",x"44",x"44",x"45",x"46",x"46",x"47",x"48",x"49",x"49",x"4a",x"4b",x"4c",x"4d",x"4e",x"4f",x"50",x"51",x"52",x"53",x"55",x"56",x"57",x"58",x"59",x"5b",x"5c",x"5d",x"5f",x"60",x"61",x"63",x"64",x"66",x"67",x"68",x"6a",x"6b",x"6d",x"6e",x"70",x"71",x"73",x"75",x"76",x"78",x"79",x"7b",x"7c",x"7e"
+--	);
+	
+--	--double value01=((value/8.0)+0.5);
+--	constant sinus_div4:sinus_type:= (
+--	x"80",x"80",x"81",x"82",x"83",x"83",x"84",x"85",x"86",x"87",x"87",x"88",x"89",x"8a",x"8a",x"8b",x"8c",x"8c",x"8d",x"8e",x"8f",x"8f",x"90",x"91",x"91",x"92",x"93",x"93",x"94",x"94",x"95",x"96",x"96",x"97",x"97",x"98",x"98",x"99",x"99",x"9a",x"9a",x"9b",x"9b",x"9b",x"9c",x"9c",x"9c",x"9d",x"9d",x"9d",x"9e",x"9e",x"9e",x"9e",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",
+--	x"a0",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9e",x"9e",x"9e",x"9e",x"9d",x"9d",x"9d",x"9c",x"9c",x"9c",x"9b",x"9b",x"9b",x"9a",x"9a",x"99",x"99",x"98",x"98",x"97",x"97",x"96",x"96",x"95",x"94",x"94",x"93",x"93",x"92",x"91",x"91",x"90",x"8f",x"8f",x"8e",x"8d",x"8c",x"8c",x"8b",x"8a",x"8a",x"89",x"88",x"87",x"87",x"86",x"85",x"84",x"83",x"83",x"82",x"81",x"80",
+--	x"80",x"7f",x"7e",x"7d",x"7c",x"7c",x"7b",x"7a",x"79",x"78",x"78",x"77",x"76",x"75",x"75",x"74",x"73",x"73",x"72",x"71",x"70",x"70",x"6f",x"6e",x"6e",x"6d",x"6c",x"6c",x"6b",x"6b",x"6a",x"69",x"69",x"68",x"68",x"67",x"67",x"66",x"66",x"65",x"65",x"64",x"64",x"64",x"63",x"63",x"63",x"62",x"62",x"62",x"61",x"61",x"61",x"61",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",
+--	x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"61",x"61",x"61",x"61",x"62",x"62",x"62",x"63",x"63",x"63",x"64",x"64",x"64",x"65",x"65",x"66",x"66",x"67",x"67",x"68",x"68",x"69",x"69",x"6a",x"6b",x"6b",x"6c",x"6c",x"6d",x"6e",x"6e",x"6f",x"70",x"70",x"71",x"72",x"73",x"73",x"74",x"75",x"75",x"76",x"77",x"78",x"78",x"79",x"7a",x"7b",x"7c",x"7c",x"7d",x"7e",x"7f"
+--	);
+
+--	--double value01=((value/32.0)+0.5);
+--	constant sinus_div16:sinus_type:= (
+--	x"80",x"80",x"81",x"82",x"83",x"83",x"84",x"85",x"86",x"87",x"87",x"88",x"89",x"8a",x"8a",x"8b",x"8c",x"8c",x"8d",x"8e",x"8f",x"8f",x"90",x"91",x"91",x"92",x"93",x"93",x"94",x"94",x"95",x"96",x"96",x"97",x"97",x"98",x"98",x"99",x"99",x"9a",x"9a",x"9b",x"9b",x"9b",x"9c",x"9c",x"9c",x"9d",x"9d",x"9d",x"9e",x"9e",x"9e",x"9e",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",
+--	x"a0",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9e",x"9e",x"9e",x"9e",x"9d",x"9d",x"9d",x"9c",x"9c",x"9c",x"9b",x"9b",x"9b",x"9a",x"9a",x"99",x"99",x"98",x"98",x"97",x"97",x"96",x"96",x"95",x"94",x"94",x"93",x"93",x"92",x"91",x"91",x"90",x"8f",x"8f",x"8e",x"8d",x"8c",x"8c",x"8b",x"8a",x"8a",x"89",x"88",x"87",x"87",x"86",x"85",x"84",x"83",x"83",x"82",x"81",x"80",
+--	x"80",x"7f",x"7e",x"7d",x"7c",x"7c",x"7b",x"7a",x"79",x"78",x"78",x"77",x"76",x"75",x"75",x"74",x"73",x"73",x"72",x"71",x"70",x"70",x"6f",x"6e",x"6e",x"6d",x"6c",x"6c",x"6b",x"6b",x"6a",x"69",x"69",x"68",x"68",x"67",x"67",x"66",x"66",x"65",x"65",x"64",x"64",x"64",x"63",x"63",x"63",x"62",x"62",x"62",x"61",x"61",x"61",x"61",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",
+--	x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"61",x"61",x"61",x"61",x"62",x"62",x"62",x"63",x"63",x"63",x"64",x"64",x"64",x"65",x"65",x"66",x"66",x"67",x"67",x"68",x"68",x"69",x"69",x"6a",x"6b",x"6b",x"6c",x"6c",x"6d",x"6e",x"6e",x"6f",x"70",x"70",x"71",x"72",x"73",x"73",x"74",x"75",x"75",x"76",x"77",x"78",x"78",x"79",x"7a",x"7b",x"7c",x"7c",x"7d",x"7e",x"7f"
+--	);
+	
+	signal sound_generated: STD_LOGIC_VECTOR(7 downto 0);
+	signal soundAB_output_s: STD_LOGIC_VECTOR(7 downto 0);
+	signal soundBC_output_s: STD_LOGIC_VECTOR(7 downto 0);
+begin
+
+jacquie_done<=jacquie_done_s;
+
+-- do not lost sound quality just for a tape player implementation :p
+soundAB_output<=soundAB_output_s when play_toggle else soundAB_input;
+soundBC_output<=soundBC_output_s when play_toggle else soundBC_input;
+--soundAB_output<=soundAB_input;
+--soundBC_output<=soundBC_input;
+
+--Un gros multiplexage sale ca marche pas ?
+--A 100khz, la moitié du temps le son d la tape, l'autre moitié celui du cpc, et roule.
+--Par tic tac. Facon multiplexeur électromécanique a l'ancienne, le téléphone fixe version 1.0
+sound_muxAB:process(reset,nCLK4_1)
+	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
+	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
+	variable tictac:boolean:=false;
+begin
+	if reset='1' then
+		soundAB_output_s<=soundAB_input;
+	elsif falling_edge(nCLK4_1) then --CLK4
+		sound_input_mem:=soundAB_input;
+		sound_generated_mem:=sound_generated;
+		tictac:=not(tictac);
+		if tictac then
+			soundAB_output_s<=sound_input_mem;
+		else
+			soundAB_output_s<=sound_generated_mem;
+		end if;
+	end if;
+end process sound_muxAB;
+
+sound_muxBC:process(reset,nCLK4_1)
+	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
+	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
+	variable tictac:boolean:=false;
+begin
+	if reset='1' then
+		soundBC_output_s<=soundBC_input;
+	elsif falling_edge(nCLK4_1) then --CLK4
+		sound_input_mem:=soundBC_input;
+		sound_generated_mem:=sound_generated;
+		tictac:=not(tictac);
+		if tictac then
+			soundBC_output_s<=sound_input_mem;
+		else
+			soundBC_output_s<=sound_generated_mem;
+		end if;
+	end if;
+end process sound_muxBC;
+
+--sound_mixerAB:process(reset,nCLK4_1)
+--	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
+--	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
+--begin
+--	if reset='1' then
+--		soundAB_output_s<=soundAB_input;
+--	elsif falling_edge(nCLK4_1) then --CLK4
+--		sound_input_mem:=soundAB_input;
+--		sound_generated_mem:=sound_generated;
+--		if not(play_toggle) then
+--			soundAB_output_s<=soundAB_input;
+--		elsif sound_input_mem>=x"64" then
+--			if sound_generated_mem>=x"64" then
+--				-- A - B
+--				if sound_input_mem<sound_generated_mem then
+--					soundAB_output_s<=x"00";
+--				else
+--					soundAB_output_s<=sound_input_mem-sound_generated_mem;
+--				end if;
+--			else
+--				-- A - B
+--				sound_generated_mem:=x"FF"-sound_generated_mem;
+--				if sound_input_mem>x"FF"-sound_generated_mem then
+--					soundAB_output_s<=x"FF";
+--				else
+--					soundAB_output_s<=sound_input_mem+sound_generated_mem;
+--				end if;
+--			end if;
+--		else
+--			if sound_generated_mem>=x"64" then
+--				-- A - B
+--				sound_generated_mem:=x"FF"-sound_generated_mem;
+--				if sound_generated_mem>sound_input_mem then
+--					soundAB_output_s<=x"00";
+--				else
+--					soundAB_output_s<=sound_input_mem-sound_generated_mem;
+--				end if;
+--			else
+--				-- A - B
+--				sound_generated_mem:=x"FF"-sound_generated_mem;
+--				if sound_generated_mem>x"FF"-sound_input_mem then
+--					soundAB_output_s<=x"FF";
+--				else
+--					soundAB_output_s<=sound_input_mem+sound_generated_mem;
+--				end if;
+--			end if;
+--		end if;
+--	end if;
+--end process sound_mixerAB;
+--
+--sound_mixerBC:process(reset,nCLK4_1)
+--	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
+--	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
+--begin
+--	if reset='1' then
+--		soundBC_output_s<=soundBC_input;
+--	elsif falling_edge(nCLK4_1) then --CLK4
+--		sound_input_mem:=soundBC_input;
+--		sound_generated_mem:=sound_generated;
+--		if sound_input_mem>=x"64" then
+--			if sound_generated_mem>=x"64" then
+--				-- A - B
+--				if sound_input_mem<sound_generated_mem then
+--					soundBC_output_s<=x"00";
+--				else
+--					soundBC_output_s<=sound_input_mem-sound_generated_mem;
+--				end if;
+--			else
+--				-- A - B
+--				sound_generated_mem:=x"FF"-sound_generated_mem;
+--				if sound_input_mem>x"FF"-sound_generated_mem then
+--					soundBC_output_s<=x"FF";
+--				else
+--					soundBC_output_s<=sound_input_mem+sound_generated_mem;
+--				end if;
+--			end if;
+--		else
+--			if sound_generated_mem>=x"64" then
+--				-- A - B
+--				sound_generated_mem:=x"FF"-sound_generated_mem;
+--				if sound_generated_mem>sound_input_mem then
+--					soundBC_output_s<=x"00";
+--				else
+--					soundBC_output_s<=sound_input_mem-sound_generated_mem;
+--				end if;
+--			else
+--				-- A - B
+--				sound_generated_mem:=x"FF"-sound_generated_mem;
+--				if sound_generated_mem>x"FF"-sound_input_mem then
+--					soundBC_output_s<=x"FF";
+--				else
+--					soundBC_output_s<=sound_input_mem+sound_generated_mem;
+--				end if;
+--			end if;
+--		end if;
+--	end if;
+--end process sound_mixerBC;
+
+cassette_pulse:process(reset,nCLK4_1)
+	variable pulse_step:integer range 1 to 1:=1;
+	variable pulse_length:integer:=0;
+	variable pulse_inc:integer:=0;
+	variable pulse_jump:integer:=0;
+	variable debug:STD_LOGIC_VECTOR(7 downto 0):=x"00";
+	variable pulse_value:std_logic:='0';
+	variable pulse_toggle:boolean;
+	variable pulse_sinus_pos:integer range 0 to 255;
+begin
+	if reset='1' then
+		cassette_output<='0';
+		play_push_done<=true;
+		debug:=x"00";
+		sound_generated<=x"80";
+	elsif falling_edge(nCLK4_1) then --CLK4
+	
+		if play_push then
+			-- buffer : bank ici
+			pulse_step:=1;
+			pulse_length:=play_output;
+			pulse_jump:=pulse_length/128;
+			pulse_inc:=0;
+			pulse_sinus_pos:=0;
+			if pulse_length=0 then
+				debug(0):='1'; -- got a problem by here :/
+			end if;
+			if not(pulse_toggle) and play_toggle then
+				--analyseID20() : ...Pause or Stop the Tape (end)
+				pulse_value:='0';
+			elsif play_toggle then
+				pulse_value:=not(pulse_value);
+			end if;
+			pulse_toggle:=play_toggle;
+			play_push_done<=false;
+		end if;
+		
+		leds8_debug(19 downto 12)<=debug;
+		
+		
+		if cassette_motor='1' and not(play_push) and not(play_push_done) then
+			case pulse_step is
+				when 1=>
+					cassette_output<=pulse_value;
+					pulse_length:=pulse_length-1;
+					pulse_inc:=pulse_inc+1;
+					if pulse_inc>pulse_jump then
+						if pulse_sinus_pos<255 then
+							pulse_sinus_pos:=pulse_sinus_pos+1;
+						end if;
+						pulse_inc:=0;
+					end if;
+					if pulse_value='1' then
+						sound_generated<=sinus(pulse_sinus_pos)(7 downto 0);
+						--sound_generated<=sinus_div16(pulse_sinus_pos)(7 downto 0);
+					else
+						sound_generated<=sinus(pulse_sinus_pos+128)(7 downto 0);
+						--sound_generated<=sinus_div16(pulse_sinus_pos+128)(7 downto 0);
+					end if;
+					if pulse_length=0 then
+						--if pulse_toggle then
+						--	debug(4):='1'; -- good
+						--	pulse_value:=not(pulse_value);
+						--else
+						--	
+						--end if;
+						play_push_done<=true;
+					end if;
+			end case;
+		end if;
+		
+	end if;
+end process cassette_pulse;
+
+michel:process(reset,nCLK4_1)
+	variable block_step:integer range 0 to 15:=0;
+	variable sb_bit0:integer:=0;
+	variable sb_bit1:integer:=0;
+	variable sb_pilot:integer:=0;
+	variable pilot:integer:=0;
+	variable last_byte:integer:=0; -- 0 to 8
+	variable data_bit:integer;
+	variable data_length:integer;
+	variable debug_no_block:integer;
+	
+begin
+	if reset='1' then
+		play_push<=false;
+		jacquie_done_s<='1';
+	elsif rising_edge(nCLK4_1) then --CLK4
+		--// TZX file blocks analysis finished
+      --// Now we start generating the sound waves
+      --if id=x"10" or id=x"11" or id=x"14" then
+		--if (id == 0x10 || id == 0x11 || id == 0x14) {
+      --// One of the data blocks ...
+		if jacquie_do='1' then
+			--if cassette_motor='0' then
+			--	jacquie_done_s<='0';
+			--else
+				debug_no_block:=conv_integer(jacquie_no_block);
+				if CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BIT0 then
+					sb_bit0:=CONV_INTEGER(jacquie_length);
+					jacquie_done_s<='1';
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BIT1 then
+					sb_bit1:=CONV_INTEGER(jacquie_length);
+					jacquie_done_s<='1';
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PILOT then
+					sb_pilot:=CONV_INTEGER(jacquie_length);
+					pilot:=CONV_INTEGER(jacquie_count);
+					block_step:=1;
+					jacquie_done_s<='0';
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PULSE then
+					sb_pilot:=CONV_INTEGER(jacquie_length);
+					block_step:=2;
+					jacquie_done_s<='0';
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BLOCK then
+					data_length:=CONV_INTEGER(jacquie_length);
+					data_bit:=7;
+					-- Used bits in the last byte (other bits should be 0) {8}
+					-- (e.g. if this is 6, then the bits used (x) in the last byte are: xxxxxx00, where MSb is the leftmost bit, LSb is the rightmost bit)
+					last_byte:=CONV_INTEGER(jacquie_count);
+					block_step:=3;
+					jacquie_done_s<='0';
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BLOCK_CONTINUE then
+					if last_byte=0 and data_length=0 then
+						-- direct stop
+						jacquie_done_s<='1';
+					else
+						data_bit:=7;
+						block_step:=3;
+						jacquie_done_s<='0';
+					end if;
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PAUSE then
+					data_length:=CONV_INTEGER(jacquie_length);
+					-- 1ms @ 4MHz : 4000 or x"0FA0"
+					sb_pilot:=4000;
+					block_step:=5;
+					jacquie_done_s<='0';
+				end if;
+			--end if;
+		end if;
+
+		leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
+		leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
+		--leds8_debug(23 downto 8)<=conv_std_logic_vector(pilot,16);
+		
+		play_push<=false;
+		if cassette_motor='1' and jacquie_done_s='0' and (play_push_done and not(play_push)) then
+			case block_step is
+				when 0=>NULL; -- fuck 0 (not even used this state machine :p
+
+				when 1=>
+					-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
+				
+               --// Play PILOT TONE
+               --while (pilot > 0) {
+               --output.play(sb_pilot);
+					play_output<=sb_pilot;
+               --output.toggleAmp();
+					play_toggle<=true;
+					play_push<=true;
+					--pilot--;
+					pilot:=pilot-1;
+               --}
+					if pilot=0 then
+						jacquie_done_s<='1';
+					end if;
+				when 2=>
+               --// Play first SYNC pulse
+					--// Play second SYNC pulse
+               --if (sb_sync1 > 0) {
+               --if (sb_sync2 > 0) {
+               --output.play(sb_sync1);
+               --output.play(sb_sync2);
+					play_output<=sb_pilot;
+               --output.toggleAmp();
+					play_toggle<=true;
+					play_push<=true;
+               --}
+					jacquie_done_s<='1';
+				when 3=>
+               --// Play actual DATA
+					--// Play first pulse of the bit
+					if jacquie_byte(data_bit)='0' then
+						play_output<=sb_bit0;
+					else
+						play_output<=sb_bit1;
+					end if;
+					play_toggle<=true;
+					play_push<=true;
+					
+					--11
+					--07 01 00
+					
+					--11
+					--15 08 00 x815
+					--11
+					--07 01 00 x107
+					--11
+					--07 01 00 x107
+					
+--					--x"815"-x"803"
+--					if debug_no_block=3 and data_length=18 and jacquie_byte/=x"C5" then
+--						block_step:=6;
+--					--x"107"-x"102"
+--					elsif debug_no_block=4 and data_length=5 and jacquie_byte/=x"F5" then
+--						block_step:=7;
+--					--x"107"-x"000"
+--					elsif debug_no_block=5 and data_length=263 and jacquie_byte/=x"16" then
+--						block_step:=8;
+--					--x"107"-x"101"
+--					elsif debug_no_block=5 and data_length=6 and jacquie_byte/=x"57" then
+--						block_step:=9;
+--					--x"107"-x"106"
+--					elsif debug_no_block=5 and data_length=1 and jacquie_byte/=x"FF" then
+--						block_step:=10;
+--					--x"107"-x"106"
+--					elsif debug_no_block=5 and data_length=1 and jacquie_byte=x"FF" then
+--						block_step:=11;  -- fin :)
+--					else
+						
+						block_step:=4;
+						
+--					end if;
+				when 4=>
+					--// Play second pulse of the bit
+					play_toggle<=true;
+					play_push<=true;
+					data_bit:=(data_bit-1) mod 8;
+					if data_length=0 and last_byte=7-data_bit then
+						-- end of block
+						jacquie_done_s<='1';
+					--	block_step:=6;
+					elsif data_length=0 and (data_bit=7) then
+						-- end of block
+						jacquie_done_s<='1';
+						--block_step:=7;
+					elsif (data_bit=7) then
+						data_length:=data_length-1;
+						jacquie_done_s<='1';
+					else
+						block_step:=3;
+					end if;
+				when 5=>
+               --// If there is pause after block present then make first millisecond the oposite
+               --// pulse of last pulse played and the rest in LOAMP ... otherwise don't do ANY pause
+					--// 5 seconds of pause in "Stop Tape" wave output
+					--output.pause(5000);
+               --if (pause > 0) {
+					play_output<=sb_pilot;
+					play_toggle<=false;
+					
+					--play_toggle<=true;
+					--pilot:=pilot-1;
+					if data_length=0 then
+						jacquie_done_s<='1';
+					else
+						play_push<=true;
+						data_length:=data_length-1;
+					end if;
+				when 6=>NULL; -- fuck 6 block 3 KO
+				when 7=>NULL; -- fuck 7 block 4 KO
+				when 8=>NULL; -- fuck 8 block 5 debut KO
+				when 9=>NULL; -- fuck 9 block 5 KO
+				when 10=>NULL; -- fuck 10 block 5 fini KO
+				when 11=>NULL; -- fuck 11 block 5 fini OK
+				when 12=>NULL; -- fuck 12
+				when 13=>NULL; -- fuck 13
+				when 14=>NULL; -- fuck 14
+				when 15=>NULL; -- fuck 15
+			end case;
+		end if;
+	end if;
+end process michel;
+
+
+end Behavioral;

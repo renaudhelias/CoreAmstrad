@@ -72,7 +72,7 @@ entity FPGAmstrad_bootloader_sd is
 			 is_dskReady:out std_logic_vector(1 downto 0);
 			 
 			 
-			 -- simpleDSK interface
+-- simpleDSK interface
 			  megashark_CHRNresult : out STD_LOGIC_VECTOR(4*8-1 downto 0); -- chr+1 quand W/R, chrn quand goto0
 			  megashark_doGOTO : in std_logic_vector(2 downto 0); -- not a W/R operation finally
 			  megashark_CHRN : in STD_LOGIC_VECTOR(4*8-1 downto 0);
@@ -89,8 +89,19 @@ entity FPGAmstrad_bootloader_sd is
 			  megashark_INFO_ST0 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
-			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0)
+			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0);
 			  --leds8_debug:out std_logic_vector(39 downto 0)
+
+-- simpleCDT interface
+			  jacquie_phase : out STD_LOGIC_VECTOR(2 downto 0);
+			  jacquie_length : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_count : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count
+			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
+			  jacquie_do : out STD_LOGIC;
+			  jacquie_done : in STD_LOGIC;
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
+			  
+			  --leds8_debug:out std_logic_vector(19 downto 0)
 			 );
 end FPGAmstrad_bootloader_sd;
 
@@ -194,8 +205,18 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 			  megashark_INFO_ST0 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST1 : out std_logic_vector(7 downto 0);
 			  megashark_INFO_ST2 : out std_logic_vector(7 downto 0);
-			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0)
-			  --leds8_debug:out std_logic_vector(39 downto 0)
+			  megashark_INFO_PANIC : out std_logic_vector(1 downto 0);
+
+-- simpleCDT interface
+			  jacquie_phase : out STD_LOGIC_VECTOR(2 downto 0);
+			  jacquie_length : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_count : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count
+			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
+			  jacquie_do : out STD_LOGIC;
+			  jacquie_done : in STD_LOGIC;
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
+			  
+			  --leds8_debug:out std_logic_vector(19 downto 0)
 			  );
    end component;
    
@@ -271,7 +292,17 @@ begin
 			  megashark_INFO_ST0=>megashark_INFO_ST0,
 			  megashark_INFO_ST1=>megashark_INFO_ST1,
 			  megashark_INFO_ST2=>megashark_INFO_ST2,
-			  megashark_INFO_PANIC=>megashark_INFO_PANIC
+			  megashark_INFO_PANIC=>megashark_INFO_PANIC,
+
+			  -- simpleCDT interface
+			  jacquie_phase=>jacquie_phase,
+			  jacquie_length=>jacquie_length,
+			  jacquie_count=>jacquie_count,
+			  jacquie_byte=>jacquie_byte,
+			  jacquie_do=>jacquie_do,
+			  jacquie_done=>jacquie_done,
+			  jacquie_no_block=>jacquie_no_block
+			  
 			  --leds8_debug=>leds8_debug
 					 );
    

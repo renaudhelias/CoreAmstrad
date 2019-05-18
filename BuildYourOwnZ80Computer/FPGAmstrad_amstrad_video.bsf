@@ -96,8 +96,8 @@ applicable agreement for further details.
 	(port
 		(pt 224 32)
 		(output)
-		(text "BLUE2[2..0]" (rect 0 0 50 12)(font "Arial" ))
-		(text "BLUE2[2..0]" (rect 153 27 203 39)(font "Arial" ))
+		(text "RED2[2..0]" (rect 0 0 47 12)(font "Arial" ))
+		(text "RED2[2..0]" (rect 156 27 203 39)(font "Arial" ))
 		(line (pt 224 32)(pt 208 32)(line_width 3))
 	)
 	(port
@@ -110,16 +110,16 @@ applicable agreement for further details.
 	(port
 		(pt 224 64)
 		(output)
-		(text "HSYNC" (rect 0 0 34 12)(font "Arial" ))
-		(text "HSYNC" (rect 169 59 203 71)(font "Arial" ))
-		(line (pt 224 64)(pt 208 64)(line_width 1))
+		(text "BLUE2[2..0]" (rect 0 0 50 12)(font "Arial" ))
+		(text "BLUE2[2..0]" (rect 153 59 203 71)(font "Arial" ))
+		(line (pt 224 64)(pt 208 64)(line_width 3))
 	)
 	(port
 		(pt 224 80)
 		(output)
-		(text "RED2[2..0]" (rect 0 0 47 12)(font "Arial" ))
-		(text "RED2[2..0]" (rect 156 75 203 87)(font "Arial" ))
-		(line (pt 224 80)(pt 208 80)(line_width 3))
+		(text "HSYNC" (rect 0 0 34 12)(font "Arial" ))
+		(text "HSYNC" (rect 169 75 203 87)(font "Arial" ))
+		(line (pt 224 80)(pt 208 80)(line_width 1))
 	)
 	(port
 		(pt 224 96)

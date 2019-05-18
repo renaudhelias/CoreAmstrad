@@ -395,8 +395,18 @@ entity FPGAmstrad_amstrad_motherboard is
 			  crtc_type: in std_logic;
 			  ga_shunt : in std_logic;
 
-			  PS2_MOUSE_DATA : in std_logic_vector(7 downto 0)
+			  PS2_MOUSE_DATA : in std_logic_vector(7 downto 0);
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+ 
+			  jacquie_phase : in STD_LOGIC_VECTOR(2 downto 0);
+			  jacquie_length : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_count : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count, or data bit count of byte to play
+			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
+			  jacquie_do : in STD_LOGIC;
+			  jacquie_done : out STD_LOGIC;
+			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0)
+			  
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -433,6 +443,8 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    signal XLXN_462      : std_logic_vector (7 downto 0);
    signal XLXN_486_AB      : std_logic_vector (7 downto 0);
 	signal XLXN_486_BC      : std_logic_vector (7 downto 0);
+   signal XLXN_486_mixAB      : std_logic_vector (7 downto 0);
+	signal XLXN_486_mixBC      : std_logic_vector (7 downto 0);
    signal XLXN_518      : std_logic_vector (7 downto 0);
    signal XLXN_519      : std_logic_vector (7 downto 0);
    signal XLXN_551      : std_logic;
@@ -459,6 +471,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
    --signal ram_W_DUMMY   : std_logic;
    signal RAMBank_DUMMY : std_logic_vector (2 downto 0);
    signal RAMBank_DUMMY512 : std_logic_vector (2 downto 0);
+	signal cassette_O:std_logic;
 	
 	-- t80_latest.tar.gz (vhdl)
    component T80se
@@ -621,6 +634,31 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  megashark_INFO_ST2 : in std_logic_vector(7 downto 0);
 			  megashark_INFO_PANIC : in std_logic_vector(1 downto 0)
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+				 );
+   end component;
+
+  component simple_CDT
+      port ( nCLK4_1        : in    std_logic; 
+             reset          : in    std_logic; 
+				 
+				 cassette_input : in STD_LOGIC;
+			  cassette_output : out STD_LOGIC;
+			  cassette_motor : in STD_LOGIC;
+				 
+             jacquie_phase : in STD_LOGIC_VECTOR(2 downto 0);
+			  jacquie_length : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_count : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count, or data bit count of byte to play
+			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
+			  jacquie_do : in STD_LOGIC;
+			  jacquie_done : out STD_LOGIC;
+			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
+			  
+			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
+			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0)
+			  
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 				 );
    end component;
    
@@ -875,7 +913,7 @@ end generate;
 	iord=>XLXN_180,
 	cpuclk=>CLK16MHz, -- (no clocked this component normaly, so let's overclock it) --nCLK4MHz,
 	
-	PBI(7)=>'1', -- pull up (default)
+	PBI(7)=>cassette_O, -- pull up (default)
 	PBI(6)=>'1', -- pull up (default)
 	PBI(5)=>'1', -- pull up (default)
 	PBI(4)=>ppi_jumpers(3), --'1', --50Hz
@@ -976,6 +1014,32 @@ INT_n<=not(XLXN_835);
 			  --leds8_debug=>leds8_debug
 					 );
    
+   XLXI_344r : simple_CDT
+      port map (
+                nCLK4_1=>nCLK4MHz,
+                reset=>XLXN_907,
+                
+					 cassette_input=>portC(5),
+			  cassette_output=>cassette_O,
+			  cassette_motor=>portC(4),
+					 
+			-- simpleCDT interface
+			  jacquie_phase=>jacquie_phase,
+			  jacquie_length=>jacquie_length,
+			  jacquie_count=>jacquie_count,
+			  jacquie_byte=>jacquie_byte,
+			  jacquie_do=>jacquie_do,
+			  jacquie_done=>jacquie_done,
+			  jacquie_no_block=>jacquie_no_block,
+			  
+			  soundAB_input=>XLXN_486_AB,
+			  soundBC_input=>XLXN_486_BC,
+			  soundAB_output=>XLXN_486_mixAB,
+			  soundBC_output=>XLXN_486_mixBC
+			  
+			  --leds8_debug=>leds8_debug
+					 );
+   
    XLXI_349 : YM2149
       port map (CLK=>SOUND_CLK,
                 ENA=>'1',
@@ -995,13 +1059,13 @@ INT_n<=not(XLXN_835);
 
    XLXI_367_AB : PWM
       port map (clk=>CLK_PWM,--nCLK4MHz,
-                clk_ref=>SOUND_CLK,
-                PWM_in(7 downto 0)=>XLXN_486_AB(7 downto 0),
+                clk_ref=>nCLK4MHz, --SOUND_CLK,
+                PWM_in(7 downto 0)=>XLXN_486_mixAB(7 downto 0),
                 PWM_out=>audio_AB);
 	XLXI_367_BC : PWM
       port map (clk=>CLK_PWM,--nCLK4MHz,
-                clk_ref=>SOUND_CLK,
-                PWM_in(7 downto 0)=>XLXN_486_BC(7 downto 0),
+                clk_ref=>nCLK4MHz, --SOUND_CLK,
+                PWM_in(7 downto 0)=>XLXN_486_mixBC(7 downto 0),
                 PWM_out=>audio_BC);
    
 XLXN_826<=XLXN_824 and IO_REQ;

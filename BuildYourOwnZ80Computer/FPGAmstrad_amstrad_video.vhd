@@ -999,10 +999,10 @@ entity FPGAmstrad_amstrad_video is
           vram_CLK    : in    std_logic; 
           vram_D      : in    std_logic_vector (7 downto 0); 
           vram_W      : in    std_logic; 
-          BLUE2       : out   std_logic_vector (2 downto 0); 
-          GREEN2      : out   std_logic_vector (2 downto 0); 
-          HSYNC       : out   std_logic; 
           RED2        : out   std_logic_vector (2 downto 0); 
+          GREEN2      : out   std_logic_vector (2 downto 0); 
+          BLUE2       : out   std_logic_vector (2 downto 0); 
+          HSYNC       : out   std_logic; 
           VSYNC       : out   std_logic);
 end FPGAmstrad_amstrad_video;
 

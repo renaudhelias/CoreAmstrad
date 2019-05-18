@@ -76,9 +76,9 @@ entity simple_CDT is
 			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
-			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0)
 			  
-			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end simple_CDT;
 
@@ -310,7 +310,7 @@ cassette_pulse:process(reset,nCLK4_1)
 	variable pulse_length:integer:=0;
 	variable pulse_inc:integer:=0;
 	variable pulse_jump:integer:=0;
-	variable debug:STD_LOGIC_VECTOR(7 downto 0):=x"00";
+	--variable debug:STD_LOGIC_VECTOR(7 downto 0):=x"00";
 	variable pulse_value:std_logic:='0';
 	variable pulse_toggle:boolean;
 	variable pulse_sinus_pos:integer range 0 to 255;
@@ -318,7 +318,7 @@ begin
 	if reset='1' then
 		cassette_output<='0';
 		play_push_done<=true;
-		debug:=x"00";
+		--debug:=x"00";
 		sound_generated<=x"80";
 	elsif falling_edge(nCLK4_1) then --CLK4
 	
@@ -329,9 +329,9 @@ begin
 			pulse_jump:=pulse_length/128;
 			pulse_inc:=0;
 			pulse_sinus_pos:=0;
-			if pulse_length=0 then
-				debug(0):='1'; -- got a problem by here :/
-			end if;
+			--if pulse_length=0 then
+			--	debug(0):='1'; -- got a problem by here :/
+			--end if;
 			if not(pulse_toggle) and play_toggle then
 				--analyseID20() : ...Pause or Stop the Tape (end)
 				pulse_value:='0';
@@ -342,7 +342,7 @@ begin
 			play_push_done<=false;
 		end if;
 		
-		leds8_debug(19 downto 12)<=debug;
+		--leds8_debug(19 downto 12)<=debug;
 		
 		
 		if cassette_motor='1' and not(play_push) and not(play_push_done) then
@@ -388,7 +388,7 @@ michel:process(reset,nCLK4_1)
 	variable last_byte:integer:=0; -- 0 to 8
 	variable data_bit:integer;
 	variable data_length:integer;
-	variable debug_no_block:integer;
+	--variable debug_no_block:integer;
 	
 begin
 	if reset='1' then
@@ -404,7 +404,7 @@ begin
 			--if cassette_motor='0' then
 			--	jacquie_done_s<='0';
 			--else
-				debug_no_block:=conv_integer(jacquie_no_block);
+				--debug_no_block:=conv_integer(jacquie_no_block);
 				if CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BIT0 then
 					sb_bit0:=CONV_INTEGER(jacquie_length);
 					jacquie_done_s<='1';
@@ -447,8 +447,8 @@ begin
 			--end if;
 		end if;
 
-		leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
-		leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
+		--leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
+		--leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
 		--leds8_debug(23 downto 8)<=conv_std_logic_vector(pilot,16);
 		
 		play_push<=false;

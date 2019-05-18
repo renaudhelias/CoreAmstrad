@@ -44,8 +44,12 @@ module osd (
 	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
-//	input [39:0] leds8_debug,
-//	input [7:0] leds8,
+	
+	//input [39:0] leds8_debug,
+	//input [19:0] leds8_debug1,
+	//input [19:0] leds8_debug2,
+	
+	//input [7:0] leds8,
 	
 	//input [16:0] leds_mouse_data,
 	
@@ -284,6 +288,17 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug[11:8]),.segment(segment[7]));
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug[3:0]),.segment(segment[9]));
+
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug1[19:16]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug1[15:12]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug1[11:8]),.segment(segment[2]));
+//osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug1[7:4]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug1[3:0]),.segment(segment[4]));
+//osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug2[19:16]),.segment(segment[5]));
+//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug2[15:12]),.segment(segment[6]));
+//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug2[11:8]),.segment(segment[7]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug2[7:4]),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug2[3:0]),.segment(segment[9]));
 
 osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
 osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));

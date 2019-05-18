@@ -86,8 +86,19 @@ entity SDRAM_FAT32_LOADER is
 			  megashark_doWRITE : in STD_LOGIC_VECTOR(2 downto 0);
 			  megashark_done : out std_logic;
 			  megashark_select : in std_logic; -- from OSD
-			  megashark_face : in std_logic_vector(3 downto 0) -- from simpleDSK
+			  megashark_face : in std_logic_vector(3 downto 0); -- from simpleDSK
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+
+-- simpleCDT interface
+			  jacquie_phase : out STD_LOGIC_VECTOR(2 downto 0);
+			  jacquie_length : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_count : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count
+			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
+			  jacquie_do : out STD_LOGIC:='0';
+			  jacquie_done : in STD_LOGIC;
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
+			  
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 			  	--attribute keep : string;
 				--attribute keep of file_select : signal is "TRUE";
@@ -105,6 +116,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 
 	constant ATTR_ARCHIVE:std_logic_vector(7 downto 0):=x"20";
 	constant file_dsk_extention:std_logic_vector((4)*8-1 downto 0):=x"44534B" & ATTR_ARCHIVE; -- DSK & ATTR_ARCHIVE
+	constant file_cdt_extention:std_logic_vector((4)*8-1 downto 0):=x"434454" & ATTR_ARCHIVE; -- CDT & ATTR_ARCHIVE
 	constant file_ezz_extention:std_logic_vector((4)*8-1 downto 0):=x"455A5A" & ATTR_ARCHIVE; -- RZZ & ATTR_ARCHIVE
 	subtype name_type is std_logic_vector(11*8-1 downto 0);
 	subtype address_type is std_logic_vector(31 downto 0);
@@ -146,6 +158,7 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal compare_result :boolean;
 	signal compare_resultEZZ :boolean;
 	signal compare_resultDSK :boolean;
+	signal compare_resultCDT :boolean;
 	signal compare_resultFF :STD_LOGIC_VECTOR(7 downto 0);
 	signal compare_address:STD_LOGIC_VECTOR(40 downto 0);
 	signal compare_do :boolean:=false;
@@ -179,9 +192,10 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	constant SWITCH_COMPARE:integer:=3;
 	constant SWITCH_BR:integer:=4;
 	constant SWITCH_MECASHARK:integer:=5;
+	constant SWITCH_jacquie:integer:=6;
 	
 	
-	signal switch_br_compare_transmit_dump_mecashark:integer range 0 to 5:=SWITCH_NONE;
+	signal switch_br_compare_transmit_dump_mecashark_jacquie:integer range 0 to 6:=SWITCH_NONE;
 	
 	signal switch_transmit_dump:integer range 0 to 2:=SWITCH_NONE;
 
@@ -202,6 +216,25 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal meca_spi_Wblock:std_logic:='0';
 	signal megashark_done_s:std_logic:='1';
 	
+	
+	signal jacquie_changeCDT_do:boolean:=false;
+	signal jacquie_changeCDT_done:boolean:=true;
+	signal jacquie_addr:std_logic_vector(40 downto 0):=(others=>'0');
+	signal deca_spi_A:STD_LOGIC_VECTOR(40 downto 0);
+	signal deca_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'0');
+	signal deca_spi_Rdo:std_logic:='0';
+
+	signal jacquie_do_s:std_logic:='0';
+
+	constant JACQUIE_PHASE_PILOT:integer:=0;
+	constant JACQUIE_PHASE_PULSE:integer:=1; -- SYNC1 or SYNC2 or several distinct PULSE
+	constant JACQUIE_PHASE_BIT0 :integer:=2;
+	constant JACQUIE_PHASE_BIT1 :integer:=3;
+	constant JACQUIE_PHASE_BLOCK:integer:=4;
+	constant JACQUIE_PHASE_BLOCK_CONTINUE:integer:=5;
+	constant JACQUIE_PHASE_PAUSE:integer:=6;
+	
+	
 	signal key_reset_space:std_logic:='0';
 begin
 
@@ -210,42 +243,48 @@ begin
 
 	megashark_done<=megashark_done_s;
 
+	jacquie_do<=jacquie_do_s;
+
 	ram_A<= transmit_ram_A when switch_transmit_dump=SWITCH_TRANSMIT else dump_ram_A when switch_transmit_dump=SWITCH_DUMP else (others=>'0');
 	ram_Dout<= transmit_ram_D when switch_transmit_dump=SWITCH_TRANSMIT else (others=>'0');
 	ram_W<= transmit_ram_W when switch_transmit_dump=SWITCH_TRANSMIT else '0';
 	ram_R<= dump_ram_R when switch_transmit_dump=SWITCH_DUMP else '0';
 	
 	
-	spi_A(31 downto 0)<=data_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark=SWITCH_BR
-		else compare_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark=SWITCH_COMPARE
-		else transmit_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark=SWITCH_TRANSMIT
-		else dump_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark=SWITCH_DUMP
-		else meca_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark=SWITCH_MECASHARK
+	spi_A(31 downto 0)<=data_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_BR
+		else compare_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_COMPARE
+		else transmit_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_TRANSMIT
+		else dump_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_DUMP
+		else meca_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_MECASHARK
+		else deca_spi_A(40 downto 9) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_jacquie
 		else (others=>'0');
-	spi_A_block(8 downto 0)<=data_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark=SWITCH_BR
-		else compare_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark=SWITCH_COMPARE
-		else transmit_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark=SWITCH_TRANSMIT
-		else dump_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark=SWITCH_DUMP
-		else meca_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark=SWITCH_MECASHARK
+	spi_A_block(8 downto 0)<=data_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_BR
+		else compare_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_COMPARE
+		else transmit_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_TRANSMIT
+		else dump_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_DUMP
+		else meca_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_MECASHARK
+		else deca_spi_A(8 downto 0) when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_jacquie
 		else (others=>'0');
 
-	spi_Rdo<=data_spi_Rdo when switch_br_compare_transmit_dump_mecashark=SWITCH_BR
-		else compare_spi_Rdo when switch_br_compare_transmit_dump_mecashark=SWITCH_COMPARE
-		else transmit_spi_Rdo when switch_br_compare_transmit_dump_mecashark=SWITCH_TRANSMIT
-		else meca_spi_Rdo when switch_br_compare_transmit_dump_mecashark=SWITCH_MECASHARK
+	spi_Rdo<=data_spi_Rdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_BR
+		else compare_spi_Rdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_COMPARE
+		else transmit_spi_Rdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_TRANSMIT
+		else meca_spi_Rdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_MECASHARK
+		else deca_spi_Rdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_jacquie
 		else '0';
-	spi_Wdo<=data_spi_Wdo when switch_br_compare_transmit_dump_mecashark=SWITCH_BR
-		else dump_spi_Wdo when switch_br_compare_transmit_dump_mecashark=SWITCH_DUMP
-		else meca_spi_Wdo when switch_br_compare_transmit_dump_mecashark=SWITCH_MECASHARK
-		else '0';
-		
-	spi_Wblock<=dump_spi_Wblock when switch_br_compare_transmit_dump_mecashark=SWITCH_DUMP
-		else meca_spi_Wblock when switch_br_compare_transmit_dump_mecashark=SWITCH_MECASHARK
+	spi_Wdo<=data_spi_Wdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_BR
+		else dump_spi_Wdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_DUMP
+		else meca_spi_Wdo when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_MECASHARK
 		else '0';
 		
-	spi_Dout<=dump_spi_Dout when switch_br_compare_transmit_dump_mecashark=SWITCH_DUMP
-		else data_spi_Dout when switch_br_compare_transmit_dump_mecashark=SWITCH_BR
-		else meca_spi_Dout when switch_br_compare_transmit_dump_mecashark=SWITCH_MECASHARK
+	spi_Wblock<=dump_spi_Wblock when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_DUMP
+		else meca_spi_Wblock when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_MECASHARK
+		else '0';
+		
+	spi_Dout<=dump_spi_Dout when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_DUMP
+		else data_spi_Dout when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_BR
+		else meca_spi_Dout when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_MECASHARK
+		else deca_spi_Dout when switch_br_compare_transmit_dump_mecashark_jacquie=SWITCH_jacquie
 		else (others=>'0');
 
 	-- Permit to load BR values, and also some others variables
@@ -470,6 +509,16 @@ begin
 				return false;
 			end if;
 		end function;
+
+		-- check if it is ascii CDT
+		function checkCDT(ff : std_logic_vector(23 downto 0)) return boolean is
+		begin
+			if ff=x"434454" then
+				return true;
+			else
+				return false;
+			end if;
+		end function;
 		
 		-- check if it is ascii RZZ (lower ROM)
 		function checkEZZ(ff : std_logic_vector(23 downto 0)) return boolean is
@@ -548,17 +597,25 @@ begin
 								if compare_extention then
 									-- volume_label     directory
 									if spi_Din(3)='0' and spi_Din(4)='0' then
-										if compare_extentionEZZorEFF and checkDSK(extFifo) then
+										if compare_extentionEZZorEFF and checkCDT(extFifo) then
+											compare_resultCDT<=true;
+											compare_resultDSK<=false;
+											compare_resultEZZ<=false;
+											compare_result<=true;
+										elsif compare_extentionEZZorEFF and checkDSK(extFifo) then
+											compare_resultCDT<=false;
 											compare_resultDSK<=true;
 											compare_resultEZZ<=false;
 											compare_result<=true;
 										elsif compare_extentionEZZorEFF and checkEZZ(extFifo) then
+											compare_resultCDT<=false;
 											compare_resultDSK<=false;
 											compare_resultEZZ<=true;
 											compare_result<=true;
 										elsif compare_extentionEZZorEFF and checkEFF(extFifo,key_reset_space_mem) then
 											compare_resultFF_mem:=extractEFF(extFifo);
 											compare_resultFF<=compare_resultFF_mem;
+											compare_resultCDT<=false;
 											compare_resultDSK<=false;
 											compare_resultEZZ<=false;
 											compare_result<=true;
@@ -831,42 +888,42 @@ begin
 	data_length<=1;
 	data_addr<=PREFIX & var_addr;
 	data_Rdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure get_var1b(var_name: in STD_LOGIC_VECTOR(7 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
 	data_length<=1;
 	data_addr<=var_addr_b;
 	data_Rdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure get_var2(var_name: in STD_LOGIC_VECTOR(15 downto 0);var_addr:STD_LOGIC_VECTOR(31 downto 0)) is
 begin
 	data_length<=2;
 	data_addr<=PREFIX & var_addr;
 	data_Rdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure get_var2b(var_name: in STD_LOGIC_VECTOR(15 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
 	data_length<=2;
 	data_addr<=var_addr_b;
 	data_Rdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure get_var4(var_name: in STD_LOGIC_VECTOR(31 downto 0);var_addr:STD_LOGIC_VECTOR(31 downto 0)) is
 begin
 	data_length<=4;
 	data_addr<=PREFIX & var_addr;
 	data_Rdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure get_var4b(var_name: in STD_LOGIC_VECTOR(31 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
 	data_length<=4;
 	data_addr<=var_addr_b;
 	data_Rdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 
 --procedure set_var1b(var_name: in STD_LOGIC_VECTOR(7 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
@@ -875,7 +932,7 @@ end;
 --	data_addr<=var_addr_b;
 --	data_writer1<=var_name;
 --	data_Wdo<=true;
---	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+--	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 --end;
 procedure set_var2b(var_name: in STD_LOGIC_VECTOR(15 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
@@ -883,7 +940,7 @@ begin
 	data_addr<=var_addr_b;
 	data_writer2<=var_name;
 	data_Wdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure set_var4b(var_name: in STD_LOGIC_VECTOR(31 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
@@ -891,21 +948,21 @@ begin
 	data_addr<=var_addr_b;
 	data_writer4<=var_name;
 	data_Wdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure fillSDCARD_32BytesWithZeros(var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
 	data_length<=3; --strange case
 	data_addr<=var_addr_b;
 	data_Wdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 procedure set_var12b(var_name:std_logic_vector(8*12-1 downto 0);var_addr_b:STD_LOGIC_VECTOR(40 downto 0)) is
 begin
 	data_length<=5; --strange case
 	data_addr<=var_addr_b;
 	data_Wdo<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_BR;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_BR;
 end;
 
 function fix_big_endian1(var_name: in STD_LOGIC_VECTOR(7 downto 0)) return STD_LOGIC_VECTOR is
@@ -933,7 +990,7 @@ begin
 	compare_extentionEZZorEFF<=false;
 	compare_length<=12;
 	compare_do<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_COMPARE;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_COMPARE;
 end procedure;
 procedure compare4(name:std_logic_vector(8*4-1 downto 0);address:std_logic_vector(40 downto 0);rom:boolean) is
 begin
@@ -943,7 +1000,7 @@ begin
 	compare_extentionEZZorEFF<=rom;
 	compare_length<=4;
 	compare_do<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_COMPARE;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_COMPARE;
 end procedure;
 
 -- RAM init
@@ -960,7 +1017,7 @@ begin
 	transmit_doRAMinit_mem:=false; -- impure ?
 	transmit_doRAMfill <= transmit_doRAMfill_mem;
 	transmit_doRAMfill_mem:=false; -- impure ?
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_TRANSMIT;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_TRANSMIT;
 end;
 
 procedure loadDSK(address_dsk:std_logic_vector(40 downto 0);dskB:boolean) is
@@ -968,7 +1025,14 @@ begin
 	mecashark_dskB<=dskB;
 	mecashark_addr<=address_dsk;
 	mecashark_changeDSK_do<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_MECASHARK;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_MECASHARK;
+end;
+
+procedure loadCDT(address_dsk:std_logic_vector(40 downto 0)) is
+begin
+	jacquie_addr<=address_dsk;
+	jacquie_changeCDT_do<=true;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_jacquie;
 end;
 
 procedure fillSDCARD(address_from:std_logic_vector(40 downto 0);address_to:std_logic_vector(40 downto 0);size:integer) is
@@ -977,7 +1041,7 @@ begin
 	dump_address_to<=address_to;
 	dump_length<=size;
 	dump_do<=true;
-	switch_br_compare_transmit_dump_mecashark<=SWITCH_DUMP;
+	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_DUMP;
 end;
 
 
@@ -1095,7 +1159,8 @@ end function;
 	--files_loaded(1) : dsk loaded (dskIsReady(1)) in face B
 	--files_loaded(2) : lowerROM loaded
 	--files_loaded(3) : dump loaded
-	variable files_loaded:std_logic_vector(3 downto 0):="0000";
+	--files_loaded(4) : CDT
+	variable files_loaded:std_logic_vector(4 downto 0):="00000";
 
 	constant DUMP_COUNT_BEFORE_RESET_MAX : integer := 15;
 	variable dump_counter_before_reset : integer range 0 to DUMP_COUNT_BEFORE_RESET_MAX:=0;
@@ -1111,11 +1176,24 @@ end function;
 	variable old_downloading:std_logic:='1';
 	variable dsk_mist:boolean:=false;
 	--variable file_name:name_type:=x"4946455F44454D4F44534B"; --IFE_DEMODSK; -- 11*8-1..0
+	variable extension_name_OSD:std_logic_vector(8*3-1 downto 0);
 	variable dir_entry_counter:integer range 0 to 32-1:=0;
 	variable file_size_mist:std_logic_vector(31 downto 0):=(others=>'0');
 	variable file_cluster_pointer_mist:std_logic_vector(31 downto 0):=(others=>'0');
 	
+	-- check if it is ascii CDT
+	function checkCDT(ff : std_logic_vector(23 downto 0)) return boolean is
+	begin
+		if ff=x"434454" then
+			return true;
+		else
+			return false;
+		end if;
+	end function;
+	
+
 	variable doDSK:boolean:=false;
+	variable doCDT:boolean:=false;
 	variable dskB:boolean:=false;
 	
 	begin
@@ -1136,10 +1214,13 @@ end function;
 				transmit_do<=false;
 				dump_do<=false;
 				mecashark_changeDSK_do<=false;
+				jacquie_changeCDT_do<=false;
 				
 				key_reset_space<=key_reset_space_mem;
 				
-if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and transmit_done and not(compare_do) and compare_done and not(dump_do) and dump_done and not(mecashark_changeDSK_do) and mecashark_changeDSK_done then
+				--leds8_debug(19 downto 0)<=conv_std_logic_vector(step_var,20);
+				
+if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and transmit_done and not(compare_do) and compare_done and not(dump_do) and dump_done and not(mecashark_changeDSK_do) and mecashark_changeDSK_done and not(jacquie_changeCDT_do) and jacquie_changeCDT_done then
 				
 				
 				
@@ -1324,6 +1405,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							step_var:=8;
 						elsif compare_resultDSK then
 							doDSK:=true;
+							doCDT:=false;
 							if files_loaded(0)='1' then
 								step_var:=8;
 							else
@@ -1337,7 +1419,25 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 								--	step_var:=8;
 								--end if;
 							end if;
+						elsif compare_resultCDT then
+							-- TODO files_loaded with CDT flag
+							doCDT:=true;
+							doDSK:=false;
+							if files_loaded(4)='1' then
+								step_var:=8;
+							else
+								-- same file name/extension founded
+								--if dsk_number>=file_select then
+									
+								get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
+								step_var:=14;
+								--else
+								--	dsk_number:=dsk_number+1;
+								--	step_var:=8;
+								--end if;
+							end if;
 						else
+							doCDT:=false;
 							doDSK:=false;
 							if compare_resultEZZ then
 								-- its a lowerROM !
@@ -1350,27 +1450,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
 							step_var:=14;
 						end if;
-					--when 60=>NULL; -- DEPRECATED -- search MiST DSK
---						if compare_result then
---							-- same file name/extension founded
---							get_var1b(data_reader1,folder_sector_pointer+(folder_DirStruct_number-1)*32);
---							step_var:=61;
---						else
---							step_var:=8;
---						end if;
 					when 61=>NULL; -- DEPRECATED -- check if not a deleted MiST file
---						if data_reader1 = x"E5" then
---							-- this is a deleted file entry
---							step_var:=8;
---						else
---							if dskB='0' then
---								files_loaded(0):='1';
---							else
---								files_loaded(1):='1';
---							end if;
---							get_var4b(file_size,folder_sector_pointer+(folder_DirStruct_number-1)*32+28);
---							step_var:=14;
---						end if;
 					when 14=>
 						file_size:=fix_big_endian4(data_reader4);
 						get_var2b(file_cluster_pointer_H,folder_sector_pointer+(folder_DirStruct_number-1)*32+20);
@@ -1395,6 +1475,9 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						if doDSK then
 							loadDSK(file_sector_pointer, false); -- can be a CAFE or else first root disk
 							step_var:=60;
+						elsif doCDT then
+							loadCDT(file_sector_pointer); -- can be a CAFE or else first root disk
+							step_var:=60;
 						else
 							if file_size>conv_std_logic_vector(conv_integer(BPB_SecPerClus)*conv_integer(BPB_BytsPerSec),32) then
 								fillRAM(file_sector_pointer,file_address,conv_integer(BPB_SecPerClus)*conv_integer(BPB_BytsPerSec));
@@ -1408,7 +1491,11 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						end if;
 					when 60=>
 						-- that's all folk
-						files_loaded(0):='1';
+						if doDSK then
+							files_loaded(0):='1';
+						elsif doCDT then
+							files_loaded(4):='1';
+						end if;
 						step_var:=18;
 					when 18=>
 						-- that's all folk
@@ -1438,7 +1525,12 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						end if;
 					when 36=> -- Ready for DUMP !
 						-- do enable simpleDSK
-						switch_br_compare_transmit_dump_mecashark<=SWITCH_MECASHARK;
+						-- TODO : DUMP ? what the fuck has DUMP doing with DSK/CDT ?
+						if files_loaded(4)='1' then
+							switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_jacquie;
+						else
+							switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_MECASHARK;
+						end if;
 						--waiting button press for DUMP !
 						if dump_button_mem='1' then
 							--permit a START-DUMP
@@ -1454,6 +1546,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 										if not(dsk_mist) then
 											files_loaded(0):='0';
 										end if;
+										files_loaded(4):='0'; -- unload CDT
 										files_loaded(3):='0'; -- ce n'est plus une lecture de dump
 										files_loaded(2):='0'; -- reload also ROM
 										--dsk_number:=(others=>'0');
@@ -1493,11 +1586,12 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							end if;
 						elsif old_downloading = '0' and dir_entry_downloading='1' then
 							-- MiST OSD dir_entry (file selected)
+							-- TODO CDT ?
+							dsk_mist:=true; -- no more coffee
 							if megashark_select='1' then
 								dskB:=true;
 							else
 								dskB:=false;
-								dsk_mist:=true; -- no more coffee
 							end if;
 							dir_entry_r<='1';
 							step_var:=59;
@@ -1518,9 +1612,10 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 --								when 5=> file_name(47 downto 40):=dir_entry_d(7 downto 0);
 --								when 6=> file_name(39 downto 32):=dir_entry_d(7 downto 0);
 --								when 7=> file_name(31 downto 24):=dir_entry_d(7 downto 0);
---								when 8=> file_name(23 downto 16):=dir_entry_d(7 downto 0);
---								when 9=> file_name(15 downto 8):=dir_entry_d(7 downto 0);
---								when 10=> file_name(7 downto 0):=dir_entry_d(7 downto 0);
+
+								when 8=> extension_name_OSD(23 downto 16):=dir_entry_d(7 downto 0);
+								when 9=> extension_name_OSD(15 downto 8):=dir_entry_d(7 downto 0);
+								when 10=> extension_name_OSD(7 downto 0):=dir_entry_d(7 downto 0);
 							
 								when 20=> --get_var2 file_cluster_pointer_H
 									file_cluster_pointer_mist(23 downto 16):=dir_entry_d(7 downto 0);
@@ -1543,7 +1638,8 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							
 							
 							if dir_entry_counter=dir_entry_counter'RIGHT then
-								-- goto load another disk
+								-- goto load another disk / another CDT
+								files_loaded(4):='0';
 								if dskB then
 									files_loaded(1):='0';
 								else
@@ -1557,6 +1653,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 									file_size:=file_size_mist;
 									file_cluster_pointer:=file_cluster_pointer_mist;
 									file_sector_pointer:=getSector(file_cluster_pointer_mist);
+									
 									step_var:=57;
 								end if;
 								dir_entry_r<='0';
@@ -1568,15 +1665,30 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						
 					when 57=>
 						-- direct load a new MiST dsk (from OSD select)
-						loadDSK(file_sector_pointer, dskB);
-						step_var:=21;
-					when 21=>
-						if dskB then
-							-- launch signal
-							files_loaded(1):='1';
+						--===============================================================================--
+						--== ICI l'utilisateur de dit pas si c'est un CDT ou une DSK via le menu OSD ! ==--
+						--===============================================================================--
+						
+						if checkCDT(extension_name_OSD) then
+							loadCDT(file_sector_pointer);
+							step_var:=21;
+							doCDT:=true;
 						else
-							-- launch signal
-							files_loaded(0):='1';
+							loadDSK(file_sector_pointer, dskB);
+							step_var:=21;
+							doCDT:=false;
+						end if;
+					when 21=>
+						if doCDT then
+							files_loaded(4):='1';
+						else
+							if dskB then
+								-- launch signal
+								files_loaded(1):='1';
+							else
+								-- launch signal
+								files_loaded(0):='1';
+							end if;
 						end if;
 						step_var:=26;
 					when 37=> --FAT Entry just for new DIRStruct
@@ -1806,7 +1918,7 @@ end if;
 		constant ST2_WRONG_CYLINDER : std_logic_vector(7 downto 0):=x"10";
 		constant ST2_MISSING_ADDR : std_logic_vector(7 downto 0):=x"01";
 		constant ST2_DATA_ERROR : std_logic_vector(7 downto 0):=x"20"; -- overrun (sector ID not found)
-		constant ST2_CONTROL_MARK : std_logic_vector(7 downto 0):=x"40"; -- FDCTEST.ASM &1E read_data_skip (attrapÃ© lus tard mÃªme si on skip les marked deleted sectors)
+		constant ST2_CONTROL_MARK : std_logic_vector(7 downto 0):=x"40"; -- FDCTEST.ASM &1E read_data_skip (attrape plus tard meme si on skip les marked deleted sectors)
 		--constant ST2_SCAN_NOT_SATISFIED : std_logic_vector(7 downto 0):=x"04";
 		constant ST2_BAD_CYLINDER : std_logic_vector(7 downto 0):=x"02";
 		constant PANIC_RAGE_QUIT : std_logic_vector(1 downto 0):="01";
@@ -2267,7 +2379,7 @@ end if;
 							else
 								-- on passe au suivant.
 								
-								-- is_multitrack : pas ici, peut-Ãªtre lors du skip ?
+								-- is_multitrack : pas ici, peut-etre lors du skip ?
 								--if is_multitrack and nb_sides(mecashark_face)=2 then
 								--	-- switch head, and relaunch search track.
 								--	if no_side_current(mecashark_face)=0 then
@@ -2534,7 +2646,7 @@ end if;
 								---- cas READ_DELETED avec SK stupide, donc ne zap pas ici.
 								-- if ((command & (1 << 5)) == 0) { // skip if deleted data
 								-- if ((command & (1 << 5)) != 0) { // skip if deleted data
-								-- Logiquement des erreurs ÃƒÂ  gÃƒÂ©rer temporairement d'un secteur ÃƒÂ  l'autre via Skip,
+								-- Logiquement des erreurs a gerer temporairement d'un secteur a l'autre via Skip,
 								--donc on va faire sans pour le moment.
 								--  ST2_DATA_ERROR
 								-- Niger Mansell, Orion x46/x66 (commande read avec et sans sk)
@@ -2560,7 +2672,7 @@ end if;
 								if megashark_INFO_PANIC_mem="00" then -- not "EOT skip !"
 									no_sect:=no_sect+1; -- skip (myself)
 									if no_sect>=nb_sects then
-										-- normalement on fait un tour complet, et aprÃƒÂ¨s on stop.
+										-- normalement on fait un tour complet, et apres on stop.
 										if is_overrun then
 											no_sect:=0; -- back to sector 0 of this current track.
 											no_sect_current(mecashark_face):=no_sect;
@@ -2799,5 +2911,591 @@ end if;
 			end if;
 		end if;
 	end process mecashark;
+
+	jacquie:process(CLK) is
+		variable jacquie_step:integer range 0 to 31:=0;
+		variable is_overrun:boolean:=false;
+		variable jacquie_addr_memTape:std_logic_vector(jacquie_addr'range):=(others=>'0');
+		variable TZXHeader_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
+		variable TZXBlock_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
+		
+		variable id : std_logic_vector(7 downto 0):=x"00";
+		variable params_length:integer;
+		variable params_zap:integer;
+		variable params:std_logic_vector(17*8-1 downto 0);
+		--constant params_length_more_than_max:integer:=17*8;
+		variable params_n:integer;
+		variable has_BYTE_N:boolean:=false;
+		variable has_WORD_N:boolean:=false;
+		
+		-- ID 11 - Turbo Speed Data Block
+		variable sb_pilot:integer;
+		variable sb_sync1:integer;
+		variable sb_sync2:integer;
+		variable sb_bit0:integer;
+		variable sb_bit1:integer;
+		variable pilot:integer;
+		variable lastbyte:std_logic_vector(8-1 downto 0):=x"08";
+		variable pause:integer;
+		variable datalen:integer;
+		
+		variable debug_no_block:integer:=0;
+	begin
+		if rising_edge(CLK) then
+		
+			if key_reset(1)='1' then
+				jacquie_changeCDT_done<=true; --BOUM !
+			elsif jacquie_changeCDT_do then
+				jacquie_changeCDT_done<=false;
+				jacquie_do_s<='0'; -- unbind (slave (sur simple_DSK c'etait un unbind master))
+				jacquie_step:=0;
+				debug_no_block:=0;
+				is_overrun:=false;
+			end if;
+			
+			if not(jacquie_do_s='1') and not(jacquie_changeCDT_done) then
+				--overrun
+				is_overrun:=true;
+			end if;
+			
+			deca_spi_Rdo<='0';
+			--deca_spi_Wdo<='0';
+			--deca_spi_Wblock<='0';
+			
+			--leds8_debug(19 downto 16)<=conv_std_logic_vector(debug_no_block,4);
+			--leds8_debug(15 downto 8)<=conv_std_logic_vector(jacquie_step,8);
+			--leds8_debug(7 downto 0)<=id;
+			
+			-- http://www.cpcwiki.eu/index.php/Format:CDT_tape_image_file_format
+			-- https://www.worldofspectrum.org/TZXformat.html
+			-- CDT2WAV.java
+			
+			-- je suis master (je n'attend rien du CPC pour demarrer ma cassette, c'est quand j'ouvre un fichier que ca se lance)
+			jacquie_do_s<='0';
+			
+			if not(jacquie_changeCDT_done) and (not(jacquie_do_s='1') and jacquie_done='1') then
+				if not(deca_spi_Rdo='1') and spi_Rdone='1'  then
+					case jacquie_step is
+						when 0=> -- 0x00 "ZXTape!"
+							jacquie_addr_memTape:=jacquie_addr; -- goto x07
+							TZXHeader_A:=jacquie_addr_memTape+(PREFIX & x"00000007"); -- goto x07
+							deca_spi_A<=TZXHeader_A;
+							deca_spi_Rdo<='1';
+							jacquie_step:=1;
+						when 1=>
+							if spi_Din=x"1A" then
+								TZXBlock_A:=TZXHeader_A+(PREFIX & x"00000003"); -- goto x0A
+								deca_spi_A<=TZXBlock_A;
+								deca_spi_Rdo<='1';
+								jacquie_step:=2;
+							end if;
+						when 2=> -- TZX Block ID
+							-- countBlocks()
+							debug_no_block:=debug_no_block+1;
+							id:=spi_Din;
+							-- tous une taille specifique.
+							--mais un objectif commun, envoyer des trucs qui font du son.
+							--et principalement des blocks (et leur parmetre avant)
+							has_BYTE_N:=false;
+							has_WORD_N:=false;
+							if id=x"10" then
+								params_length:=4+1; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
+								has_BYTE_N:=true;
+							elsif id=x"11" then
+								params_length:=18; -- words,byte,word,byte[3], then BYTE[N]
+								has_BYTE_N:=true;
+								
+								--params_length:=params_length'high;
+								--jacquie_step:=17;
+								
+							elsif id=x"12" then
+								params_length:=4; -- 2 words
+							elsif id=x"13" then
+								params_length:=1; -- 1 byte, then WORD[N]
+								has_WORD_N:=true;
+							elsif id=x"14" then
+								params_length:=10; -- word,word,byte,word,byte[3], then BYTE[N]
+								has_BYTE_N:=true;
+							elsif id=x"15" then -- EAR
+								params_length:=8; -- word,word,byte,byte[3], then BYTE[N]
+								has_BYTE_N:=true;
+							elsif id=x"20" then
+								params_length:=2; -- word
+							elsif id=x"21" then -- to skip
+								params_length:=1; -- byte, then BYTE[L] (chars)
+								has_BYTE_N:=true;
+							elsif id=x"22" then -- to skip
+								params_length:=0;
+							elsif id=x"23" then -- to skip
+								params_length:=2; -- word
+							elsif id=x"24" then -- to skip
+								params_length:=2; -- word
+							elsif id=x"25" then -- to skip
+								params_length:=0;
+							elsif id=x"26" then -- to skip
+								params_length:=2; -- word, then WORD[N]
+								has_WORD_N:=true; -- skipped
+							elsif id=x"27" then -- to skip
+								params_length:=0;
+							elsif id=x"2A" then -- to skip (not implemented in Caprice32)
+								params_length:=4; -- dword
+							elsif id=x"30" then -- to skip
+								params_length:=1; -- byte, then BYTE[N] (chars)
+								has_BYTE_N:=true;
+							elsif id=x"31" then -- to skip
+								params_length:=2; -- byte,byte, then BYTE[N] (chars)
+								has_BYTE_N:=true;
+							elsif id=x"32" then -- to skip
+								params_length:=3; -- word,byte, then TEXT[N] (structure...)
+							elsif id=x"33" then -- to skip
+								params_length:=1; -- byte, then HWINFO[N] (3 bytes structure)
+							elsif id=x"34" then -- to ignore
+								params_length:=9; -- ??? Emulator-info
+							elsif id=x"35" then -- to skip
+								params_length:=14; -- byte[10](chars),dword, then BYTE[L]
+								has_BYTE_N:=true;
+							elsif id=x"40" then -- to skip
+								params_length:=4;
+								has_BYTE_N:=true;
+							elsif id=x"5A" then
+								params_length:=9; -- byte[9]
+							else
+								 -- arret brutal de la lecture de la cassette
+								jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PAUSE,jacquie_phase'length);
+								jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+								jacquie_length<=x"00FF";
+								jacquie_do_s<='1';
+								jacquie_changeCDT_done<=true; -- BOUM ! (ou fin de cassette a la rache (pas de detection de EOF))
+								params_length:=params_length'high;
+							end if;
+							
+							if params_length=params_length'high then
+							--if params_length=params_length_more_than_max then
+								-- evil
+							elsif params_length=0 then
+								jacquie_step:=4;
+							else
+								params_n:=0;
+								deca_spi_A<=TZXBlock_A+1+params_n;
+								deca_spi_Rdo<='1';
+								jacquie_step:=3;
+							end if;
+						when 3=>
+							params((params_n+1)*8-1 downto params_n*8):= spi_Din;
+							if params_length=params_n+1 then
+								jacquie_step:=4;
+							else
+								params_n:=params_n+1;
+								deca_spi_A<=TZXBlock_A+1+params_n;
+								deca_spi_Rdo<='1';
+							end if;
+						when 4=>
+							pilot:=0;
+							params_zap:=0;
+							if id=x"10" then
+								--ID:10 - Standard speed data block
+								--This block MUST be supported and CAN exist in a CDT. Emulators should use standard Spectrum ROM timings for playback.
+								-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
+								--pause = get2(inpbuf, data);
+								pause:=conv_integer(params(8*2-1 downto 0));
+								--datalen = get2(inpbuf, data + 2);
+								datalen:=conv_integer(params(8*4-1 downto 8*2));
+								--data += 4;
+								--if (inpbuf[data] == 0x00) {
+								if params(8*5-1 downto 8*4) = x"00" then
+								--pilot = 8064; -- count : in pulses (half of sinus)
+									pilot:=8064;
+								--} else {
+								else
+								--pilot = 3220;
+									pilot:=3220;
+								--}
+								end if;
+								--sb_pilot = output.samples(2168); -- length : 2168 T-State
+								sb_pilot:=2168;
+								--sb_sync1 = output.samples(667);
+								sb_sync1:=667;
+								--sb_sync2 = output.samples(735);
+								sb_sync2:=735;
+								--sb_bit0 = output.samples(885);
+								sb_bit0:=885;
+								--sb_bit1 = output.samples(1710);
+								sb_bit1:=1710;
+								--lastbyte = 8; -- after end of block, do send this.
+								lastbyte:=x"08";
+							elsif id=x"11" then
+								--ID:11 - Turbo Loading Data Block
+								--This block MUST be supported and CAN exist in a CDT.
+								--
+								--The timings for playback are stored in the block header.
+								--
+								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+								--pos += get3(inpbuf, pos + 0x0F) + 0x12;
+								-- Fruity_Frank.cdt
+								-- 07 01 00 => 000107h length
+								-- 00 CD 43 FF FF FF FF 11 << ID 11 once time again.
+								-- 11
+								-- 13 07 00 => 000713h length
+								-- 11
+								-- 07 01 00 => 000107h length
+								-- 11
+								-- 15 08 00 => 000815h length
+								-- 11
+								-- 07 01 00 => 000107h length
+								-- 11
+								-- 15 08 00 => 000815h length
+								-- 11
+								-- 07 01 00
+								-- 11
+								-- 15 08 00 => 000815h length
+								
+								--jacquie_addr_memTape:=TZXBlock_A+(PREFIX & x"00000001"); -- goto Block content
+								--meca_spi_A<=jacquie_addr_memTape;
+								--meca_spi_Rdo<='1';
+								--jacquie_step:=3;
+								
+								--sb_pilot = output.samples(get2(inpbuf, data + 0));
+								sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+								--sb_sync1 = output.samples(get2(inpbuf, data + 2));
+								sb_sync1:=CONV_INTEGER(params(8*4-1 downto 8*2));
+								--sb_sync2 = output.samples(get2(inpbuf, data + 4));
+								sb_sync2:=CONV_INTEGER(params(8*6-1 downto 8*4));
+								--sb_bit0 = output.samples(get2(inpbuf, data + 6));
+								sb_bit0:=CONV_INTEGER(params(8*8-1 downto 8*6));
+								--sb_bit1 = output.samples(get2(inpbuf, data + 8));
+								sb_bit1:=CONV_INTEGER(params(8*10-1 downto 8*8));
+								--pilot = get2(inpbuf, data + 10);
+								pilot:=CONV_INTEGER(params(8*12-1 downto 8*10));
+								
+								--params_length:=params_length'high;
+								--jacquie_step:=18;
+								
+								--lastbyte = (int) inpbuf[data + 12];
+								lastbyte:=params(8*13-1 downto 8*12);
+								--pause = get2(inpbuf, data + 13);
+								pause:=CONV_INTEGER(params(8*15-1 downto 8*13));
+								--datalen = get3(inpbuf, data + 15);
+								datalen:=CONV_INTEGER(params(8*17-1 downto 8*15));
+							elsif id=x"12" then	
+								--case 0x12: // pure tone (length of tone=number of pulses)
+								--sb_pilot = output.samples(get2(inpbuf, data + 0));
+								sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+								--pilot = get2(inpbuf, data + 2);
+								pilot:=CONV_INTEGER(params(8*4-1 downto 8*2));
+							elsif id=x"13" then
+								--ID:13 - Sequence of pulses of different length
+								--This block MUST be supported and CAN exist in a CDT.
+								--
+								--The timings for playback are stored in the block header.
+								--
+								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+								
+								--pilot = (int) inpbuf[data + 0];
+								datalen:=CONV_INTEGER(params(8*2-1 downto 0));
+							elsif id=x"14" then
+								--ID:14 - Pure Data Block
+								--This block MUST be supported and CAN exist in a CDT.
+								--
+								--The timings for playback are stored in the block header.
+								--
+								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+								
+								--sb_pilot = pilot = sb_sync1 = sb_sync2 = 0;
+								sb_pilot:=0;
+								pilot:=0;
+								sb_sync1:=0;
+								sb_sync2:=0;
+								--sb_bit0 = output.samples(get2(inpbuf, data + 0));
+								sb_bit0:=CONV_INTEGER(params(8*2-1 downto 0));
+								--sb_bit1 = output.samples(get2(inpbuf, data + 2));
+								sb_bit1:=CONV_INTEGER(params(8*4-1 downto 8*2));
+								--lastbyte = (int) inpbuf[data + 4];
+								lastbyte:=params(8*5-1 downto 8*4);
+								--pause = get2(inpbuf, data + 5);
+								pause:=CONV_INTEGER(params(8*7-1 downto 8*5));
+								--datalen = get3(inpbuf, data + 7);
+								datalen:=CONV_INTEGER(params(8*9-1 downto 8*7));
+							elsif id=x"15" then
+								--ID:15 - Direct Recording
+								--This block MUST be supported but SHOULD be avoided when creating a CDT by a sample-to-CDT converter. This block can be used by emulators to support writing to CDTs.
+								--
+								--The timings for playback are stored in the block header.
+								--
+								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+								-- This block is used for tapes which have some parts in a format such that the turbo loader block cannot be used. This is not like a VOC file, since the information is much more compact. Each sample value is represented by one bit only (0 for low, 1 for high) which means that the block will be at most 1/8 the size of the equivalent VOC.
+								-- The preferred sampling frequencies are 22050 or 44100 Hz (158 or 79 T-states/sample). Please, if you can, don't use other sampling frequencies.
+								
+								--FIXME : il est ou le bout de code ici ? (finalement c'est pas un enregistrement, mais une voie enregistre)
+								-- Number of T-states per sample (bit of data)
+								pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+								--pause = get2(inpbuf, data + 2);
+								pause:=CONV_INTEGER(params(8*4-1 downto 8*2));
+								-- Used bits (samples) in last byte of data (1-8)
+								-- (e.g. if this is 2, only first two samples of the last byte will be played)
+								--lastbyte = (int) inpbuf[data + 4];
+								lastbyte:=params(8*5-1 downto 8*4);
+								--Length of samples' data
+								--datalen = get3(inpbuf, data + 5);
+								datalen:=CONV_INTEGER(params(8*7-1 downto 8*5));
+								-- Samples data. Each bit represents a state on the EAR port (i.e. one sample).
+								-- MSb is played first.
+							elsif id=x"20" then
+								-- skip : OK
+								pause:=CONV_INTEGER(params(8*2-1 downto 0));
+								
+							elsif id=x"21" then
+								-- skip the block : OK
+								params_zap:=conv_integer(params(8-1 downto 0));
+								has_BYTE_N:=false;
+							elsif id=x"22" then
+								-- skip : OK
+							elsif id=x"23" then
+								-- skip : OK
+							elsif id=x"24" then
+								-- skip : OK
+							elsif id=x"25" then
+								-- skip : OK
+							elsif id=x"26" then
+								-- skip the WORD[N] block : OK
+								params_zap:=conv_integer(params(8*2-1 downto 0))+conv_integer(params(8*2-1 downto 0));
+								has_WORD_N:=false;
+							elsif id=x"27" then
+								-- skip : OK
+							elsif id=x"2A" then
+								-- not implemetend in caprice32 tape.c
+								-- skip : OK
+							elsif id=x"30" then
+								-- skip the block : OK
+								params_zap:=conv_integer(params(8*2-1 downto 8));
+								has_BYTE_N:=false;
+							elsif id=x"31" then
+								-- skip the block : OK
+								params_zap:=conv_integer(params(8*2-1 downto 8));
+								has_BYTE_N:=false;
+							elsif id=x"32" then
+								-- skip the block : OK
+								params_zap:=conv_integer(params(8*2-1 downto 0));
+							elsif id=x"33" then
+								-- skip the HWINFO[N] block : OK
+								params_zap:=conv_integer(params(8-1 downto 0))+conv_integer(params(8-1 downto 0))+conv_integer(params(8-1 downto 0));
+							elsif id=x"34" then
+								-- skip : OK
+							elsif id=x"35" then
+								-- skip the block of BYTE[L] : OK
+								params_zap:=conv_integer(params(8*12-1 downto 8*10));
+								has_BYTE_N:=false;
+							elsif id=x"40" then
+								--This block MUST not be added to a new CDT. Amstrad emulator's MUST ignore this block.
+								-- skip the block : OK
+								params_zap:=conv_integer(params(8*4-1 downto 0)); -- a dword address
+								has_BYTE_N:=false;
+							elsif id=x"5A" then
+								-- skip : OK
+							end if;
+							
+							TZXBlock_A:=TZXBlock_A + 1 + params_length + params_zap; -- jump next block of begin of BLOCK content
+							--if has_BYTE_N then
+							--	jacquie_step:=5;
+							--elsif has_WORD_N then
+							--	jacquie_step:=6;
+							--else
+							--	jacquie_step:=2; -- next block (END OF FILE ???)
+							--end if;
+							
+							--if params_length=params_length_more_than_max then
+							if params_length=params_length'high then
+								-- evil
+							elsif has_WORD_N then -- certainement id=x"13"
+								deca_spi_A<=TZXBlock_A;
+								deca_spi_Rdo<='1';
+								jacquie_step:=13;
+							elsif pilot>0 then
+								--jacquie_step:=16;
+								jacquie_step:=5;
+							elsif pause>0 then
+								jacquie_step:=12;
+							else
+								deca_spi_A<=TZXBlock_A;
+								deca_spi_Rdo<='1';
+								--jacquie_step:=15;
+								jacquie_step:=2; -- next block
+							end if;
+						when 5=>
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT0,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(sb_bit0,jacquie_length'length);
+							jacquie_step:=6;
+							jacquie_do_s<='1';
+						when 6=>
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT1,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(sb_bit1,jacquie_length'length);
+							jacquie_step:=7;
+							--jacquie_step:=19;
+							jacquie_do_s<='1';
+						when 7=> --while (pilot > 0) {
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PILOT,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
+							jacquie_count<=conv_std_logic_vector(pilot,jacquie_count'length);
+							if has_BYTE_N then -- c'est un vrai pilot
+								jacquie_step:=8;
+							else
+								-- certainement id=x"12"
+								jacquie_step:=2; -- next block ID
+							end if;
+							jacquie_do_s<='1';
+						when 8=> --if (sb_sync1 > 0) {
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(sb_sync1,jacquie_length'length);
+							jacquie_step:=9;
+							jacquie_do_s<='1';
+						when 9=> --if (sb_sync2 > 0) {
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(sb_sync2,jacquie_length'length);
+							jacquie_step:=10;
+							deca_spi_A<=TZXBlock_A;
+							deca_spi_Rdo<='1';
+							jacquie_do_s<='1';
+						when 10=> -- block
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_count<=x"00" & lastbyte;-- conv_std_logic_vector(lastbyte,jacquie_count'length);
+							-- first one byte readen, and sent to JACQUIE_PHASE_BLOCK, data_length=512
+							jacquie_byte<=spi_Din;
+							jacquie_length<=conv_std_logic_vector(datalen,jacquie_length'length);
+							-- data_length for next step is sure 511
+							datalen:=datalen-1;
+							jacquie_step:=11;
+							TZXBlock_A:=TZXBlock_A+1;
+							deca_spi_A<=TZXBlock_A;
+							deca_spi_Rdo<='1';
+							jacquie_do_s<='1';
+--							--11
+--							--15 08 00
+--							if debug_no_block=3 then
+--								if datalen/=2069-1 then
+--									jacquie_step:=20;
+--								elsif spi_Din/=x"16" then
+--									jacquie_step:=21;
+--								end if;
+--							end if;
+						when 11=>  -- then BYTE[N]
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK_CONTINUE,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							datalen:=datalen-1;
+							-- second byte readen, and sent to JACQUIE_PHASE_BLOCK_CONTINUE, data_length=511=>510
+							jacquie_byte<=spi_Din;
+							if datalen=0 then
+								if pause>0 then
+									-- goto end-of-block signal + pause
+									jacquie_step:=31;
+								else
+									-- but sure got to move because i'm currently face to a data byte.
+									TZXBlock_A:=TZXBlock_A+1;
+									deca_spi_A<=TZXBlock_A;
+									deca_spi_Rdo<='1';
+									jacquie_step:=2; -- next block ID
+								end if;
+							else
+								TZXBlock_A:=TZXBlock_A+1;
+								deca_spi_A<=TZXBlock_A;
+								deca_spi_Rdo<='1';
+							end if;
+							jacquie_do_s<='1';
+							
+--							--11
+--							--07 01 00
+--							
+--							--11
+--							--15 08 00
+--							if debug_no_block=3 and datalen=2069-256-1 and spi_Din/=x"49" then
+--								-- datalen min is 1, and two datalen-- before, so -1
+--								jacquie_step:=22;
+--							end if;
+--							--11
+--							--07 01 00
+--							if debug_no_block=4 and datalen=263-1 and spi_Din/=x"41" then
+--								jacquie_step:=23;
+--							end if;
+--							--11
+--							--07 01 00
+--							if debug_no_block=5 and datalen=263-5-1 and spi_Din/=x"2A" then
+--								jacquie_step:=24;
+--							end if;
+--							if debug_no_block=5 and datalen=263-262-1 and spi_Din/=x"FF" then
+--								jacquie_step:=25;
+--							end if;
+--							if debug_no_block=5 and datalen=263-262-1 and spi_Din=x"FF" then
+--								jacquie_step:=26;
+--							end if;
+						when 31=>
+							-- end of block : one pulse only, of 1ms.
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							-- 1ms @ 4MHz : 4000 or x"0FA0"
+							jacquie_length<=x"0FA0"; -- 1ms
+							jacquie_do_s<='1';
+							-- but sure got to move because i'm currently face to a data byte.
+							TZXBlock_A:=TZXBlock_A+1;
+							-- goto pause
+							jacquie_step:=12;
+						when 12=>
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PAUSE,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(pause,8*2);
+							-- inconsistent pause : so no A++ by here.
+							deca_spi_A<=TZXBlock_A;
+							deca_spi_Rdo<='1';
+							jacquie_step:=2; -- next block ID
+							jacquie_do_s<='1';
+						when 13=> -- then WORD[N] -- cas x"13"
+							params(8*2-1 downto 8):=spi_Din;
+							TZXBlock_A:=TZXBlock_A+1;
+							deca_spi_A<=TZXBlock_A;
+							deca_spi_Rdo<='1';
+							jacquie_step:=14;
+						when 14=>
+							params(8-1 downto 0):=spi_Din;
+							sb_pilot:=conv_integer(params(8*2-1 downto 0));
+							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+							jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
+							jacquie_do_s<='1';
+							datalen:=datalen-1;
+							if datalen=0 then
+								TZXBlock_A:=TZXBlock_A+1;
+								deca_spi_Rdo<='1';
+								jacquie_step:=2; -- next block ID
+							else
+								TZXBlock_A:=TZXBlock_A+1;
+								deca_spi_A<=TZXBlock_A;
+								deca_spi_Rdo<='1';
+								jacquie_step:=13;
+							end if;
+						when 15=> id:=spi_Din; -- fuck 15
+						when 16=> id:=conv_std_logic_vector(pilot,16)(7 downto 0); -- fuck 16
+						when 17=> NULL; -- fuck 17
+						when 18=> NULL; -- fuck 18
+						when 19=> id:=conv_std_logic_vector(sb_bit1,16)(15 downto 8); -- fuck 19
+						when 20=> -- fuck 20 block 3 debut datalen KO
+						id:=conv_std_logic_vector(datalen,16)(15 downto 8);
+						when 21=> NULL; -- fuck 21 block 3 debut byte KO
+						when 22=> NULL; -- fuck 22 block 3 KO
+						when 23=> NULL; -- fuck 23 block 4 2eme byte KO
+						when 24=> NULL; -- fuck 24 block 5 KO
+						when 25=> NULL; -- fuck 25 block 5 fin KO
+						when 26=> NULL; -- fuck 26 block 5 fin OK
+						when 27=> NULL; -- fuck 27
+						when 28=> NULL; -- fuck 28
+						when 29=> NULL; -- fuck 29
+						when 30=> NULL; -- fuck 30
+					end case;
+				end if;
+			end if;
+		end if;
+	end process jacquie;
 
 end Behavioral;

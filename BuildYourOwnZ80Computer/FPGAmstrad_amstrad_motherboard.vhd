@@ -399,14 +399,14 @@ entity FPGAmstrad_amstrad_motherboard is
 			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
  
 			  jacquie_phase : in STD_LOGIC_VECTOR(2 downto 0);
-			  jacquie_length : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_length : in STD_LOGIC_VECTOR(8*3-1 downto 0); -- data_length or pulse_length or pause_length
 			  jacquie_count : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count, or data bit count of byte to play
 			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : in STD_LOGIC;
 			  jacquie_done : out STD_LOGIC;
-			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0)
+			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
 			  
-			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -646,7 +646,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  cassette_motor : in STD_LOGIC;
 				 
              jacquie_phase : in STD_LOGIC_VECTOR(2 downto 0);
-			  jacquie_length : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_length : in STD_LOGIC_VECTOR(8*3-1 downto 0); -- data_length or pulse_length or pause_length
 			  jacquie_count : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count, or data bit count of byte to play
 			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : in STD_LOGIC;
@@ -656,9 +656,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
-			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0)
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0);
 			  
-			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 				 );
    end component;
    
@@ -1035,9 +1035,9 @@ INT_n<=not(XLXN_835);
 			  soundAB_input=>XLXN_486_AB,
 			  soundBC_input=>XLXN_486_BC,
 			  soundAB_output=>XLXN_486_mixAB,
-			  soundBC_output=>XLXN_486_mixBC
+			  soundBC_output=>XLXN_486_mixBC,
 			  
-			  --leds8_debug=>leds8_debug
+			  leds8_debug=>leds8_debug
 					 );
    
    XLXI_349 : YM2149

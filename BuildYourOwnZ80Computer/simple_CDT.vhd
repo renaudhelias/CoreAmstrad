@@ -66,7 +66,7 @@ entity simple_CDT is
 			  cassette_motor : in STD_LOGIC;
 			  
 			  jacquie_phase : in STD_LOGIC_VECTOR(2 downto 0);
-			  jacquie_length : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_length : in STD_LOGIC_VECTOR(8*3-1 downto 0); -- data_length or pulse_length or pause_length
 			  jacquie_count : in STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count, or data bit count of byte to play
 			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : in STD_LOGIC;
@@ -76,9 +76,9 @@ entity simple_CDT is
 			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
-			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0)
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0);
 			  
-			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end simple_CDT;
 
@@ -96,6 +96,8 @@ architecture Behavioral of simple_CDT is
 	signal play_push_done:boolean:=true;
 	signal play_output:integer:=0;
 	signal play_toggle:boolean:=false;
+	signal play_value:std_logic:='0';
+	signal play_pause:boolean:=false;
 	
 	signal jacquie_done_s:std_logic:='1';
 	
@@ -129,30 +131,6 @@ architecture Behavioral of simple_CDT is
 	x"00",x"00",x"00",x"00",x"00",x"00",x"01",x"01",x"02",x"03",x"03",x"04",x"05",x"06",x"07",x"08",x"09",x"0a",x"0c",x"0d",x"0f",x"10",x"12",x"13",x"15",x"17",x"19",x"1b",x"1d",x"1f",x"21",x"23",x"25",x"27",x"2a",x"2c",x"2e",x"31",x"33",x"36",x"38",x"3b",x"3e",x"40",x"43",x"46",x"49",x"4c",x"4f",x"51",x"54",x"57",x"5a",x"5d",x"60",x"63",x"67",x"6a",x"6d",x"70",x"73",x"76",x"79",x"7c"
 	);
 	
---	--double value01=((value/4.0)+0.5);
---	constant sinus_div2:sinus_type:= (
---	x"80",x"81",x"83",x"84",x"86",x"87",x"89",x"8a",x"8c",x"8e",x"8f",x"91",x"92",x"94",x"95",x"97",x"98",x"99",x"9b",x"9c",x"9e",x"9f",x"a0",x"a2",x"a3",x"a4",x"a6",x"a7",x"a8",x"a9",x"aa",x"ac",x"ad",x"ae",x"af",x"b0",x"b1",x"b2",x"b3",x"b4",x"b5",x"b6",x"b6",x"b7",x"b8",x"b9",x"b9",x"ba",x"bb",x"bb",x"bc",x"bc",x"bd",x"bd",x"be",x"be",x"be",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",
---	x"c0",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",x"bf",x"be",x"be",x"be",x"bd",x"bd",x"bc",x"bc",x"bb",x"bb",x"ba",x"b9",x"b9",x"b8",x"b7",x"b6",x"b6",x"b5",x"b4",x"b3",x"b2",x"b1",x"b0",x"af",x"ae",x"ad",x"ac",x"aa",x"a9",x"a8",x"a7",x"a6",x"a4",x"a3",x"a2",x"a0",x"9f",x"9e",x"9c",x"9b",x"99",x"98",x"97",x"95",x"94",x"92",x"91",x"8f",x"8e",x"8c",x"8a",x"89",x"87",x"86",x"84",x"83",x"81",
---	x"80",x"7e",x"7c",x"7b",x"79",x"78",x"76",x"75",x"73",x"71",x"70",x"6e",x"6d",x"6b",x"6a",x"68",x"67",x"66",x"64",x"63",x"61",x"60",x"5f",x"5d",x"5c",x"5b",x"59",x"58",x"57",x"56",x"55",x"53",x"52",x"51",x"50",x"4f",x"4e",x"4d",x"4c",x"4b",x"4a",x"49",x"49",x"48",x"47",x"46",x"46",x"45",x"44",x"44",x"43",x"43",x"42",x"42",x"41",x"41",x"41",x"40",x"40",x"40",x"40",x"40",x"40",x"40",
---	x"40",x"40",x"40",x"40",x"40",x"40",x"40",x"40",x"41",x"41",x"41",x"42",x"42",x"43",x"43",x"44",x"44",x"45",x"46",x"46",x"47",x"48",x"49",x"49",x"4a",x"4b",x"4c",x"4d",x"4e",x"4f",x"50",x"51",x"52",x"53",x"55",x"56",x"57",x"58",x"59",x"5b",x"5c",x"5d",x"5f",x"60",x"61",x"63",x"64",x"66",x"67",x"68",x"6a",x"6b",x"6d",x"6e",x"70",x"71",x"73",x"75",x"76",x"78",x"79",x"7b",x"7c",x"7e"
---	);
-	
---	--double value01=((value/8.0)+0.5);
---	constant sinus_div4:sinus_type:= (
---	x"80",x"80",x"81",x"82",x"83",x"83",x"84",x"85",x"86",x"87",x"87",x"88",x"89",x"8a",x"8a",x"8b",x"8c",x"8c",x"8d",x"8e",x"8f",x"8f",x"90",x"91",x"91",x"92",x"93",x"93",x"94",x"94",x"95",x"96",x"96",x"97",x"97",x"98",x"98",x"99",x"99",x"9a",x"9a",x"9b",x"9b",x"9b",x"9c",x"9c",x"9c",x"9d",x"9d",x"9d",x"9e",x"9e",x"9e",x"9e",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",
---	x"a0",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9e",x"9e",x"9e",x"9e",x"9d",x"9d",x"9d",x"9c",x"9c",x"9c",x"9b",x"9b",x"9b",x"9a",x"9a",x"99",x"99",x"98",x"98",x"97",x"97",x"96",x"96",x"95",x"94",x"94",x"93",x"93",x"92",x"91",x"91",x"90",x"8f",x"8f",x"8e",x"8d",x"8c",x"8c",x"8b",x"8a",x"8a",x"89",x"88",x"87",x"87",x"86",x"85",x"84",x"83",x"83",x"82",x"81",x"80",
---	x"80",x"7f",x"7e",x"7d",x"7c",x"7c",x"7b",x"7a",x"79",x"78",x"78",x"77",x"76",x"75",x"75",x"74",x"73",x"73",x"72",x"71",x"70",x"70",x"6f",x"6e",x"6e",x"6d",x"6c",x"6c",x"6b",x"6b",x"6a",x"69",x"69",x"68",x"68",x"67",x"67",x"66",x"66",x"65",x"65",x"64",x"64",x"64",x"63",x"63",x"63",x"62",x"62",x"62",x"61",x"61",x"61",x"61",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",
---	x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"61",x"61",x"61",x"61",x"62",x"62",x"62",x"63",x"63",x"63",x"64",x"64",x"64",x"65",x"65",x"66",x"66",x"67",x"67",x"68",x"68",x"69",x"69",x"6a",x"6b",x"6b",x"6c",x"6c",x"6d",x"6e",x"6e",x"6f",x"70",x"70",x"71",x"72",x"73",x"73",x"74",x"75",x"75",x"76",x"77",x"78",x"78",x"79",x"7a",x"7b",x"7c",x"7c",x"7d",x"7e",x"7f"
---	);
-
---	--double value01=((value/32.0)+0.5);
---	constant sinus_div16:sinus_type:= (
---	x"80",x"80",x"81",x"82",x"83",x"83",x"84",x"85",x"86",x"87",x"87",x"88",x"89",x"8a",x"8a",x"8b",x"8c",x"8c",x"8d",x"8e",x"8f",x"8f",x"90",x"91",x"91",x"92",x"93",x"93",x"94",x"94",x"95",x"96",x"96",x"97",x"97",x"98",x"98",x"99",x"99",x"9a",x"9a",x"9b",x"9b",x"9b",x"9c",x"9c",x"9c",x"9d",x"9d",x"9d",x"9e",x"9e",x"9e",x"9e",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",
---	x"a0",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9f",x"9e",x"9e",x"9e",x"9e",x"9d",x"9d",x"9d",x"9c",x"9c",x"9c",x"9b",x"9b",x"9b",x"9a",x"9a",x"99",x"99",x"98",x"98",x"97",x"97",x"96",x"96",x"95",x"94",x"94",x"93",x"93",x"92",x"91",x"91",x"90",x"8f",x"8f",x"8e",x"8d",x"8c",x"8c",x"8b",x"8a",x"8a",x"89",x"88",x"87",x"87",x"86",x"85",x"84",x"83",x"83",x"82",x"81",x"80",
---	x"80",x"7f",x"7e",x"7d",x"7c",x"7c",x"7b",x"7a",x"79",x"78",x"78",x"77",x"76",x"75",x"75",x"74",x"73",x"73",x"72",x"71",x"70",x"70",x"6f",x"6e",x"6e",x"6d",x"6c",x"6c",x"6b",x"6b",x"6a",x"69",x"69",x"68",x"68",x"67",x"67",x"66",x"66",x"65",x"65",x"64",x"64",x"64",x"63",x"63",x"63",x"62",x"62",x"62",x"61",x"61",x"61",x"61",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",
---	x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"60",x"61",x"61",x"61",x"61",x"62",x"62",x"62",x"63",x"63",x"63",x"64",x"64",x"64",x"65",x"65",x"66",x"66",x"67",x"67",x"68",x"68",x"69",x"69",x"6a",x"6b",x"6b",x"6c",x"6c",x"6d",x"6e",x"6e",x"6f",x"70",x"70",x"71",x"72",x"73",x"73",x"74",x"75",x"75",x"76",x"77",x"78",x"78",x"79",x"7a",x"7b",x"7c",x"7c",x"7d",x"7e",x"7f"
---	);
-	
 	signal sound_generated: STD_LOGIC_VECTOR(7 downto 0);
 	signal soundAB_output_s: STD_LOGIC_VECTOR(7 downto 0);
 	signal soundBC_output_s: STD_LOGIC_VECTOR(7 downto 0);
@@ -161,14 +139,14 @@ begin
 jacquie_done<=jacquie_done_s;
 
 -- do not lost sound quality just for a tape player implementation :p
-soundAB_output<=soundAB_output_s when play_toggle else soundAB_input;
-soundBC_output<=soundBC_output_s when play_toggle else soundBC_input;
+soundAB_output<=soundAB_output_s when not(play_push_done) else soundAB_input;
+soundBC_output<=soundBC_output_s when not(play_push_done) else soundBC_input;
 --soundAB_output<=soundAB_input;
 --soundBC_output<=soundBC_input;
 
 --Un gros multiplexage sale ca marche pas ?
---A 100khz, la moitié du temps le son d la tape, l'autre moitié celui du cpc, et roule.
---Par tic tac. Facon multiplexeur électromécanique a l'ancienne, le téléphone fixe version 1.0
+--A 100khz, la moitie du temps le son d la tape, l'autre moitie celui du cpc, et roule.
+--Par tic tac. Facon multiplexeur electromecanique a l'ancienne, le telephone fixe version 1.0
 sound_muxAB:process(reset,nCLK4_1)
 	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
 	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
@@ -207,104 +185,6 @@ begin
 	end if;
 end process sound_muxBC;
 
---sound_mixerAB:process(reset,nCLK4_1)
---	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
---	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
---begin
---	if reset='1' then
---		soundAB_output_s<=soundAB_input;
---	elsif falling_edge(nCLK4_1) then --CLK4
---		sound_input_mem:=soundAB_input;
---		sound_generated_mem:=sound_generated;
---		if not(play_toggle) then
---			soundAB_output_s<=soundAB_input;
---		elsif sound_input_mem>=x"64" then
---			if sound_generated_mem>=x"64" then
---				-- A - B
---				if sound_input_mem<sound_generated_mem then
---					soundAB_output_s<=x"00";
---				else
---					soundAB_output_s<=sound_input_mem-sound_generated_mem;
---				end if;
---			else
---				-- A - B
---				sound_generated_mem:=x"FF"-sound_generated_mem;
---				if sound_input_mem>x"FF"-sound_generated_mem then
---					soundAB_output_s<=x"FF";
---				else
---					soundAB_output_s<=sound_input_mem+sound_generated_mem;
---				end if;
---			end if;
---		else
---			if sound_generated_mem>=x"64" then
---				-- A - B
---				sound_generated_mem:=x"FF"-sound_generated_mem;
---				if sound_generated_mem>sound_input_mem then
---					soundAB_output_s<=x"00";
---				else
---					soundAB_output_s<=sound_input_mem-sound_generated_mem;
---				end if;
---			else
---				-- A - B
---				sound_generated_mem:=x"FF"-sound_generated_mem;
---				if sound_generated_mem>x"FF"-sound_input_mem then
---					soundAB_output_s<=x"FF";
---				else
---					soundAB_output_s<=sound_input_mem+sound_generated_mem;
---				end if;
---			end if;
---		end if;
---	end if;
---end process sound_mixerAB;
---
---sound_mixerBC:process(reset,nCLK4_1)
---	variable sound_input_mem:STD_LOGIC_VECTOR(7 downto 0);
---	variable sound_generated_mem:STD_LOGIC_VECTOR(7 downto 0);
---begin
---	if reset='1' then
---		soundBC_output_s<=soundBC_input;
---	elsif falling_edge(nCLK4_1) then --CLK4
---		sound_input_mem:=soundBC_input;
---		sound_generated_mem:=sound_generated;
---		if sound_input_mem>=x"64" then
---			if sound_generated_mem>=x"64" then
---				-- A - B
---				if sound_input_mem<sound_generated_mem then
---					soundBC_output_s<=x"00";
---				else
---					soundBC_output_s<=sound_input_mem-sound_generated_mem;
---				end if;
---			else
---				-- A - B
---				sound_generated_mem:=x"FF"-sound_generated_mem;
---				if sound_input_mem>x"FF"-sound_generated_mem then
---					soundBC_output_s<=x"FF";
---				else
---					soundBC_output_s<=sound_input_mem+sound_generated_mem;
---				end if;
---			end if;
---		else
---			if sound_generated_mem>=x"64" then
---				-- A - B
---				sound_generated_mem:=x"FF"-sound_generated_mem;
---				if sound_generated_mem>sound_input_mem then
---					soundBC_output_s<=x"00";
---				else
---					soundBC_output_s<=sound_input_mem-sound_generated_mem;
---				end if;
---			else
---				-- A - B
---				sound_generated_mem:=x"FF"-sound_generated_mem;
---				if sound_generated_mem>x"FF"-sound_input_mem then
---					soundBC_output_s<=x"FF";
---				else
---					soundBC_output_s<=sound_input_mem+sound_generated_mem;
---				end if;
---			end if;
---		end if;
---	end if;
---end process sound_mixerBC;
-
 cassette_pulse:process(reset,nCLK4_1)
 	variable pulse_step:integer range 1 to 1:=1;
 	variable pulse_length:integer:=0;
@@ -312,8 +192,9 @@ cassette_pulse:process(reset,nCLK4_1)
 	variable pulse_jump:integer:=0;
 	--variable debug:STD_LOGIC_VECTOR(7 downto 0):=x"00";
 	variable pulse_value:std_logic:='0';
-	variable pulse_toggle:boolean;
+	--variable pulse_toggle:boolean;
 	variable pulse_sinus_pos:integer range 0 to 255;
+	variable pulse_pause: boolean;
 begin
 	if reset='1' then
 		cassette_output<='0';
@@ -332,13 +213,23 @@ begin
 			--if pulse_length=0 then
 			--	debug(0):='1'; -- got a problem by here :/
 			--end if;
-			if not(pulse_toggle) and play_toggle then
-				--analyseID20() : ...Pause or Stop the Tape (end)
-				pulse_value:='0';
+			--if not(pulse_toggle) and play_toggle then
+			--	--analyseID20() : ...Pause or Stop the Tape (end)
+			--	pulse_value:='0';
+			--elsif play_toggle then
+			--	pulse_value:=not(pulse_value);
+			--end if;
+			pulse_pause:=play_pause;
+			if play_pause then
+				-- no toggle during pause
+				pulse_value:='0'; -- opposite of header of block -- pulse_value;
 			elsif play_toggle then
 				pulse_value:=not(pulse_value);
+			else
+				pulse_value:=play_value; -- play new sinus.
 			end if;
-			pulse_toggle:=play_toggle;
+			--pulse_toggle:=play_toggle;
+			--cassette_output<=pulse_value;
 			play_push_done<=false;
 		end if;
 		
@@ -357,12 +248,17 @@ begin
 						end if;
 						pulse_inc:=0;
 					end if;
-					if pulse_value='1' then
-						sound_generated<=sinus(pulse_sinus_pos)(7 downto 0);
-						--sound_generated<=sinus_div16(pulse_sinus_pos)(7 downto 0);
+					-- PAUSE does exists but send same old value to cassette and no sound output.
+					if pulse_pause then
+						sound_generated<=x"7F";
 					else
-						sound_generated<=sinus(pulse_sinus_pos+128)(7 downto 0);
-						--sound_generated<=sinus_div16(pulse_sinus_pos+128)(7 downto 0);
+						if pulse_value='1' then
+							sound_generated<=sinus(pulse_sinus_pos)(7 downto 0);
+							--sound_generated<=sinus_div16(pulse_sinus_pos)(7 downto 0);
+						else
+							sound_generated<=sinus(pulse_sinus_pos+128)(7 downto 0);
+							--sound_generated<=sinus_div16(pulse_sinus_pos+128)(7 downto 0);
+						end if;
 					end if;
 					if pulse_length=0 then
 						--if pulse_toggle then
@@ -388,7 +284,7 @@ michel:process(reset,nCLK4_1)
 	variable last_byte:integer:=0; -- 0 to 8
 	variable data_bit:integer;
 	variable data_length:integer;
-	--variable debug_no_block:integer;
+	variable debug_no_block:integer;
 	
 begin
 	if reset='1' then
@@ -404,7 +300,7 @@ begin
 			--if cassette_motor='0' then
 			--	jacquie_done_s<='0';
 			--else
-				--debug_no_block:=conv_integer(jacquie_no_block);
+				debug_no_block:=conv_integer(jacquie_no_block);
 				if CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BIT0 then
 					sb_bit0:=CONV_INTEGER(jacquie_length);
 					jacquie_done_s<='1';
@@ -414,7 +310,7 @@ begin
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PILOT then
 					sb_pilot:=CONV_INTEGER(jacquie_length);
 					pilot:=CONV_INTEGER(jacquie_count);
-					block_step:=1;
+					block_step:=0;
 					jacquie_done_s<='0';
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PULSE then
 					sb_pilot:=CONV_INTEGER(jacquie_length);
@@ -426,6 +322,7 @@ begin
 					-- Used bits in the last byte (other bits should be 0) {8}
 					-- (e.g. if this is 6, then the bits used (x) in the last byte are: xxxxxx00, where MSb is the leftmost bit, LSb is the rightmost bit)
 					last_byte:=CONV_INTEGER(jacquie_count);
+--last_byte:=8; -- Abu hack
 					block_step:=3;
 					jacquie_done_s<='0';
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BLOCK_CONTINUE then
@@ -440,22 +337,42 @@ begin
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PAUSE then
 					data_length:=CONV_INTEGER(jacquie_length);
 					-- 1ms @ 4MHz : 4000 or x"0FA0"
-					sb_pilot:=4000;
+					-- 4M -> 1s
+					-- 4k -> 1ms
+					sb_pilot:=4000; -- we wanna 1ms by here
 					block_step:=5;
 					jacquie_done_s<='0';
 				end if;
 			--end if;
 		end if;
 
-		--leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
-		--leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
+		leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
+		leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
 		--leds8_debug(23 downto 8)<=conv_std_logic_vector(pilot,16);
+		leds8_debug(19 downto 12)<=conv_std_logic_vector(debug_no_block,8);
 		
 		play_push<=false;
+		play_pause<=false;
 		if cassette_motor='1' and jacquie_done_s='0' and (play_push_done and not(play_push)) then
 			case block_step is
-				when 0=>NULL; -- fuck 0 (not even used this state machine :p
-
+				when 0=>NULL;
+					-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
+				
+               --// Play PILOT TONE: premier bit - qui ne toggle pas lui.
+               --while (pilot > 0) {
+               --output.play(sb_pilot);
+					play_output<=sb_pilot;
+               --output.toggleAmp();
+play_toggle<=false;
+play_value<='1';
+					play_push<=true;
+					pilot:=pilot-1;
+					if pilot=0 then
+						jacquie_done_s<='1';
+					else
+						block_step:=1;
+					end if;
+					
 				when 1=>
 					-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
 				
@@ -464,7 +381,9 @@ begin
                --output.play(sb_pilot);
 					play_output<=sb_pilot;
                --output.toggleAmp();
-					play_toggle<=true;
+--CDT2WAVBaseOutput.java default value amp = LOAMP
+play_toggle<=true; -- do toggle until pilot=0
+play_value<='0';
 					play_push<=true;
 					--pilot--;
 					pilot:=pilot-1;
@@ -481,72 +400,102 @@ begin
                --output.play(sb_sync2);
 					play_output<=sb_pilot;
                --output.toggleAmp();
-					play_toggle<=true;
+play_toggle<=true;
+play_value<='1';
 					play_push<=true;
                --}
 					jacquie_done_s<='1';
 				when 3=>
                --// Play actual DATA
 					--// Play first pulse of the bit
+					
+					
+					--last_byte data_bit
+					--   8        XXXXXXXX
+					--   7        XXXXXXX
+					--   6        XXXXXX
+					
+					
 					if jacquie_byte(data_bit)='0' then
 						play_output<=sb_bit0;
+						play_value<='0'; -- usefull for cassette_output
 					else
 						play_output<=sb_bit1;
+						play_value<='1'; -- usefull for cassette_output
 					end if;
-					play_toggle<=true;
 					play_push<=true;
+					play_toggle<=true;
 					
-					--11
-					--07 01 00
-					
-					--11
-					--15 08 00 x815
-					--11
-					--07 01 00 x107
-					--11
-					--07 01 00 x107
-					
---					--x"815"-x"803"
---					if debug_no_block=3 and data_length=18 and jacquie_byte/=x"C5" then
---						block_step:=6;
---					--x"107"-x"102"
---					elsif debug_no_block=4 and data_length=5 and jacquie_byte/=x"F5" then
---						block_step:=7;
---					--x"107"-x"000"
---					elsif debug_no_block=5 and data_length=263 and jacquie_byte/=x"16" then
---						block_step:=8;
---					--x"107"-x"101"
---					elsif debug_no_block=5 and data_length=6 and jacquie_byte/=x"57" then
---						block_step:=9;
---					--x"107"-x"106"
---					elsif debug_no_block=5 and data_length=1 and jacquie_byte/=x"FF" then
---						block_step:=10;
---					--x"107"-x"106"
---					elsif debug_no_block=5 and data_length=1 and jacquie_byte=x"FF" then
---						block_step:=11;  -- fin :)
---					else
+-- Afteroids
+--20 5C 2D pause
+--         11
+--08 XX XX 07 01 00
+--		if debug_no_block=2 and data_length=1 and jacquie_byte/=x"FF" then
+--			block_step:=6;
+--		end if;
+--         11
+--01 XX XX 08 01 00
+--		if debug_no_block=3 and data_length=1 and jacquie_byte/=x"00" then
+--			block_step:=7;
+--		end if;
+--         11
+--08 XX XX 07 01 00
+--		if debug_no_block=4 and data_length=1 and jacquie_byte/=x"FF" then
+--			block_step:=8;
+--		end if;
+--         11
+--08 XX XX 09 02 00
+--		if debug_no_block=5 and data_length=1 and jacquie_byte/=x"FF" then
+--			block_step:=9;
+--		end if;
+--         11
+--08 XX XX 02 40 00
+--		if debug_no_block=6 and data_length=1 and jacquie_byte/=x"65" then
+--			block_step:=10;
+--		end if;
+--         11
+--08 XX XX F7 B3
+--		if debug_no_block=7 and data_length=1 and jacquie_byte/=x"D5" then
+--			block_step:=11;
+--		end if;
+--fin de la cassette
+
 						
-						block_step:=4;
-						
+							block_step:=4;
+					--	end if;
+
 --					end if;
 				when 4=>
 					--// Play second pulse of the bit
 					play_toggle<=true;
+					play_value<=not(play_value);
 					play_push<=true;
-					data_bit:=(data_bit-1) mod 8;
-					if data_length=0 and last_byte=7-data_bit then
-						-- end of block
+					
+					
+--if debug_no_block=3 and data_length=1 then
+-- here last_byte is 01 using Afteroids
+----jacquie_done_s<='1';
+--block_step:=12;
+					
+					----if bit_cnt = "000" or (data_len = 1 and ((bit_cnt = (8 - last_byte_bits)) or (last_byte_bits = 0))) then
+					if data_length=0 then
+						block_step:=12;
+					elsif data_length=1 and ((data_bit=(8-last_byte)) or (last_byte=0)) then
+					--if debug_no_block=3 and data_length=1 then
+						-- end of block using last_byte!=8
 						jacquie_done_s<='1';
-					--	block_step:=6;
-					elsif data_length=0 and (data_bit=7) then
-						-- end of block
-						jacquie_done_s<='1';
-						--block_step:=7;
-					elsif (data_bit=7) then
-						data_length:=data_length-1;
-						jacquie_done_s<='1';
+						--block_step:=12;
 					else
-						block_step:=3;
+						data_bit:=(data_bit-1) mod 8;
+						if data_length=1 and (data_bit=7) then
+							-- end of block
+							jacquie_done_s<='1';
+						elsif (data_bit=7) then
+							data_length:=data_length-1;
+							jacquie_done_s<='1';
+						else
+							block_step:=3;
+						end if;
 					end if;
 				when 5=>
                --// If there is pause after block present then make first millisecond the oposite
@@ -556,7 +505,8 @@ begin
                --if (pause > 0) {
 					play_output<=sb_pilot;
 					play_toggle<=false;
-					
+play_pause<=true;
+play_value<='0'; --play_value;
 					--play_toggle<=true;
 					--pilot:=pilot-1;
 					if data_length=0 then
@@ -565,13 +515,14 @@ begin
 						play_push<=true;
 						data_length:=data_length-1;
 					end if;
-				when 6=>NULL; -- fuck 6 block 3 KO
-				when 7=>NULL; -- fuck 7 block 4 KO
-				when 8=>NULL; -- fuck 8 block 5 debut KO
+				when 6=>NULL; -- fuck 6 block 2 KO
+				when 7=>NULL; -- fuck 7 block 3 KO
+				when 8=>NULL; -- fuck 8 block 4 KO
 				when 9=>NULL; -- fuck 9 block 5 KO
-				when 10=>NULL; -- fuck 10 block 5 fini KO
-				when 11=>NULL; -- fuck 11 block 5 fini OK
-				when 12=>NULL; -- fuck 12
+				when 10=>NULL; -- fuck 10 block 6 KO
+				when 11=>NULL; -- fuck 11 block 7 KO
+				when 12=>--NULL; -- fuck 12 block 3 OK
+				leds8_debug(11 downto 4)<=conv_std_logic_vector(last_byte,8);
 				when 13=>NULL; -- fuck 13
 				when 14=>NULL; -- fuck 14
 				when 15=>NULL; -- fuck 15

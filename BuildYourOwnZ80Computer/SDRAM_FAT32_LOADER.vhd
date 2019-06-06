@@ -91,14 +91,14 @@ entity SDRAM_FAT32_LOADER is
 
 -- simpleCDT interface
 			  jacquie_phase : out STD_LOGIC_VECTOR(2 downto 0);
-			  jacquie_length : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_length : out STD_LOGIC_VECTOR(8*3-1 downto 0); -- data_length or pulse_length or pause_length
 			  jacquie_count : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count
 			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : out STD_LOGIC:='0';
 			  jacquie_done : in STD_LOGIC;
-			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0);
 			  
-			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 			  	--attribute keep : string;
 				--attribute keep of file_select : signal is "TRUE";
@@ -2912,590 +2912,685 @@ end if;
 		end if;
 	end process mecashark;
 
-	jacquie:process(CLK) is
-		variable jacquie_step:integer range 0 to 31:=0;
-		variable is_overrun:boolean:=false;
-		variable jacquie_addr_memTape:std_logic_vector(jacquie_addr'range):=(others=>'0');
-		variable TZXHeader_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
-		variable TZXBlock_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
+jacquie:process(CLK) is
+	variable jacquie_step:integer range 0 to 30:=0;
+	variable is_overrun:boolean:=false;
+	variable jacquie_addr_memTape:std_logic_vector(jacquie_addr'range):=(others=>'0');
+	variable TZXHeader_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
+	variable TZXBlock_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
+	
+	variable id : std_logic_vector(7 downto 0):=x"00";
+	variable params_length:integer;
+	variable params_zap:integer;
+	variable params:std_logic_vector(18*8-1 downto 0);
+	--constant params_length_more_than_max:integer:=17*8;
+	variable params_n:integer;
+	variable has_BYTE_N:boolean:=false;
+	variable has_WORD_N:boolean:=false;
+	
+	-- ID 11 - Turbo Speed Data Block
+	variable sb_pilot:integer;
+	variable sb_sync1:integer;
+	variable sb_sync2:integer;
+	variable sb_bit0:integer;
+	variable sb_bit1:integer;
+	variable pilot:integer;
+	variable lastbyte:std_logic_vector(4-1 downto 0):=x"8";
+	variable pause:integer;
+	variable datalen:integer;
+	
+	variable debug_no_block:integer:=0;
+	
+	-- Amstrad CPC
+--	constant NORMAL_PILOT_LEN    : integer := 2000;
+--	constant NORMAL_PILOT_LEN2    : integer := 2000;
+--	constant NORMAL_SYNC1_LEN    : integer := 855;
+--	constant NORMAL_SYNC2_LEN    : integer := 855;
+--	constant NORMAL_ZERO_LEN     : integer := 855;
+--	constant NORMAL_ONE_LEN      : integer := 1710;
+--	constant NORMAL_PILOT_PULSES : integer := 4096;
+	
+	-- JavaCPC
+	constant NORMAL_PILOT_LEN    : integer := 8064;
+	constant NORMAL_PILOT_LEN2    : integer := 3220;
+	constant NORMAL_SYNC1_LEN    : integer := 667;
+	constant NORMAL_SYNC2_LEN    : integer := 735;
+	constant NORMAL_ZERO_LEN     : integer := 855;
+	constant NORMAL_ONE_LEN      : integer := 1710;
+	constant NORMAL_PILOT_PULSES : integer := 2168;
+begin
+	if rising_edge(CLK) then
+	
+		if key_reset(1)='1' then
+			jacquie_changeCDT_done<=true; --BOUM !
+		elsif jacquie_changeCDT_do then
+			jacquie_changeCDT_done<=false;
+			jacquie_do_s<='0'; -- unbind (slave (sur simple_DSK c'etait un unbind master))
+			jacquie_step:=0;
+			debug_no_block:=0;
+			is_overrun:=false;
+		end if;
 		
-		variable id : std_logic_vector(7 downto 0):=x"00";
-		variable params_length:integer;
-		variable params_zap:integer;
-		variable params:std_logic_vector(17*8-1 downto 0);
-		--constant params_length_more_than_max:integer:=17*8;
-		variable params_n:integer;
-		variable has_BYTE_N:boolean:=false;
-		variable has_WORD_N:boolean:=false;
+		if not(jacquie_do_s='1') and not(jacquie_changeCDT_done) then
+			--overrun
+			is_overrun:=true;
+		end if;
 		
-		-- ID 11 - Turbo Speed Data Block
-		variable sb_pilot:integer;
-		variable sb_sync1:integer;
-		variable sb_sync2:integer;
-		variable sb_bit0:integer;
-		variable sb_bit1:integer;
-		variable pilot:integer;
-		variable lastbyte:std_logic_vector(8-1 downto 0):=x"08";
-		variable pause:integer;
-		variable datalen:integer;
+		deca_spi_Rdo<='0';
+		--deca_spi_Wdo<='0';
+		--deca_spi_Wblock<='0';
 		
-		variable debug_no_block:integer:=0;
-	begin
-		if rising_edge(CLK) then
+		leds8_debug(19 downto 16)<=conv_std_logic_vector(debug_no_block,4);
+		leds8_debug(15 downto 8)<=conv_std_logic_vector(jacquie_step,8);
+		leds8_debug(7 downto 0)<=id;
 		
-			if key_reset(1)='1' then
-				jacquie_changeCDT_done<=true; --BOUM !
-			elsif jacquie_changeCDT_do then
-				jacquie_changeCDT_done<=false;
-				jacquie_do_s<='0'; -- unbind (slave (sur simple_DSK c'etait un unbind master))
-				jacquie_step:=0;
-				debug_no_block:=0;
-				is_overrun:=false;
-			end if;
-			
-			if not(jacquie_do_s='1') and not(jacquie_changeCDT_done) then
-				--overrun
-				is_overrun:=true;
-			end if;
-			
-			deca_spi_Rdo<='0';
-			--deca_spi_Wdo<='0';
-			--deca_spi_Wblock<='0';
-			
-			--leds8_debug(19 downto 16)<=conv_std_logic_vector(debug_no_block,4);
-			--leds8_debug(15 downto 8)<=conv_std_logic_vector(jacquie_step,8);
-			--leds8_debug(7 downto 0)<=id;
-			
-			-- http://www.cpcwiki.eu/index.php/Format:CDT_tape_image_file_format
-			-- https://www.worldofspectrum.org/TZXformat.html
-			-- CDT2WAV.java
-			
-			-- je suis master (je n'attend rien du CPC pour demarrer ma cassette, c'est quand j'ouvre un fichier que ca se lance)
-			jacquie_do_s<='0';
-			
-			if not(jacquie_changeCDT_done) and (not(jacquie_do_s='1') and jacquie_done='1') then
-				if not(deca_spi_Rdo='1') and spi_Rdone='1'  then
-					case jacquie_step is
-						when 0=> -- 0x00 "ZXTape!"
-							jacquie_addr_memTape:=jacquie_addr; -- goto x07
-							TZXHeader_A:=jacquie_addr_memTape+(PREFIX & x"00000007"); -- goto x07
-							deca_spi_A<=TZXHeader_A;
-							deca_spi_Rdo<='1';
-							jacquie_step:=1;
-						when 1=>
-							if spi_Din=x"1A" then
-								TZXBlock_A:=TZXHeader_A+(PREFIX & x"00000003"); -- goto x0A
-								deca_spi_A<=TZXBlock_A;
-								deca_spi_Rdo<='1';
-								jacquie_step:=2;
-							end if;
-						when 2=> -- TZX Block ID
-							-- countBlocks()
-							debug_no_block:=debug_no_block+1;
-							id:=spi_Din;
-							-- tous une taille specifique.
-							--mais un objectif commun, envoyer des trucs qui font du son.
-							--et principalement des blocks (et leur parmetre avant)
-							has_BYTE_N:=false;
-							has_WORD_N:=false;
-							if id=x"10" then
-								params_length:=4+1; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
-								has_BYTE_N:=true;
-							elsif id=x"11" then
-								params_length:=18; -- words,byte,word,byte[3], then BYTE[N]
-								has_BYTE_N:=true;
-								
-								--params_length:=params_length'high;
-								--jacquie_step:=17;
-								
-							elsif id=x"12" then
-								params_length:=4; -- 2 words
-							elsif id=x"13" then
-								params_length:=1; -- 1 byte, then WORD[N]
-								has_WORD_N:=true;
-							elsif id=x"14" then
-								params_length:=10; -- word,word,byte,word,byte[3], then BYTE[N]
-								has_BYTE_N:=true;
-							elsif id=x"15" then -- EAR
-								params_length:=8; -- word,word,byte,byte[3], then BYTE[N]
-								has_BYTE_N:=true;
-							elsif id=x"20" then
-								params_length:=2; -- word
-							elsif id=x"21" then -- to skip
-								params_length:=1; -- byte, then BYTE[L] (chars)
-								has_BYTE_N:=true;
-							elsif id=x"22" then -- to skip
-								params_length:=0;
-							elsif id=x"23" then -- to skip
-								params_length:=2; -- word
-							elsif id=x"24" then -- to skip
-								params_length:=2; -- word
-							elsif id=x"25" then -- to skip
-								params_length:=0;
-							elsif id=x"26" then -- to skip
-								params_length:=2; -- word, then WORD[N]
-								has_WORD_N:=true; -- skipped
-							elsif id=x"27" then -- to skip
-								params_length:=0;
-							elsif id=x"2A" then -- to skip (not implemented in Caprice32)
-								params_length:=4; -- dword
-							elsif id=x"30" then -- to skip
-								params_length:=1; -- byte, then BYTE[N] (chars)
-								has_BYTE_N:=true;
-							elsif id=x"31" then -- to skip
-								params_length:=2; -- byte,byte, then BYTE[N] (chars)
-								has_BYTE_N:=true;
-							elsif id=x"32" then -- to skip
-								params_length:=3; -- word,byte, then TEXT[N] (structure...)
-							elsif id=x"33" then -- to skip
-								params_length:=1; -- byte, then HWINFO[N] (3 bytes structure)
-							elsif id=x"34" then -- to ignore
-								params_length:=9; -- ??? Emulator-info
-							elsif id=x"35" then -- to skip
-								params_length:=14; -- byte[10](chars),dword, then BYTE[L]
-								has_BYTE_N:=true;
-							elsif id=x"40" then -- to skip
-								params_length:=4;
-								has_BYTE_N:=true;
-							elsif id=x"5A" then
-								params_length:=9; -- byte[9]
-							else
-								 -- arret brutal de la lecture de la cassette
-								jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PAUSE,jacquie_phase'length);
-								jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-								jacquie_length<=x"00FF";
-								jacquie_do_s<='1';
-								jacquie_changeCDT_done<=true; -- BOUM ! (ou fin de cassette a la rache (pas de detection de EOF))
-								params_length:=params_length'high;
-							end if;
-							
-							if params_length=params_length'high then
-							--if params_length=params_length_more_than_max then
-								-- evil
-							elsif params_length=0 then
-								jacquie_step:=4;
-							else
-								params_n:=0;
-								deca_spi_A<=TZXBlock_A+1+params_n;
-								deca_spi_Rdo<='1';
-								jacquie_step:=3;
-							end if;
-						when 3=>
-							params((params_n+1)*8-1 downto params_n*8):= spi_Din;
-							if params_length=params_n+1 then
-								jacquie_step:=4;
-							else
-								params_n:=params_n+1;
-								deca_spi_A<=TZXBlock_A+1+params_n;
-								deca_spi_Rdo<='1';
-							end if;
-						when 4=>
-							pilot:=0;
-							params_zap:=0;
-							if id=x"10" then
-								--ID:10 - Standard speed data block
-								--This block MUST be supported and CAN exist in a CDT. Emulators should use standard Spectrum ROM timings for playback.
-								-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
-								--pause = get2(inpbuf, data);
-								pause:=conv_integer(params(8*2-1 downto 0));
-								--datalen = get2(inpbuf, data + 2);
-								datalen:=conv_integer(params(8*4-1 downto 8*2));
-								--data += 4;
-								--if (inpbuf[data] == 0x00) {
-								if params(8*5-1 downto 8*4) = x"00" then
-								--pilot = 8064; -- count : in pulses (half of sinus)
-									pilot:=8064;
-								--} else {
-								else
-								--pilot = 3220;
-									pilot:=3220;
-								--}
-								end if;
-								--sb_pilot = output.samples(2168); -- length : 2168 T-State
-								sb_pilot:=2168;
-								--sb_sync1 = output.samples(667);
-								sb_sync1:=667;
-								--sb_sync2 = output.samples(735);
-								sb_sync2:=735;
-								--sb_bit0 = output.samples(885);
-								sb_bit0:=885;
-								--sb_bit1 = output.samples(1710);
-								sb_bit1:=1710;
-								--lastbyte = 8; -- after end of block, do send this.
-								lastbyte:=x"08";
-							elsif id=x"11" then
-								--ID:11 - Turbo Loading Data Block
-								--This block MUST be supported and CAN exist in a CDT.
-								--
-								--The timings for playback are stored in the block header.
-								--
-								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
-								--pos += get3(inpbuf, pos + 0x0F) + 0x12;
-								-- Fruity_Frank.cdt
-								-- 07 01 00 => 000107h length
-								-- 00 CD 43 FF FF FF FF 11 << ID 11 once time again.
-								-- 11
-								-- 13 07 00 => 000713h length
-								-- 11
-								-- 07 01 00 => 000107h length
-								-- 11
-								-- 15 08 00 => 000815h length
-								-- 11
-								-- 07 01 00 => 000107h length
-								-- 11
-								-- 15 08 00 => 000815h length
-								-- 11
-								-- 07 01 00
-								-- 11
-								-- 15 08 00 => 000815h length
-								
-								--jacquie_addr_memTape:=TZXBlock_A+(PREFIX & x"00000001"); -- goto Block content
-								--meca_spi_A<=jacquie_addr_memTape;
-								--meca_spi_Rdo<='1';
-								--jacquie_step:=3;
-								
-								--sb_pilot = output.samples(get2(inpbuf, data + 0));
-								sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
-								--sb_sync1 = output.samples(get2(inpbuf, data + 2));
-								sb_sync1:=CONV_INTEGER(params(8*4-1 downto 8*2));
-								--sb_sync2 = output.samples(get2(inpbuf, data + 4));
-								sb_sync2:=CONV_INTEGER(params(8*6-1 downto 8*4));
-								--sb_bit0 = output.samples(get2(inpbuf, data + 6));
-								sb_bit0:=CONV_INTEGER(params(8*8-1 downto 8*6));
-								--sb_bit1 = output.samples(get2(inpbuf, data + 8));
-								sb_bit1:=CONV_INTEGER(params(8*10-1 downto 8*8));
-								--pilot = get2(inpbuf, data + 10);
-								pilot:=CONV_INTEGER(params(8*12-1 downto 8*10));
-								
-								--params_length:=params_length'high;
-								--jacquie_step:=18;
-								
-								--lastbyte = (int) inpbuf[data + 12];
-								lastbyte:=params(8*13-1 downto 8*12);
-								--pause = get2(inpbuf, data + 13);
-								pause:=CONV_INTEGER(params(8*15-1 downto 8*13));
-								--datalen = get3(inpbuf, data + 15);
-								datalen:=CONV_INTEGER(params(8*17-1 downto 8*15));
-							elsif id=x"12" then	
-								--case 0x12: // pure tone (length of tone=number of pulses)
-								--sb_pilot = output.samples(get2(inpbuf, data + 0));
-								sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
-								--pilot = get2(inpbuf, data + 2);
-								pilot:=CONV_INTEGER(params(8*4-1 downto 8*2));
-							elsif id=x"13" then
-								--ID:13 - Sequence of pulses of different length
-								--This block MUST be supported and CAN exist in a CDT.
-								--
-								--The timings for playback are stored in the block header.
-								--
-								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
-								
-								--pilot = (int) inpbuf[data + 0];
-								datalen:=CONV_INTEGER(params(8*2-1 downto 0));
-							elsif id=x"14" then
-								--ID:14 - Pure Data Block
-								--This block MUST be supported and CAN exist in a CDT.
-								--
-								--The timings for playback are stored in the block header.
-								--
-								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
-								
-								--sb_pilot = pilot = sb_sync1 = sb_sync2 = 0;
-								sb_pilot:=0;
-								pilot:=0;
-								sb_sync1:=0;
-								sb_sync2:=0;
-								--sb_bit0 = output.samples(get2(inpbuf, data + 0));
-								sb_bit0:=CONV_INTEGER(params(8*2-1 downto 0));
-								--sb_bit1 = output.samples(get2(inpbuf, data + 2));
-								sb_bit1:=CONV_INTEGER(params(8*4-1 downto 8*2));
-								--lastbyte = (int) inpbuf[data + 4];
-								lastbyte:=params(8*5-1 downto 8*4);
-								--pause = get2(inpbuf, data + 5);
-								pause:=CONV_INTEGER(params(8*7-1 downto 8*5));
-								--datalen = get3(inpbuf, data + 7);
-								datalen:=CONV_INTEGER(params(8*9-1 downto 8*7));
-							elsif id=x"15" then
-								--ID:15 - Direct Recording
-								--This block MUST be supported but SHOULD be avoided when creating a CDT by a sample-to-CDT converter. This block can be used by emulators to support writing to CDTs.
-								--
-								--The timings for playback are stored in the block header.
-								--
-								--Details and functionality of this block are the same as described in the official TZX/CDT specification.
-								-- This block is used for tapes which have some parts in a format such that the turbo loader block cannot be used. This is not like a VOC file, since the information is much more compact. Each sample value is represented by one bit only (0 for low, 1 for high) which means that the block will be at most 1/8 the size of the equivalent VOC.
-								-- The preferred sampling frequencies are 22050 or 44100 Hz (158 or 79 T-states/sample). Please, if you can, don't use other sampling frequencies.
-								
-								--FIXME : il est ou le bout de code ici ? (finalement c'est pas un enregistrement, mais une voie enregistre)
-								-- Number of T-states per sample (bit of data)
-								pilot:=CONV_INTEGER(params(8*2-1 downto 0));
-								--pause = get2(inpbuf, data + 2);
-								pause:=CONV_INTEGER(params(8*4-1 downto 8*2));
-								-- Used bits (samples) in last byte of data (1-8)
-								-- (e.g. if this is 2, only first two samples of the last byte will be played)
-								--lastbyte = (int) inpbuf[data + 4];
-								lastbyte:=params(8*5-1 downto 8*4);
-								--Length of samples' data
-								--datalen = get3(inpbuf, data + 5);
-								datalen:=CONV_INTEGER(params(8*7-1 downto 8*5));
-								-- Samples data. Each bit represents a state on the EAR port (i.e. one sample).
-								-- MSb is played first.
-							elsif id=x"20" then
-								-- skip : OK
-								pause:=CONV_INTEGER(params(8*2-1 downto 0));
-								
-							elsif id=x"21" then
-								-- skip the block : OK
-								params_zap:=conv_integer(params(8-1 downto 0));
-								has_BYTE_N:=false;
-							elsif id=x"22" then
-								-- skip : OK
-							elsif id=x"23" then
-								-- skip : OK
-							elsif id=x"24" then
-								-- skip : OK
-							elsif id=x"25" then
-								-- skip : OK
-							elsif id=x"26" then
-								-- skip the WORD[N] block : OK
-								params_zap:=conv_integer(params(8*2-1 downto 0))+conv_integer(params(8*2-1 downto 0));
-								has_WORD_N:=false;
-							elsif id=x"27" then
-								-- skip : OK
-							elsif id=x"2A" then
-								-- not implemetend in caprice32 tape.c
-								-- skip : OK
-							elsif id=x"30" then
-								-- skip the block : OK
-								params_zap:=conv_integer(params(8*2-1 downto 8));
-								has_BYTE_N:=false;
-							elsif id=x"31" then
-								-- skip the block : OK
-								params_zap:=conv_integer(params(8*2-1 downto 8));
-								has_BYTE_N:=false;
-							elsif id=x"32" then
-								-- skip the block : OK
-								params_zap:=conv_integer(params(8*2-1 downto 0));
-							elsif id=x"33" then
-								-- skip the HWINFO[N] block : OK
-								params_zap:=conv_integer(params(8-1 downto 0))+conv_integer(params(8-1 downto 0))+conv_integer(params(8-1 downto 0));
-							elsif id=x"34" then
-								-- skip : OK
-							elsif id=x"35" then
-								-- skip the block of BYTE[L] : OK
-								params_zap:=conv_integer(params(8*12-1 downto 8*10));
-								has_BYTE_N:=false;
-							elsif id=x"40" then
-								--This block MUST not be added to a new CDT. Amstrad emulator's MUST ignore this block.
-								-- skip the block : OK
-								params_zap:=conv_integer(params(8*4-1 downto 0)); -- a dword address
-								has_BYTE_N:=false;
-							elsif id=x"5A" then
-								-- skip : OK
-							end if;
-							
-							TZXBlock_A:=TZXBlock_A + 1 + params_length + params_zap; -- jump next block of begin of BLOCK content
-							--if has_BYTE_N then
-							--	jacquie_step:=5;
-							--elsif has_WORD_N then
-							--	jacquie_step:=6;
-							--else
-							--	jacquie_step:=2; -- next block (END OF FILE ???)
-							--end if;
-							
-							--if params_length=params_length_more_than_max then
-							if params_length=params_length'high then
-								-- evil
-							elsif has_WORD_N then -- certainement id=x"13"
-								deca_spi_A<=TZXBlock_A;
-								deca_spi_Rdo<='1';
-								jacquie_step:=13;
-							elsif pilot>0 then
-								--jacquie_step:=16;
-								jacquie_step:=5;
-							elsif pause>0 then
-								jacquie_step:=12;
-							else
-								deca_spi_A<=TZXBlock_A;
-								deca_spi_Rdo<='1';
-								--jacquie_step:=15;
-								jacquie_step:=2; -- next block
-							end if;
-						when 5=>
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT0,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(sb_bit0,jacquie_length'length);
-							jacquie_step:=6;
-							jacquie_do_s<='1';
-						when 6=>
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT1,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(sb_bit1,jacquie_length'length);
-							jacquie_step:=7;
-							--jacquie_step:=19;
-							jacquie_do_s<='1';
-						when 7=> --while (pilot > 0) {
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PILOT,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
-							jacquie_count<=conv_std_logic_vector(pilot,jacquie_count'length);
-							if has_BYTE_N then -- c'est un vrai pilot
-								jacquie_step:=8;
-							else
-								-- certainement id=x"12"
-								jacquie_step:=2; -- next block ID
-							end if;
-							jacquie_do_s<='1';
-						when 8=> --if (sb_sync1 > 0) {
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(sb_sync1,jacquie_length'length);
-							jacquie_step:=9;
-							jacquie_do_s<='1';
-						when 9=> --if (sb_sync2 > 0) {
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(sb_sync2,jacquie_length'length);
-							jacquie_step:=10;
-							deca_spi_A<=TZXBlock_A;
-							deca_spi_Rdo<='1';
-							jacquie_do_s<='1';
-						when 10=> -- block
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_count<=x"00" & lastbyte;-- conv_std_logic_vector(lastbyte,jacquie_count'length);
-							-- first one byte readen, and sent to JACQUIE_PHASE_BLOCK, data_length=512
-							jacquie_byte<=spi_Din;
-							jacquie_length<=conv_std_logic_vector(datalen,jacquie_length'length);
-							-- data_length for next step is sure 511
-							datalen:=datalen-1;
-							jacquie_step:=11;
-							TZXBlock_A:=TZXBlock_A+1;
-							deca_spi_A<=TZXBlock_A;
-							deca_spi_Rdo<='1';
-							jacquie_do_s<='1';
---							--11
---							--15 08 00
---							if debug_no_block=3 then
---								if datalen/=2069-1 then
---									jacquie_step:=20;
---								elsif spi_Din/=x"16" then
---									jacquie_step:=21;
---								end if;
---							end if;
-						when 11=>  -- then BYTE[N]
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK_CONTINUE,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							datalen:=datalen-1;
-							-- second byte readen, and sent to JACQUIE_PHASE_BLOCK_CONTINUE, data_length=511=>510
-							jacquie_byte<=spi_Din;
-							if datalen=0 then
-								if pause>0 then
-									-- goto end-of-block signal + pause
-									jacquie_step:=31;
-								else
-									-- but sure got to move because i'm currently face to a data byte.
-									TZXBlock_A:=TZXBlock_A+1;
-									deca_spi_A<=TZXBlock_A;
-									deca_spi_Rdo<='1';
-									jacquie_step:=2; -- next block ID
-								end if;
-							else
-								TZXBlock_A:=TZXBlock_A+1;
-								deca_spi_A<=TZXBlock_A;
-								deca_spi_Rdo<='1';
-							end if;
-							jacquie_do_s<='1';
-							
---							--11
---							--07 01 00
---							
---							--11
---							--15 08 00
---							if debug_no_block=3 and datalen=2069-256-1 and spi_Din/=x"49" then
---								-- datalen min is 1, and two datalen-- before, so -1
---								jacquie_step:=22;
---							end if;
---							--11
---							--07 01 00
---							if debug_no_block=4 and datalen=263-1 and spi_Din/=x"41" then
---								jacquie_step:=23;
---							end if;
---							--11
---							--07 01 00
---							if debug_no_block=5 and datalen=263-5-1 and spi_Din/=x"2A" then
---								jacquie_step:=24;
---							end if;
---							if debug_no_block=5 and datalen=263-262-1 and spi_Din/=x"FF" then
---								jacquie_step:=25;
---							end if;
---							if debug_no_block=5 and datalen=263-262-1 and spi_Din=x"FF" then
---								jacquie_step:=26;
---							end if;
-						when 31=>
-							-- end of block : one pulse only, of 1ms.
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							-- 1ms @ 4MHz : 4000 or x"0FA0"
-							jacquie_length<=x"0FA0"; -- 1ms
-							jacquie_do_s<='1';
-							-- but sure got to move because i'm currently face to a data byte.
-							TZXBlock_A:=TZXBlock_A+1;
-							-- goto pause
-							jacquie_step:=12;
-						when 12=>
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PAUSE,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(pause,8*2);
-							-- inconsistent pause : so no A++ by here.
-							deca_spi_A<=TZXBlock_A;
-							deca_spi_Rdo<='1';
-							jacquie_step:=2; -- next block ID
-							jacquie_do_s<='1';
-						when 13=> -- then WORD[N] -- cas x"13"
-							params(8*2-1 downto 8):=spi_Din;
-							TZXBlock_A:=TZXBlock_A+1;
-							deca_spi_A<=TZXBlock_A;
-							deca_spi_Rdo<='1';
-							jacquie_step:=14;
-						when 14=>
-							params(8-1 downto 0):=spi_Din;
-							sb_pilot:=conv_integer(params(8*2-1 downto 0));
-							jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
-							jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-							jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
-							jacquie_do_s<='1';
-							datalen:=datalen-1;
-							if datalen=0 then
-								TZXBlock_A:=TZXBlock_A+1;
-								deca_spi_Rdo<='1';
-								jacquie_step:=2; -- next block ID
-							else
-								TZXBlock_A:=TZXBlock_A+1;
-								deca_spi_A<=TZXBlock_A;
-								deca_spi_Rdo<='1';
-								jacquie_step:=13;
-							end if;
-						when 15=> id:=spi_Din; -- fuck 15
-						when 16=> id:=conv_std_logic_vector(pilot,16)(7 downto 0); -- fuck 16
-						when 17=> NULL; -- fuck 17
-						when 18=> NULL; -- fuck 18
-						when 19=> id:=conv_std_logic_vector(sb_bit1,16)(15 downto 8); -- fuck 19
-						when 20=> -- fuck 20 block 3 debut datalen KO
-						id:=conv_std_logic_vector(datalen,16)(15 downto 8);
-						when 21=> NULL; -- fuck 21 block 3 debut byte KO
-						when 22=> NULL; -- fuck 22 block 3 KO
-						when 23=> NULL; -- fuck 23 block 4 2eme byte KO
-						when 24=> NULL; -- fuck 24 block 5 KO
-						when 25=> NULL; -- fuck 25 block 5 fin KO
-						when 26=> NULL; -- fuck 26 block 5 fin OK
-						when 27=> NULL; -- fuck 27
-						when 28=> NULL; -- fuck 28
-						when 29=> NULL; -- fuck 29
-						when 30=> NULL; -- fuck 30
-					end case;
-				end if;
+		-- http://www.cpcwiki.eu/index.php/Format:CDT_tape_image_file_format
+		-- https://www.worldofspectrum.org/TZXformat.html
+		-- CDT2WAV.java
+		-- https://raw.githubusercontent.com/gyurco/Amstrad_MiST/master/tzxplayer.vhd
+		
+		-- je suis master (je n'attend rien du CPC pour demarrer ma cassette, c'est quand j'ouvre un fichier que ca se lance)
+		jacquie_do_s<='0';
+		
+		if not(jacquie_changeCDT_done) and (not(jacquie_do_s='1') and jacquie_done='1') then
+			if not(deca_spi_Rdo='1') and spi_Rdone='1'  then
+				case jacquie_step is
+when 0=> -- 0x00 "ZXTape!"
+	jacquie_addr_memTape:=jacquie_addr; -- goto x07
+	TZXHeader_A:=jacquie_addr_memTape+(PREFIX & x"00000007"); -- goto x07
+	deca_spi_A<=TZXHeader_A;
+	deca_spi_Rdo<='1';
+	jacquie_step:=1;
+when 1=>
+	if spi_Din=x"1A" then
+		TZXBlock_A:=TZXHeader_A+(PREFIX & x"00000003"); -- goto x0A
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
+		jacquie_step:=2;
+	end if;
+when 2=> -- TZX Block ID
+	-- countBlocks()
+	debug_no_block:=debug_no_block+1;
+	id:=spi_Din;
+	-- tous une taille specifique.
+	--mais un objectif commun, envoyer des trucs qui font du son.
+	--et principalement des blocks (et leur parmetre avant)
+	has_BYTE_N:=false;
+	has_WORD_N:=false;
+	if id=x"10" then
+		params_length:=4+1; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
+		has_BYTE_N:=true;
+	elsif id=x"11" then
+		params_length:=18; -- words,byte,word,byte[3], then BYTE[N]
+		has_BYTE_N:=true;
+		
+		--params_length:=params_length'high;
+		--jacquie_step:=17;
+		
+	elsif id=x"12" then
+		params_length:=4; -- 2 words
+	elsif id=x"13" then
+		params_length:=1; -- 1 byte, then WORD[N]
+		has_WORD_N:=true;
+	elsif id=x"14" then
+		params_length:=10; -- word,word,byte,word,byte[3], then BYTE[N]
+		has_BYTE_N:=true;
+	elsif id=x"15" then -- EAR
+		params_length:=8; -- word,word,byte,byte[3], then BYTE[N]
+		has_BYTE_N:=true;
+	elsif id=x"20" then
+		params_length:=2; -- word
+	elsif id=x"21" then -- to skip
+		params_length:=1; -- byte, then BYTE[L] (chars)
+		has_BYTE_N:=true;
+	elsif id=x"22" then -- to skip
+		params_length:=0;
+	elsif id=x"23" then -- to skip
+		params_length:=2; -- word
+	elsif id=x"24" then -- to skip
+		params_length:=2; -- word
+	elsif id=x"25" then -- to skip
+		params_length:=0;
+	elsif id=x"26" then -- to skip
+		params_length:=2; -- word, then WORD[N]
+		has_WORD_N:=true; -- skipped
+	elsif id=x"27" then -- to skip
+		params_length:=0;
+	elsif id=x"2A" then -- to skip (not implemented in Caprice32)
+		params_length:=4; -- dword
+	elsif id=x"30" then -- to skip
+		params_length:=1; -- byte, then BYTE[N] (chars)
+		has_BYTE_N:=true;
+	elsif id=x"31" then -- to skip
+		params_length:=2; -- byte,byte, then BYTE[N] (chars)
+		has_BYTE_N:=true;
+	elsif id=x"32" then -- to skip
+		params_length:=2; -- word,byte, then TEXT[N] (structure...)
+		-- utilise par Abu : word here because "Length of the whole block (without these two bytes)"
+		has_BYTE_N:=true;
+	elsif id=x"33" then -- to skip
+		params_length:=1; -- byte, then HWINFO[N] (3 bytes structure)
+	elsif id=x"34" then -- to ignore
+		params_length:=9; -- ??? Emulator-info
+	elsif id=x"35" then -- to skip
+		params_length:=14; -- byte[10](chars),dword, then BYTE[L]
+		has_BYTE_N:=true;
+	elsif id=x"40" then -- to skip
+		params_length:=4;
+		has_BYTE_N:=true;
+	elsif id=x"5A" then
+		params_length:=9; -- byte[9]
+	else
+		 -- arret brutal de la lecture de la cassette
+		jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PAUSE,jacquie_phase'length);
+		jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+		--simpleCDT entry : 1ms so here 5000ms=x1388
+		jacquie_length<=x"001388";
+		jacquie_do_s<='1';
+		jacquie_changeCDT_done<=true; -- BOUM ! (ou fin de cassette a la rache (pas de detection de EOF))
+		params_length:=params_length'high;
+	end if;
+	
+	if params_length=params_length'high then
+	--if params_length=params_length_more_than_max then
+		-- evil
+	elsif params_length=0 then
+		jacquie_step:=4;
+	else
+		params_n:=0;
+		deca_spi_A<=TZXBlock_A+1+params_n;
+		deca_spi_Rdo<='1';
+		jacquie_step:=3;
+	end if;
+when 3=>
+	params((params_n+1)*8-1 downto params_n*8):= spi_Din;
+	if params_length=params_n+1 then
+		jacquie_step:=4;
+	else
+		params_n:=params_n+1;
+		deca_spi_A<=TZXBlock_A+1+params_n;
+		deca_spi_Rdo<='1';
+	end if;
+when 4=>
+	pilot:=0;
+	sb_sync1:=0;
+	sb_sync2:=0;
+	datalen:=0;
+	pause:=0;
+
+	params_zap:=0;
+	
+	if id=x"10" then
+		--ID:10 - Standard speed data block
+		--This block MUST be supported and CAN exist in a CDT. Emulators should use standard Spectrum ROM timings for playback.
+		-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
+		--pause = get2(inpbuf, data);
+		pause:=conv_integer(params(8*2-1 downto 0));
+		--datalen = get2(inpbuf, data + 2);
+		datalen:=conv_integer(params(8*4-1 downto 8*2));
+		--data += 4;
+		
+
+
+		
+		
+		
+		
+		
+		--if (inpbuf[data] == 0x00) {
+		if params(8*5-1 downto 8*4) = x"00" then
+		--pilot = 8064; -- count : in pulses (half of sinus)
+			pilot:=NORMAL_PILOT_LEN;
+		--} else {
+		else
+		--pilot = 3220;
+			pilot:=NORMAL_PILOT_LEN2;
+		--}
+		end if;
+		--sb_pilot = output.samples(2168); -- length : 2168 T-State
+		sb_pilot:=NORMAL_PILOT_PULSES;
+		--sb_sync1 = output.samples(667);
+		sb_sync1:=NORMAL_SYNC1_LEN;
+		--sb_sync2 = output.samples(735);
+		sb_sync2:=NORMAL_SYNC2_LEN;
+		--sb_bit0 = output.samples(885);
+		sb_bit0:=NORMAL_ZERO_LEN;
+		--sb_bit1 = output.samples(1710);
+		sb_bit1:=NORMAL_ONE_LEN;
+		--lastbyte = 8; -- after end of block, do send this.
+		lastbyte:=x"8"; -- 1000
+	elsif id=x"11" then
+		--ID:11 - Turbo Loading Data Block
+		--This block MUST be supported and CAN exist in a CDT.
+		--
+		--The timings for playback are stored in the block header.
+		--
+		--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+		--pos += get3(inpbuf, pos + 0x0F) + 0x12;
+		-- Fruity_Frank.cdt
+		-- 07 01 00 => 000107h length
+		-- 00 CD 43 FF FF FF FF 11 << ID 11 once time again.
+		-- 11
+		-- 13 07 00 => 000713h length
+		-- 11
+		-- 07 01 00 => 000107h length
+		-- 11
+		-- 15 08 00 => 000815h length
+		-- 11
+		-- 07 01 00 => 000107h length
+		-- 11
+		-- 15 08 00 => 000815h length
+		-- 11
+		-- 07 01 00
+		-- 11
+		-- 15 08 00 => 000815h length
+		
+		--jacquie_addr_memTape:=TZXBlock_A+(PREFIX & x"00000001"); -- goto Block content
+		--meca_spi_A<=jacquie_addr_memTape;
+		--meca_spi_Rdo<='1';
+		--jacquie_step:=3;
+		
+		--sb_pilot = output.samples(get2(inpbuf, data + 0));
+		sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+		--sb_sync1 = output.samples(get2(inpbuf, data + 2));
+		sb_sync1:=CONV_INTEGER(params(8*4-1 downto 8*2));
+		--sb_sync2 = output.samples(get2(inpbuf, data + 4));
+		sb_sync2:=CONV_INTEGER(params(8*6-1 downto 8*4));
+		--sb_bit0 = output.samples(get2(inpbuf, data + 6));
+		sb_bit0:=CONV_INTEGER(params(8*8-1 downto 8*6));
+		--sb_bit1 = output.samples(get2(inpbuf, data + 8));
+		sb_bit1:=CONV_INTEGER(params(8*10-1 downto 8*8));
+		--pilot = get2(inpbuf, data + 10);
+		pilot:=CONV_INTEGER(params(8*12-1 downto 8*10));
+		
+		--params_length:=params_length'high;
+		--jacquie_step:=18;
+		
+		--lastbyte = (int) inpbuf[data + 12];
+		--last_byte_bits <= tap_fifo_do(3 downto 0);
+		lastbyte:=params(8*13-1-4 downto 8*12);
+		--pause = get2(inpbuf, data + 13);
+		pause:=CONV_INTEGER(params(8*15-1 downto 8*13));
+		--datalen = get3(inpbuf, data + 15);
+		datalen:=CONV_INTEGER(params(8*18-1 downto 8*15));
+		
+		
+		
+		
+		
+		
+		
+		--pilot:=NORMAL_PILOT_LEN;
+		--sb_pilot:=NORMAL_PILOT_PULSES;
+		--sb_sync1:=NORMAL_SYNC1_LEN;
+		--sb_sync2:=NORMAL_SYNC2_LEN;
+		--sb_bit0:=NORMAL_ZERO_LEN;
+		--sb_bit1:=NORMAL_ONE_LEN;
+		
+		
+	elsif id=x"12" then	
+		--case 0x12: // pure tone (length of tone=number of pulses)
+		--sb_pilot = output.samples(get2(inpbuf, data + 0));
+		sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+		--pilot = get2(inpbuf, data + 2);
+		pilot:=CONV_INTEGER(params(8*4-1 downto 8*2));
+	elsif id=x"13" then
+		--ID:13 - Sequence of pulses of different length
+		--This block MUST be supported and CAN exist in a CDT.
+		--
+		--The timings for playback are stored in the block header.
+		--
+		--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+		
+		--pilot = (int) inpbuf[data + 0];
+		datalen:=CONV_INTEGER(params(8*2-1 downto 0));
+	elsif id=x"14" then
+		--ID:14 - Pure Data Block
+		--This block MUST be supported and CAN exist in a CDT.
+		--
+		--The timings for playback are stored in the block header.
+		--
+		--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+		
+		--sb_pilot = pilot = sb_sync1 = sb_sync2 = 0;
+		sb_pilot:=0;
+		pilot:=0;
+		sb_sync1:=0;
+		sb_sync2:=0;
+		--sb_bit0 = output.samples(get2(inpbuf, data + 0));
+		sb_bit0:=CONV_INTEGER(params(8*2-1 downto 0));
+		--sb_bit1 = output.samples(get2(inpbuf, data + 2));
+		sb_bit1:=CONV_INTEGER(params(8*4-1 downto 8*2));
+		--lastbyte = (int) inpbuf[data + 4];
+		--last_byte_bits <= tap_fifo_do(3 downto 0);
+		lastbyte:=params(8*5-1-4 downto 8*4);
+		--pause = get2(inpbuf, data + 5);
+		pause:=CONV_INTEGER(params(8*7-1 downto 8*5));
+		--datalen = get3(inpbuf, data + 7);
+		datalen:=CONV_INTEGER(params(8*9-1 downto 8*7));
+	elsif id=x"15" then
+		--ID:15 - Direct Recording
+		--This block MUST be supported but SHOULD be avoided when creating a CDT by a sample-to-CDT converter. This block can be used by emulators to support writing to CDTs.
+		--
+		--The timings for playback are stored in the block header.
+		--
+		--Details and functionality of this block are the same as described in the official TZX/CDT specification.
+		-- This block is used for tapes which have some parts in a format such that the turbo loader block cannot be used. This is not like a VOC file, since the information is much more compact. Each sample value is represented by one bit only (0 for low, 1 for high) which means that the block will be at most 1/8 the size of the equivalent VOC.
+		-- The preferred sampling frequencies are 22050 or 44100 Hz (158 or 79 T-states/sample). Please, if you can, don't use other sampling frequencies.
+		
+		--FIXME : il est ou le bout de code ici ? (finalement c'est pas un enregistrement, mais une voie enregistre)
+		-- Number of T-states per sample (bit of data)
+		pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+		--pause = get2(inpbuf, data + 2);
+		pause:=CONV_INTEGER(params(8*4-1 downto 8*2));
+		-- Used bits (samples) in last byte of data (1-8)
+		-- (e.g. if this is 2, only first two samples of the last byte will be played)
+		--lastbyte = (int) inpbuf[data + 4];
+		lastbyte:=params(8*5-1-4 downto 8*4);
+		--Length of samples' data
+		--datalen = get3(inpbuf, data + 5);
+		datalen:=CONV_INTEGER(params(8*7-1 downto 8*5));
+		-- Samples data. Each bit represents a state on the EAR port (i.e. one sample).
+		-- MSb is played first.
+	elsif id=x"20" then
+		-- skip : OK
+		-- Any value requiring more than one byte is stored in little endian format (i.e. LSB first).
+		pause:=CONV_INTEGER(params(8*2-1 downto 0)); -- TODO little endian here ?
+	elsif id=x"21" then
+		-- skip the block : OK
+		params_zap:=conv_integer(params(8-1 downto 0));
+		has_BYTE_N:=false;
+	elsif id=x"22" then
+		-- skip : OK
+	elsif id=x"23" then
+		-- skip : OK
+	elsif id=x"24" then
+		-- skip : OK
+	elsif id=x"25" then
+		-- skip : OK
+	elsif id=x"26" then
+		-- skip the WORD[N] block : OK
+		params_zap:=conv_integer(params(8*2-1 downto 0))+conv_integer(params(8*2-1 downto 0));
+		has_WORD_N:=false;
+	elsif id=x"27" then
+		-- skip : OK
+	elsif id=x"2A" then
+		-- not implemetend in caprice32 tape.c
+		-- skip : OK
+	elsif id=x"30" then
+		-- skip the block : OK
+		params_zap:=conv_integer(params(8-1 downto 0));
+		has_BYTE_N:=false;
+	elsif id=x"31" then
+		-- skip the block : OK
+		params_zap:=conv_integer(params(8*2-1 downto 8));
+		has_BYTE_N:=false;
+	elsif id=x"32" then
+		-- skip the block : OK
+		params_zap:=conv_integer(params(8*2-1 downto 0));
+		has_BYTE_N:=false;
+	elsif id=x"33" then
+		-- skip the HWINFO[N] block : OK
+		params_zap:=conv_integer(params(8-1 downto 0))+conv_integer(params(8-1 downto 0))+conv_integer(params(8-1 downto 0));
+	elsif id=x"34" then
+		-- skip : OK
+	elsif id=x"35" then
+		-- skip the block of BYTE[L] : OK
+		params_zap:=conv_integer(params(8*12-1 downto 8*10));
+		has_BYTE_N:=false;
+	elsif id=x"40" then
+		--This block MUST not be added to a new CDT. Amstrad emulator's MUST ignore this block.
+		-- skip the block : OK
+		params_zap:=conv_integer(params(8*4-1 downto 0)); -- a dword address
+		has_BYTE_N:=false;
+	elsif id=x"5A" then
+		-- skip : OK
+	end if;
+	
+	TZXBlock_A:=TZXBlock_A + 1 + params_length + params_zap; -- jump next block of begin of BLOCK content
+	--if has_BYTE_N then
+	--	jacquie_step:=5;
+	--elsif has_WORD_N then
+	--	jacquie_step:=6;
+	--else
+	--	jacquie_step:=2; -- next block (END OF FILE ???)
+	--end if;
+	
+	--if params_length=params_length_more_than_max then
+	
+	jacquie_step:=5; -- sb_bit0  + sb_bit1 for everybody !
+	
+when 5=>
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT0,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(sb_bit0,jacquie_length'length);
+	jacquie_step:=6;
+	jacquie_do_s<='1';
+when 6=>
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT1,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(sb_bit1,jacquie_length'length);
+	--jacquie_step:=7;
+	--jacquie_step:=19;
+	jacquie_step:=30;
+	jacquie_do_s<='1';
+	
+when 30=>
+	if params_length=params_length'high then
+		-- evil
+	elsif has_WORD_N then -- certainement id=x"13"
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
+		jacquie_step:=13;
+	elsif pilot>0 then
+		--jacquie_step:=16;
+		jacquie_step:=7;
+	elsif sb_sync1>0 then
+		jacquie_step:=8;
+	elsif sb_sync2>0 then
+		jacquie_step:=9;
+	elsif datalen>0 then	
+		jacquie_step:=10;
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
+	elsif pause>0 then
+		jacquie_step:=12;
+	else
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
+		--jacquie_step:=15;
+		jacquie_step:=2; -- next block
+	end if;
+	
+when 7=> --while (pilot > 0) {
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PILOT,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
+	jacquie_count<=conv_std_logic_vector(pilot,jacquie_count'length);
+	if has_BYTE_N then -- c'est un vrai pilot
+		jacquie_step:=8;
+	else
+		-- certainement id=x"12"
+		jacquie_step:=2; -- next block ID
+	end if;
+	jacquie_do_s<='1';
+when 8=> --if (sb_sync1 > 0) {
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(sb_sync1,jacquie_length'length);
+	if sb_sync2>0 then
+		jacquie_step:=9;
+	else
+		jacquie_step:=10;
+	end if;
+	jacquie_do_s<='1';
+when 9=> --if (sb_sync2 > 0) {
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(sb_sync2,jacquie_length'length);
+	jacquie_step:=10;
+	deca_spi_A<=TZXBlock_A;
+	deca_spi_Rdo<='1';
+	jacquie_do_s<='1';
+when 10=> -- block
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_count<=x"000" & lastbyte;-- conv_std_logic_vector(lastbyte,jacquie_count'length);
+	-- first one byte readen, and sent to JACQUIE_PHASE_BLOCK, data_length=512
+	jacquie_byte<=spi_Din;
+	jacquie_length<=conv_std_logic_vector(datalen,jacquie_length'length);
+	-- data_length for next step is sure 511
+	datalen:=datalen-1;
+	jacquie_step:=11;
+	TZXBlock_A:=TZXBlock_A+1;
+	deca_spi_A<=TZXBlock_A;
+	deca_spi_Rdo<='1';
+	jacquie_do_s<='1';
+--		--11
+--		--15 08 00
+--		if debug_no_block=3 then
+--			if datalen/=2069-1 then
+--				jacquie_step:=20;
+--			elsif spi_Din/=x"16" then
+--				jacquie_step:=21;
+--			end if;
+--		end if;
+when 11=>  -- then BYTE[N]
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK_CONTINUE,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	
+	-- second byte readen, and sent to JACQUIE_PHASE_BLOCK_CONTINUE, data_length=511=>510
+	jacquie_byte<=spi_Din;
+	if datalen=1 then
+		if pause>0 then
+			-- NO : goto end-of-block signal + pause
+			-- goto pause
+			jacquie_step:=12;
+			-- but sure got to move because i'm currently face to a data byte.
+			TZXBlock_A:=TZXBlock_A+1;
+		else
+			-- but sure got to move because i'm currently face to a data byte.
+			TZXBlock_A:=TZXBlock_A+1;
+			deca_spi_A<=TZXBlock_A;
+			deca_spi_Rdo<='1';
+			jacquie_step:=2; -- next block ID
+		end if;
+	else
+		TZXBlock_A:=TZXBlock_A+1;
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
+	end if;
+	jacquie_do_s<='1';
+
+-- Afteroids
+--20 5C 2D pause
+--         11
+--08 XX XX 07 01 00
+--		if debug_no_block=2 and datalen=1 and spi_Din/=x"FF" then
+--			jacquie_step:=22;
+--		end if;
+--         11
+--01 XX XX 08 01 00
+--		if debug_no_block=3 and datalen=1 and spi_Din/=x"00" then
+--			jacquie_step:=23;
+--		end if;
+--         11
+--08 XX XX 07 01 00
+--		if debug_no_block=4 and datalen=1 and spi_Din/=x"FF" then
+--			jacquie_step:=24;
+--		end if;
+--         11
+--08 XX XX 09 02 00
+--		if debug_no_block=5 and datalen=1 and spi_Din/=x"FF" then
+--			jacquie_step:=25;
+--		end if;
+--         11
+--08 XX XX 02 40 00
+--		if debug_no_block=6 and datalen=1 and spi_Din/=x"65" then
+--			jacquie_step:=26;
+--		end if;
+--         11
+--08 XX XX F7 B3
+--		if debug_no_block=7 and datalen=1 and spi_Din/=x"D5" then
+--			jacquie_step:=27;
+--		end if;
+--fin de la cassette
+	
+	-- data_length for next step is sure 511
+	datalen:=datalen-1;
+--when 31=>
+--	-- end of block : one pulse only, of 1ms.
+--	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+--	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+--	-- 1ms @ 4MHz : 4000 or x"0FA0"
+--	jacquie_length<=x"0FA0"; -- 1ms
+--	jacquie_do_s<='1';
+--	-- but sure got to move because i'm currently face to a data byte.
+--	TZXBlock_A:=TZXBlock_A+1;
+--	-- goto pause
+--	if pause>0 then
+--		jacquie_step:=12;
+--	else
+--		deca_spi_A<=TZXBlock_A;
+--		deca_spi_Rdo<='1';
+--		jacquie_step:=2; -- next block
+--	end if;
+when 12=>
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PAUSE,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(pause,8*3);
+	-- inconsistent pause : so no A++ by here.
+	deca_spi_A<=TZXBlock_A;
+	deca_spi_Rdo<='1';
+	jacquie_step:=2; -- next block ID
+	jacquie_do_s<='1';
+when 13=> -- then WORD[N] -- cas x"13"
+	params(8*2-1 downto 8):=spi_Din;
+	TZXBlock_A:=TZXBlock_A+1;
+	deca_spi_A<=TZXBlock_A;
+	deca_spi_Rdo<='1';
+	jacquie_step:=14;
+when 14=>
+	params(8-1 downto 0):=spi_Din;
+	sb_pilot:=conv_integer(params(8*2-1 downto 0));
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
+	jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
+	jacquie_do_s<='1';
+	if datalen=1 then
+		TZXBlock_A:=TZXBlock_A+1;
+		deca_spi_Rdo<='1';
+		jacquie_step:=2; -- next block ID
+	else
+		TZXBlock_A:=TZXBlock_A+1;
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
+		jacquie_step:=13;
+	end if;
+	datalen:=datalen-1;
+when 15=> id:=spi_Din; -- fuck 15
+when 16=> id:=conv_std_logic_vector(pilot,16)(7 downto 0); -- fuck 16
+when 17=> NULL; -- fuck 17
+when 18=> NULL; -- fuck 18
+when 19=> id:=conv_std_logic_vector(sb_bit1,16)(15 downto 8); -- fuck 19
+when 20=> -- fuck 20 block 3 debut datalen KO
+	id:=conv_std_logic_vector(datalen,16)(15 downto 8);
+when 21=> NULL; -- fuck 21 block 3 debut byte KO
+
+when 22=> id:=spi_Din; -- fuck 22 block 2 fin KO
+when 23=> NULL; -- fuck 23 block 3 fin KO
+when 24=> NULL; -- fuck 24 block 4 fin KO
+when 25=> NULL; -- fuck 25 block 5 fin KO
+when 26=> NULL; -- fuck 26 block 6 fin KO
+when 27=> NULL; -- fuck 27 block 7 fin KO
+
+when 28=> NULL; -- fuck 28
+when 29=> NULL; -- fuck 29
+--when 30=> NULL; -- fuck 30
+				end case;
 			end if;
 		end if;
-	end process jacquie;
+	end if;
+end process jacquie;
 
 end Behavioral;

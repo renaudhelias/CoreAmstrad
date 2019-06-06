@@ -94,14 +94,14 @@ entity FPGAmstrad_bootloader_sd is
 
 -- simpleCDT interface
 			  jacquie_phase : out STD_LOGIC_VECTOR(2 downto 0);
-			  jacquie_length : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_length : out STD_LOGIC_VECTOR(8*3-1 downto 0); -- data_length or pulse_length or pause_length
 			  jacquie_count : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count
 			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : out STD_LOGIC;
 			  jacquie_done : in STD_LOGIC;
-			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0);
 			  
-			  --leds8_debug:out std_logic_vector(19 downto 0)
+			  leds8_debug:out std_logic_vector(19 downto 0)
 			 );
 end FPGAmstrad_bootloader_sd;
 
@@ -209,14 +209,14 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 
 -- simpleCDT interface
 			  jacquie_phase : out STD_LOGIC_VECTOR(2 downto 0);
-			  jacquie_length : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- data_length or pulse_length or pause_length
+			  jacquie_length : out STD_LOGIC_VECTOR(8*3-1 downto 0); -- data_length or pulse_length or pause_length
 			  jacquie_count : out STD_LOGIC_VECTOR(8*2-1 downto 0); -- pulse count
 			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : out STD_LOGIC;
 			  jacquie_done : in STD_LOGIC;
-			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0);
 			  
-			  --leds8_debug:out std_logic_vector(19 downto 0)
+			  leds8_debug:out std_logic_vector(19 downto 0)
 			  );
    end component;
    
@@ -301,9 +301,9 @@ begin
 			  jacquie_byte=>jacquie_byte,
 			  jacquie_do=>jacquie_do,
 			  jacquie_done=>jacquie_done,
-			  jacquie_no_block=>jacquie_no_block
+			  jacquie_no_block=>jacquie_no_block,
 			  
-			  --leds8_debug=>leds8_debug
+			  leds8_debug=>leds8_debug
 					 );
    
 ram_W_n<=not(XLXN_94);

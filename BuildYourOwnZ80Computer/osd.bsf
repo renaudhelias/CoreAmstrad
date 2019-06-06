@@ -20,9 +20,9 @@ applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 232 224)
+	(rect 16 16 256 256)
 	(text "osd" (rect 5 0 19 12)(font "Arial" ))
-	(text "inst" (rect 8 192 20 204)(font "Arial" ))
+	(text "inst" (rect 8 224 20 236)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -94,25 +94,39 @@ applicable agreement for further details.
 		(line (pt 0 176)(pt 16 176)(line_width 1))
 	)
 	(port
-		(pt 216 32)
+		(pt 0 192)
+		(input)
+		(text "leds8_debug1[19..0]" (rect 0 0 76 12)(font "Arial" ))
+		(text "leds8_debug1[19..0]" (rect 21 187 97 199)(font "Arial" ))
+		(line (pt 0 192)(pt 16 192)(line_width 3))
+	)
+	(port
+		(pt 0 208)
+		(input)
+		(text "leds8_debug2[19..0]" (rect 0 0 77 12)(font "Arial" ))
+		(text "leds8_debug2[19..0]" (rect 21 203 98 215)(font "Arial" ))
+		(line (pt 0 208)(pt 16 208)(line_width 3))
+	)
+	(port
+		(pt 240 32)
 		(output)
 		(text "red_out[5..0]" (rect 0 0 50 12)(font "Arial" ))
-		(text "red_out[5..0]" (rect 145 27 195 39)(font "Arial" ))
-		(line (pt 216 32)(pt 200 32)(line_width 3))
+		(text "red_out[5..0]" (rect 169 27 219 39)(font "Arial" ))
+		(line (pt 240 32)(pt 224 32)(line_width 3))
 	)
 	(port
-		(pt 216 48)
+		(pt 240 48)
 		(output)
 		(text "green_out[5..0]" (rect 0 0 60 12)(font "Arial" ))
-		(text "green_out[5..0]" (rect 135 43 195 55)(font "Arial" ))
-		(line (pt 216 48)(pt 200 48)(line_width 3))
+		(text "green_out[5..0]" (rect 159 43 219 55)(font "Arial" ))
+		(line (pt 240 48)(pt 224 48)(line_width 3))
 	)
 	(port
-		(pt 216 64)
+		(pt 240 64)
 		(output)
 		(text "blue_out[5..0]" (rect 0 0 53 12)(font "Arial" ))
-		(text "blue_out[5..0]" (rect 142 59 195 71)(font "Arial" ))
-		(line (pt 216 64)(pt 200 64)(line_width 3))
+		(text "blue_out[5..0]" (rect 166 59 219 71)(font "Arial" ))
+		(line (pt 240 64)(pt 224 64)(line_width 3))
 	)
 	(parameter
 		"OSD_X_OFFSET"
@@ -130,7 +144,7 @@ applicable agreement for further details.
 		""
 		(type "PARAMETER_UNSIGNED_BIN")	)
 	(drawing
-		(rectangle (rect 16 16 200 192)(line_width 1))
+		(rectangle (rect 16 16 224 224)(line_width 1))
 	)
-	(annotation_block (parameter)(rect 232 -64 332 16))
+	(annotation_block (parameter)(rect 256 -64 356 16))
 )

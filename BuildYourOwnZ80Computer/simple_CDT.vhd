@@ -236,7 +236,7 @@ begin
 		--leds8_debug(19 downto 12)<=debug;
 		
 		
-		if cassette_motor='1' and not(play_push) and not(play_push_done) then
+		if cassette_motor='1' and (play_push or (not(play_push) and not(play_push_done))) then
 			case pulse_step is
 				when 1=>
 					cassette_output<=pulse_value;

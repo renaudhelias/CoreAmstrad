@@ -219,7 +219,8 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	
 	signal jacquie_changeCDT_do:boolean:=false;
 	signal jacquie_changeCDT_done:boolean:=true;
-	signal jacquie_addr:std_logic_vector(40 downto 0):=(others=>'0');
+	signal jacquie_addr_from:std_logic_vector(40 downto 0):=(others=>'0');
+	signal jacquie_addr_size:std_logic_vector(31 downto 0):=(others=>'0');
 	signal deca_spi_A:STD_LOGIC_VECTOR(40 downto 0);
 	signal deca_spi_Dout:std_logic_vector(ram_Dout'range):=(others=>'0');
 	signal deca_spi_Rdo:std_logic:='0';
@@ -1028,9 +1029,10 @@ begin
 	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_MECASHARK;
 end;
 
-procedure loadCDT(address_dsk:std_logic_vector(40 downto 0)) is
+procedure loadCDT(address_from:std_logic_vector(40 downto 0);address_size:std_logic_vector(31 downto 0)) is
 begin
-	jacquie_addr<=address_dsk;
+	jacquie_addr_from<=address_from;
+	jacquie_addr_size<=address_size;
 	jacquie_changeCDT_do<=true;
 	switch_br_compare_transmit_dump_mecashark_jacquie<=SWITCH_jacquie;
 end;
@@ -1476,7 +1478,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 							loadDSK(file_sector_pointer, false); -- can be a CAFE or else first root disk
 							step_var:=60;
 						elsif doCDT then
-							loadCDT(file_sector_pointer); -- can be a CAFE or else first root disk
+							loadCDT(file_sector_pointer, file_size); -- can be a CAFE or else first root disk
 							step_var:=60;
 						else
 							if file_size>conv_std_logic_vector(conv_integer(BPB_SecPerClus)*conv_integer(BPB_BytsPerSec),32) then
@@ -1670,7 +1672,7 @@ if not(data_Rdo) and not(data_Wdo) and data_RWdone and not(transmit_do) and tran
 						--===============================================================================--
 						
 						if checkCDT(extension_name_OSD) then
-							loadCDT(file_sector_pointer);
+							loadCDT(file_sector_pointer, file_size);
 							step_var:=21;
 							doCDT:=true;
 						else
@@ -2915,9 +2917,10 @@ end if;
 jacquie:process(CLK) is
 	variable jacquie_step:integer range 0 to 30:=0;
 	variable is_overrun:boolean:=false;
-	variable jacquie_addr_memTape:std_logic_vector(jacquie_addr'range):=(others=>'0');
-	variable TZXHeader_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
-	variable TZXBlock_A:std_logic_vector(jacquie_addr'range):=(others=>'0');
+	variable jacquie_addr_from_memTape:std_logic_vector(jacquie_addr_from'range):=(others=>'0');
+	variable jacquie_addr_size_memTape:std_logic_vector(jacquie_addr_size'range):=(others=>'0');
+	variable TZXHeader_A:std_logic_vector(jacquie_addr_from'range):=(others=>'0');
+	variable TZXBlock_A:std_logic_vector(jacquie_addr_from'range):=(others=>'0');
 	
 	variable id : std_logic_vector(7 downto 0):=x"00";
 	variable params_length:integer;
@@ -2996,8 +2999,9 @@ begin
 			if not(deca_spi_Rdo='1') and spi_Rdone='1'  then
 				case jacquie_step is
 when 0=> -- 0x00 "ZXTape!"
-	jacquie_addr_memTape:=jacquie_addr; -- goto x07
-	TZXHeader_A:=jacquie_addr_memTape+(PREFIX & x"00000007"); -- goto x07
+	jacquie_addr_from_memTape:=jacquie_addr_from; -- goto x07
+	jacquie_addr_size_memTape:=jacquie_addr_size;
+	TZXHeader_A:=jacquie_addr_from_memTape+(PREFIX & x"00000007"); -- goto x07
 	deca_spi_A<=TZXHeader_A;
 	deca_spi_Rdo<='1';
 	jacquie_step:=1;
@@ -3017,6 +3021,9 @@ when 2=> -- TZX Block ID
 	--et principalement des blocks (et leur parmetre avant)
 	has_BYTE_N:=false;
 	has_WORD_N:=false;
+	if TZXBlock_A >= jacquie_addr_from_memTape+jacquie_addr_size_memTape then -- GLUE to attach two ZX tape file, Problem next tape begin with ZX
+		id:=x"FF"; -- BOUM end of tape
+	end if;
 	if id=x"10" then
 		params_length:=4+1; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
 		has_BYTE_N:=true;
@@ -3185,8 +3192,8 @@ when 4=>
 		-- 11
 		-- 15 08 00 => 000815h length
 		
-		--jacquie_addr_memTape:=TZXBlock_A+(PREFIX & x"00000001"); -- goto Block content
-		--meca_spi_A<=jacquie_addr_memTape;
+		--jacquie_addr_from_memTape:=TZXBlock_A+(PREFIX & x"00000001"); -- goto Block content
+		--meca_spi_A<=jacquie_addr_from_memTape;
 		--meca_spi_Rdo<='1';
 		--jacquie_step:=3;
 		

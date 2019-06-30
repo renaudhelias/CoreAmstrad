@@ -58,6 +58,11 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --Usually single sided 40 Track 3" disk drives are used in CPCs, whereas 40 tracks is the official specification, practically 42 tracks could be used (the limit is specific to the FDD, some support more tracks. 42 is a good maximum). The FDC controller can be used to control 80 tracks, and/or double sided drives also, even though AMSDOS isn't supporting such formats. AMSDOS is supporting a maximum of two disk drives only. 
 
 entity simple_CDT is
+    Generic (
+	 -- 8/7=4000/3500
+           SPEED_MULT : integer:=8;
+           SPEED_DIV : integer:=7
+	 );
     Port ( nCLK4_1 : in  STD_LOGIC;
            reset : in STD_LOGIC;
 
@@ -85,12 +90,13 @@ end simple_CDT;
 architecture Behavioral of simple_CDT is
 
 	constant JACQUIE_PHASE_PILOT:integer:=0;
-	constant JACQUIE_PHASE_PULSE:integer:=1; -- SYNC1 or SYNC2 or several distinct PULSE
+	constant JACQUIE_PHASE_HALFPULSE:integer:=1; -- SYNC1 or SYNC2 or several distinct HALF PULSE
 	constant JACQUIE_PHASE_BIT0 :integer:=2;
 	constant JACQUIE_PHASE_BIT1 :integer:=3;
 	constant JACQUIE_PHASE_BLOCK:integer:=4;
 	constant JACQUIE_PHASE_BLOCK_CONTINUE:integer:=5;
 	constant JACQUIE_PHASE_PAUSE:integer:=6;
+	constant JACQUIE_PHASE_PULSE:integer:=7;
 	
 	signal play_push:boolean:=false;
 	signal play_push_done:boolean:=true;
@@ -243,7 +249,7 @@ begin
 					pulse_length:=pulse_length-1;
 					pulse_inc:=pulse_inc+1;
 					if pulse_inc>pulse_jump then
-						if pulse_sinus_pos<255 then
+						if pulse_sinus_pos<128 then
 							pulse_sinus_pos:=pulse_sinus_pos+1;
 						end if;
 						pulse_inc:=0;
@@ -302,19 +308,23 @@ begin
 			--else
 				debug_no_block:=conv_integer(jacquie_no_block);
 				if CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BIT0 then
-					sb_bit0:=CONV_INTEGER(jacquie_length);
+					sb_bit0:=(SPEED_MULT*CONV_INTEGER(jacquie_length))/SPEED_DIV;
 					jacquie_done_s<='1';
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BIT1 then
-					sb_bit1:=CONV_INTEGER(jacquie_length);
+					sb_bit1:=(SPEED_MULT*CONV_INTEGER(jacquie_length))/SPEED_DIV;
 					jacquie_done_s<='1';
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PILOT then
-					sb_pilot:=CONV_INTEGER(jacquie_length);
+					sb_pilot:=(SPEED_MULT*CONV_INTEGER(jacquie_length))/SPEED_DIV;
 					pilot:=CONV_INTEGER(jacquie_count);
 					block_step:=0;
 					jacquie_done_s<='0';
-				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PULSE then
-					sb_pilot:=CONV_INTEGER(jacquie_length);
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_HALFPULSE then
+					sb_pilot:=(SPEED_MULT*CONV_INTEGER(jacquie_length))/SPEED_DIV;
 					block_step:=2;
+					jacquie_done_s<='0';
+				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PULSE then
+					sb_pilot:=(SPEED_MULT*CONV_INTEGER(jacquie_length))/SPEED_DIV;
+					block_step:=6;
 					jacquie_done_s<='0';
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BLOCK then
 					data_length:=CONV_INTEGER(jacquie_length);
@@ -401,7 +411,7 @@ play_value<='0';
 					play_output<=sb_pilot;
                --output.toggleAmp();
 play_toggle<=true;
-play_value<='1';
+--play_value<='1';
 					play_push<=true;
                --}
 					jacquie_done_s<='1';
@@ -418,10 +428,10 @@ play_value<='1';
 					
 					if jacquie_byte(data_bit)='0' then
 						play_output<=sb_bit0;
-						play_value<='0'; -- usefull for cassette_output
+						--play_value<='0'; -- usefull for cassette_output
 					else
 						play_output<=sb_bit1;
-						play_value<='1'; -- usefull for cassette_output
+						--play_value<='1'; -- usefull for cassette_output
 					end if;
 					play_push<=true;
 					play_toggle<=true;
@@ -515,8 +525,21 @@ play_value<='0'; --play_value;
 						play_push<=true;
 						data_length:=data_length-1;
 					end if;
-				when 6=>NULL; -- fuck 6 block 2 KO
-				when 7=>NULL; -- fuck 7 block 3 KO
+				when 6=> -- One 'half-period' will also be referred to as a 'pulse'.
+					play_output<=sb_pilot;
+               --output.toggleAmp();
+play_toggle<=true;
+--play_value<='1';
+					play_push<=true;
+					jacquie_done_s<='1';
+					block_step:=7;
+				when 7=> NULL;-- fuck 7 block 3 KO
+					play_output<=sb_pilot;
+               --output.toggleAmp();
+play_toggle<=true;
+--play_value<='1';
+					play_push<=true;
+					jacquie_done_s<='1';
 				when 8=>NULL; -- fuck 8 block 4 KO
 				when 9=>NULL; -- fuck 9 block 5 KO
 				when 10=>NULL; -- fuck 10 block 6 KO

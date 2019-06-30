@@ -228,12 +228,13 @@ architecture Behavioral of SDRAM_FAT32_LOADER is
 	signal jacquie_do_s:std_logic:='0';
 
 	constant JACQUIE_PHASE_PILOT:integer:=0;
-	constant JACQUIE_PHASE_PULSE:integer:=1; -- SYNC1 or SYNC2 or several distinct PULSE
+	constant JACQUIE_PHASE_HALFPULSE:integer:=1; -- SYNC1 or SYNC2 or several distinct PULSE
 	constant JACQUIE_PHASE_BIT0 :integer:=2;
 	constant JACQUIE_PHASE_BIT1 :integer:=3;
 	constant JACQUIE_PHASE_BLOCK:integer:=4;
 	constant JACQUIE_PHASE_BLOCK_CONTINUE:integer:=5;
 	constant JACQUIE_PHASE_PAUSE:integer:=6;
+	constant JACQUIE_PHASE_PULSE:integer:=7;
 	
 	
 	signal key_reset_space:std_logic:='0';
@@ -2954,13 +2955,23 @@ jacquie:process(CLK) is
 --	constant NORMAL_PILOT_PULSES : integer := 4096;
 	
 	-- JavaCPC
-	constant NORMAL_PILOT_LEN    : integer := 8064;
-	constant NORMAL_PILOT_LEN2    : integer := 3220;
+--	constant NORMAL_PILOT_LEN    : integer := 8064;
+--	constant NORMAL_PILOT_LEN2    : integer := 3220;
+--	constant NORMAL_SYNC1_LEN    : integer := 667;
+--	constant NORMAL_SYNC2_LEN    : integer := 735;
+--	constant NORMAL_ZERO_LEN     : integer := 855;
+--	constant NORMAL_ONE_LEN      : integer := 1710;
+--	constant NORMAL_PILOT_PULSES : integer := 2168;
+
+	-- ZX
+	constant NORMAL_PILOT_PULSES : integer := 2168;
 	constant NORMAL_SYNC1_LEN    : integer := 667;
 	constant NORMAL_SYNC2_LEN    : integer := 735;
 	constant NORMAL_ZERO_LEN     : integer := 855;
 	constant NORMAL_ONE_LEN      : integer := 1710;
-	constant NORMAL_PILOT_PULSES : integer := 2168;
+	constant NORMAL_PILOT_LEN    : integer := 8063;
+	constant NORMAL_PILOT_LEN2    : integer := 3223;
+
 begin
 	if rising_edge(CLK) then
 	
@@ -3136,7 +3147,7 @@ when 4=>
 		--datalen = get2(inpbuf, data + 2);
 		datalen:=conv_integer(params(8*4-1 downto 8*2));
 		--data += 4;
-		
+		params_length:=4; -- NOT 4+1 FINALLY
 
 
 		
@@ -3241,6 +3252,7 @@ when 4=>
 		sb_pilot:=CONV_INTEGER(params(8*2-1 downto 0));
 		--pilot = get2(inpbuf, data + 2);
 		pilot:=CONV_INTEGER(params(8*4-1 downto 8*2));
+		--has_BYTE_N:=false; by default
 	elsif id=x"13" then
 		--ID:13 - Sequence of pulses of different length
 		--This block MUST be supported and CAN exist in a CDT.
@@ -3354,7 +3366,9 @@ when 4=>
 		-- skip : OK
 	end if;
 	
+	
 	TZXBlock_A:=TZXBlock_A + 1 + params_length + params_zap; -- jump next block of begin of BLOCK content
+	
 	--if has_BYTE_N then
 	--	jacquie_step:=5;
 	--elsif has_WORD_N then
@@ -3364,8 +3378,11 @@ when 4=>
 	--end if;
 	
 	--if params_length=params_length_more_than_max then
-	
-	jacquie_step:=5; -- sb_bit0  + sb_bit1 for everybody !
+	if has_BYTE_N then
+		jacquie_step:=5; -- sb_bit0  + sb_bit1 for everybody !
+	else
+		jacquie_step:=30;
+	end if;
 	
 when 5=>
 	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BIT0,jacquie_phase'length);
@@ -3418,11 +3435,13 @@ when 7=> --while (pilot > 0) {
 		jacquie_step:=8;
 	else
 		-- certainement id=x"12"
+		deca_spi_A<=TZXBlock_A;
+		deca_spi_Rdo<='1';
 		jacquie_step:=2; -- next block ID
 	end if;
 	jacquie_do_s<='1';
 when 8=> --if (sb_sync1 > 0) {
-	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_HALFPULSE,jacquie_phase'length);
 	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
 	jacquie_length<=conv_std_logic_vector(sb_sync1,jacquie_length'length);
 	if sb_sync2>0 then
@@ -3432,7 +3451,7 @@ when 8=> --if (sb_sync1 > 0) {
 	end if;
 	jacquie_do_s<='1';
 when 9=> --if (sb_sync2 > 0) {
-	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_HALFPULSE,jacquie_phase'length);
 	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
 	jacquie_length<=conv_std_logic_vector(sb_sync2,jacquie_length'length);
 	jacquie_step:=10;
@@ -3527,7 +3546,7 @@ when 11=>  -- then BYTE[N]
 	datalen:=datalen-1;
 --when 31=>
 --	-- end of block : one pulse only, of 1ms.
---	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
+--	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_HALFPULSE,jacquie_phase'length);
 --	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
 --	-- 1ms @ 4MHz : 4000 or x"0FA0"
 --	jacquie_length<=x"0FA0"; -- 1ms
@@ -3552,13 +3571,13 @@ when 12=>
 	jacquie_step:=2; -- next block ID
 	jacquie_do_s<='1';
 when 13=> -- then WORD[N] -- cas x"13"
-	params(8*2-1 downto 8):=spi_Din;
+	params(8-1 downto 0):=spi_Din;
 	TZXBlock_A:=TZXBlock_A+1;
 	deca_spi_A<=TZXBlock_A;
 	deca_spi_Rdo<='1';
 	jacquie_step:=14;
 when 14=>
-	params(8-1 downto 0):=spi_Din;
+	params(8*2-1 downto 8):=spi_Din;
 	sb_pilot:=conv_integer(params(8*2-1 downto 0));
 	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_PULSE,jacquie_phase'length);
 	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
@@ -3566,9 +3585,11 @@ when 14=>
 	jacquie_do_s<='1';
 	if datalen=1 then
 		TZXBlock_A:=TZXBlock_A+1;
+		deca_spi_A<=TZXBlock_A;
 		deca_spi_Rdo<='1';
 		jacquie_step:=2; -- next block ID
 	else
+		datalen:=datalen-1;
 		TZXBlock_A:=TZXBlock_A+1;
 		deca_spi_A<=TZXBlock_A;
 		deca_spi_Rdo<='1';

@@ -2941,7 +2941,7 @@ jacquie:process(CLK) is
 	variable pilot:integer;
 	variable lastbyte:std_logic_vector(4-1 downto 0):=x"8";
 	variable pause:integer;
-	variable datalen:integer;
+	variable datalen:std_logic_vector(23 downto 0);
 	
 	variable debug_no_block:integer:=0;
 	
@@ -3036,9 +3036,11 @@ when 2=> -- TZX Block ID
 		id:=x"FF"; -- BOUM end of tape
 	end if;
 	if id=x"10" then
+		--analyseID10...Standard Loading Data block
 		params_length:=4+1; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
 		has_BYTE_N:=true;
 	elsif id=x"11" then
+		--analyseID11...Custom Loading Data block
 		params_length:=18; -- words,byte,word,byte[3], then BYTE[N]
 		has_BYTE_N:=true;
 		
@@ -3046,14 +3048,18 @@ when 2=> -- TZX Block ID
 		--jacquie_step:=17;
 		
 	elsif id=x"12" then
+		--analyseID12...Pure Tone
 		params_length:=4; -- 2 words
 	elsif id=x"13" then
+		--analyseID13...Sequence of Pulses
 		params_length:=1; -- 1 byte, then WORD[N]
 		has_WORD_N:=true;
 	elsif id=x"14" then
+		--analyseID14...Pure Data
 		params_length:=10; -- word,word,byte,word,byte[3], then BYTE[N]
 		has_BYTE_N:=true;
 	elsif id=x"15" then -- EAR
+		--analyseID15...Direct Recording
 		params_length:=8; -- word,word,byte,byte[3], then BYTE[N]
 		has_BYTE_N:=true;
 	elsif id=x"20" then
@@ -3131,9 +3137,10 @@ when 3=>
 	end if;
 when 4=>
 	pilot:=0;
+	sb_pilot:=0;
 	sb_sync1:=0;
 	sb_sync2:=0;
-	datalen:=0;
+	datalen:=(others=>'0');
 	pause:=0;
 
 	params_zap:=0;
@@ -3145,7 +3152,7 @@ when 4=>
 		--pause = get2(inpbuf, data);
 		pause:=conv_integer(params(8*2-1 downto 0));
 		--datalen = get2(inpbuf, data + 2);
-		datalen:=conv_integer(params(8*4-1 downto 8*2));
+		datalen:=x"00" & params(8*4-1 downto 8*2);
 		--data += 4;
 		params_length:=4; -- NOT 4+1 FINALLY
 
@@ -3230,7 +3237,7 @@ when 4=>
 		--pause = get2(inpbuf, data + 13);
 		pause:=CONV_INTEGER(params(8*15-1 downto 8*13));
 		--datalen = get3(inpbuf, data + 15);
-		datalen:=CONV_INTEGER(params(8*18-1 downto 8*15));
+		datalen:=params(8*18-1 downto 8*15);
 		
 		
 		
@@ -3262,7 +3269,7 @@ when 4=>
 		--Details and functionality of this block are the same as described in the official TZX/CDT specification.
 		
 		--pilot = (int) inpbuf[data + 0];
-		datalen:=CONV_INTEGER(params(8*2-1 downto 0));
+		datalen(7 downto 0):=params(8-1 downto 0);
 	elsif id=x"14" then
 		--ID:14 - Pure Data Block
 		--This block MUST be supported and CAN exist in a CDT.
@@ -3286,7 +3293,7 @@ when 4=>
 		--pause = get2(inpbuf, data + 5);
 		pause:=CONV_INTEGER(params(8*7-1 downto 8*5));
 		--datalen = get3(inpbuf, data + 7);
-		datalen:=CONV_INTEGER(params(8*9-1 downto 8*7));
+		datalen:=params(8*10-1 downto 8*7);
 	elsif id=x"15" then
 		--ID:15 - Direct Recording
 		--This block MUST be supported but SHOULD be avoided when creating a CDT by a sample-to-CDT converter. This block can be used by emulators to support writing to CDTs.
@@ -3299,7 +3306,10 @@ when 4=>
 		
 		--FIXME : il est ou le bout de code ici ? (finalement c'est pas un enregistrement, mais une voie enregistre)
 		-- Number of T-states per sample (bit of data)
-		pilot:=CONV_INTEGER(params(8*2-1 downto 0));
+		sb_bit0:=CONV_INTEGER(params(8*2-1 downto 0));
+		sb_bit1:=sb_bit0;
+		-- if sb_bit1==sb_bit0 then Direct Recording
+		
 		--pause = get2(inpbuf, data + 2);
 		pause:=CONV_INTEGER(params(8*4-1 downto 8*2));
 		-- Used bits (samples) in last byte of data (1-8)
@@ -3308,7 +3318,7 @@ when 4=>
 		lastbyte:=params(8*5-1-4 downto 8*4);
 		--Length of samples' data
 		--datalen = get3(inpbuf, data + 5);
-		datalen:=CONV_INTEGER(params(8*7-1 downto 8*5));
+		datalen:=params(8*8-1 downto 8*5);
 		-- Samples data. Each bit represents a state on the EAR port (i.e. one sample).
 		-- MSb is played first.
 	elsif id=x"20" then
@@ -3464,7 +3474,7 @@ when 10=> -- block
 	jacquie_count<=x"000" & lastbyte;-- conv_std_logic_vector(lastbyte,jacquie_count'length);
 	-- first one byte readen, and sent to JACQUIE_PHASE_BLOCK, data_length=512
 	jacquie_byte<=spi_Din;
-	jacquie_length<=conv_std_logic_vector(datalen,jacquie_length'length);
+	jacquie_length<=datalen;
 	-- data_length for next step is sure 511
 	datalen:=datalen-1;
 	jacquie_step:=11;
@@ -3583,26 +3593,25 @@ when 14=>
 	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
 	jacquie_length<=conv_std_logic_vector(sb_pilot,jacquie_length'length);
 	jacquie_do_s<='1';
-	if datalen=1 then
+	if datalen(7 downto 0)=x"01" then
 		TZXBlock_A:=TZXBlock_A+1;
 		deca_spi_A<=TZXBlock_A;
 		deca_spi_Rdo<='1';
 		jacquie_step:=2; -- next block ID
 	else
-		datalen:=datalen-1;
+		datalen(7 downto 0):=datalen(7 downto 0)-1;
 		TZXBlock_A:=TZXBlock_A+1;
 		deca_spi_A<=TZXBlock_A;
 		deca_spi_Rdo<='1';
 		jacquie_step:=13;
 	end if;
-	datalen:=datalen-1;
 when 15=> id:=spi_Din; -- fuck 15
 when 16=> id:=conv_std_logic_vector(pilot,16)(7 downto 0); -- fuck 16
 when 17=> NULL; -- fuck 17
 when 18=> NULL; -- fuck 18
 when 19=> id:=conv_std_logic_vector(sb_bit1,16)(15 downto 8); -- fuck 19
-when 20=> -- fuck 20 block 3 debut datalen KO
-	id:=conv_std_logic_vector(datalen,16)(15 downto 8);
+when 20=> NULL;-- fuck 20 block 3 debut datalen KO
+	--id:=conv_std_logic_vector(datalen,16)(15 downto 8);
 when 21=> NULL; -- fuck 21 block 3 debut byte KO
 
 when 22=> id:=spi_Din; -- fuck 22 block 2 fin KO

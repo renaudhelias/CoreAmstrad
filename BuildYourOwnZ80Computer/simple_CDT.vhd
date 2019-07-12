@@ -289,13 +289,16 @@ michel:process(reset,nCLK4_1)
 	variable pilot:integer:=0;
 	variable last_byte:integer:=0; -- 0 to 8
 	variable data_bit:integer;
-	variable data_length:integer;
+	variable data_length:std_logic_vector(23 downto 0);
 	variable debug_no_block:integer;
+	variable begin_pause:boolean;
+	variable no_toggle:boolean:=true;
 	
 begin
 	if reset='1' then
 		play_push<=false;
 		jacquie_done_s<='1';
+		no_toggle:=true;
 	elsif rising_edge(nCLK4_1) then --CLK4
 		--// TZX file blocks analysis finished
       --// Now we start generating the sound waves
@@ -327,7 +330,7 @@ begin
 					block_step:=6;
 					jacquie_done_s<='0';
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_BLOCK then
-					data_length:=CONV_INTEGER(jacquie_length);
+					data_length:=jacquie_length;
 					data_bit:=7;
 					-- Used bits in the last byte (other bits should be 0) {8}
 					-- (e.g. if this is 6, then the bits used (x) in the last byte are: xxxxxx00, where MSb is the leftmost bit, LSb is the rightmost bit)
@@ -345,11 +348,12 @@ begin
 						jacquie_done_s<='0';
 					end if;
 				elsif CONV_INTEGER(jacquie_phase)=JACQUIE_PHASE_PAUSE then
-					data_length:=CONV_INTEGER(jacquie_length);
+					data_length:=jacquie_length;
 					-- 1ms @ 4MHz : 4000 or x"0FA0"
 					-- 4M -> 1s
 					-- 4k -> 1ms
 					sb_pilot:=4000; -- we wanna 1ms by here
+					begin_pause:=true;
 					block_step:=5;
 					jacquie_done_s<='0';
 				end if;
@@ -363,6 +367,9 @@ begin
 		
 		play_push<=false;
 		play_pause<=false;
+		if cassette_motor='0' then
+			no_toggle:=true;
+		end if;
 		if cassette_motor='1' and jacquie_done_s='0' and (play_push_done and not(play_push)) then
 			case block_step is
 				when 0=>NULL;
@@ -373,34 +380,20 @@ begin
                --output.play(sb_pilot);
 					play_output<=sb_pilot;
                --output.toggleAmp();
-play_toggle<=false;
-play_value<='1';
+					if no_toggle then
+						play_value<='0';
+						no_toggle:=false;
+						play_toggle<=false;
+					else
+						play_toggle<=true;
+					end if;
 					play_push<=true;
 					pilot:=pilot-1;
 					if pilot=0 then
 						jacquie_done_s<='1';
-					else
-						block_step:=1;
 					end if;
 					
-				when 1=>
-					-- ZX : sequence of 8063 (header) or 3223 (data) pulses, each of length 2168 T-states.
-				
-               --// Play PILOT TONE
-               --while (pilot > 0) {
-               --output.play(sb_pilot);
-					play_output<=sb_pilot;
-               --output.toggleAmp();
---CDT2WAVBaseOutput.java default value amp = LOAMP
-play_toggle<=true; -- do toggle until pilot=0
-play_value<='0';
-					play_push<=true;
-					--pilot--;
-					pilot:=pilot-1;
-               --}
-					if pilot=0 then
-						jacquie_done_s<='1';
-					end if;
+				when 1=>NULL;
 				when 2=>
                --// Play first SYNC pulse
 					--// Play second SYNC pulse
@@ -410,10 +403,17 @@ play_value<='0';
                --output.play(sb_sync2);
 					play_output<=sb_pilot;
                --output.toggleAmp();
-play_toggle<=true;
+					
+					if no_toggle then
+						play_value<='0';
+						no_toggle:=false;
+						play_toggle<=false;
+					else
+						play_toggle<=true;
+					end if;
 --play_value<='1';
 					play_push<=true;
-               --}
+               
 					jacquie_done_s<='1';
 				when 3=>
                --// Play actual DATA
@@ -425,16 +425,39 @@ play_toggle<=true;
 					--   7        XXXXXXX
 					--   6        XXXXXX
 					
-					
-					if jacquie_byte(data_bit)='0' then
-						play_output<=sb_bit0;
-						--play_value<='0'; -- usefull for cassette_output
+					if sb_bit0=sb_bit1 then
+						-- Direct Recording
+						play_toggle<=false;
+						no_toggle:=false;
+						--while (bitcount > 0) {
+	               --  output.setAmp((databyte & 0x80) != 0);
+						--  output.play(sb_pulse);
+						--  databyte <<= 1;
+						--  bitcount--;
+						if jacquie_byte(data_bit)='0' then
+							play_output<=sb_bit0;
+							play_value<='0';
+						else
+							play_output<=sb_bit0;
+							play_value<='1';
+						end if;
 					else
-						play_output<=sb_bit1;
-						--play_value<='1'; -- usefull for cassette_output
+						if no_toggle then
+							play_value<='0';
+							play_toggle<=false;
+							no_toggle:=false;
+						else
+							play_toggle<=true;
+						end if;
+						if jacquie_byte(data_bit)='0' then
+							play_output<=sb_bit0;
+							--play_value<='0'; -- usefull for cassette_output
+						else
+							play_output<=sb_bit1;
+							--play_value<='1'; -- usefull for cassette_output
+						end if;
 					end if;
 					play_push<=true;
-					play_toggle<=true;
 					
 -- Afteroids
 --20 5C 2D pause
@@ -477,10 +500,15 @@ play_toggle<=true;
 --					end if;
 				when 4=>
 					--// Play second pulse of the bit
-					play_toggle<=true;
-					play_value<=not(play_value);
+					if no_toggle then
+						play_value<='0';
+						play_toggle<=false;
+						no_toggle:=false;
+					else
+						play_toggle<=true;
+						--play_value<=not(play_value);
+					end if;
 					play_push<=true;
-					
 					
 --if debug_no_block=3 and data_length=1 then
 -- here last_byte is 01 using Afteroids
@@ -488,16 +516,14 @@ play_toggle<=true;
 --block_step:=12;
 					
 					----if bit_cnt = "000" or (data_len = 1 and ((bit_cnt = (8 - last_byte_bits)) or (last_byte_bits = 0))) then
-					if data_length=0 then
-						block_step:=12;
-					elsif data_length=1 and ((data_bit=(8-last_byte)) or (last_byte=0)) then
+					if data_length=x"000001" and ((data_bit=(8-last_byte)) or (last_byte=0)) then
 					--if debug_no_block=3 and data_length=1 then
 						-- end of block using last_byte!=8
 						jacquie_done_s<='1';
 						--block_step:=12;
 					else
 						data_bit:=(data_bit-1) mod 8;
-						if data_length=1 and (data_bit=7) then
+						if data_length=x"000001" and (data_bit=7) then
 							-- end of block
 							jacquie_done_s<='1';
 						elsif (data_bit=7) then
@@ -515,31 +541,44 @@ play_toggle<=true;
                --if (pause > 0) {
 					play_output<=sb_pilot;
 					play_toggle<=false;
+					no_toggle:=true;
 play_pause<=true;
 play_value<='0'; --play_value;
 					--play_toggle<=true;
 					--pilot:=pilot-1;
-					if data_length=0 then
+					if data_length=x"000000" then
 						jacquie_done_s<='1';
+					elsif begin_pause then
+						play_toggle<=true;
+						play_pause<=false;
+						play_push<=true;
+						begin_pause:=false;
+						data_length:=data_length-1;
 					else
 						play_push<=true;
 						data_length:=data_length-1;
 					end if;
 				when 6=> -- One 'half-period' will also be referred to as a 'pulse'.
 					play_output<=sb_pilot;
+					--block_step:=7;
                --output.toggleAmp();
-play_toggle<=true;
+					if no_toggle then
+						play_value<='0';
+						play_toggle<=false;
+						no_toggle:=false;
+					else
+						play_toggle<=true;
+					end if;
 --play_value<='1';
 					play_push<=true;
 					jacquie_done_s<='1';
-					block_step:=7;
-				when 7=> NULL;-- fuck 7 block 3 KO
-					play_output<=sb_pilot;
+				when 7=>NULL;-- fuck 7 block 3 KO
+					--play_output<=sb_pilot;
                --output.toggleAmp();
-play_toggle<=true;
---play_value<='1';
-					play_push<=true;
-					jacquie_done_s<='1';
+--play_toggle<=true;
+--play_value<='0';
+					--play_push<=true;
+					--jacquie_done_s<='1';
 				when 8=>NULL; -- fuck 8 block 4 KO
 				when 9=>NULL; -- fuck 9 block 5 KO
 				when 10=>NULL; -- fuck 10 block 6 KO

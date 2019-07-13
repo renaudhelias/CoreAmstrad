@@ -292,13 +292,10 @@ michel:process(reset,nCLK4_1)
 	variable data_length:std_logic_vector(23 downto 0);
 	variable debug_no_block:integer;
 	variable begin_pause:boolean;
-	variable no_toggle:boolean:=true;
-	
 begin
 	if reset='1' then
 		play_push<=false;
 		jacquie_done_s<='1';
-		no_toggle:=true;
 	elsif rising_edge(nCLK4_1) then --CLK4
 		--// TZX file blocks analysis finished
       --// Now we start generating the sound waves
@@ -367,9 +364,6 @@ begin
 		
 		play_push<=false;
 		play_pause<=false;
-		if cassette_motor='0' then
-			no_toggle:=true;
-		end if;
 		if cassette_motor='1' and jacquie_done_s='0' and (play_push_done and not(play_push)) then
 			case block_step is
 				when 0=>NULL;
@@ -380,13 +374,7 @@ begin
                --output.play(sb_pilot);
 					play_output<=sb_pilot;
                --output.toggleAmp();
-					if no_toggle then
-						play_value<='0';
-						no_toggle:=false;
-						play_toggle<=false;
-					else
-						play_toggle<=true;
-					end if;
+					play_toggle<=true;
 					play_push<=true;
 					pilot:=pilot-1;
 					if pilot=0 then
@@ -404,13 +392,7 @@ begin
 					play_output<=sb_pilot;
                --output.toggleAmp();
 					
-					if no_toggle then
-						play_value<='0';
-						no_toggle:=false;
-						play_toggle<=false;
-					else
-						play_toggle<=true;
-					end if;
+					play_toggle<=true;
 --play_value<='1';
 					play_push<=true;
                
@@ -428,7 +410,6 @@ begin
 					if sb_bit0=sb_bit1 then
 						-- Direct Recording
 						play_toggle<=false;
-						no_toggle:=false;
 						--while (bitcount > 0) {
 	               --  output.setAmp((databyte & 0x80) != 0);
 						--  output.play(sb_pulse);
@@ -442,13 +423,7 @@ begin
 							play_value<='1';
 						end if;
 					else
-						if no_toggle then
-							play_value<='0';
-							play_toggle<=false;
-							no_toggle:=false;
-						else
-							play_toggle<=true;
-						end if;
+						play_toggle<=true;
 						if jacquie_byte(data_bit)='0' then
 							play_output<=sb_bit0;
 							--play_value<='0'; -- usefull for cassette_output
@@ -500,14 +475,8 @@ begin
 --					end if;
 				when 4=>
 					--// Play second pulse of the bit
-					if no_toggle then
-						play_value<='0';
-						play_toggle<=false;
-						no_toggle:=false;
-					else
-						play_toggle<=true;
+					play_toggle<=true;
 						--play_value<=not(play_value);
-					end if;
 					play_push<=true;
 					
 --if debug_no_block=3 and data_length=1 then
@@ -541,7 +510,6 @@ begin
                --if (pause > 0) {
 					play_output<=sb_pilot;
 					play_toggle<=false;
-					no_toggle:=true;
 play_pause<=true;
 play_value<='0'; --play_value;
 					--play_toggle<=true;
@@ -562,13 +530,7 @@ play_value<='0'; --play_value;
 					play_output<=sb_pilot;
 					--block_step:=7;
                --output.toggleAmp();
-					if no_toggle then
-						play_value<='0';
-						play_toggle<=false;
-						no_toggle:=false;
-					else
-						play_toggle<=true;
-					end if;
+					play_toggle<=true;
 --play_value<='1';
 					play_push<=true;
 					jacquie_done_s<='1';

@@ -204,6 +204,7 @@ cassette_pulse:process(reset,nCLK4_1)
 begin
 	if reset='1' then
 		cassette_output<='0';
+		pulse_value:='0';
 		play_push_done<=true;
 		--debug:=x"00";
 		sound_generated<=x"80";
@@ -295,6 +296,8 @@ michel:process(reset,nCLK4_1)
 begin
 	if reset='1' then
 		play_push<=false;
+		play_pause<=false;
+		play_toggle<=false;
 		jacquie_done_s<='1';
 	elsif rising_edge(nCLK4_1) then --CLK4
 		--// TZX file blocks analysis finished
@@ -516,7 +519,7 @@ play_value<='0'; --play_value;
 					--pilot:=pilot-1;
 					if data_length=x"000000" then
 						jacquie_done_s<='1';
-					elsif begin_pause then
+					elsif begin_pause and data_length/=x"000001" then
 						play_toggle<=true;
 						play_pause<=false;
 						play_push<=true;
@@ -524,6 +527,7 @@ play_value<='0'; --play_value;
 						data_length:=data_length-1;
 					else
 						play_push<=true;
+						begin_pause:=false;
 						data_length:=data_length-1;
 					end if;
 				when 6=> -- One 'half-period' will also be referred to as a 'pulse'.

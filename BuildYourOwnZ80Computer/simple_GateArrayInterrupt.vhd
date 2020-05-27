@@ -122,7 +122,7 @@ entity simple_GateArrayInterrupt is
            int : out  STD_LOGIC:='0'; -- JavaCPC reset init
 			  M1_n : in  STD_LOGIC;
 			  MEM_RD:in std_logic;
-			  
+			  MEM_WR:in std_logic;
 			  -- Z80 4MHz and CRTC 1MHz are produced by GATE_ARRAY normally
 			  -- MA0/CCLK is produced by GATE_ARRAY and does feed Yamaha sound chip.
 			  -- WAIT<=WAIT_MEM_n and WAIT_n; -- MEM_WR and M1
@@ -1534,7 +1534,7 @@ constant latences_FDCB:LATENCE_ARRAY :=(
     253 => 0, -- "fd" UNDOCUMENTED
     255 => 0, -- "ff" UNDOCUMENTED
 others=>0);
-	
+	signal WAIT_n_3: std_logic:='1';
 	signal WAIT_n_0: std_logic:='1';
 	signal WAIT_n_0_ack: boolean:=false;
 	--signal WAIT_n_0_ackM1: std_logic:='1';
@@ -1567,7 +1567,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
-WAIT_n<=WAIT_n_0 and WAIT_n_1 when not(WAIT_n_0_ack) else WAIT_n_1;
+WAIT_n<=WAIT_n_3 when ga_shunt='0' else WAIT_n_0 and WAIT_n_1 when not(WAIT_n_0_ack) else WAIT_n_1;
 
 m1_process:process(reset,nCLK4_1) is
 	variable compteur1MHz:integer range 0 to 3:=0;
@@ -1603,6 +1603,15 @@ was_M1:=false;
 elsif rising_edge(nCLK4_1) then
 	--compteur1MHz:=compteur1MHz_signal;
 	compteur1MHz:=(compteur1MHz+1) mod 4;
+	
+	--.wait_n((phase == 0) | (IORQ_n & MREQ_n) | no_wait)
+	if compteur1MHz > 0 and (IO_REQ_R='1' or IO_REQ_W='1' or MEM_RD='1' or MEM_WR='1') then
+		WAIT_n_3<='0';
+	else
+		WAIT_n_3<='1';
+	end if;
+	
+	
 	
 		if WAIT_n_1='0' and WAIT_n_0='0' and not(WAIT_n_0_ack) then
 			-- conflit : WAIT_n_0 n'a servit à rien.

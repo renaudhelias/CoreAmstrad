@@ -538,6 +538,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
              IO_ACK        : in    std_logic; 
              M1_n          : in    std_logic; 
 				 MEM_RD        : in    std_logic;
+				 MEM_WR        : in    std_logic;
              reset         : in    std_logic; 
 				 crtc_type : in std_logic;
 				 ga_shunt : in std_logic;
@@ -869,6 +870,7 @@ end generate;
                 IO_REQ_R=>IO_RD,
                 IO_REQ_W=>IO_WR,
 					 MEM_RD=>MEM_RD,
+					 MEM_WR=>MEM_WR,
                 MODE_select(1 downto 0)=>XLXN_857(1 downto 0),
                 M1_n=>M1_n,
                 nCLK4_1=>nCLK4MHz,

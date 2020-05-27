@@ -2939,7 +2939,7 @@ jacquie:process(CLK) is
 	variable sb_bit0:integer;
 	variable sb_bit1:integer;
 	variable pilot:integer;
-	variable lastbyte:std_logic_vector(4-1 downto 0):=x"8";
+	variable lastbyte:std_logic_vector(7 downto 0):=x"08";
 	variable pause:integer;
 	variable datalen:std_logic_vector(23 downto 0);
 	
@@ -3037,7 +3037,7 @@ when 2=> -- TZX Block ID
 	end if;
 	if id=x"10" then
 		--analyseID10...Standard Loading Data block
-		params_length:=4+1; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
+		params_length:=5; -- 2 words, then BYTE[N] (+1 : with first byte of data block)
 		has_BYTE_N:=true;
 	elsif id=x"11" then
 		--analyseID11...Custom Loading Data block
@@ -3183,7 +3183,7 @@ when 4=>
 		--sb_bit1 = output.samples(1710);
 		sb_bit1:=NORMAL_ONE_LEN;
 		--lastbyte = 8; -- after end of block, do send this.
-		lastbyte:=x"8"; -- 1000
+		lastbyte:=x"08"; -- 1000
 	elsif id=x"11" then
 		--ID:11 - Turbo Loading Data Block
 		--This block MUST be supported and CAN exist in a CDT.
@@ -3233,7 +3233,7 @@ when 4=>
 		
 		--lastbyte = (int) inpbuf[data + 12];
 		--last_byte_bits <= tap_fifo_do(3 downto 0);
-		lastbyte:=params(8*13-1-4 downto 8*12);
+		lastbyte:=params(8*13-1 downto 8*12);
 		--pause = get2(inpbuf, data + 13);
 		pause:=CONV_INTEGER(params(8*15-1 downto 8*13));
 		--datalen = get3(inpbuf, data + 15);
@@ -3289,7 +3289,7 @@ when 4=>
 		sb_bit1:=CONV_INTEGER(params(8*4-1 downto 8*2));
 		--lastbyte = (int) inpbuf[data + 4];
 		--last_byte_bits <= tap_fifo_do(3 downto 0);
-		lastbyte:=params(8*5-1-4 downto 8*4);
+		lastbyte:=params(8*5-1 downto 8*4);
 		--pause = get2(inpbuf, data + 5);
 		pause:=CONV_INTEGER(params(8*7-1 downto 8*5));
 		--datalen = get3(inpbuf, data + 7);
@@ -3315,7 +3315,7 @@ when 4=>
 		-- Used bits (samples) in last byte of data (1-8)
 		-- (e.g. if this is 2, only first two samples of the last byte will be played)
 		--lastbyte = (int) inpbuf[data + 4];
-		lastbyte:=params(8*5-1-4 downto 8*4);
+		lastbyte:=params(8*5-1 downto 8*4);
 		--Length of samples' data
 		--datalen = get3(inpbuf, data + 5);
 		datalen:=params(8*8-1 downto 8*5);
@@ -3471,7 +3471,7 @@ when 9=> --if (sb_sync2 > 0) {
 when 10=> -- block
 	jacquie_phase<=conv_std_logic_vector(JACQUIE_PHASE_BLOCK,jacquie_phase'length);
 	jacquie_no_block<=conv_std_logic_vector(debug_no_block,jacquie_no_block'length);
-	jacquie_count<=x"000" & lastbyte;-- conv_std_logic_vector(lastbyte,jacquie_count'length);
+	jacquie_count<=x"00" & lastbyte(7 downto 0);
 	-- first one byte readen, and sent to JACQUIE_PHASE_BLOCK, data_length=512
 	jacquie_byte<=spi_Din;
 	jacquie_length<=datalen;

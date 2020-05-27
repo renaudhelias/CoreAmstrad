@@ -24,7 +24,6 @@
 -- T80(b) core. In an effort to merge and maintain bug fixes ....
 --
 -- Ver 303 add undocumented DDCB and FDCB opcodes by TobiFlex 20.04.2010
--- Ver 302 fixed IO cycle timing, tested thanks to Alessandro.
 -- Ver 300 started tidyup
 -- MikeJ March 2005
 -- Latest version from www.fpgaarcade.com (original www.opencores.org)
@@ -1751,7 +1750,7 @@ begin
 				when 3 =>
 					NoRead <= '1';
 					I_BC <= '1';
-					TStates <= "110";
+					TStates <= "101";
 				when 4 =>
 					NoRead <= '1';
 					TStates <= "101";

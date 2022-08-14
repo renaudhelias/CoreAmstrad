@@ -1,0 +1,267 @@
+-- Copyright (c) 2005-2006 Tobias Gubener
+-- Subdesign CPC T-REX by TobiFlex
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+
+
+
+
+INCLUDE "colorram_inst.inc";
+INCLUDE "colortab_inst.inc";
+INCLUDE "crtcv.inc"; 
+INCLUDE "risccrt.inc";
+ 
+SUBDESIGN ioblock
+(
+	16MHz				: INPUT;
+	cpuclk				: INPUT;
+	expint				: INPUT;
+	count[3..0]			: INPUT;
+	video[15..0]		: OUTPUT;
+	VSYNC				: OUTPUT;
+	DIVSYNC				: OUTPUT;
+	HSYNC				: OUTPUT;
+	DIHSYNC				: OUTPUT;
+	vadr[22..0]			: OUTPUT;
+	vack				: OUTPUT;
+	OUT_B[7..0]			: OUTPUT;
+
+	IO_Adr[7..0] 		: INPUT;
+	IO_Data[7..0]		: INPUT;
+	IOWR				: INPUT;
+	ROMENA[1..0]		: OUTPUT;
+	reset				: INPUT=VCC;
+	vdatain[7..0]		: INPUT;
+	riscview			: INPUT;
+	disp				: OUTPUT;
+)
+
+VARIABLE
+--	count[3..0]				:DFF;
+	videonode[5..0]			:NODE;
+--	expintvd				:DFFE;
+	n_data[7..0]			:DFF;
+	n_video[5..0]			:NODE;
+	MF[3..0]				: DFFE;
+	MFH[1..0]				: DFF;
+	colorram				: colorram_inst;
+
+	colortab 			: colortab_inst;
+	
+	coladr[4..0]		: DFFE;
+	n_clk				: NODE;
+	crtc			:crtcv;
+	rcrt			:risccrt;
+	vdatad[7..0]		: DFF;
+--	hsynccnt[3..0]		:DFFE;
+--	vsynccnt[5..0]		:DFFE;
+	riscnode[1..0]		:NODE;
+BEGIN
+DEFAULTS
+	MF[].ena=GND;
+	n_clk=GND;
+	coladr[].ena=GND;
+	OUT_B[]=VCC;
+	video[]=GND;
+
+END DEFAULTS;
+--FUNCTION crtcV (IOCLK, RS, CS, RW, Din[7..0], RESET, CLK)
+--	RETURNS (MA[13..0], RA[4..0], HSYNC, VSYNC, DISP);
+	crtc.ioclk=cpuclk;
+	crtc.clk=count[3];   --1MHz
+	crtc.rs=IO_Adr[0];
+	crtc.cs=IO_Adr[6];
+	crtc.Din[7..0]=IO_Data[7..0];
+	crtc.rw=IOWR;
+	crtc.reset=reset;
+--	crtc.degclk=16MHz;
+	DIVSYNC=crtc.VSYNC;
+	DIHSYNC=crtc.HSYNC;
+	IF riscview THEN
+		VSYNC=rcrt.vsync;
+		HSYNC=rcrt.hsync;
+		vadr[13..0]=rcrt.vadr[];
+		vadr[22..14]=B"000101011";
+--		vadr[22..14]=B"000100101";
+	ELSE
+		VSYNC=crtc.CPCVSYNC;
+		HSYNC=crtc.CPCHSYNC;
+		vadr[13..11]=crtc.ra[2..0];
+		vadr[15..14]=crtc.ma[13..12];
+		vadr[10..0]=(crtc.ma[9..0], NOT count[3]);
+		vadr[22..16]=B"0001011";
+	END IF;
+	
+	rcrt.16MHz=16MHz;
+
+--****************************
+--Videobytesteuerung
+--****************************
+	vack=count[2];
+	vdatad[].clk=count[2];
+	n_data[]=vdatad[];
+	vdatad[]=vdatain[7..0];
+--	n_data[]=vadr[7..0];
+	n_data[].clk=count[2];
+--	n_data[].clk=NOT cpuclk;--count[2];
+----------------------------------------------------------------------------
+--Gate Array
+----------------------------------------------------------------------------
+		
+	MFH[]=MF[1..0];
+	MFH[].clk=not hsync;
+	IF DIVSYNC OR DIHSYNC OR crtc.cpcblack THEN
+--	IF DIHSYNC THEN
+		videonode[]=B"100000";				--schwarzschulter
+	ELSIF crtc.CPCDISP THEN
+			 		videonode[5..4]=B"00";	--AKTIV
+				 	case MFH[1..0]	is
+--				 	case B"10"	is
+						WHEN 1 =>				  
+							videonode[3..2]=B"00";
+							case count[2..1] is	
+								WHEN 3 => videonode0=n_data7;
+										  videonode1=n_data3;  
+								WHEN 2 => videonode0=n_data6;  
+										  videonode1=n_data2;  
+								WHEN 1 => videonode0=n_data5;  
+										  videonode1=n_data1;  
+								WHEN 0 => videonode0=n_data4;  
+										  videonode1=n_data0;  
+				 			END CASE;
+						WHEN 2 =>				  
+							videonode[3..1]=B"000";
+							case count[2..0] is	
+								WHEN 7 => videonode0=n_data7;
+								WHEN 6 => videonode0=n_data6;  
+								WHEN 5 => videonode0=n_data5;  
+								WHEN 4 => videonode0=n_data4;  
+								WHEN 3 => videonode0=n_data3;
+								WHEN 2 => videonode0=n_data2;  
+								WHEN 1 => videonode0=n_data1;  
+								WHEN 0 => videonode0=n_data0;  
+				 			END CASE;
+						WHEN OTHERS =>				  
+
+							case count[2] is	
+								WHEN 1 => videonode0=n_data7;  
+										  videonode2=n_data5;  
+										  videonode1=n_data3;  
+										  videonode3=n_data1;  
+								WHEN 0 => videonode0=n_data6;  
+										  videonode2=n_data4;  
+										  videonode1=n_data2;  
+										  videonode3=n_data0;  
+				 			END CASE;
+				 	END CASE;
+	ELSE	
+		videonode[]=B"010000";				--border
+	END IF;
+
+
+
+----------------------------------------------------------------------------
+--IOBLOCK
+----------------------------------------------------------------------------
+--	riscnode1=GND;
+--	case count[2..0] is	
+--		WHEN 7 => riscnode0=n_data7;
+--		WHEN 6 => riscnode0=n_data6;  
+--		WHEN 5 => riscnode0=n_data5;  
+--		WHEN 4 => riscnode0=n_data4;  
+--		WHEN 3 => riscnode0=n_data3;
+--		WHEN 2 => riscnode0=n_data2;  
+--		WHEN 1 => riscnode0=n_data1;  
+--		WHEN 0 => riscnode0=n_data0;  
+		
+	case count[2..1] is	
+		WHEN 3 => riscnode0=n_data7;
+				  riscnode1=n_data3;  
+		WHEN 2 => riscnode0=n_data6;  
+				  riscnode1=n_data2;  
+		WHEN 1 => riscnode0=n_data5;  
+				  riscnode1=n_data1;  
+		WHEN 0 => riscnode0=n_data4;  
+				  riscnode1=n_data0;  
+	END CASE;
+
+ 	IF riscview THEN
+		CASE (rcrt.border,riscnode[]) IS
+			WHEN 0 => colortab.address[5..0]=X"03";--25;
+			WHEN 1 => colortab.address[5..0]=X"14";--0;
+			WHEN 2 => colortab.address[5..0]=X"0E";--15;
+--			WHEN 3 => colortab.address[5..0]=X"1C";--3;
+			WHEN OTHERS => colortab.address[5..0]=X"1C";--3;
+		END CASE;
+--		IF	riscnode AND NOT rcrt.border THEN
+--			colortab.address[5..0]=B"001010";		--gelb
+--		ELSE
+--			colortab.address[5..0]=B"000100";		--blau
+--		END IF;
+	ELSE
+		colortab.address[5..0]=(videonode[5],colorram.q[4..0]);
+	END IF;	
+	colorram.wraddress[4..0]=coladr[];	--n_vadr[4..0];
+	colorram.data[4..0]=IO_Data[4..0];
+	colorram.wrclock=cpuclk;
+	colorram.wren=n_clk;
+	colorram.rdaddress[4..0]=videonode[4..0];
+	colorram.rdclock=16MHz;
+
+    colortab.clock= NOT 16MHz;
+--	colortab.address[5..0]=videonode[];
+	n_video[5..0]=colortab.q[];
+--	n_video[5..0]=(gnd,videonode[4..0]);
+--		if hsync OR vsync OR videonode[5] then
+		if hsync OR vsync OR (videonode[5] AND NOT riscview) OR (rcrt.blackb AND riscview) then
+			video[]=0;
+		else
+			video[]=(n_video[1], n_video[0], n_video[0], n_video[0], n_video[0], n_video[3], n_video[2], n_video[2], n_video[2], n_video[2], GND, n_video[5], n_video[4], n_video[4], n_video[4], n_video[4]);
+		end if;
+		
+	MF[3..2].clrn=reset;
+	ROMENA[]=MF[3..2];
+	(MF[], coladr[]).clk= cpuclk;
+	IF NOT (IO_adr[7] OR IOWR) THEN
+		IF IO_Data[7..6] == B"00" THEN			--coloradresse
+			coladr[4..0]=IO_Data[4..0];
+			coladr[].ena=VCC;
+		END IF;
+		IF IO_Data[7..6] == B"01" THEN			--colorwert
+			n_clk=VCC;
+		END IF;
+		IF IO_Data[7..6] == B"10" THEN
+			MF[3..0]=IO_Data[3..0];			--ROM & MODE
+			MF[].ena=VCC;
+		END IF;
+--	ELSE
+--		n_vadr[]=videonode[4..0];
+	END IF;
+END;
+

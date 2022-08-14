@@ -1,0 +1,33 @@
+SET_FLAG DEBUG FALSE
+SET_FLAG MODE INTERACTIVE
+SET_FLAG STANDALONE_MODE FALSE
+SET_PREFERENCE devicefamily artix7
+SET_PREFERENCE device xc7a100t
+SET_PREFERENCE speedgrade -1
+SET_PREFERENCE package csg324
+SET_PREFERENCE verilogsim false
+SET_PREFERENCE vhdlsim true
+SET_PREFERENCE simulationfiles Behavioral
+SET_PREFERENCE busformat BusFormatAngleBracketNotRipped
+SET_PREFERENCE outputdirectory C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/RAM32Ko/
+SET_PREFERENCE workingdirectory C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/RAM32Ko/tmp/
+SET_PREFERENCE subworkingdirectory C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/RAM32Ko/tmp/_cg/
+SET_PREFERENCE transientdirectory C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/RAM32Ko/tmp/_cg/_dbg/
+SET_PREFERENCE designentry VHDL
+SET_PREFERENCE flowvendor Other
+SET_PREFERENCE addpads false
+SET_PREFERENCE projectname coregen
+SET_PREFERENCE formalverification false
+SET_PREFERENCE asysymbol false
+SET_PREFERENCE implementationfiletype Ngc
+SET_PREFERENCE foundationsym false
+SET_PREFERENCE createndf false
+SET_PREFERENCE removerpms false
+SET_CORE_NAME Block Memory Generator
+SET_CORE_VERSION 7.3
+SET_CORE_VLNV xilinx.com:ip:blk_mem_gen:7.3
+SET_CORE_CLASS com.xilinx.ip.blk_mem_gen_v7_3.blk_mem_gen_v7_3
+SET_CORE_PATH C:/Xilinx/14.7/ISE_DS/ISE/coregen/ip/xilinx/primary/com/xilinx/ip/blk_mem_gen_v7_3
+SET_CORE_GUIPATH C:/Xilinx/14.7/ISE_DS/ISE/coregen/ip/xilinx/primary/com/xilinx/ip/blk_mem_gen_v7_3/gui/blk_mem_gen_v7_3.tcl
+SET_CORE_DATASHEET http://www.xilinx.com/cgi-bin/docs/ipdoc?c=blk_mem_gen;v=v7_3;d=pg058-blk-mem-gen.pdf
+ADD_CORE_DOCUMENT <C:\Xilinx\14.7\ISE_DS\ISE\coregen\ip\xilinx\primary\com\xilinx\ip\blk_mem_gen_v7_3\doc\blk_mem_gen_v7_3_vinfo.html><blk_mem_gen_v7_3_vinfo.html>

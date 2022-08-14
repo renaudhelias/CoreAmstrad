@@ -1,0 +1,8 @@
+INTSTYLE=ise
+INFILE=C:\Users\freemac\BuildYourOwnZ80Computer\amstradROM_check.ncd
+OUTFILE=C:\Users\freemac\BuildYourOwnZ80Computer\amstradROM_check.bit
+FAMILY=Spartan3
+PART=xc3s200-5ft256
+WORKINGDIR=C:\Users\freemac\BuildYourOwnZ80Computer
+LICENSE=WebPack
+USER_INFO=0_0_733

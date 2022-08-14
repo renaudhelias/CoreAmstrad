@@ -1,0 +1,151 @@
+select figure at 300 72 8 -wires -sn=1
+select all in 300 72 1057 946 -wires -enclosed -sn=1
+move selection by 64 0 -keepConn -sn=1
+select figure at 1353 161 8 -wires -sn=1
+select figure at 5389 67 8 -wires -sn=1
+select all in 3085 67 5389 1950 -wires -enclosed -sn=1
+select figure at 3552 1489 8 -wires -sn=1
+select figure at 5369 47 8 -branches -sn=1
+select all in 3132 47 5369 1736 -branches -enclosed -sn=1
+select figure at 2985 1816 8 -branches -sn=1
+select figure at 3430 892 8 -branches -sn=1
+select figure at 3417 957 8 -branches -toggle -sn=1
+select figure at 3415 1035 8 -branches -toggle -sn=1
+move selection by -160 16 -keepConn -sn=1
+undo
+select figure at 3222 937 8 -branches -sn=1
+select figure at 3227 930 8 -branches -sn=1
+move wire at 3232 544 3232 896 to 2912 544 2912 896 -keepConn -sn=1
+move wire at 3232 896 3232 1168 to 2912 896 2912 1168 -keepConn -sn=1
+select figure at 3247 787 8 -branches -sn=1
+move wire at 3248 736 3248 848 to 3008 736 3008 848 -keepConn -sn=1
+select figure at 3663 767 8 -branches -sn=1
+select figure at 3258 1328 8 -wires -sn=1
+select figure at 3661 711 8 -wires -sn=1
+select figure at 3665 642 8 -wires -sn=1
+delete selection -sn=1
+select figure at 3663 702 8 -wires -sn=1
+select figure at 3665 834 8 -wires -sn=1
+select figure at 3607 608 8 -wires -sn=1
+delete selection -sn=1
+select figure at 3665 613 8 -wires -sn=1
+delete selection -sn=1
+select figure at 3665 698 8 -wires -sn=1
+select figure at 4117 1076 8 -wires -sn=1
+select figure at 4377 971 8 -wires -sn=1
+select all in 4001 971 4377 1358 -wires -enclosed -sn=1
+delete selection -sn=1
+select figure at 3282 1256 8 -wires -sn=1
+select all in 3282 612 3744 1256 -wires -enclosed -sn=1
+select figure at 3475 770 8 -wires -sn=1
+select all in 3475 770 3813 1183 -wires -enclosed -sn=1
+delete selection -sn=1
+select figure at 3346 1006 8 -wires -sn=1
+select figure at 3346 1006 8 -wires -all -sn=1
+select figure at 3800 1248 8 -wires -sn=1
+select figure at 3577 1055 8 -wires -sn=1
+add autowire 3680 608 3488 608 8 -sn=1
+select figure at 3564 617 8 -wires -sn=1
+select figure at 3564 617 8 -wires -all -sn=1
+select figure at 3601 612 8 -wires -sn=1
+select figure at 3601 612 8 -wires -all -sn=1
+add atwin 3493 611 3493 611 8 Name -sn=1
+set attr NA|XLXN_371(13:0)|Name value TATA(6:0),TATA(13:7) -sn=1
+select figure at 3478 1640 8 -wires -sn=1
+select figure at 3091 1006 8 -wires -sn=1
+add autowire 3392 1008 3472 1008 8 -sn=1
+add autowire 3472 1008 3472 672 8 -sn=1
+add bustap 3472 672 3568 672 -sn=1
+add bustap 3472 800 3568 800 -sn=1
+add bustap 3472 864 3568 864 -sn=1
+add autowire 3680 672 3568 672 8 -sn=1
+add autowire 3680 800 3568 800 8 -sn=1
+add autowire 3680 864 3568 864 8 -sn=1
+select figure at 3283 11 8 -wires -sn=1
+select all in 3283 11 5242 1747 -wires -enclosed -sn=1
+select figure at 4045 1192 8 -wires -sn=1
+select figure at 3569 897 8 -wires -sn=1
+select figure at 3540 883 8 -wires -sn=1
+delete selection -sn=1
+select figure at 3531 787 8 -wires -sn=1
+delete selection -sn=1
+select figure at 3522 671 8 -wires -sn=1
+delete selection -sn=1
+select figure at 3480 801 8 -wires -sn=1
+move wire at 3472 672 3472 1008 to 3104 672 3104 1008 -keepConn -sn=1
+select figure at 5281 64 8 -wires -sn=1
+select all in 2965 64 5281 1819 -wires -enclosed -sn=1
+select figure at 4207 112 8 -wires -sn=1
+select figure at 1274 2548 8 -wires -sn=1
+select figure at 2396 2156 8 -wires -sn=1
+select all in 2396 2156 2564 2236 -wires -enclosed -sn=1
+select figure at 3382 2452 8 -wires -sn=1
+select all in 3382 2276 4319 2452 -wires -enclosed -sn=1
+select figure at 4583 2147 8 -wires -sn=1
+select figure at 5171 81 8 -branches -sn=1
+select all in 3397 81 5171 1594 -branches -enclosed -sn=1
+select figure at 3397 1594 8 -branches -sn=1
+select figure at 3400 1591 8 -branches -sn=1
+select all in 3400 30 5236 1591 -branches -enclosed -sn=1
+move selection by -176 16 -keepConn -sn=1
+select figure at 3102 979 8 -branches -sn=1
+move selection by 0 -16 -keepConn -sn=1
+undo
+select figure at 3011 907 8 -branches -sn=1
+select figure at 3091 888 8 -branches -sn=1
+select figure at 3110 886 8 -branches -sn=1
+select figure at 3022 1014 8 -branches -sn=1
+select figure at 2981 1084 8 -branches -sn=1
+select figure at 2984 1012 8 -branches -sn=1
+delete selection -sn=1
+select figure at 3175 864 8 -branches -sn=1
+move wire at 3168 560 3168 1168 to 2944 560 2944 1168 -keepConn -sn=1
+select figure at 5126 86 8 -branches -sn=1
+select all in 3156 86 5126 1562 -branches -enclosed -sn=1
+move selection by -304 0 -keepConn -sn=1
+add autowire 2832 1008 2928 1008 8 -sn=1
+add autowire 2928 1008 2928 688 8 -sn=1
+select figure at 2921 808 8 -branches -sn=1
+move selection by 48 0 -keepConn -sn=1
+select figure at 2980 818 8 -branches -sn=1
+move wire at 2976 688 2976 1008 to 2992 688 2992 1008 -keepConn -sn=1
+select figure at 3033 817 8 -branches -sn=1
+select figure at 3025 815 8 -branches -sn=1
+move wire at 3024 560 3024 1168 to 2928 560 2928 1168 -keepConn -sn=1
+BeginGroup
+add bustap 2928 688 3024 688 -sn=1
+add wire 3024 688 3088 688 -sn=1
+name net at 3056 688 1 XLXN_288(13) -sn=1
+EndGroup
+undo
+select figure at 3007 1314 8 -branches -sn=1
+BeginGroup
+add bustap 2928 688 3024 688 -sn=1
+add wire 3024 688 3088 688 -sn=1
+name net at 3056 688 1 XLXN_288(12) -sn=1
+EndGroup
+BeginGroup
+add bustap 2928 816 3024 816 -sn=1
+add wire 3024 816 3088 816 -sn=1
+name net at 3056 816 1 XLXN_288(11) -sn=1
+EndGroup
+BeginGroup
+add bustap 2928 880 3024 880 -sn=1
+add wire 3024 880 3088 880 -sn=1
+name net at 3056 880 1 XLXN_288(10) -sn=1
+EndGroup
+undo
+undo
+undo
+select figure at 3115 879 8 -branches -sn=1
+delete selection -sn=1
+select figure at 3118 814 8 -branches -sn=1
+delete selection -sn=1
+select figure at 3111 688 8 -branches -sn=1
+delete selection -sn=1
+BeginGroup
+add bustap 2928 688 3024 688 -sn=1
+add wire 3024 688 3088 688 -sn=1
+name net at 3056 688 1 XLXN_288(9) -sn=1
+EndGroup
+undo

@@ -1,0 +1,8 @@
+INTSTYLE=ise
+INFILE=C:\Users\freemac\BuildYourOwnZ80Computer\VGA_test.ncd
+OUTFILE=C:\Users\freemac\BuildYourOwnZ80Computer\VGA_test.bit
+FAMILY=Spartan3E
+PART=xc3s500e-5fg320
+WORKINGDIR=C:\Users\freemac\BuildYourOwnZ80Computer
+LICENSE=WebPack
+USER_INFO=0_0_733

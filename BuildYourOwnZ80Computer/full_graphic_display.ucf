@@ -1,0 +1,7 @@
+NET "CLK50MHz" LOC = "T9";
+# led NET "K12" LOC = "K12";
+NET "RGB<0>" LOC = "R12";
+NET "RGB<1>" LOC = "T12";
+NET "RGB<2>" LOC = "R11";
+NET "HSYNC" LOC = "R9";
+NET "VSYNC" LOC = "T10";

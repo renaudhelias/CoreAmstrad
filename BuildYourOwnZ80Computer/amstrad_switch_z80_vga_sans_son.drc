@@ -1,0 +1,11 @@
+Release 12.2 Drc M.63c (nt)
+Copyright (c) 1995-2010 Xilinx, Inc.  All rights reserved.
+
+Wed Feb 09 15:04:13 2011
+
+drc -z amstrad_switch_z80_vga_sans_son.ncd amstrad_switch_z80_vga_sans_son.pcf
+
+INFO:PhysDesignRules:772 - To achieve optimal frequency synthesis performance
+   with the CLKFX and CLKFX180 outputs of the DCM comp XLXI_416/XLXI_23, consult
+   the device Interactive Data Sheet.
+DRC detected 0 errors and 0 warnings.

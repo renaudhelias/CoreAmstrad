@@ -1,0 +1,138 @@
+--------------------------------------------------------------------------------
+Release 12.2 Trace  (nt)
+Copyright (c) 1995-2010 Xilinx, Inc.  All rights reserved.
+
+C:\Xilinx\12.2\ISE_DS\ISE\bin\nt\unwrapped\trce.exe -intstyle ise -v 3 -s 5 -n
+3 -fastpaths -xml amstrad_switch_z80_vga_sans_son.twx
+amstrad_switch_z80_vga_sans_son.ncd -o amstrad_switch_z80_vga_sans_son.twr
+amstrad_switch_z80_vga_sans_son.pcf -ucf amstrad_switch_z80_vga_sans_son.ucf
+
+Design file:              amstrad_switch_z80_vga_sans_son.ncd
+Physical constraint file: amstrad_switch_z80_vga_sans_son.pcf
+Device,package,speed:     xc3s200,ft256,-5 (PRODUCTION 1.39 2010-06-22)
+Report level:             verbose report
+
+Environment Variable      Effect 
+--------------------      ------ 
+NONE                      No environment variables were set
+--------------------------------------------------------------------------------
+
+INFO:Timing:2698 - No timing constraints found, doing default enumeration.
+INFO:Timing:2752 - To get complete path coverage, use the unconstrained paths 
+   option. All paths that are not constrained will be reported in the 
+   unconstrained paths section(s) of the report.
+INFO:Timing:3339 - The clock-to-out numbers in this timing report are based on 
+   a 50 Ohm transmission line loading model.  For the details of this model, 
+   and for more information on accounting for different loading conditions, 
+   please see the device datasheet.
+INFO:Timing:3390 - This architecture does not support a default System Jitter 
+   value, please add SYSTEM_JITTER constraint to the UCF to modify the Clock 
+   Uncertainty calculation.
+INFO:Timing:3389 - This architecture does not support 'Discrete Jitter' and 
+   'Phase Error' calculations, these terms will be zero in the Clock 
+   Uncertainty calculation.  Please make appropriate modification to 
+   SYSTEM_JITTER to account for the unsupported Discrete Jitter and Phase 
+   Error.
+
+
+
+Data Sheet report:
+-----------------
+All values displayed in nanoseconds (ns)
+
+Setup/Hold to clock CLK50MHz
+------------+------------+------------+------------------+--------+
+            |Max Setup to|Max Hold to |                  | Clock  |
+Source      | clk (edge) | clk (edge) |Internal Clock(s) | Phase  |
+------------+------------+------------+------------------+--------+
+PS2_CLK     |   -0.517(R)|    2.446(R)|CLK50MHz_IBUFG    |   0.000|
+PS2_DATA    |   -0.214(R)|    2.065(R)|CLK50MHz_IBUFG    |   0.000|
+RESET_n     |   10.620(F)|   -2.779(F)|XLXN_544          |   0.000|
+ram_D<0>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<1>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<2>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<3>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<4>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<5>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<6>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D<7>    |    2.081(F)|   -0.067(F)|XLXN_544          |   0.000|
+ram_D_U<0>  |    5.229(F)|   -3.006(F)|XLXN_544          |   0.000|
+ram_D_U<1>  |    4.368(F)|   -2.319(F)|XLXN_544          |   0.000|
+ram_D_U<2>  |    6.001(F)|   -3.625(F)|XLXN_544          |   0.000|
+ram_D_U<3>  |    5.475(F)|   -3.204(F)|XLXN_544          |   0.000|
+ram_D_U<4>  |    6.358(F)|   -3.874(F)|XLXN_544          |   0.000|
+ram_D_U<5>  |    6.304(F)|   -3.867(F)|XLXN_544          |   0.000|
+ram_D_U<6>  |    6.758(F)|   -3.903(F)|XLXN_544          |   0.000|
+ram_D_U<7>  |    6.129(F)|   -3.634(F)|XLXN_544          |   0.000|
+------------+------------+------------+------------------+--------+
+
+Clock CLK50MHz to Pad
+------------+------------+------------------+--------+
+            | clk (edge) |                  | Clock  |
+Destination |   to PAD   |Internal Clock(s) | Phase  |
+------------+------------+------------------+--------+
+BLUE        |    6.776(R)|XLXN_142          |   0.000|
+CLK4<1>     |    8.420(R)|XLXN_544          |   0.000|
+GREEN       |    6.372(R)|XLXN_142          |   0.000|
+HSYNC       |    8.000(R)|XLXN_142          |   0.000|
+LB1         |    6.824(F)|XLXN_544          |   0.000|
+OE1         |    9.074(F)|XLXN_544          |   0.000|
+RED         |    7.310(R)|XLXN_142          |   0.000|
+UB1         |    6.864(F)|XLXN_544          |   0.000|
+VSYNC       |    7.603(R)|XLXN_142          |   0.000|
+ram_A<0>    |    8.735(F)|XLXN_544          |   0.000|
+ram_A<1>    |    8.095(F)|XLXN_544          |   0.000|
+ram_A<2>    |    7.983(F)|XLXN_544          |   0.000|
+ram_A<3>    |    9.820(F)|XLXN_544          |   0.000|
+ram_A<4>    |    9.329(F)|XLXN_544          |   0.000|
+ram_A<5>    |    8.391(F)|XLXN_544          |   0.000|
+ram_A<6>    |    8.157(F)|XLXN_544          |   0.000|
+ram_A<7>    |    8.616(F)|XLXN_544          |   0.000|
+ram_A<8>    |    7.544(F)|XLXN_544          |   0.000|
+ram_A<9>    |    7.049(F)|XLXN_544          |   0.000|
+ram_A<10>   |    8.622(F)|XLXN_544          |   0.000|
+ram_A<11>   |    7.601(F)|XLXN_544          |   0.000|
+ram_A<12>   |    8.454(F)|XLXN_544          |   0.000|
+ram_A<13>   |    8.639(F)|XLXN_544          |   0.000|
+ram_A<14>   |    7.867(F)|XLXN_544          |   0.000|
+ram_A<15>   |    9.835(F)|XLXN_544          |   0.000|
+ram_A<16>   |    9.178(F)|XLXN_544          |   0.000|
+ram_A<17>   |    9.173(F)|XLXN_544          |   0.000|
+ram_D<0>    |    7.006(F)|XLXN_544          |   0.000|
+ram_D<1>    |    7.281(F)|XLXN_544          |   0.000|
+ram_D<2>    |    7.006(F)|XLXN_544          |   0.000|
+ram_D<3>    |    7.334(F)|XLXN_544          |   0.000|
+ram_D<4>    |    7.007(F)|XLXN_544          |   0.000|
+ram_D<5>    |    6.820(F)|XLXN_544          |   0.000|
+ram_D<6>    |    7.111(F)|XLXN_544          |   0.000|
+ram_D<7>    |    7.132(F)|XLXN_544          |   0.000|
+ram_W       |    5.686(F)|XLXN_544          |   0.000|
+------------+------------+------------------+--------+
+
+Clock to Setup on destination clock CLK50MHz
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+CLK50MHz       |   12.825|    6.142|    9.694|   16.319|
+---------------+---------+---------+---------+---------+
+
+Pad to Pad
+---------------+---------------+---------+
+Source Pad     |Destination Pad|  Delay  |
+---------------+---------------+---------+
+CLK50MHz       |CLK4<0>        |    4.158|
+---------------+---------------+---------+
+
+
+Analysis completed Wed Feb 09 15:04:05 2011 
+--------------------------------------------------------------------------------
+
+Trace Settings:
+-------------------------
+Trace Settings 
+
+Peak Memory Usage: 130 MB
+
+
+

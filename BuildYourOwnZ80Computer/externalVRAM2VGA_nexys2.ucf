@@ -1,0 +1,139 @@
+NET "CLK50MHz" LOC = "B8";
+CONFIG PROHIBIT="U9"; #other clock source
+NET "RED3<0>" LOC = "R9";
+NET "RED3<1>" LOC = "T8";
+NET "RED3<2>" LOC = "R8";
+NET "GREEN3<0>" LOC = "N8";
+NET "GREEN3<1>" LOC = "P8";
+NET "GREEN3<2>" LOC = "P6";
+NET "BLUE2<0>" LOC = "U5";
+NET "BLUE2<1>" LOC = "U4";
+NET "HSYNC" LOC = "T4";
+NET "VSYNC" LOC = "U3";
+
+#NET "BUTTON_FINAL_WRITE" LOC="H13";
+CONFIG PROHIBIT="H13","E18","D18","B18"; #buttons
+NET "SWITCH_FILL" LOC="G18";
+NET "SWITCH_READ" LOC="H18";
+NET "SWITCH_DSK" LOC="N17";
+
+NET "ROM_en" LOC="R17";
+CONFIG PROHIBIT=      "L13","L14","K17","K18"            ; #switches
+#NET "LED1" LOC="F4";
+NET "COUNTER<5>" LOC="R4";
+NET "COUNTER<6>" LOC="F4";
+NET "COUNTER<7>" LOC="P15";
+NET "COUNTER<8>" LOC="E17";
+NET "COUNTER<9>" LOC="K14";
+NET "COUNTER<10>" LOC="K15";
+NET "COUNTER<11>" LOC="J15";
+NET "COUNTER<12>" LOC="J14";
+#CONFIG PROHIBIT="R4","F4","P15","E17","K14","K15","J15","J14"; #LEDS
+CONFIG PROHIBIT="P4","E4","P16","E16"; # DEAD LEDS
+CONFIG PROHIBIT="C17","H14","J17","G14","D16","D17","F18","L18"; # 7seg cathodes
+CONFIG PROHIBIT="F15","C18","H17","F17"; # 7seg anodes
+CONFIG PROHIBIT="V14","U14","V16","N9","R14","R13","P13","T12","N11","R11","P10","R10","T15","V15","V9","V12","T16","U15","T14","V13"; # USB
+CONFIG PROHIBIT="R12","P11"; # PS2
+#NET "PS2_CLK" LOC="R12";
+#NET "PS2_DATA" LOC="P11";
+#CONFIG PROHIBIT="U6","P9"; # serial
+NET "RX" LOC="U6";
+NET "TX" LOC="P9";
+
+# RAM : 128Mbit Micron MT45W8MW16BGX
+#NET "ram_A<0>" LOC="NA"; lol
+NET "ram_A<0>" LOC="J1";
+NET "ram_A<1>" LOC="J2";
+NET "ram_A<2>" LOC="H4";
+NET "ram_A<3>" LOC="H1";
+NET "ram_A<4>" LOC="H2";
+NET "ram_A<5>" LOC="J5";
+NET "ram_A<6>" LOC="H3";
+NET "ram_A<7>" LOC="H6";
+NET "ram_A<8>" LOC="F1";
+NET "ram_A<9>" LOC="G3";
+NET "ram_A<10>" LOC="G6";
+NET "ram_A<11>" LOC="G5";
+NET "ram_A<12>" LOC="G4";
+NET "ram_A<13>" LOC="F2";
+NET "ram_A<14>" LOC="E1";
+NET "ram_A<15>" LOC="M5";
+NET "ram_A<16>" LOC="E2";
+NET "ram_A<17>" LOC="C2";
+NET "ram_A<18>" LOC="C1";
+NET "ram_A<19>" LOC="D2";
+NET "ram_A<20>" LOC="K3";
+NET "ram_A<21>" LOC="D1";
+NET "ram_A<22>" LOC="K6";
+#CONFIG PROHIBIT="C1","D2","K3","D1","K6"; #ram_A
+NET "ram_D<0>" LOC="L1";
+NET "ram_D<1>" LOC="L4";
+NET "ram_D<2>" LOC="L6";
+NET "ram_D<3>" LOC="M4";
+NET "ram_D<4>" LOC="N5";
+NET "ram_D<5>" LOC="P1";
+NET "ram_D<6>" LOC="P2";
+NET "ram_D<7>" LOC="R2";
+NET "ram_D_U<0>" LOC="L3";
+NET "ram_D_U<1>" LOC="L5";
+NET "ram_D_U<2>" LOC="M3";
+NET "ram_D_U<3>" LOC="M6";
+NET "ram_D_U<4>" LOC="L2";
+NET "ram_D_U<5>" LOC="N4";
+NET "ram_D_U<6>" LOC="R3";
+NET "ram_D_U<7>" LOC="T1";
+#CONFIG PROHIBIT="L3","L5","M3","M6","L2","N4","R3","T1"; #ram_D
+
+
+
+## pour la RAM il y a un temps maximum d'accès en lecture ou ecriture : tCEM
+##CE#, OE#, and LB#/UB# LOW
+##NET "CE1_n" LOC="R6"; #0=on 1=off OK TOUT SIMPLEMENT
+#NET "OE1_n" LOC="T2"; #0=on_read commun à strata-flash OK car superposition
+##NET "UB1_n" LOC="K4"; #0
+##NET "LB1_n" LOC="K5"; #0
+##The data to be written is latched on the rising edge of CE#, WE#, or LB#/UB#
+#NET "ram_W_n" LOC="N7"; # #0=on_write_RAM ok , et pour strata-flash ?
+##NET "ADV1_n" LOC="J4"; #0 address valid LOW déjà pull down
+##NET "CLK1" LOC="H5"; #0 clock LOW mais déjà pull down
+##NET "CRE1" LOC="P7"; #0 control register enable
+##NET "WAIT1" LOC="F5"; # input
+#CONFIG PROHIBIT="F5"; #intru
+#CONFIG PROHIBIT="R6","K4","K5","J4","H5","P7"; # RAM off
+## strataflash JS28F128J3D-75
+## ROM on
+#NET "CE2_n" LOC="R5";
+#NET "RP2_p" LOC="T5";
+#CONFIG PROHIBIT="D3"; #output STS
+#
+
+
+
+# pour la RAM il y a un temps maximum d'accès en lecture ou ecriture : tCEM
+#CE#, OE#, and LB#/UB# LOW
+NET "CE1_n" LOC="R6"; #0=on 1=off OK TOUT SIMPLEMENT
+NET "OE1_n" LOC="T2"; #0=on_read commun à strata-flash OK car superposition
+NET "UB1_n" LOC="K4"; #0
+NET "LB1_n" LOC="K5"; #0
+#The data to be written is latched on the rising edge of CE#, WE#, or LB#/UB#
+NET "ram_W_n" LOC="N7"; # #0=on_write_RAM ok , et pour strata-flash ?
+NET "ADV1_n" LOC="J4"; #0 address valid LOW déjà pull down
+NET "CLK1" LOC="H5"; #0 clock LOW mais déjà pull down
+NET "CRE1" LOC="P7"; #0 control register enable
+#NET "WAIT1" LOC="F5"; # input
+CONFIG PROHIBIT="F5"; #intru
+#CONFIG PROHIBIT="K4","K5","J4","H5","P7"; # RAM off
+# strataflash JS28F128J3D-75
+
+#NET "CE2_n" LOC="R5";# ROM on
+#NET "RP2_p" LOC="T5";# ROM on
+CONFIG PROHIBIT="D3"; #output STS : il faudra l'utilisé car ça pulse quand le transmit est fini...
+CONFIG PROHIBIT="R5","T5";
+
+CONFIG PROHIBIT="L15","K12","L17","M15","K13","L16","M14","M16"; #pmod JA
+CONFIG PROHIBIT="M13","R18","R15","T17","P17","R16","T18","U18"; #pmod JB
+CONFIG PROHIBIT="G15","J16","G13","H16","H15","F14","G16","J12"; #pmod JC
+CONFIG PROHIBIT="J13","M18","N18","P18"; #pmod JD - partagé avec LEDS...
+
+CONFIG PROHIBIT="D15","B4","A4","C3","C4","B6","D5","C5","F7","E7","A6","C7","F8","D7","E8","E9","C9","A8","G9","F9","D10","A10","B10","A11","D11","E10","B11","C11","E11","F11","E12","F12","A13","B13","E13","A14","C14","D14","B14","A16","B16","D9"; #hirose part 1
+CONFIG PROHIBIT="A17","B9","M9"; #hirose part 2

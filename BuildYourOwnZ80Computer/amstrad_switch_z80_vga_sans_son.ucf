@@ -1,0 +1,93 @@
+NET "CLK50MHz" LOC = "T9";
+CONFIG PROHIBIT="D9"; #other clock source
+NET "RED" LOC = "R12";
+NET "GREEN" LOC = "T12";
+NET "BLUE" LOC = "R11";
+NET "HSYNC" LOC = "R9";
+NET "VSYNC" LOC = "T10";
+
+#NET "LED0" LOC="K12";
+NET "LED1" LOC="P14";
+NET "LED2" LOC="L12";
+NET "LED3" LOC="N14";
+NET "LED4" LOC="P13";
+NET "LED5" LOC="N12";
+#NET "LED6" LOC="P12";
+#NET "LED7" LOC="P11";
+CONFIG PROHIBIT="K12",   "P12","P11";
+
+
+
+NET "RESET_n" LOC="F12";
+#NET "SOUND_ON" LOC="G12";
+#"NET "INTERRUPT_ENABLE" LOC="H14";
+#NET "RESET_n" CLOCK_DEDICATED_ROUTE = FALSE; # wtf !
+CONFIG PROHIBIT="G12","H13","H14"; #switch ok
+CONFIG PROHIBIT="K13","K14","J13","J14"; #switch
+#CONFIG PROHIBIT="H14"; #switch HS
+
+CONFIG PROHIBIT="M13","M14","L13","L14";#button
+
+#CONFIG PROHIBIT="M15","M16";#ps2
+NET "PS2_DATA" LOC="M15";
+NET "PS2_CLK" LOC="M16";
+#NET "PS2_CLK" CLOCK_DEDICATED_ROUTE = FALSE;
+
+CONFIG PROHIBIT="T13","R13","N10","T14";#RS232
+
+CONFIG PROHIBIT="E14","G13","N15","P15","R16","F13","N16","P16";#7seg
+CONFIG PROHIBIT="E13","F14","G14","D14";#7seg control
+
+NET "ram_W" LOC="G3";
+NET "ram_A<0>" LOC="L5";
+NET "ram_A<1>" LOC="N3";
+NET "ram_A<2>" LOC="M4";
+NET "ram_A<3>" LOC="M3";
+NET "ram_A<4>" LOC="L4";
+NET "ram_A<5>" LOC="G4";
+NET "ram_A<6>" LOC="F3";
+NET "ram_A<7>" LOC="F4";
+NET "ram_A<8>" LOC="E3";
+NET "ram_A<9>" LOC="E4";
+NET "ram_A<10>" LOC="G5";
+NET "ram_A<11>" LOC="H3";
+NET "ram_A<12>" LOC="H4";
+NET "ram_A<13>" LOC="J4";
+NET "ram_A<14>" LOC="J3";
+NET "ram_A<15>" LOC="K3";
+NET "ram_A<16>" LOC="K5";
+NET "ram_A<17>" LOC="L3";
+NET "ram_D<0>" LOC="N7"; # donc on est sur la SRAM d'en haut
+NET "ram_D<1>" LOC="T8";
+NET "ram_D<2>" LOC="R6";
+NET "ram_D<3>" LOC="T5";
+NET "ram_D<4>" LOC="R5";
+NET "ram_D<5>" LOC="C2";
+NET "ram_D<6>" LOC="C1";
+NET "ram_D<7>" LOC="B1";
+NET "ram_D_U<0>" LOC="D3";
+NET "ram_D_U<1>" LOC="P8";
+NET "ram_D_U<2>" LOC="F2";
+NET "ram_D_U<3>" LOC="H1";
+NET "ram_D_U<4>" LOC="J2";
+NET "ram_D_U<5>" LOC="L2";
+NET "ram_D_U<6>" LOC="P1";
+NET "ram_D_U<7>" LOC="R1";
+#CONFIG PROHIBIT="D3","P8","F2","H1","J2","L2","P1","R1"; # IO8 à IO15
+
+CONFIG PROHIBIT="P2","N2","M2","K1","J1","G2","E1","D1","D2","E2","G1","F5","C3","K2","M1","N1"; # IO 0 à 15 SRAM IC11
+CONFIG PROHIBIT="N5","R4","P5"; # SRAM IC11 CE2 UB2 LB2
+
+
+NET "OE1" LOC="K4";
+NET "CE1" LOC="P7";
+NET "UB1" LOC="T4";
+NET "LB1" LOC="P6";
+
+
+# connector A2
+#GND
+#5v
+#3.3v
+#NET "AUDIO" LOC="E6";
+CONFIG PROHIBIT="E6",    "D5","C5","D6","C6","E7","C7","D7",   "C8","D8","C9","D10","A3","B4","A4","B5","A5","B6","B7","A7","B8","A8","A9","B10","A10","B11","B12","A12","B13","A13","B14","D9","B3","R14","N9","T15","A14","M11";

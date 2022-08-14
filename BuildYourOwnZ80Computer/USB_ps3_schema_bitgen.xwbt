@@ -1,0 +1,8 @@
+INTSTYLE=ise
+INFILE=E:\BuildYourOwnZ80Computer\USB_ps3_schema.ncd
+OUTFILE=E:\BuildYourOwnZ80Computer\USB_ps3_schema.bit
+FAMILY=Spartan3E
+PART=xc3s500e-5fg320
+WORKINGDIR=E:\BuildYourOwnZ80Computer
+LICENSE=WebPack
+USER_INFO=205653148_0_0_354

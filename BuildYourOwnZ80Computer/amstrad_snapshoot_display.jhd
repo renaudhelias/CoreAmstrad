@@ -1,0 +1,5 @@
+MODULE amstrad_snapshoot_display
+	SUBMODULE aZRaEL_vram2vgaAmstrad
+		INSTANCE XLXI_1
+	SUBMODULE CLK_commander
+		INSTANCE XLXI_2

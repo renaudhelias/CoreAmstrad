@@ -1,0 +1,27 @@
+#PIN-Locations for fbas_enc v0.31 and XC9536 (PLCC44)
+#(c) 2007 Joerg Wolfram
+ 
+NET "sysclk"  	LOC="PIN7" | TNM_NET = "sck";
+NET "cpuclk"  	LOC="PIN5";
+NET "green"   	LOC="PIN9";
+NET "red"     	LOC="PIN11";
+NET "blue"    	LOC="PIN12";
+NET "hsync"   	LOC="PIN13";
+NET "vsync"   	LOC="PIN14";
+NET "cgsel"   	LOC="PIN18";
+
+NET "fbh"     	LOC="PIN37" | PWR_MODE=STD;
+NET "fbl"  	LOC="PIN39" | PWR_MODE=STD;
+
+NET "chroma<1>" LOC="PIN42" | PWR_MODE=STD;
+NET "chroma<0>" LOC="PIN43" | PWR_MODE=STD;
+
+
+NET "luma<0>" 	LOC="PIN20" | PWR_MODE=STD;
+NET "luma<1>" 	LOC="PIN24" | PWR_MODE=STD;
+NET "luma<2>" 	LOC="PIN25" | PWR_MODE=STD;
+NET "luma<3>" 	LOC="PIN28" | PWR_MODE=STD;
+NET "luma<4>" 	LOC="PIN33" | PWR_MODE=STD;
+
+
+TIMESPEC "TS_CK1" = PERIOD "sck" 31.25 ns HIGH 50%;

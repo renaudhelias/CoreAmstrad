@@ -1,0 +1,2 @@
+vhdtdtfi -lib work NEXYS4_RGB.vhd -prj BuildYourOwnZ80Computer -o NEXYS4_RGB.spl -module NEXYS4_RGB -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family spartan3e -w NEXYS4_RGB.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/NEXYS4_RGB.sym 

@@ -1,0 +1,209 @@
+NET "CLK50MHz" LOC = "B8";
+CONFIG PROHIBIT="U9"; #other clock source
+#NET "RED3<0>" LOC = "R9";
+#NET "RED3<1>" LOC = "T8";
+#NET "RED3<2>" LOC = "R8";
+#NET "GREEN3<0>" LOC = "N8";
+#NET "GREEN3<1>" LOC = "P8";
+#NET "GREEN3<2>" LOC = "P6";
+#NET "BLUE2<0>" LOC = "U5";
+#NET "BLUE2<1>" LOC = "U4";
+#NET "HSYNC" LOC = "T4";
+#NET "VSYNC" LOC = "U3";
+CONFIG PROHIBIT="R9","T8","R8","N8","P8","P6","U5","U4","T4","U3"; #screen
+
+#NET "FILE_SELECT<7>" LOC="H13";
+#NET "SIMULATE" LOC="E18";
+#NET "TOUCHE_A" LOC="D18";
+#NET "INTERRUPT_TEST" LOC="B18";
+CONFIG PROHIBIT="H13","E18","D18","B18"; #buttons
+NET "PLAGE<0>" LOC="R17";
+NET "PLAGE<1>" LOC="N17";
+NET "PLAGE<2>" LOC="L13";
+
+
+#NET "FILE_SELECT<0>" LOC="R17";
+#NET "FILE_SELECT<1>" LOC="N17";
+#NET "FILE_SELECT<2>" LOC="L13";
+#NET "FILE_SELECT<3>" LOC="L14";
+#NET "FILE_SELECT<4>" LOC="K17";
+#NET "FILE_SELECT<5>" LOC="K18";
+#NET "FILE_SELECT<6>" LOC="H18";
+#NET "DISABLE_INK" LOC="G18";
+CONFIG PROHIBIT=                "L14","K17","K18","H18","G18"; #selects
+
+NET "LEDS<0>" LOC="R4";
+NET "LEDS<1>" LOC="F4";
+NET "LEDS<2>" LOC="P15";
+NET "LEDS<3>" LOC="E17";
+NET "LEDS<4>" LOC="K14";
+NET "LEDS<5>" LOC="K15";
+NET "LEDS<6>" LOC="J15";
+NET "LEDS<7>" LOC="J14";
+#CONFIG PROHIBIT="R4","F4","P15","E17",          "J15","J14"; #LEDS
+
+CONFIG PROHIBIT="P4","E4","P16","E16"; # DEAD LEDS
+CONFIG PROHIBIT="C17","H14","J17","G14","D16","D17","F18","L18"; # 7seg cathodes
+CONFIG PROHIBIT="F15","C18","H17","F17"; # 7seg anodes
+#T15 # U-IFCLK
+#V14 # u-FLAGA
+#U14 # u-FLAGB
+#V16 # u-FLAGC
+#N9  # U-SLRD
+#V9  # U-SLWR
+CONFIG PROHIBIT="T15","V14","U14","V16","N9","V9"; # USB
+
+#NET "PS2_CLK" LOC="R12";
+#NET "PS2_CLK" CLOCK_DEDICATED_ROUTE = FALSE;
+#NET "PS2_DATA" LOC="P11";
+CONFIG PROHIBIT="R12","P11"; # PS2
+
+#NET "RX" LOC="U6";
+#NET "TX" LOC="P9";
+CONFIG PROHIBIT="U6","P9"; # serial
+
+#NET "ram_A<0>" LOC="NA"; lol
+#NET "ram_A<0>" LOC="J1";
+#NET "ram_A<1>" LOC="J2";
+#NET "ram_A<2>" LOC="H4";
+#NET "ram_A<3>" LOC="H1";
+#NET "ram_A<4>" LOC="H2";
+#NET "ram_A<5>" LOC="J5";
+#NET "ram_A<6>" LOC="H3";
+#NET "ram_A<7>" LOC="H6";
+#NET "ram_A<8>" LOC="F1";
+#NET "ram_A<9>" LOC="G3";
+#NET "ram_A<10>" LOC="G6";
+#NET "ram_A<11>" LOC="G5";
+#NET "ram_A<12>" LOC="G4";
+#NET "ram_A<13>" LOC="F2";
+#NET "ram_A<14>" LOC="E1";
+#NET "ram_A<15>" LOC="M5";
+#NET "ram_A<16>" LOC="E2";
+#NET "ram_A<17>" LOC="C2";
+#NET "ram_A<18>" LOC="C1";
+#NET "ram_A<19>" LOC="D2";
+#NET "ram_A<20>" LOC="K3";
+#NET "ram_A<21>" LOC="D1";
+#NET "ram_A<22>" LOC="K6";
+CONFIG PROHIBIT="J1","J2","H4","H1","H2","J5","H3","H6","F1","G3","G6","G5","G4","F2","E1","M5","E2","C2","C1","D2","K3","D1","K6"; #ram_A
+#NET "ram_D<0>" LOC="L1";
+#NET "ram_D<1>" LOC="L4";
+#NET "ram_D<2>" LOC="L6";
+#NET "ram_D<3>" LOC="M4";
+#NET "ram_D<4>" LOC="N5";
+#NET "ram_D<5>" LOC="P1";
+#NET "ram_D<6>" LOC="P2";
+#NET "ram_D<7>" LOC="R2";
+#NET "ram_D_U<0>" LOC="L3";
+#NET "ram_D_U<1>" LOC="L5";
+#NET "ram_D_U<2>" LOC="M3";
+#NET "ram_D_U<3>" LOC="M6";
+#NET "ram_D_U<4>" LOC="L2";
+#NET "ram_D_U<5>" LOC="N4";
+#NET "ram_D_U<6>" LOC="R3";
+#NET "ram_D_U<7>" LOC="T1";
+CONFIG PROHIBIT="L1","L4","L6","M4","N5","P1","P2","R2"; #ram_D
+CONFIG PROHIBIT="L3","L5","M3","M6","L2","N4","R3","T1"; #ram_D_U
+
+### mode RAM
+# 128Mbit Micron M45W8MW16
+##NET "CE1_n" LOC="R6"; #0=on 1=off OK TOUT SIMPLEMENT
+##NET "OE1_n" LOC="T2"; #0=on_read commun à strata-flash OK car superposition
+##NET "UB1_n" LOC="K4"; #0
+##NET "LB1_n" LOC="K5"; #0
+###The data to be written is latched on the rising edge of CE#, WE#, or LB#/UB#
+##NET "ram_W_n" LOC="N7"; # #0=on_write_RAM ok , et pour strata-flash ?
+##NET "ADV1_n" LOC="J4"; #0 address valid LOW déjà pull down
+##NET "CLK1" LOC="H5"; #0 clock LOW mais déjà pull down
+##NET "CRE1" LOC="P7"; #0 control register enable
+###NET "WAIT1" LOC="F5"; # input
+CONFIG PROHIBIT="F5"; #intru
+CONFIG PROHIBIT="R6","T2","K4","K5","N7","J4","H5","P7","F5"; # RAM
+CONFIG PROHIBIT="D3","T5","R5"; #strata-flash (ROM) : inactif par pulldown pullup STS RP# CE
+
+
+
+NET "USB_DATA<0>" LOC="L15"; # D- WHITE
+NET "USB_DATA<1>" LOC="K12"; # D+ GREEN
+#USB_DATA(1 downto 0) - full speed (pullup sur GREEN)
+#USB_DATA="01"=diff 0 = ZERO = K
+#USB_DATA="10"=diff 1 = UN = J = IDLE = REPOS
+#USB_DATA="00"=EOP
+
+#NET "JOYSTICK2<0>" LOC="L15";
+#NET "JOYSTICK2<1>" LOC="K12";
+#NET "JOYSTICK2<2>" LOC="L17";
+#NET "JOYSTICK2<3>" LOC="M15";
+#NET "JOYSTICK2<4>" LOC="K13";
+#NET "JOYSTICK2<5>" LOC="L16";
+#NET "JOYSTICK2<6>" LOC="M14";
+#NET "JOYSTICK2<7>" LOC="M16";
+CONFIG PROHIBIT=           "L17","M15","K13","L16","M14","M16"; #pmod JA
+
+#NET "JOYSTICK1<0>" LOC="M13";
+#NET "JOYSTICK1<1>" LOC="R18";
+#NET "JOYSTICK1<2>" LOC="R15";
+#NET "JOYSTICK1<3>" LOC="T17";
+#NET "JOYSTICK1<4>" LOC="P17";
+#NET "JOYSTICK1<5>" LOC="R16";
+#NET "JOYSTICK1<6>" LOC="T18";
+#NET "JOYSTICK1<7>" LOC="U18";
+CONFIG PROHIBIT="M13","R18","R15","T17","P17","R16","T18","U18"; #pmod JB
+##NET "SS_n" LOC="G15"; # SS='0' pour activer, pas besoin de failling_edge
+##NET "MOSI" LOC="J16";
+##NET "MISO" LOC="G13";
+##NET "SCLK" LOC="H16";
+##NET "CD_n" LOC="G16";# je confirme : CDn='0' si carte SD inséré
+##CONFIG PROHIBIT=                 "H15","F14"   ,"J12"; #pmod JC
+CONFIG PROHIBIT="G15","J16","G13","H16","H15","F14","G16","J12"; #pmod JC
+#NET "AUDIO" LOC="P18";
+CONFIG PROHIBIT="J13","M18","N18","P18"    ; #pmod JD - partagé avec LEDS...
+
+
+
+#NET "FX2BB<1>" LOC="B4";
+#NET "FX2BB<2>" LOC="A4";
+#NET "FX2BB<3>" LOC="C3";
+#NET "FX2BB<4>" LOC="C4";
+#NET "FX2BB<5>" LOC="B6";
+#NET "FX2BB<6>" LOC="D5";
+#NET "FX2BB<7>" LOC="C5";
+#NET "FX2BB<8>" LOC="F7";
+#NET "FX2BB<9>" LOC="E7";
+#NET "FX2BB<10>" LOC="A6";
+#NET "FX2BB<11>" LOC="C7";
+#NET "FX2BB<12>" LOC="F8";
+#NET "FX2BB<13>" LOC="D7";
+#NET "FX2BB<14>" LOC="E8";
+#NET "FX2BB<15>" LOC="E9";
+#NET "FX2BB<16>" LOC="C9";
+#NET "FX2BB<17>" LOC="A8";
+#NET "FX2BB<18>" LOC="G9";
+#NET "FX2BB<19>" LOC="F9";
+#NET "FX2BB<20>" LOC="D10";
+#NET "FX2BB<21>" LOC="A10";
+#NET "FX2BB<22>" LOC="B10";
+#NET "FX2BB<23>" LOC="A11";
+#NET "FX2BB<24>" LOC="D11";
+#NET "FX2BB<25>" LOC="E10";
+#NET "FX2BB<26>" LOC="B11";
+#NET "FX2BB<27>" LOC="C11";
+#NET "FX2BB<28>" LOC="E11";
+#NET "FX2BB<29>" LOC="F11";
+#NET "FX2BB<30>" LOC="E12";
+#NET "FX2BB<31>" LOC="F12";
+#NET "FX2BB<32>" LOC="A13";
+#NET "FX2BB<33>" LOC="B13";
+#NET "FX2BB<34>" LOC="E13";
+#NET "FX2BB<35>" LOC="A14";
+#NET "FX2BB<36>" LOC="C14";
+#NET "FX2BB<37>" LOC="D14";
+#NET "FX2BB<38>" LOC="B14";
+#NET "FX2BB<39>" LOC="A16";
+#NET "FX2BB<40>" LOC="B16";
+
+CONFIG PROHIBIT="B4","A4","C3","C4","B6","D5","C5","F7","E7","A6","C7","F8","D7","E8","E9","C9","A8","G9","F9","D10","A10","B10","A11","D11","E10","B11","C11","E11","F11","E12","F12","A13","B13","E13","A14","C14","D14","B14","A16","B16"; # hirose
+
+CONFIG PROHIBIT="D15","D9"; #hirose part 1
+CONFIG PROHIBIT="A17","B9","M93"; #hirose part 2

@@ -1,0 +1,22 @@
+[Inputs]
+wb_clk_i
+wb_rst_i
+wb_we_i
+wb_stb_i
+wb_cyc_i
+miso_pad_i
+=wb_adr_i[4:0]=
+=wb_dat_i[31:0]=
+=wb_sel_i[3:0]=
+[Outputs]
+wb_ack_o
+wb_err_o
+wb_int_o
+sclk_pad_o
+mosi_pad_o
+=wb_dat_o[31:0]=
+=ss_pad_o[7:0]=
+[BiDir]
+[ATTRIBUTES]
+VeriModel spi_top
+

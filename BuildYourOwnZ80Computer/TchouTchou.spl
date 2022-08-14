@@ -1,0 +1,11 @@
+[Inputs]
+ram_LB
+ram_UB
+DO_READ
+DO_FILL
+=ram_Din[7:0]=
+[Outputs]
+=ram_Dout[7:0]=
+[BiDir]
+=ram_D_L[7:0]=
+=ram_D_U[7:0]=

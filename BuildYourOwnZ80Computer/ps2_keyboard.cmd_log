@@ -1,0 +1,2 @@
+vhdtdtfi -lib work debounce.vhd -lib work ps2_keyboard.vhd -prj BuildYourOwnZ80Computer -o ps2_keyboard.spl -module ps2_keyboard -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w ps2_keyboard.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/ps2_keyboard.sym 

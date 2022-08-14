@@ -1,0 +1,688 @@
+Release 14.7 - ngc2edif P.20131013 (nt64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+Reading design amstrad_switch_z80_vga_sd.ngc ...
+WARNING:NetListWriters:298 - No output is written to
+   amstrad_switch_z80_vga_sd.xncf, ignored.
+Processing design ...
+   Preping design's networks ...
+   Preping design's macros ...
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_463_OUT_lut<4 : 2> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_466_OUT_lut<4 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var[4]_compare_to12[95]_wide_mux_544_OUT<
+   91 : 10> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_7/compare_to12<91 : 5> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/portC<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Madd_n0808_Madd_lut<19
+   : 9> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n2469_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n1778_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Msub_cortex.exec_restant[31]_GND_231_o_sub_22_OUT<31:0>_lut
+   <31 : 1> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Mcount_cortex.exec_restant_write_lut<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_259_OUT
+   <9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write[31]_cortex.exec_restant_write[31]
+   _mux_267_OUT<9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed,
+   because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_467_OUT
+   <31 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/n1302<30 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_GND_231_o_sub_22_OUT<31 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/cortex.exec_restant<31
+   : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_simple_GateArray_process.palette_A_mem[13]_GND_153
+   _o_add_238_OUT_lut<4 : 0> on block amstrad_switch_z80_vga_sd is not
+   reconstructed, because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_RVsyncpos[6]_GND_153_o_add_180_OUT_lut<4 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_n0793_Madd_cy<10 : 6> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_RVdisp[6]_RRmax[4]_MuLt_184_OUT_Madd_cy<10 : 6>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/GA_interrupt/n0637<13 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/RRmax[4]_GND_153_o_add_174_OUT<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/GA_interrupt/RVwidth<2 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_6<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_4<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_3<3 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_2<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_1<5 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/r_portc<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/portb_ipreg<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/_n0564<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_494/XLXI_2/_n0654<61 : 0>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_181_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_178_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Op<2 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Q<3 : 1> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/alu/ALU_Op[2]_Q_v[7]_wide_mux_11_OUT<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2111<119
+   : 6> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2095<24 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/Maddsub_n0297_Madd1_lut<8 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_511/XLXI_476/n0267<8 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/GND_75_o_GND_75_o_sub_100_OUT<9 : 5> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+  finished :Prep
+Writing EDIF netlist file amstrad_switch_z80_vga_sd.edif ...
+ngc2edif: Total memory usage is 102620 kilobytes
+
+Release 14.7 - ngc2edif P.20131013 (nt64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+Reading design amstrad_switch_z80_vga_sd.ngc ...
+WARNING:NetListWriters:298 - No output is written to
+   amstrad_switch_z80_vga_sd.xncf, ignored.
+Processing design ...
+   Preping design's networks ...
+   Preping design's macros ...
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_463_OUT_lut<4 : 2> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_466_OUT_lut<4 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var[4]_compare_to12[95]_wide_mux_544_OUT<
+   91 : 10> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_7/compare_to12<91 : 5> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/portC<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Madd_n0808_Madd_lut<19
+   : 9> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n2469_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n1778_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Msub_cortex.exec_restant[31]_GND_234_o_sub_22_OUT<31:0>_lut
+   <31 : 1> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Mcount_cortex.exec_restant_write_lut<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_259_OUT
+   <9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write[31]_cortex.exec_restant_write[31]
+   _mux_267_OUT<9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed,
+   because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_467_OUT
+   <31 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/n1302<30 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_GND_234_o_sub_22_OUT<31 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/cortex.exec_restant<31
+   : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_simple_GateArray_process.palette_A_mem[13]_GND_156
+   _o_add_242_OUT_lut<4 : 0> on block amstrad_switch_z80_vga_sd is not
+   reconstructed, because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_RVsyncpos[6]_GND_156_o_add_184_OUT_lut<4 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_n0784_Madd_cy<10 : 6> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_RVdisp[6]_RRmax[4]_MuLt_188_OUT_Madd_cy<10 : 6>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/GA_interrupt/n0630<13 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/RRmax[4]_GND_156_o_add_178_OUT<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_6<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_4<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_3<3 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_2<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_1<5 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/r_portc<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/portb_ipreg<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/_n0548<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_1/_n1243<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_494/XLXI_2/_n0654<61 : 0>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_181_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_178_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Op<2 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Q<3 : 1> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/alu/ALU_Op[2]_Q_v[7]_wide_mux_11_OUT<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2111<113
+   : 6> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2095<24 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/Maddsub_n0190_Madd1_lut<8 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_511/XLXI_476/n0168<8 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/GND_78_o_GND_78_o_sub_46_OUT<9 : 5> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+  finished :Prep
+Writing EDIF netlist file amstrad_switch_z80_vga_sd.edif ...
+ngc2edif: Total memory usage is 104104 kilobytes
+
+Release 14.7 - ngc2edif P.20131013 (nt64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+Reading design amstrad_switch_z80_vga_sd.ngc ...
+WARNING:NetListWriters:298 - No output is written to
+   amstrad_switch_z80_vga_sd.xncf, ignored.
+Processing design ...
+   Preping design's networks ...
+   Preping design's macros ...
+WARNING:NetListWriters:306 - Signal bus XLXI_512/portC<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Madd_n0769_Madd_lut<19
+   : 9> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n1703_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n2333_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Msub_cortex.exec_restant[31]_GND_202_o_sub_20_OUT<31:0>_lut
+   <31 : 1> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Mcount_cortex.exec_restant_write_lut<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_257_OUT
+   <9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write[31]_cortex.exec_restant_write[31]
+   _mux_265_OUT<9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed,
+   because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/n1238<30 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_GND_202_o_sub_20_OUT<31 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_465_OUT
+   <31 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/cortex.exec_restant<31
+   : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_799_OUT_lut<4 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_796_OUT_lut<4 : 2> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var[5]_X_11_o_wide_mux_879_OUT<94 : 5> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_7/compare_to12<94 : 8> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_RVsyncpos[6]_GND_158_o_add_353_OUT_lut<4 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_n1121_Madd_cy<10 : 6> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_RVdisp[6]_RRmax[4]_MuLt_357_OUT_Madd_cy<10 : 6>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_simple_GateArray_process.palette_A_tictac_mem[13]_
+   GND_158_o_add_420_OUT_lut<4 : 0> on block amstrad_switch_z80_vga_sd is not
+   reconstructed, because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/GA_interrupt/n0960<12 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/RRmax[4]_GND_158_o_add_347_OUT<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_6<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_4<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_3<3 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_2<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_1<5 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/r_portc<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/portb_ipreg<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/_n0542<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_494/XLXI_2/_n0654<61 : 0>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_181_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_178_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Op<2 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Q<3 : 1> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/alu/ALU_Op[2]_Q_v[7]_wide_mux_11_OUT<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2111<113
+   : 6> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2095<24 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_1/PWR_10_o_PWR_10_o_mux_195_OUT<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_1/leds_sangoku<7 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/Maddsub_n0304_Madd1_lut<8 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_511/XLXI_476/n0274<8 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/GND_78_o_GND_78_o_sub_97_OUT<9 : 5> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var_tortue_geniale.step_var<4 : 1> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var_tortue_geniale.step_var[5]_X_11_o_wid
+   e_mux_885_OUT<5 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed,
+   because there are some missing bus signals.
+  finished :Prep
+Writing EDIF netlist file amstrad_switch_z80_vga_sd.edif ...
+ngc2edif: Total memory usage is 108520 kilobytes
+
+Release 14.7 - ngc2edif P.20131013 (nt64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+Reading design amstrad_switch_z80_vga_sd.ngc ...
+WARNING:NetListWriters:298 - No output is written to
+   amstrad_switch_z80_vga_sd.xncf, ignored.
+Processing design ...
+   Preping design's networks ...
+   Preping design's macros ...
+WARNING:NetListWriters:306 - Signal bus XLXI_512/portC<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Madd_n0769_Madd_lut<19
+   : 9> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n1703_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/Mcompar__n2333_lut<6 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Msub_cortex.exec_restant[31]_GND_202_o_sub_20_OUT<31:0>_lut
+   <31 : 1> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/Mcount_cortex.exec_restant_write_lut<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_257_OUT
+   <9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write[31]_cortex.exec_restant_write[31]
+   _mux_265_OUT<9 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed,
+   because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/n1238<30 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_GND_202_o_sub_20_OUT<31 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant_write<31 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/XLXI_344/cortex.exec_restant[31]_cortex.exec_restant[31]_mux_465_OUT
+   <31 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because
+   there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_344/cortex.exec_restant<31
+   : 0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_799_OUT_lut<4 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/Madd_GND_12_o_GND_12_o_add_796_OUT_lut<4 : 2> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var[5]_X_11_o_wide_mux_879_OUT<94 : 5> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_7/compare_to12<94 : 8> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_RVsyncpos[6]_GND_158_o_add_353_OUT_lut<4 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_n1121_Madd_cy<10 : 6> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Mmult_RVdisp[6]_RRmax[4]_MuLt_357_OUT_Madd_cy<10 : 6>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/Madd_simple_GateArray_process.palette_A_tictac_mem[13]_
+   GND_158_o_add_420_OUT_lut<4 : 0> on block amstrad_switch_z80_vga_sd is not
+   reconstructed, because there are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/GA_interrupt/n0960<12 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/RRmax[4]_GND_158_o_add_347_OUT<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_6<4 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_4<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_3<3 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_2<5 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/GA_interrupt/ctrcConfig_process.registres_1<5 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/r_portc<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/portb_ipreg<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/PPI/_n0542<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/XLXI_494/XLXI_2/_n0654<61 : 0>
+   on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_181_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/Alternate_XY_State[1]_mux_178_OUT<2 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Op<2 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/ALU_Q<3 : 1> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_512/AmstradT80/u0/alu/ALU_Op[2]_Q_v[7]_wide_mux_11_OUT<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2111<113
+   : 6> on block amstrad_switch_z80_vga_sd is not reconstructed, because there
+   are some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_512/AmstradT80/u0/mcode/_n2095<24 :
+   0> on block amstrad_switch_z80_vga_sd is not reconstructed, because there are
+   some missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_1/PWR_10_o_PWR_10_o_mux_195_OUT<7 : 0> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_462/XLXI_1/leds_sangoku<7 : 0> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/Maddsub_n0304_Madd1_lut<8 : 3> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus XLXI_511/XLXI_476/n0274<8 : 1> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_511/XLXI_476/GND_78_o_GND_78_o_sub_97_OUT<9 : 5> on block
+   amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var_tortue_geniale.step_var<4 : 1> on
+   block amstrad_switch_z80_vga_sd is not reconstructed, because there are some
+   missing bus signals.
+WARNING:NetListWriters:306 - Signal bus
+   XLXI_462/XLXI_7/tortue_geniale.step_var_tortue_geniale.step_var[5]_X_11_o_wid
+   e_mux_885_OUT<5 : 0> on block amstrad_switch_z80_vga_sd is not reconstructed,
+   because there are some missing bus signals.
+  finished :Prep
+Writing EDIF netlist file amstrad_switch_z80_vga_sd.edif ...
+ngc2edif: Total memory usage is 108840 kilobytes
+

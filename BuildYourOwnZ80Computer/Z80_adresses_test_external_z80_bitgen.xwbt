@@ -1,0 +1,8 @@
+INTSTYLE=ise
+INFILE=C:\Users\freemac\BuildYourOwnZ80Computer\Z80_adresses_test_external_z80.ncd
+OUTFILE=C:\Users\freemac\BuildYourOwnZ80Computer\Z80_adresses_test_external_z80.bit
+FAMILY=Spartan3
+PART=xc3s200-5ft256
+WORKINGDIR=C:\Users\freemac\BuildYourOwnZ80Computer
+LICENSE=WebPack
+USER_INFO=0_0_733

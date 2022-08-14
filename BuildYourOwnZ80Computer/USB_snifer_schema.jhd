@@ -1,0 +1,3 @@
+MODULE USB_snifer_schema
+	SUBMODULE USB_snifer
+		INSTANCE XLXI_1

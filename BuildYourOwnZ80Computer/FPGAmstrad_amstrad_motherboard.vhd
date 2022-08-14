@@ -474,6 +474,37 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 	signal cassette_O:std_logic;
 	
 	-- t80_latest.tar.gz (vhdl)
+	component T80pa is
+    generic(
+        Mode : integer := 0 -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+    );
+    port(
+        RESET_n     : in  std_logic;
+        CLK         : in  std_logic;
+        CEN_p       : in  std_logic := '1';
+        CEN_n       : in  std_logic := '1';
+        WAIT_n      : in  std_logic := '1';
+        INT_n       : in  std_logic := '1';
+        NMI_n       : in  std_logic := '1';
+        BUSRQ_n     : in  std_logic := '1';
+        M1_n        : out std_logic;
+        MREQ_n      : out std_logic;
+        IORQ_n      : out std_logic;
+        RD_n        : out std_logic;
+        WR_n        : out std_logic;
+        RFSH_n      : out std_logic;
+        HALT_n      : out std_logic;
+        BUSAK_n     : out std_logic;
+        OUT0        : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
+        A           : out std_logic_vector(15 downto 0);
+        DI          : in  std_logic_vector(7 downto 0);
+        DO          : out std_logic_vector(7 downto 0);
+        REG         : out std_logic_vector(211 downto 0); -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
+        DIRSet      : in  std_logic := '0';
+        DIR         : in  std_logic_vector(211 downto 0) := (others => '0') -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
+    );
+	end component;
+	
    component T80se
       port ( RESET_n : in    std_logic; -- under time constraint test
              CLK_n   : in    std_logic; 
@@ -783,26 +814,25 @@ do_hack_t80:if HACK_Z80 and not(USE_AZ80) generate
 end generate;
 
 do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
-   AmstradT80 : T80se
-      port map (BUSRQ_n=>'1',
-                CLKEN=>'1',
-                CLK_n=>CLK4MHz, --XLXN_802,
-                DI(7 downto 0)=>MIX_DOUT_MOUSE(7 downto 0),
-                INT_n=>INT_n,
-                NMI_n=>'1',
-                RESET_n=>RESET_n, -- '1'der time constraint test
-                WAIT_n=>WAIT_n, --'1',
-                A(15 downto 0)=>A(15 downto 0),
-                BUSAK_n=>open,
-                DO(7 downto 0)=>D(7 downto 0),
-                HALT_n=>open,
-                IORQ_n=>IORQ_n,
-                MREQ_n=>MREQ_n,
-                M1_n=>M1_n,
-                RD_n=>RD_n,
-                RFSH_n=>RFSH_n,
-                WR_n=>WR_n);
-
+   AmstradT80 : T80pa
+      port map (
+		  RESET_n =>RESET_n,
+        CLK =>CLK4MHz,
+        WAIT_n=>WAIT_n,
+        INT_n=>INT_n,
+        M1_n=>M1_n,
+        MREQ_n=>MREQ_n,
+        IORQ_n=>IORQ_n,
+        RD_n=>RD_n,
+        WR_n=>WR_n,
+        RFSH_n=>RFSH_n,
+        HALT_n=>open,
+        BUSAK_n=>open,
+        A(15 downto 0)=>A(15 downto 0),
+        DI(7 downto 0)=>MIX_DOUT_MOUSE(7 downto 0),
+        DO(7 downto 0)=>D(7 downto 0));
+		
+		
 					 -- #FBEE	%xxxxx0x1 xxx0xxx0	Kempston Mouse - 8bit X position
 					 -- #FBEF	%xxxxx0x1 xxx0xxx1	Kempston Mouse - 8bit Y position
 					 -- #FAEF	%xxxxx0x0 xxx0xxxx	Kempston Mouse - Mouse Buttons

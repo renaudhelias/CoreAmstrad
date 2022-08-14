@@ -1,0 +1,38 @@
+NET "CLK50MHz" LOC = "T9";
+NET "RED" LOC = "R12";
+NET "GREEN" LOC = "T12";
+NET "BLUE" LOC = "R11";
+NET "HSYNC" LOC = "R9";
+NET "VSYNC" LOC = "T10";
+
+NET "SWITCH_WAIT" LOC="G12";
+
+NET "ram_W" LOC="G3";
+NET "ram_A<0>" LOC="L5";
+NET "ram_A<1>" LOC="N3";
+NET "ram_A<2>" LOC="M4";
+NET "ram_A<3>" LOC="M3";
+NET "ram_A<4>" LOC="L4";
+NET "ram_A<5>" LOC="G4";
+NET "ram_A<6>" LOC="F3";
+NET "ram_A<7>" LOC="F4";
+NET "ram_A<8>" LOC="E3";
+NET "ram_A<9>" LOC="E4";
+NET "ram_A<10>" LOC="G5";
+NET "ram_A<11>" LOC="H3";
+NET "ram_A<12>" LOC="H4";
+NET "ram_A<13>" LOC="J4";
+NET "ram_A<14>" LOC="J3";
+NET "ram_D<0>" LOC="N7"; # donc on est sur la SRAM d'en haut
+NET "ram_D<1>" LOC="T8";
+NET "ram_D<2>" LOC="R6";
+NET "ram_D<3>" LOC="T5";
+NET "ram_D<4>" LOC="R5";
+NET "ram_D<5>" LOC="C2";
+NET "ram_D<6>" LOC="C1";
+NET "ram_D<7>" LOC="B1";
+
+NET "OE1" LOC="K4";
+NET "CE1" LOC="P7";
+NET "UB1" LOC="T4";
+NET "LB1" LOC="P6";

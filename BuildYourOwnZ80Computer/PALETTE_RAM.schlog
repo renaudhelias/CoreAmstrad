@@ -1,0 +1,3 @@
+select figure at 274 808 8 -wires -sn=1
+select figure at 268 716 8 -branches -sn=1
+select figure at 225 1234 8 -wires -sn=1

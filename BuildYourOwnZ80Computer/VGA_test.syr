@@ -1,0 +1,566 @@
+Release 12.2 - xst M.63c (nt)
+Copyright (c) 1995-2010 Xilinx, Inc.  All rights reserved.
+--> Parameter TMPDIR set to xst/projnav.tmp
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.17 secs
+ 
+--> Parameter xsthdpdir set to xst
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.17 secs
+ 
+--> Reading design: VGA_test.prj
+
+TABLE OF CONTENTS
+  1) Synthesis Options Summary
+  2) HDL Compilation
+  3) Design Hierarchy Analysis
+  4) HDL Analysis
+  5) HDL Synthesis
+     5.1) HDL Synthesis Report
+  6) Advanced HDL Synthesis
+     6.1) Advanced HDL Synthesis Report
+  7) Low Level Synthesis
+  8) Partition Report
+  9) Final Report
+	9.1) Device utilization summary
+	9.2) Partition Resource Summary
+	9.3) TIMING REPORT
+
+
+=========================================================================
+*                      Synthesis Options Summary                        *
+=========================================================================
+---- Source Parameters
+Input File Name                    : "VGA_test.prj"
+Input Format                       : mixed
+Ignore Synthesis Constraint File   : NO
+
+---- Target Parameters
+Output File Name                   : "VGA_test"
+Output Format                      : NGC
+Target Device                      : xc3s500e-5-fg320
+
+---- Source Options
+Top Module Name                    : VGA_test
+Automatic FSM Extraction           : YES
+FSM Encoding Algorithm             : Auto
+Safe Implementation                : No
+FSM Style                          : LUT
+RAM Extraction                     : Yes
+RAM Style                          : Auto
+ROM Extraction                     : Yes
+Mux Style                          : Auto
+Decoder Extraction                 : YES
+Priority Encoder Extraction        : Yes
+Shift Register Extraction          : YES
+Logical Shifter Extraction         : YES
+XOR Collapsing                     : YES
+ROM Style                          : Auto
+Mux Extraction                     : Yes
+Resource Sharing                   : YES
+Asynchronous To Synchronous        : NO
+Multiplier Style                   : Auto
+Automatic Register Balancing       : No
+
+---- Target Options
+Add IO Buffers                     : YES
+Global Maximum Fanout              : 500
+Add Generic Clock Buffer(BUFG)     : 24
+Register Duplication               : YES
+Slice Packing                      : YES
+Optimize Instantiated Primitives   : NO
+Use Clock Enable                   : Yes
+Use Synchronous Set                : Yes
+Use Synchronous Reset              : Yes
+Pack IO Registers into IOBs        : Auto
+Equivalent register Removal        : YES
+
+---- General Options
+Optimization Goal                  : Speed
+Optimization Effort                : 1
+Keep Hierarchy                     : No
+Netlist Hierarchy                  : As_Optimized
+RTL Output                         : Yes
+Global Optimization                : AllClockNets
+Read Cores                         : YES
+Write Timing Constraints           : NO
+Cross Clock Analysis               : NO
+Hierarchy Separator                : /
+Bus Delimiter                      : <>
+Case Specifier                     : Maintain
+Slice Utilization Ratio            : 100
+BRAM Utilization Ratio             : 100
+Verilog 2001                       : YES
+Auto BRAM Packing                  : NO
+Slice Utilization Ratio Delta      : 5
+
+=========================================================================
+
+
+=========================================================================
+*                          HDL Compilation                              *
+=========================================================================
+Compiling vhdl file "C:/Users/freemac/BuildYourOwnZ80Computer/aZRaEL_vram2vga.vhd" in Library work.
+Architecture behavioral of Entity azrael_vram2vga is up to date.
+Compiling vhdl file "C:/Users/freemac/BuildYourOwnZ80Computer/NEXUS_RGB.vhd" in Library work.
+Entity <nexus_rgb> compiled.
+Entity <nexus_rgb> (Architecture <behavioral>) compiled.
+Compiling vhdl file "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf" in Library work.
+Entity <ftce_mxilinx_vga_test> compiled.
+Entity <ftce_mxilinx_vga_test> (Architecture <behavioral>) compiled.
+Entity <cb2ce_mxilinx_vga_test> compiled.
+Entity <cb2ce_mxilinx_vga_test> (Architecture <behavioral>) compiled.
+Entity <divideby2_muser_vga_test> compiled.
+Entity <divideby2_muser_vga_test> (Architecture <behavioral>) compiled.
+Entity <vga_test> compiled.
+Entity <vga_test> (Architecture <behavioral>) compiled.
+Compiling vhdl file "C:/Users/freemac/BuildYourOwnZ80Computer/divideby2.vhf" in Library work.
+Architecture behavioral of Entity ftce_mxilinx_divideby2 is up to date.
+Architecture behavioral of Entity cb2ce_mxilinx_divideby2 is up to date.
+Architecture behavioral of Entity divideby2 is up to date.
+
+=========================================================================
+*                     Design Hierarchy Analysis                         *
+=========================================================================
+Analyzing hierarchy for entity <VGA_test> in library <work> (architecture <behavioral>).
+
+Analyzing hierarchy for entity <aZRaEL_vram2vga> in library <work> (architecture <behavioral>) with generics.
+	HDecal = 64
+	HDsp = 640
+	HSE = 752
+	HSS = 656
+	HTot = 800
+	HZoom = 4
+	SQRT_VRAM_HEIGHT = 7
+	SQRT_VRAM_WIDTH = 7
+	VDecal = 0
+	VDsp = 480
+	VSE = 492
+	VSS = 490
+	VTot = 525
+	VZoom = 4
+	label_modeline = "640x480@60"
+	nhsync = '1'
+	nvsync = '1'
+	pxcl = "25.2"
+
+Analyzing hierarchy for entity <NEXUS_RGB> in library <work> (architecture <behavioral>).
+
+Analyzing hierarchy for entity <divideby2_MUSER_VGA_test> in library <work> (architecture <behavioral>).
+
+Analyzing hierarchy for entity <CB2CE_MXILINX_VGA_test> in library <work> (architecture <behavioral>).
+
+Analyzing hierarchy for entity <FTCE_MXILINX_VGA_test> in library <work> (architecture <behavioral>) with generics.
+	INIT = '0'
+
+
+=========================================================================
+*                            HDL Analysis                               *
+=========================================================================
+Analyzing Entity <VGA_test> in library <work> (Architecture <behavioral>).
+WARNING:Xst:753 - "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf" line 277: Unconnected output port 'R' of component 'aZRaEL_vram2vga'.
+WARNING:Xst:753 - "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf" line 277: Unconnected output port 'ADDRESS' of component 'aZRaEL_vram2vga'.
+Entity <VGA_test> analyzed. Unit <VGA_test> generated.
+
+Analyzing generic Entity <aZRaEL_vram2vga> in library <work> (Architecture <behavioral>).
+	HDecal = 64
+	HDsp = 640
+	HSE = 752
+	HSS = 656
+	HTot = 800
+	HZoom = 4
+	SQRT_VRAM_HEIGHT = 7
+	SQRT_VRAM_WIDTH = 7
+	VDecal = 0
+	VDsp = 480
+	VSE = 492
+	VSS = 490
+	VTot = 525
+	VZoom = 4
+	label_modeline = "640x480@60"
+	nhsync = '1'
+	nvsync = '1'
+	pxcl = "25.2"
+Entity <aZRaEL_vram2vga> analyzed. Unit <aZRaEL_vram2vga> generated.
+
+Analyzing Entity <NEXUS_RGB> in library <work> (Architecture <behavioral>).
+Entity <NEXUS_RGB> analyzed. Unit <NEXUS_RGB> generated.
+
+Analyzing Entity <divideby2_MUSER_VGA_test> in library <work> (Architecture <behavioral>).
+WARNING:Xst:753 - "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf" line 198: Unconnected output port 'CEO' of component 'CB2CE_MXILINX_VGA_test'.
+WARNING:Xst:753 - "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf" line 198: Unconnected output port 'Q1' of component 'CB2CE_MXILINX_VGA_test'.
+WARNING:Xst:753 - "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf" line 198: Unconnected output port 'TC' of component 'CB2CE_MXILINX_VGA_test'.
+    Set user-defined property "HU_SET =  XLXI_24_2" for instance <XLXI_24> in unit <divideby2_MUSER_VGA_test>.
+Entity <divideby2_MUSER_VGA_test> analyzed. Unit <divideby2_MUSER_VGA_test> generated.
+
+Analyzing Entity <CB2CE_MXILINX_VGA_test> in library <work> (Architecture <behavioral>).
+    Set user-defined property "HU_SET =  I_Q0_0" for instance <I_Q0> in unit <CB2CE_MXILINX_VGA_test>.
+    Set user-defined property "HU_SET =  I_Q1_1" for instance <I_Q1> in unit <CB2CE_MXILINX_VGA_test>.
+Entity <CB2CE_MXILINX_VGA_test> analyzed. Unit <CB2CE_MXILINX_VGA_test> generated.
+
+Analyzing generic Entity <FTCE_MXILINX_VGA_test> in library <work> (Architecture <behavioral>).
+	INIT = '0'
+    Set user-defined property "INIT =  0" for instance <I_36_35> in unit <FTCE_MXILINX_VGA_test>.
+    Set user-defined property "RLOC =  X0Y0" for instance <I_36_35> in unit <FTCE_MXILINX_VGA_test>.
+Entity <FTCE_MXILINX_VGA_test> analyzed. Unit <FTCE_MXILINX_VGA_test> generated.
+
+
+=========================================================================
+*                           HDL Synthesis                               *
+=========================================================================
+
+Performing bidirectional port resolution...
+
+Synthesizing Unit <aZRaEL_vram2vga>.
+    Related source file is "C:/Users/freemac/BuildYourOwnZ80Computer/aZRaEL_vram2vga.vhd".
+WARNING:Xst:647 - Input <DATA<4:0>> is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+    Found 1-bit register for signal <BLUE>.
+    Found 1-bit register for signal <VSYNC>.
+    Found 1-bit register for signal <GREEN>.
+    Found 14-bit register for signal <ADDRESS>.
+    Found 1-bit register for signal <R>.
+    Found 1-bit register for signal <RED>.
+    Found 1-bit register for signal <HSYNC>.
+    Found 10-bit comparator greatequal for signal <ADDRESS_0$cmp_ge0000> created at line 77.
+    Found 10-bit comparator greatequal for signal <ADDRESS_0$cmp_ge0001> created at line 78.
+    Found 10-bit comparator less for signal <ADDRESS_0$cmp_lt0000> created at line 78.
+    Found 32-bit adder for signal <ADDRESS_6_0$add0000>.
+    Found 32-bit adder for signal <ADDRESS_6_0$addsub0000>.
+    Found 10-bit subtractor for signal <ADDRESS_6_0$sub0001> created at line 84.
+    Found 1-bit register for signal <etat_hsync>.
+    Found 10-bit comparator greatequal for signal <etat_hsync$cmp_ge0000> created at line 94.
+    Found 10-bit comparator less for signal <etat_hsync$cmp_lt0000> created at line 94.
+    Found 1-bit register for signal <etat_rgb>.
+    Found 1-bit register for signal <etat_vsync>.
+    Found 10-bit comparator greatequal for signal <etat_vsync$cmp_ge0000> created at line 99.
+    Found 10-bit comparator less for signal <etat_vsync$cmp_lt0000> created at line 99.
+    Found 10-bit register for signal <horizontal_counter>.
+    Found 10-bit adder for signal <horizontal_counter$addsub0000> created at line 105.
+    Found 10-bit comparator greatequal for signal <horizontal_counter$cmp_ge0000> created at line 106.
+    Found 10-bit up counter for signal <vertical_counter>.
+    Found 10-bit adder for signal <vertical_counter$addsub0000> created at line 111.
+    Found 10-bit comparator greatequal for signal <vertical_counter$cmp_ge0000> created at line 112.
+    Summary:
+	inferred   1 Counter(s).
+	inferred  33 D-type flip-flop(s).
+	inferred   5 Adder/Subtractor(s).
+	inferred   9 Comparator(s).
+Unit <aZRaEL_vram2vga> synthesized.
+
+
+Synthesizing Unit <NEXUS_RGB>.
+    Related source file is "C:/Users/freemac/BuildYourOwnZ80Computer/NEXUS_RGB.vhd".
+Unit <NEXUS_RGB> synthesized.
+
+
+Synthesizing Unit <FTCE_MXILINX_VGA_test>.
+    Related source file is "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf".
+Unit <FTCE_MXILINX_VGA_test> synthesized.
+
+
+Synthesizing Unit <CB2CE_MXILINX_VGA_test>.
+    Related source file is "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf".
+Unit <CB2CE_MXILINX_VGA_test> synthesized.
+
+
+Synthesizing Unit <divideby2_MUSER_VGA_test>.
+    Related source file is "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf".
+Unit <divideby2_MUSER_VGA_test> synthesized.
+
+
+Synthesizing Unit <VGA_test>.
+    Related source file is "C:/Users/freemac/BuildYourOwnZ80Computer/VGA_test.vhf".
+Unit <VGA_test> synthesized.
+
+
+=========================================================================
+HDL Synthesis Report
+
+Macro Statistics
+# Adders/Subtractors                                   : 5
+ 10-bit adder                                          : 2
+ 10-bit subtractor                                     : 1
+ 32-bit adder                                          : 2
+# Counters                                             : 1
+ 10-bit up counter                                     : 1
+# Registers                                            : 24
+ 1-bit register                                        : 23
+ 10-bit register                                       : 1
+# Comparators                                          : 9
+ 10-bit comparator greatequal                          : 6
+ 10-bit comparator less                                : 3
+
+=========================================================================
+
+=========================================================================
+*                       Advanced HDL Synthesis                          *
+=========================================================================
+
+
+=========================================================================
+Advanced HDL Synthesis Report
+
+Macro Statistics
+# Adders/Subtractors                                   : 5
+ 10-bit adder                                          : 2
+ 10-bit subtractor                                     : 1
+ 7-bit adder                                           : 1
+ 9-bit adder                                           : 1
+# Counters                                             : 1
+ 10-bit up counter                                     : 1
+# Registers                                            : 35
+ Flip-Flops                                            : 35
+# Comparators                                          : 9
+ 10-bit comparator greatequal                          : 6
+ 10-bit comparator less                                : 3
+
+=========================================================================
+
+=========================================================================
+*                         Low Level Synthesis                           *
+=========================================================================
+INFO:Xst:2261 - The FF/Latch <etat_rgb> in Unit <aZRaEL_vram2vga> is equivalent to the following FF/Latch, which will be removed : <R> 
+INFO:Xst:2261 - The FF/Latch <BLUE> in Unit <aZRaEL_vram2vga> is equivalent to the following FF/Latch, which will be removed : <GREEN> 
+
+Optimizing unit <VGA_test> ...
+
+Optimizing unit <aZRaEL_vram2vga> ...
+
+Optimizing unit <FTCE_MXILINX_VGA_test> ...
+
+Optimizing unit <CB2CE_MXILINX_VGA_test> ...
+WARNING:Xst:1710 - FF/Latch <XLXI_1/BLUE> (without init value) has a constant value of 0 in block <VGA_test>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_13> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_11> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_10> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_12> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_9> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_8> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_7> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_5> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_4> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_6> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_3> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_2> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_1> of sequential type is unconnected in block <VGA_test>.
+WARNING:Xst:2677 - Node <XLXI_1/ADDRESS_0> of sequential type is unconnected in block <VGA_test>.
+
+Mapping all equations...
+Building and optimizing final netlist ...
+Found area constraint ratio of 100 (+ 5) on block VGA_test, actual ratio is 0.
+
+Final Macro Processing ...
+
+=========================================================================
+Final Register Report
+
+Macro Statistics
+# Registers                                            : 28
+ Flip-Flops                                            : 28
+
+=========================================================================
+
+=========================================================================
+*                           Partition Report                            *
+=========================================================================
+
+Partition Implementation Status
+-------------------------------
+
+  No Partitions were found in this design.
+
+-------------------------------
+
+=========================================================================
+*                            Final Report                               *
+=========================================================================
+Final Results
+RTL Top Level Output File Name     : VGA_test.ngr
+Top Level Output File Name         : VGA_test
+Output Format                      : NGC
+Optimization Goal                  : Speed
+Keep Hierarchy                     : No
+
+Design Statistics
+# IOs                              : 11
+
+Cell Usage :
+# BELS                             : 126
+#      AND2                        : 2
+#      GND                         : 1
+#      INV                         : 4
+#      LUT1                        : 27
+#      LUT2                        : 2
+#      LUT3                        : 9
+#      LUT3_D                      : 1
+#      LUT3_L                      : 1
+#      LUT4                        : 15
+#      LUT4_D                      : 1
+#      MUXCY                       : 27
+#      MUXF5                       : 2
+#      VCC                         : 2
+#      XOR2                        : 2
+#      XORCY                       : 30
+# FlipFlops/Latches                : 28
+#      FD                          : 10
+#      FDCE                        : 2
+#      FDR                         : 6
+#      FDRE                        : 10
+# Clock Buffers                    : 2
+#      BUFG                        : 1
+#      BUFGP                       : 1
+# IO Buffers                       : 10
+#      OBUF                        : 10
+=========================================================================
+
+Device utilization summary:
+---------------------------
+
+Selected Device : 3s500efg320-5 
+
+ Number of Slices:                       40  out of   4656     0%  
+ Number of Slice Flip Flops:             28  out of   9312     0%  
+ Number of 4 input LUTs:                 60  out of   9312     0%  
+ Number of IOs:                          11
+ Number of bonded IOBs:                  11  out of    232     4%  
+ Number of GCLKs:                         2  out of     24     8%  
+
+---------------------------
+Partition Resource Summary:
+---------------------------
+
+  No Partitions were found in this design.
+
+---------------------------
+
+
+=========================================================================
+TIMING REPORT
+
+NOTE: THESE TIMING NUMBERS ARE ONLY A SYNTHESIS ESTIMATE.
+      FOR ACCURATE TIMING INFORMATION PLEASE REFER TO THE TRACE REPORT
+      GENERATED AFTER PLACE-and-ROUTE.
+
+Clock Information:
+------------------
+-----------------------------------+------------------------+-------+
+Clock Signal                       | Clock buffer(FF name)  | Load  |
+-----------------------------------+------------------------+-------+
+XLXI_3/XLXI_24/I_Q0/Q_DUMMY1       | BUFG                   | 26    |
+CLK50MHz                           | BUFGP                  | 2     |
+-----------------------------------+------------------------+-------+
+
+Asynchronous Control Signals Information:
+----------------------------------------
+-----------------------------------+----------------------------------+-------+
+Control Signal                     | Buffer(FF name)                  | Load  |
+-----------------------------------+----------------------------------+-------+
+XLXI_3/XLXN_35(XLXI_3/XLXI_26:G)   | NONE(XLXI_3/XLXI_24/I_Q0/I_36_35)| 2     |
+-----------------------------------+----------------------------------+-------+
+
+Timing Summary:
+---------------
+Speed Grade: -5
+
+   Minimum period: 8.359ns (Maximum Frequency: 119.629MHz)
+   Minimum input arrival time before clock: No path found
+   Maximum output required time after clock: 4.134ns
+   Maximum combinational path delay: No path found
+
+Timing Detail:
+--------------
+All values displayed in nanoseconds (ns)
+
+=========================================================================
+Timing constraint: Default period analysis for Clock 'XLXI_3/XLXI_24/I_Q0/Q_DUMMY1'
+  Clock period: 8.359ns (frequency: 119.629MHz)
+  Total number of paths / destination ports: 4505 / 46
+-------------------------------------------------------------------------
+Delay:               8.359ns (Levels of Logic = 10)
+  Source:            XLXI_1/horizontal_counter_1 (FF)
+  Destination:       XLXI_1/vertical_counter_9 (FF)
+  Source Clock:      XLXI_3/XLXI_24/I_Q0/Q_DUMMY1 rising
+  Destination Clock: XLXI_3/XLXI_24/I_Q0/Q_DUMMY1 rising
+
+  Data Path: XLXI_1/horizontal_counter_1 to XLXI_1/vertical_counter_9
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FD:C->Q               1   0.514   0.509  XLXI_1/horizontal_counter_1 (XLXI_1/horizontal_counter_1)
+     LUT1:I0->O            1   0.612   0.000  XLXI_1/Madd_horizontal_counter_addsub0000_cy<1>_rt (XLXI_1/Madd_horizontal_counter_addsub0000_cy<1>_rt)
+     MUXCY:S->O            1   0.404   0.000  XLXI_1/Madd_horizontal_counter_addsub0000_cy<1> (XLXI_1/Madd_horizontal_counter_addsub0000_cy<1>)
+     MUXCY:CI->O           1   0.051   0.000  XLXI_1/Madd_horizontal_counter_addsub0000_cy<2> (XLXI_1/Madd_horizontal_counter_addsub0000_cy<2>)
+     MUXCY:CI->O           1   0.051   0.000  XLXI_1/Madd_horizontal_counter_addsub0000_cy<3> (XLXI_1/Madd_horizontal_counter_addsub0000_cy<3>)
+     MUXCY:CI->O           1   0.051   0.000  XLXI_1/Madd_horizontal_counter_addsub0000_cy<4> (XLXI_1/Madd_horizontal_counter_addsub0000_cy<4>)
+     XORCY:CI->O           4   0.699   0.651  XLXI_1/Madd_horizontal_counter_addsub0000_xor<5> (XLXI_1/horizontal_counter_addsub0000<5>)
+     LUT2:I0->O            1   0.612   0.360  XLXI_1/vertical_counter_cmp_eq000037_SW1 (N14)
+     LUT4_D:I3->LO         1   0.612   0.103  XLXI_1/vertical_counter_cmp_eq000037 (N19)
+     LUT4:I3->O            1   0.612   0.360  XLXI_1/vertical_counter_cmp_eq000040_SW1 (N10)
+     LUT4:I3->O           10   0.612   0.750  XLXI_1/vertical_counter_and000033 (XLXI_1/vertical_counter_and0000)
+     FDRE:R                    0.795          XLXI_1/vertical_counter_0
+    ----------------------------------------
+    Total                      8.359ns (5.627ns logic, 2.733ns route)
+                                       (67.3% logic, 32.7% route)
+
+=========================================================================
+Timing constraint: Default period analysis for Clock 'CLK50MHz'
+  Clock period: 4.660ns (frequency: 214.604MHz)
+  Total number of paths / destination ports: 3 / 2
+-------------------------------------------------------------------------
+Delay:               4.660ns (Levels of Logic = 3)
+  Source:            XLXI_3/XLXI_24/I_Q0/I_36_35 (FF)
+  Destination:       XLXI_3/XLXI_24/I_Q1/I_36_35 (FF)
+  Source Clock:      CLK50MHz rising
+  Destination Clock: CLK50MHz rising
+
+  Data Path: XLXI_3/XLXI_24/I_Q0/I_36_35 to XLXI_3/XLXI_24/I_Q1/I_36_35
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FDCE:C->Q             2   0.514   0.380  I_36_35 (Q_DUMMY1)
+     BUFG:I->O            28   1.457   1.072  Q_DUMMY_BUFG (Q)
+     end scope: 'I_Q0'
+     begin scope: 'I_Q1'
+     XOR2:I0->O            1   0.612   0.357  I_36_32 (TQ)
+     FDCE:D                    0.268          I_36_35
+    ----------------------------------------
+    Total                      4.660ns (2.851ns logic, 1.809ns route)
+                                       (61.2% logic, 38.8% route)
+
+=========================================================================
+Timing constraint: Default OFFSET OUT AFTER for Clock 'XLXI_3/XLXI_24/I_Q0/Q_DUMMY1'
+  Total number of paths / destination ports: 5 / 5
+-------------------------------------------------------------------------
+Offset:              4.134ns (Levels of Logic = 1)
+  Source:            XLXI_1/RED (FF)
+  Destination:       RED3<2> (PAD)
+  Source Clock:      XLXI_3/XLXI_24/I_Q0/Q_DUMMY1 rising
+
+  Data Path: XLXI_1/RED to RED3<2>
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FDR:C->Q              3   0.514   0.451  XLXI_1/RED (XLXI_1/RED)
+     OBUF:I->O                 3.169          RED3_2_OBUF (RED3<2>)
+    ----------------------------------------
+    Total                      4.134ns (3.683ns logic, 0.451ns route)
+                                       (89.1% logic, 10.9% route)
+
+=========================================================================
+
+
+Total REAL time to Xst completion: 8.00 secs
+Total CPU time to Xst completion: 8.75 secs
+ 
+--> 
+
+Total memory usage is 167300 kilobytes
+
+Number of errors   :    0 (   0 filtered)
+Number of warnings :   21 (   0 filtered)
+Number of infos    :    2 (   0 filtered)
+

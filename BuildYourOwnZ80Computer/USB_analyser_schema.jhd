@@ -1,0 +1,5 @@
+MODULE USB_analyser_schema
+	SUBMODULE USB_analyser
+		INSTANCE XLXI_7
+	SUBMODULE USB_analyser_to_RAM
+		INSTANCE XLXI_10

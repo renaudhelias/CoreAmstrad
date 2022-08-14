@@ -1,0 +1,3 @@
+MODULE BarbarianSequencer
+	SUBMODULE CLK_commander
+		INSTANCE XLXI_1

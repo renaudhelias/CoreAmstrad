@@ -1,0 +1,13 @@
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SDRAM_SPIMASTER.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SDRAM_SPIMASTER.sym 
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SDRAM_SPIMASTER.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SDRAM_SPIMASTER.sym 
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SDRAM_SPIMASTER.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SDRAM_SPIMASTER.sym 
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SDRAM_SPIMASTER.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SDRAM_SPIMASTER.sym 
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SDRAM_SPIMASTER.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SDRAM_SPIMASTER.sym 
+vhdtdtfi -lib work SDRAM_SPIMASTER.vhd -prj BuildYourOwnZ80Computer -o SDRAM_SPIMASTER.spl -module SDRAM_SPIMASTER -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SDRAM_SPIMASTER.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SDRAM_SPIMASTER.sym 

@@ -1,0 +1,13 @@
+NET "CLK50MHz" LOC = "T9";
+# led NET "K12" LOC = "K12";
+NET "RED" LOC = "R12"; # red
+NET "GREEN" LOC = "T12"; # green
+NET "BLUE" LOC = "R11"; # blue
+#NET "TEST_VCC" LOC = "R12"; # red
+#NET "TEST_GND" LOC = "T12"; # green
+#NET "TEST_GND" LOC = "R11"; # blue
+NET "HSYNC" LOC = "R9";
+NET "VSYNC2" LOC = "T10";
+NET "VSYNC2" LOC = "E6"; # 4 de A2
+NET "HSYNC" LOC = "D5"; # 5 de A2
+NET "RESET" LOC = "F12"; # 5 de A2

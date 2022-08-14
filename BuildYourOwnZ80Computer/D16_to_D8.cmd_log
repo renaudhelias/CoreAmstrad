@@ -1,0 +1,2 @@
+vhdtdtfi -lib work D16_to_D8.vhd -prj BuildYourOwnZ80Computer -o D16_to_D8.spl -module D16_to_D8 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w D16_to_D8.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/D16_to_D8.sym 

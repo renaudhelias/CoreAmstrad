@@ -1,0 +1,7 @@
+NET "CLK50MHz" LOC = "T9";
+#NET "CLK1MHz" LOC = "E6"; # 4 de A2
+NET "CLKOUT<15>" LOC = "E6"; # 4 de A2
+NET "TEST_GND" LOC = "D5"; # 5 de A2
+NET "TEST_VCC" LOC = "C5"; # 6 de A2
+#NET "TEST_GND" LOC = "P11"; # LED 7
+#NET "TEST_VCC" LOC = "P12"; # LED 6

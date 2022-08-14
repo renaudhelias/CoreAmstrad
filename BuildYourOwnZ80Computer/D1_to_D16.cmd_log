@@ -1,0 +1,8 @@
+vhdtdtfi -lib work D1_to_D16.vhd -prj BuildYourOwnZ80Computer -o D1_to_D16.spl -module D1_to_D16 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w D1_to_D16.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/D1_to_D16.sym 
+vhdtdtfi -lib work D1_to_D16.vhd -prj BuildYourOwnZ80Computer -o D1_to_D16.spl -module D1_to_D16 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w D1_to_D16.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/D1_to_D16.sym 
+vhdtdtfi -lib work D1_to_D16.vhd -prj BuildYourOwnZ80Computer -o D1_to_D16.spl -module D1_to_D16 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w D1_to_D16.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/D1_to_D16.sym 
+vhdtdtfi -lib work D1_to_D16.vhd -prj BuildYourOwnZ80Computer -o D1_to_D16.spl -module D1_to_D16 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w D1_to_D16.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/D1_to_D16.sym 

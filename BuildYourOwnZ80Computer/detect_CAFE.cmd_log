@@ -1,0 +1,4 @@
+vhdtdtfi -lib work detect_CAFE.vhd -prj BuildYourOwnZ80Computer -o detect_CAFE.spl -module detect_CAFE -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w detect_CAFE.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/detect_CAFE.sym 
+vhdtdtfi -lib work detect_CAFE.vhd -prj BuildYourOwnZ80Computer -o detect_CAFE.spl -module detect_CAFE -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w detect_CAFE.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/detect_CAFE.sym 

@@ -1,0 +1,4 @@
+vhdl work "NEXUS_RGB.vhd"
+vhdl work "divideby2.vhf"
+vhdl work "aZRaEL_vram2vga.vhd"
+vhdl work "VGA_test.vhf"

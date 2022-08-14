@@ -1,0 +1,4 @@
+vhdtdtfi -lib work synchroRESET_n.vhd -prj BuildYourOwnZ80Computer -o synchroRESET_n.spl -module synchroRESET_n -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w synchroRESET_n.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/synchroRESET_n.sym 
+vhdtdtfi -lib work synchroRESET_n.vhd -prj BuildYourOwnZ80Computer -o synchroRESET_n.spl -module synchroRESET_n -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w synchroRESET_n.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/synchroRESET_n.sym 

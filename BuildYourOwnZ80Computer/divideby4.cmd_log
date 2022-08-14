@@ -1,0 +1,1 @@
+sch2sym -intstyle ise -family artix7 -w -refsym divideby4 C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/divideby4.sch C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/divideby4.sym 

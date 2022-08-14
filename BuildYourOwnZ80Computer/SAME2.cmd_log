@@ -1,0 +1,2 @@
+vhdtdtfi -lib work SAME2.vhd -prj BuildYourOwnZ80Computer -o SAME2.spl -module SAME2 -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w SAME2.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/SAME2.sym 

@@ -1,0 +1,11 @@
+# PROMGEN: Xilinx Prom Generator P.20131013
+# Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+
+SOFTWARE_VERSION P.20131013
+DATE            01/18/2015 - 15:37
+SOURCE          C:\fpgamstrad\BuildYourOwnZ80Computer_amstrad_vhdl_002_repack\BuildYourOwnZ80Computer\Untitled.mcs
+DEVICE          4096K
+DATA_WIDTH      1
+FILL_DATA       0xFF
+SIGNATURE       0x065F52D3
+START_ADDRESS   0x00000000 END_ADDRESS 0x003A607B DIRECTION_UP   "C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/amstrad_switch_z80_vga_sd.bit" 7a100tcsg324

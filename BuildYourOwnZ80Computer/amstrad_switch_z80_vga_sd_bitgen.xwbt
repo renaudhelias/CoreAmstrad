@@ -1,0 +1,8 @@
+INTSTYLE=ise
+INFILE=C:\fpgamstrad\BuildYourOwnZ80Computer_amstrad_vhdl_002_repack\BuildYourOwnZ80Computer\amstrad_switch_z80_vga_sd.ncd
+OUTFILE=C:\fpgamstrad\BuildYourOwnZ80Computer_amstrad_vhdl_002_repack\BuildYourOwnZ80Computer\amstrad_switch_z80_vga_sd.bit
+FAMILY=Artix7
+PART=xc7a100t-1csg324
+WORKINGDIR=C:\fpgamstrad\BuildYourOwnZ80Computer_amstrad_vhdl_002_repack\BuildYourOwnZ80Computer
+LICENSE=WebPack
+USER_INFO=205653148_0_0_919

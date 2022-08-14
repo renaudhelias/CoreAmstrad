@@ -1,0 +1,12 @@
+[Inputs]
+CLK_25MHz
+=DATA[7:0]=
+[Outputs]
+R
+RED
+GREEN
+BLUE
+VSYNC
+HSYNC
+=ADDRESS[15:0]=
+[BiDir]

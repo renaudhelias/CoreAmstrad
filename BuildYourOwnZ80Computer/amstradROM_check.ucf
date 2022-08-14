@@ -1,0 +1,62 @@
+NET "LEDS<0>" LOC="K12";
+NET "LEDS<1>" LOC="P14";
+NET "LEDS<2>" LOC="L12";
+NET "LEDS<3>" LOC="N14";
+NET "LEDS<4>" LOC="P13";
+NET "LEDS<5>" LOC="N12";
+NET "LEDS<6>" LOC="P12";
+NET "LEDS<7>" LOC="P11";
+
+NET "BUTTON_0" LOC="M13";
+NET "BUTTON_0" CLOCK_DEDICATED_ROUTE = "FALSE";
+
+# 1 GND
+# 2 Vcc 5v
+# 3 Vcc 3.3v
+NET "ram_W" LOC="G3";
+NET "ram_A<0>" LOC="L5";
+NET "ram_A<1>" LOC="N3";
+NET "ram_A<2>" LOC="M4";
+NET "ram_A<3>" LOC="M3";
+NET "ram_A<4>" LOC="L4";
+NET "ram_A<5>" LOC="G4";
+NET "ram_A<6>" LOC="F3";
+NET "ram_A<7>" LOC="F4";
+NET "ram_A<8>" LOC="E3";
+NET "ram_A<9>" LOC="E4";
+NET "ram_A<10>" LOC="G5";
+NET "ram_A<11>" LOC="H3";
+NET "ram_A<12>" LOC="H4";
+NET "ram_A<13>" LOC="J4";
+NET "ram_A<14>" LOC="J3";
+
+#NET "ram_A<14>" LOC="L5";
+#NET "ram_A<13>" LOC="N3";
+#NET "ram_A<12>" LOC="M4";
+#NET "ram_A<11>" LOC="M3";
+#NET "ram_A<10>" LOC="L4";
+#NET "ram_A<9>" LOC="G4";
+#NET "ram_A<8>" LOC="F3";
+#NET "ram_A<7>" LOC="F4";
+#NET "ram_A<6>" LOC="E3";
+#NET "ram_A<5>" LOC="E4";
+#NET "ram_A<4>" LOC="G5";
+#NET "ram_A<3>" LOC="H3";
+#NET "ram_A<2>" LOC="H4";
+#NET "ram_A<1>" LOC="J4";
+#NET "ram_A<0>" LOC="J3";
+
+
+NET "ram_D<0>" LOC="N7"; # donc on est sur la SRAM d'en haut
+NET "ram_D<1>" LOC="T8";
+NET "ram_D<2>" LOC="R6";
+NET "ram_D<3>" LOC="T5";
+NET "ram_D<4>" LOC="R5";
+NET "ram_D<5>" LOC="C2";
+NET "ram_D<6>" LOC="C1";
+NET "ram_D<7>" LOC="B1";
+
+NET "OE1" LOC="K4";
+NET "CE1" LOC="P7";
+NET "UB1" LOC="T4";
+NET "LB1" LOC="P6";

@@ -1,0 +1,17 @@
+PROMGEN: Xilinx Prom Generator P.20131013
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+
+promgen -w -p mcs -c FF -o C:\fpgamstrad\BuildYourOwnZ80Computer_amstrad_vhdl_002_repack\BuildYourOwnZ80Computer//Before8MHzTimeConstraints -s 4096 -u 0000 C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/amstrad_switch_z80_vga_sd.bit -spi 
+
+PROM C:\fpgamstrad\BuildYourOwnZ80Computer_amstrad_vhdl_002_repack\BuildYourOwnZ80Computer\Before8MHzTimeConstraints.prm map: Sun Dec 14 10:24:51 2014
+
+Calculating PROM checksum with fill value ff
+
+Format        Mcs86 (32-bit)
+Size          4096K
+PROM start    0000:0000
+PROM end      003f:ffff
+PROM checksum 065aa608
+
+        Addr1        Addr2                     Date File(s)
+    0000:0000    003a:607b     Dec 08 21:51:53 2014 C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/amstrad_switch_z80_vga_sd.bit

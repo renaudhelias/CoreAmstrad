@@ -1,0 +1,2 @@
+vhdtdtfi -lib work please_wait.vhd -prj BuildYourOwnZ80Computer -o please_wait.spl -module please_wait -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w please_wait.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/please_wait.sym 

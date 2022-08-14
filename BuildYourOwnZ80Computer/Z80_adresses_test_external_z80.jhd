@@ -1,0 +1,3 @@
+MODULE Z80_adresses_test_external_z80
+	SUBMODULE zo
+		INSTANCE XLXI_403

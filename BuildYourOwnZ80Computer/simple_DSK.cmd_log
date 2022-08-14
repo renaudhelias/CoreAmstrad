@@ -1,0 +1,15 @@
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -lib work simple_DSK.vhd -prj BuildYourOwnZ80Computer -o simple_DSK.spl -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/splfile.tft -deleteonerror 
+spl2sym -intstyle ise -family artix7 -w simple_DSK.spl C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.sym 
+vhdtdtfi -prj BuildYourOwnZ80Computer -o C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/simple_DSK.vhi -module simple_DSK -template C:/Xilinx/14.7/ISE_DS/ISE//data/vhdlinst.tft -deleteonerror -lib work simple_DSK.vhd 

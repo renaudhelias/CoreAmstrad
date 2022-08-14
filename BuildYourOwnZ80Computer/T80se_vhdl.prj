@@ -1,0 +1,6 @@
+vhdl work "E:\BuildYourOwnZ80Computer\T80_RegX.vhd"
+vhdl work "E:\BuildYourOwnZ80Computer\T80_Pack.vhd"
+vhdl work "E:\BuildYourOwnZ80Computer\T80_MCode.vhd"
+vhdl work "E:\BuildYourOwnZ80Computer\T80_ALU.vhd"
+vhdl work "E:\BuildYourOwnZ80Computer\T80.vhd"
+vhdl work "E:\BuildYourOwnZ80Computer\T80se.vhd"

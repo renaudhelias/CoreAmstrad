@@ -1,0 +1,19 @@
+//! **************************************************************************
+// Written by: Map M.63c on Thu Feb 10 20:03:55 2011
+//! **************************************************************************
+
+SCHEMATIC START;
+COMP "BLUE2<0>" LOCATE = SITE "U5" LEVEL 1;
+COMP "RED3<0>" LOCATE = SITE "R9" LEVEL 1;
+COMP "BLUE2<1>" LOCATE = SITE "U4" LEVEL 1;
+COMP "RED3<1>" LOCATE = SITE "T8" LEVEL 1;
+COMP "RED3<2>" LOCATE = SITE "R8" LEVEL 1;
+COMP "HSYNC" LOCATE = SITE "T4" LEVEL 1;
+COMP "CLK50MHz" LOCATE = SITE "B8" LEVEL 1;
+COMP "GREEN3<0>" LOCATE = SITE "N8" LEVEL 1;
+COMP "GREEN3<1>" LOCATE = SITE "P8" LEVEL 1;
+COMP "GREEN3<2>" LOCATE = SITE "P6" LEVEL 1;
+COMP "VSYNC" LOCATE = SITE "U3" LEVEL 1;
+NET "CLK50MHz_BUFGP/IBUFG" BEL "CLK50MHz_BUFGP/BUFG.GCLKMUX" USELOCALCONNECT;
+SCHEMATIC END;
+

@@ -1,0 +1,12 @@
+NET "CLK50MHz" LOC = "B8";
+NET "RED3<0>" LOC = "R9";
+NET "RED3<1>" LOC = "T8";
+NET "RED3<2>" LOC = "R8";
+NET "GREEN3<0>" LOC = "N8";
+NET "GREEN3<1>" LOC = "P8";
+NET "GREEN3<2>" LOC = "P6";
+NET "BLUE2<0>" LOC = "U5";
+NET "BLUE2<1>" LOC = "U4";
+NET "HSYNC" LOC = "T4";
+NET "VSYNC" LOC = "U3";
+

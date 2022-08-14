@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--This is an ISE project configuration file.-->
+<!--It holds project specific layout data for the projectmgr plugin.-->
+<!--Copyright (c) 1995-2009 Xilinx, Inc.  All rights reserved.-->
+<Project version="2" owner="projectmgr" name="BuildYourOwnZ80Computer" >
+   <!--This is an ISE project configuration file.-->
+   <ItemView engineview="SynthesisOnly" guiview="Source" compilemode="AutoCompile" >
+      <ClosedNodes>
+         <ClosedNodesVersion>2</ClosedNodesVersion>
+         <ClosedNode>/Ioblock - Ioblock_behav C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|Ioblock.vhd</ClosedNode>
+         <ClosedNode>/Ioblock - Ioblock_behav E:|BuildYourOwnZ80Computer|Ioblock.vhd</ClosedNode>
+         <ClosedNode>/PALETTE_RAM C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|PALETTE_RAM.sch</ClosedNode>
+         <ClosedNode>/RAM_dumper_schema E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|RAM_dumper_schema.sch</ClosedNode>
+         <ClosedNode>/RAM_dumper_schema E:|BuildYourOwnZ80Computer|RAM_dumper_schema.sch</ClosedNode>
+         <ClosedNode>/T80_timing_log - Behavioral C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|T80_timing_log.vhd</ClosedNode>
+         <ClosedNode>/T80_timing_log - Behavioral E:|BuildYourOwnZ80Computer|T80_timing_log.vhd</ClosedNode>
+         <ClosedNode>/USB_analyser_schema C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|USB_analyser_schema.sch</ClosedNode>
+         <ClosedNode>/USB_analyser_schema E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|USB_analyser_schema.sch</ClosedNode>
+         <ClosedNode>/USB_analyser_schema E:|BuildYourOwnZ80Computer|USB_analyser_schema.sch</ClosedNode>
+         <ClosedNode>/USB_logitech_schema C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|USB_logitech_schema.sch</ClosedNode>
+         <ClosedNode>/USB_logitech_schema E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|USB_logitech_schema.sch</ClosedNode>
+         <ClosedNode>/USB_logitech_schema E:|BuildYourOwnZ80Computer|USB_logitech_schema.sch</ClosedNode>
+         <ClosedNode>/USB_ps3_schema C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|USB_ps3_schema.sch</ClosedNode>
+         <ClosedNode>/USB_ps3_schema E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|USB_ps3_schema.sch</ClosedNode>
+         <ClosedNode>/USB_ps3_schema E:|BuildYourOwnZ80Computer|USB_ps3_schema.sch</ClosedNode>
+         <ClosedNode>/USB_ps3_test - behavior C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|USB_ps3_test.vhd</ClosedNode>
+         <ClosedNode>/USB_ps3_test - behavior E:|BuildYourOwnZ80Computer|USB_ps3_test.vhd</ClosedNode>
+         <ClosedNode>/USB_snifer_schema C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|USB_snifer_schema.sch</ClosedNode>
+         <ClosedNode>/USB_snifer_schema E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|USB_snifer_schema.sch</ClosedNode>
+         <ClosedNode>/USB_snifer_schema E:|BuildYourOwnZ80Computer|USB_snifer_schema.sch</ClosedNode>
+         <ClosedNode>/VRAM32Ko_Amstrad E:|BuildYourOwnZ80Computer|VRAM32Ko_Amstrad.sch</ClosedNode>
+         <ClosedNode>/VRAM_Amstrad_NEXYS4 C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|VRAM_Amstrad_NEXYS4.sch</ClosedNode>
+         <ClosedNode>/amstrad_oscillo C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_oscillo.sch</ClosedNode>
+         <ClosedNode>/amstrad_oscillo E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_oscillo.sch</ClosedNode>
+         <ClosedNode>/amstrad_oscillo E:|BuildYourOwnZ80Computer|amstrad_oscillo.sch</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_31 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_32 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_33 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_34 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_35 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_36 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_8 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_37 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad/XLXI_9 - VRAM_Amstrad_NEXYS4_16Ko</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_30 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_31 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_32 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_33 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_34 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_35 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_36 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_478 - VRAM_Amstrad_NEXYS4_16Ko/XLXI_37 - VRAM_Amstrad_NEXYS4</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/AmstradT80 - T80se - rtl</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_589 - VRAM32Ko_Amstrad</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_462 - bootloader_sd</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/AmstradT80 - T80se - rtl</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_494 - joykeyb</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_566 - joybuf</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_567 - joybuf</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_462 - bootloader_sd</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_474 - VRAM32Ko_Amstrad</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_511 - amstrad_video/XLXI_475 - PALETTE_RAM</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/AmstradT80 - T80se - rtl</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_494 - joykeyb</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_566 - joybuf</ClosedNode>
+         <ClosedNode>/amstrad_switch_z80_vga_sd E:|BuildYourOwnZ80Computer|amstrad_switch_z80_vga_sd.sch/XLXI_512 - amstrad_motherboard/XLXI_567 - joybuf</ClosedNode>
+         <ClosedNode>/externalVRAM2VGA_2 C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|externalVRAM2VGA_2.sch</ClosedNode>
+         <ClosedNode>/externalVRAM2VGA_2 E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|externalVRAM2VGA_2.sch</ClosedNode>
+         <ClosedNode>/externalVRAM2VGA_2 E:|BuildYourOwnZ80Computer|externalVRAM2VGA_2.sch</ClosedNode>
+         <ClosedNode>/ps2_test C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|ps2_test.sch</ClosedNode>
+         <ClosedNode>/ps2_test E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|ps2_test.sch</ClosedNode>
+         <ClosedNode>/ps2_test E:|BuildYourOwnZ80Computer|ps2_test.sch</ClosedNode>
+         <ClosedNode>/spi_test C:|fpgamstrad|BuildYourOwnZ80Computer_amstrad_vhdl_002_repack|BuildYourOwnZ80Computer|spi_test.sch</ClosedNode>
+         <ClosedNode>/spi_test E:|BuildYourOwnZ80Computer_GREEN_FFF_last_color_version|BuildYourOwnZ80Computer|spi_test.sch</ClosedNode>
+         <ClosedNode>/spi_test E:|BuildYourOwnZ80Computer|spi_test.sch</ClosedNode>
+         <ClosedNode>PROJECT</ClosedNode>
+      </ClosedNodes>
+      <SelectedItems>
+         <SelectedItem>amstrad_switch_z80_vga_sd (C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/amstrad_switch_z80_vga_sd.sch)</SelectedItem>
+      </SelectedItems>
+      <ScrollbarPosition orientation="vertical" >15</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000020200000001000000010000006400000232000000020000000000000000000000000200000064ffffffff000000810000000300000002000002320000000100000003000000000000000100000003</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
+      <CurrentItem>amstrad_switch_z80_vga_sd (C:/fpgamstrad/BuildYourOwnZ80Computer_amstrad_vhdl_002_repack/BuildYourOwnZ80Computer/amstrad_switch_z80_vga_sd.sch)</CurrentItem>
+   </ItemView>
+   <ItemView engineview="SynthesisOnly" sourcetype="DESUT_SCHEMATIC" guiview="Process" >
+      <ClosedNodes>
+         <ClosedNodesVersion>1</ClosedNodesVersion>
+         <ClosedNode>Design Utilities/Compile HDL Simulation Libraries</ClosedNode>
+         <ClosedNode>Implement Design</ClosedNode>
+         <ClosedNode>Implement Design/Map</ClosedNode>
+         <ClosedNode>Implement Design/Place &amp; Route/Back-annotate Pin Locations</ClosedNode>
+         <ClosedNode>Implement Design/Place &amp; Route/Generate IBIS Model</ClosedNode>
+         <ClosedNode>Implement Design/Translate</ClosedNode>
+         <ClosedNode>Synthesize - XST</ClosedNode>
+         <ClosedNode>User Constraints</ClosedNode>
+      </ClosedNodes>
+      <SelectedItems>
+         <SelectedItem></SelectedItem>
+      </SelectedItems>
+      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000197000000010000000100000000000000000000000064ffffffff000000810000000000000001000001970000000100000000</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
+      <CurrentItem></CurrentItem>
+   </ItemView>
+   <ItemView guiview="File" >
+      <ClosedNodes>
+         <ClosedNodesVersion>1</ClosedNodesVersion>
+      </ClosedNodes>
+      <SelectedItems>
+         <SelectedItem>z80_synchronizer.vhd</SelectedItem>
+      </SelectedItems>
+      <ScrollbarPosition orientation="vertical" >89</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000000000000000100000000000000000000000000000000000002ce000000040101000100000000000000000000000064ffffffff0000008100000000000000040000017100000001000000000000009d00000001000000000000006600000001000000000000005a0000000100000000</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
+      <CurrentItem>z80_synchronizer.vhd</CurrentItem>
+   </ItemView>
+   <ItemView guiview="Library" >
+      <ClosedNodes>
+         <ClosedNodesVersion>1</ClosedNodesVersion>
+         <ClosedNode>work</ClosedNode>
+      </ClosedNodes>
+      <SelectedItems/>
+      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000109000000010001000100000000000000000000000064ffffffff000000810000000000000001000001090000000100000000</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
+      <CurrentItem>work</CurrentItem>
+   </ItemView>
+   <ItemView engineview="SynthesisOnly" sourcetype="" guiview="Process" >
+      <ClosedNodes>
+         <ClosedNodesVersion>1</ClosedNodesVersion>
+         <ClosedNode>Design Utilities/Compile HDL Simulation Libraries</ClosedNode>
+      </ClosedNodes>
+      <SelectedItems>
+         <SelectedItem/>
+      </SelectedItems>
+      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000000000000000001a8000000010000000100000000000000000000000064ffffffff000000810000000000000001000001a80000000100000000</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
+      <CurrentItem/>
+   </ItemView>
+   <SourceProcessView>000000ff0000000000000002000000d7000000b001000000040100000002</SourceProcessView>
+   <CurrentView>Implementation</CurrentView>
+   <ItemView engineview="SynthesisOnly" sourcetype="DESUT_UCF" guiview="Process" >
+      <ClosedNodes>
+         <ClosedNodesVersion>1</ClosedNodesVersion>
+      </ClosedNodes>
+      <SelectedItems>
+         <SelectedItem/>
+      </SelectedItems>
+      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000000000000000001a8000000010000000100000000000000000000000064ffffffff000000810000000000000001000001a80000000100000000</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
+      <CurrentItem/>
+   </ItemView>
+   <ItemView engineview="SynthesisOnly" sourcetype="DESUT_VHDL_ARCHITECTURE" guiview="Process" >
+      <ClosedNodes>
+         <ClosedNodesVersion>1</ClosedNodesVersion>
+      </ClosedNodes>
+      <SelectedItems>
+         <SelectedItem/>
+      </SelectedItems>
+      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000000000000000001a8000000010000000100000000000000000000000064ffffffff000000810000000000000001000001a80000000100000000</ViewHeaderState>
+      <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
+      <CurrentItem/>
+   </ItemView>
+</Project>

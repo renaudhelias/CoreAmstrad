@@ -1,0 +1,3 @@
+MODULE ZAP_read_only_external_z80
+	SUBMODULE ROM
+		INSTANCE XLXI_60

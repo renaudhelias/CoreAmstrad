@@ -1,0 +1,8 @@
+NET "CLK50MHz" LOC = "T9";
+NET "RED" LOC = "R12"; # red
+NET "GREEN" LOC = "T12"; # green
+NET "BLUE" LOC = "R11"; # blue
+NET "HSYNC" LOC = "R9";
+NET "VSYNC" LOC = "T10";
+NET "SWITCH" LOC = "K13";
+NET "BUTTON" LOC = "M13";

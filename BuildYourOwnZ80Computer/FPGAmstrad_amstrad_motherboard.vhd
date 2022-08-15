@@ -407,7 +407,7 @@ entity FPGAmstrad_amstrad_motherboard is
 			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
 			  
 			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0);
-			  CLK8MHz : in STD_LOGIC
+			  nCLK8MHz : in STD_LOGIC
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -818,7 +818,7 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
    AmstradT80 : T80pa
       port map (
 		  RESET_n =>RESET_n,
-        CLK =>CLK8MHz,
+        CLK =>nCLK8MHz,
         WAIT_n=>WAIT_n,
         INT_n=>INT_n,
         M1_n=>M1_n,

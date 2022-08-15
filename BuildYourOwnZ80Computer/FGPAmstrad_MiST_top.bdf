@@ -2575,8 +2575,8 @@ applicable agreement for further details.
 	(port
 		(pt 0 576)
 		(input)
-		(text "CLK8MHz" (rect 0 0 48 12)(font "Arial" ))
-		(text "CLK8MHz" (rect 21 571 69 583)(font "Arial" ))
+		(text "nCLK8MHz" (rect 0 0 54 12)(font "Arial" ))
+		(text "nCLK8MHz" (rect 21 571 75 583)(font "Arial" ))
 		(line (pt 0 576)(pt 16 576))
 	)
 	(port
@@ -4115,10 +4115,6 @@ applicable agreement for further details.
 	(bus)
 )
 (connector
-	(pt 936 -344)
-	(pt 936 -136)
-)
-(connector
 	(pt 1016 -400)
 	(pt 1016 -88)
 )
@@ -4353,10 +4349,6 @@ applicable agreement for further details.
 (connector
 	(pt 856 -152)
 	(pt 1320 -152)
-)
-(connector
-	(pt 936 -136)
-	(pt 1320 -136)
 )
 (connector
 	(pt 840 -120)
@@ -5304,7 +5296,39 @@ applicable agreement for further details.
 	(pt -776 368)
 )
 (connector
-	(pt -464 144)
+	(pt 952 -360)
+	(pt -688 -360)
+)
+(connector
+	(pt -168 928)
+	(pt -528 928)
+)
+(connector
+	(pt 936 -344)
+	(pt 936 -136)
+)
+(connector
+	(pt 1320 -136)
+	(pt 936 -136)
+)
+(connector
+	(pt -440 496)
+	(pt -440 144)
+)
+(connector
+	(pt -656 -344)
+	(pt -656 144)
+)
+(connector
+	(pt -840 144)
+	(pt -656 144)
+)
+(connector
+	(pt -656 144)
+	(pt -440 144)
+)
+(connector
+	(pt -464 160)
 	(pt -464 384)
 )
 (connector
@@ -5312,48 +5336,28 @@ applicable agreement for further details.
 	(pt -464 584)
 )
 (connector
-	(pt -440 496)
-	(pt -440 160)
+	(pt -688 -360)
+	(pt -688 160)
 )
 (connector
-	(pt -656 160)
-	(pt -656 -344)
+	(pt -688 160)
+	(pt -688 168)
 )
 (connector
 	(pt -840 160)
-	(pt -656 160)
+	(pt -688 160)
 )
 (connector
-	(pt -656 160)
-	(pt -440 160)
+	(pt -688 160)
+	(pt -464 160)
 )
 (connector
-	(pt 952 -360)
-	(pt -688 -360)
+	(pt -528 176)
+	(pt -528 928)
 )
 (connector
-	(pt -688 -360)
-	(pt -688 144)
-)
-(connector
-	(pt -464 144)
-	(pt -688 144)
-)
-(connector
-	(pt -688 144)
-	(pt -840 144)
-)
-(connector
+	(pt -528 176)
 	(pt -840 176)
-	(pt -528 176)
-)
-(connector
-	(pt -168 928)
-	(pt -528 928)
-)
-(connector
-	(pt -528 176)
-	(pt -528 928)
 )
 (junction (pt -512 40))
 (junction (pt -488 56))
@@ -5365,6 +5369,6 @@ applicable agreement for further details.
 (junction (pt -336 560))
 (junction (pt 1920 224))
 (junction (pt -208 1040))
-(junction (pt -656 160))
-(junction (pt -688 144))
+(junction (pt -656 144))
+(junction (pt -688 160))
 (text "LED=0 on; LED=1 off" (rect 2784 224 2902 238)(font "Arial" (font_size 8)))

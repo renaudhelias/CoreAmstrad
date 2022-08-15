@@ -264,8 +264,8 @@ applicable agreement for further details.
 	(port
 		(pt 0 576)
 		(input)
-		(text "CLK8MHz" (rect 0 0 43 12)(font "Arial" ))
-		(text "CLK8MHz" (rect 21 571 64 583)(font "Arial" ))
+		(text "nCLK8MHz" (rect 0 0 48 12)(font "Arial" ))
+		(text "nCLK8MHz" (rect 21 571 69 583)(font "Arial" ))
 		(line (pt 0 576)(pt 16 576)(line_width 1))
 	)
 	(port

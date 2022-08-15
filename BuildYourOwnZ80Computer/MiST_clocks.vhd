@@ -176,8 +176,8 @@ begin
 	CLK16MHz <=c3;
 	CLK32MHz <=c4;
 	
-	CLK4MHz<=not(c5);
-	nCLK4MHz<=c5; -- not Z80 (under Time Contraints) / synchro 25MHz
+	CLK4MHz<=c5;
+	nCLK4MHz<=not(c5); -- not Z80 (under Time Contraints) / synchro 25MHz
    CLK8MHz<=c0; -- Bootloader (nCLK4MHz)
    nCLK8MHz<=not(c0); -- Bootloader (CLK4MHz)
 	CLK25MHz<=c1; -- VGA

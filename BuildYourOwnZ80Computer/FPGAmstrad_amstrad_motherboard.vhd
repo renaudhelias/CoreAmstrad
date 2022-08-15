@@ -819,7 +819,7 @@ do_t80:if not(HACK_Z80) and not(USE_AZ80) generate
       port map (
 		  RESET_n =>RESET_n,
         CLK =>nCLK8MHz,
-        WAIT_n=>WAIT_n,
+        WAIT_n=>'1', --WAIT_n,
         INT_n=>INT_n,
         M1_n=>M1_n,
         MREQ_n=>MREQ_n,
@@ -1024,7 +1024,7 @@ INT_n<=not(XLXN_835);
                 IO_RD=>IO_RD,
                 IO_WR=>IO_WR,
 					 is_dskReady=>is_dskReady,
-                nCLK4_1=>nCLK4MHz,
+                nCLK4_1=>CLK4MHz,
                 reset=>XLXN_907,
                 D_result(7 downto 0)=>MIX_DOUT3(7 downto 0), -- inout
 			  megashark_CHRNresult=>megashark_CHRNresult,

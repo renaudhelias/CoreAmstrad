@@ -1,4 +1,4 @@
-PLL_Name	MIST_clocks:clock|altpll:altpll_component|altpll_2d53:auto_generated|pll1
+PLL_Name	MIST_clocks:clock|altpll:altpll_component|altpll_vc53:auto_generated|pll1
 PLLJITTER	8
 PLLSPEmax	84
 PLLSPEmin	-53

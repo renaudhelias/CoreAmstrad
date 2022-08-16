@@ -58,7 +58,6 @@ architecture Behavioral of MIST_clocks is
 	signal c2 : std_logic;--27MHz 572/135=114.4MHz SDRAM
 	signal c3 : std_logic;--27MHz 1/2250 =12kHz    TV mode 16MHz - (not keyboard finally)
 	signal c4 : std_logic;
-	signal c5 : std_logic; -- c0@8MHz c5@4MHz
 	signal pll_locked : std_logic;
 	
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (4 DOWNTO 0);
@@ -160,12 +159,11 @@ begin
 	--c0 4MHz
 	--ps2_clk	12-16kHz ratio 256 ok !
 	process (c0)
-		variable n:integer range 0 to 512-1;
+		variable n:integer range 0 to 256-1;
 	begin
 		if rising_edge(c0) then
-			c5<=not(c5);
-			n:=(n+1) mod 512;
-			if n>=256 then
+			n:=(n+1) mod 256;
+			if n>=128 then
 				ps2_clk<='1';
 			else
 				ps2_clk<='0';
@@ -176,18 +174,18 @@ begin
 	CLK16MHz <=c3;
 	CLK32MHz <=c4;
 	
-	CLK4MHz<=c5;
-	nCLK4MHz<=not(c5); -- not Z80 (under Time Contraints) / synchro 25MHz
+	CLK4MHz<=not(c0);
+	nCLK4MHz<=c0; -- not Z80 (under Time Contraints) / synchro 25MHz
    CLK8MHz<=c0; -- Bootloader (nCLK4MHz)
    nCLK8MHz<=not(c0); -- Bootloader (CLK4MHz)
 	CLK25MHz<=c1; -- VGA
 	nCLK25MHz<=not(c1);
 	pclk<=c1; -- CLK25MHz (VGA)
 	palette_CLK<=c0; --nCLK4MHz
-	vram_CLK<=c5; --nCLK4MHz
+	vram_CLK<=c0; --nCLK4MHz
 	SDRAM_CLK<=c2;
 	sdram_v_clk<=c2;
-	sdram_v_clkref<=c5; -- esclave Z80, executant de bootloader
+	sdram_v_clkref<=c0; -- esclave Z80, executant de bootloader
 	--sdram_v_init<=not(pll_locked); -- si 1 alors reset sdram.
 	CLK_PWM<=c4; --CLK32MHz c1; --CLK25MHz --c0; --nCLK4MHz 
 	
@@ -206,7 +204,7 @@ begin
 	altpll_component : altpll
 	GENERIC MAP (
 		bandwidth_type => "AUTO",
-		clk0_divide_by => 300,
+		clk0_divide_by => 600,
 		clk0_duty_cycle => 50,
 		clk0_multiply_by => 89,
 		clk0_phase_shift => "0",

@@ -1709,7 +1709,11 @@ begin
 				end case;
 			when "10100001" | "10101001" | "10110001" | "10111001" =>
 				-- CPI, CPD, CPIR, CPDR
-				MCycles <= "100";
+				if IRB= "10110001" then
+					MCycles <= "101";
+				else
+					MCycles <= "100";
+				end if;
 				case to_integer(unsigned(MCycle)) is
 				when 1 =>
 					Set_Addr_To <= aXY;

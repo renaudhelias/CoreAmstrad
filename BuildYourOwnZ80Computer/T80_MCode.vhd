@@ -1708,8 +1708,8 @@ begin
 				when others => null;
 				end case;
 			when "10100001" | "10101001" | "10110001" | "10111001" =>
-				-- CPI, CPD, CPIR, CPDR
-				if IRB= "10110001" then
+				-- CPI, CPD, CPIR, CPDR freemac
+				if IRB= "10110001" or IRB = "10111001" then
 					MCycles <= "101";
 				else
 					MCycles <= "100";

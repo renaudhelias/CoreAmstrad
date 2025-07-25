@@ -81,9 +81,9 @@ entity simple_CDT is
 			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
-			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0)
 			  
-			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end simple_CDT;
 
@@ -360,10 +360,10 @@ begin
 			--end if;
 		end if;
 
-		leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
-		leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
+		--leds8_debug(3 downto 0)<=conv_std_logic_vector(block_step,4);
+		--leds8_debug(11 downto 4)<=jacquie_byte(7 downto 0);
 		--leds8_debug(23 downto 8)<=conv_std_logic_vector(pilot,16);
-		leds8_debug(19 downto 12)<=conv_std_logic_vector(debug_no_block,8);
+		--leds8_debug(19 downto 12)<=conv_std_logic_vector(debug_no_block,8);
 		
 		play_push<=false;
 		play_pause<=false;
@@ -550,7 +550,7 @@ play_value<='0'; --play_value;
 				when 10=>NULL; -- fuck 10 block 6 KO
 				when 11=>NULL; -- fuck 11 block 7 KO
 				when 12=>--NULL; -- fuck 12 block 3 OK
-				leds8_debug(11 downto 4)<=conv_std_logic_vector(last_byte,8);
+				--leds8_debug(11 downto 4)<=conv_std_logic_vector(last_byte,8);
 				when 13=>NULL; -- fuck 13
 				when 14=>NULL; -- fuck 14
 				when 15=>NULL; -- fuck 15

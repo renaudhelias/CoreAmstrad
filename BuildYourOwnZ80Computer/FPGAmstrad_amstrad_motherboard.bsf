@@ -471,13 +471,6 @@ applicable agreement for further details.
 		(text "jacquie_done" (rect 281 491 331 503)(font "Arial" ))
 		(line (pt 352 496)(pt 336 496)(line_width 1))
 	)
-	(port
-		(pt 352 512)
-		(output)
-		(text "leds8_debug[19..0]" (rect 0 0 73 12)(font "Arial" ))
-		(text "leds8_debug[19..0]" (rect 258 507 331 519)(font "Arial" ))
-		(line (pt 352 512)(pt 336 512)(line_width 3))
-	)
 	(parameter
 		"USE_AZ80"
 		"false"

@@ -338,13 +338,6 @@ applicable agreement for further details.
 		(text "jacquie_no_block[15..0]" (rect 241 411 331 423)(font "Arial" ))
 		(line (pt 352 416)(pt 336 416)(line_width 3))
 	)
-	(port
-		(pt 352 432)
-		(output)
-		(text "leds8_debug[19..0]" (rect 0 0 73 12)(font "Arial" ))
-		(text "leds8_debug[19..0]" (rect 258 427 331 439)(font "Arial" ))
-		(line (pt 352 432)(pt 336 432)(line_width 3))
-	)
 	(drawing
 		(rectangle (rect 16 16 336 448)(line_width 1))
 	)

@@ -404,9 +404,9 @@ entity FPGAmstrad_amstrad_motherboard is
 			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : in STD_LOGIC;
 			  jacquie_done : out STD_LOGIC;
-			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
+			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0)
 			  
-			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
 
@@ -657,9 +657,9 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 			  soundAB_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundBC_input:in STD_LOGIC_VECTOR(7 downto 0);
 			  soundAB_output:out STD_LOGIC_VECTOR(7 downto 0);
-			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0);
+			  soundBC_output:out STD_LOGIC_VECTOR(7 downto 0)
 			  
-			  leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
+			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 				 );
    end component;
    
@@ -1037,9 +1037,9 @@ INT_n<=not(XLXN_835);
 			  soundAB_input=>XLXN_486_AB,
 			  soundBC_input=>XLXN_486_BC,
 			  soundAB_output=>XLXN_486_mixAB,
-			  soundBC_output=>XLXN_486_mixBC,
+			  soundBC_output=>XLXN_486_mixBC
 			  
-			  leds8_debug=>leds8_debug
+			  --leds8_debug=>leds8_debug
 					 );
    
    XLXI_349 : YM2149

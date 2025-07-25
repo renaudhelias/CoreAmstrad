@@ -99,9 +99,9 @@ entity FPGAmstrad_bootloader_sd is
 			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : out STD_LOGIC;
 			  jacquie_done : in STD_LOGIC;
-			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0);
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
 			  
-			  leds8_debug:out std_logic_vector(19 downto 0)
+			  --leds8_debug:out std_logic_vector(19 downto 0)
 			 );
 end FPGAmstrad_bootloader_sd;
 
@@ -214,9 +214,9 @@ architecture BEHAVIORAL of FPGAmstrad_bootloader_sd is
 			  jacquie_byte : out STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : out STD_LOGIC;
 			  jacquie_done : in STD_LOGIC;
-			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0);
+			  jacquie_no_block : out STD_LOGIC_VECTOR(15 downto 0)
 			  
-			  leds8_debug:out std_logic_vector(19 downto 0)
+			  --leds8_debug:out std_logic_vector(19 downto 0)
 			  );
    end component;
    
@@ -301,9 +301,9 @@ begin
 			  jacquie_byte=>jacquie_byte,
 			  jacquie_do=>jacquie_do,
 			  jacquie_done=>jacquie_done,
-			  jacquie_no_block=>jacquie_no_block,
+			  jacquie_no_block=>jacquie_no_block
 			  
-			  leds8_debug=>leds8_debug
+			  --leds8_debug=>leds8_debug
 					 );
    
 ram_W_n<=not(XLXN_94);

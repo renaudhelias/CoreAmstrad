@@ -37,10 +37,12 @@ module osd (
 	input				vs_in,
 	
 	// green/scanlines
-	input green,
+    input [1:0] screen_vga,
+	input [1:0] screen_color,
 	
-	// debug 7seg input examples
-	//input [7:0] leds8,
+	input green,
+// debug 7seg input examples
+	input [7:0] leds8,
 	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
@@ -275,8 +277,10 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_crc_r[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_crc_r[3:0]),.segment(segment[9]));
 
-//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8[7:4]),.segment(segment[0]));
-//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8[3:0]),.segment(segment[1]));
+osd_HEXA_7SEG my7segConverter0(.halfByte(leds8[7:4]),.segment(segment[0]));
+osd_HEXA_7SEG my7segConverter1(.halfByte(leds8[3:0]),.segment(segment[1]));
+osd_HEXA_7SEG my7segConverter8(.halfByte(screen_vga),.segment(segment[8]));
+osd_HEXA_7SEG my7segConverter9(.halfByte(screen_color),.segment(segment[9]));
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug[39:36]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug[35:32]),.segment(segment[1]));
@@ -300,16 +304,16 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug2[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug2[3:0]),.segment(segment[9]));
 
-osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
-osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));
 osd_HEXA_7SEG my7segConverter2(.halfByte(4'hA),.segment(segment[2]));
 osd_HEXA_7SEG my7segConverter3(.halfByte(4'hB),.segment(segment[3]));
 osd_HEXA_7SEG my7segConverter4(.halfByte(4'hC),.segment(segment[4]));
 osd_HEXA_7SEG my7segConverter5(.halfByte(4'hD),.segment(segment[5]));
 osd_HEXA_7SEG my7segConverter6(.halfByte(4'hE),.segment(segment[6]));
 osd_HEXA_7SEG my7segConverter7(.halfByte(4'hF),.segment(segment[7]));
-osd_HEXA_7SEG my7segConverter8(.halfByte(4'h0),.segment(segment[8]));
-osd_HEXA_7SEG my7segConverter9(.halfByte(4'h0),.segment(segment[9]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(4'h0),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(4'h0),.segment(segment[9]));
 
 
 
@@ -335,6 +339,9 @@ reg [3:0] seg7_i=0; // current 7segment selected
 always @(posedge pclk) begin
 	if (osd_de)
 		begin
+			// todo (green == 1'b0)
+			// couleur verte
+//			if (screen_color == 2'b00)
 			if (green == 1'b0)
 				begin
 					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
@@ -371,11 +378,13 @@ always @(posedge pclk) begin
 					matrice_v[seg7_i]<=seg7_vcntDiv4[2:0];
 					matrice_h[seg7_i]<=seg7_h;
 					seg7_pixel<=matrice_pixel[seg7_i];
+					// vert
+					//if (screen_color == 2'b00)
 					if (green == 1'b0)
 						begin
-							red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]  };
+							red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]};
 							green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
-							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
+							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3]};
 						end
 					else
 						begin
@@ -388,6 +397,7 @@ always @(posedge pclk) begin
 					if (seg7_hB==3'd0 || seg7_hB==3'd5)
 						begin
 							// separators
+							//if (screen_color== 2'b01)
 							if (green == 1'b0)
 								begin
 									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
@@ -405,6 +415,7 @@ always @(posedge pclk) begin
 					if (seg7_hB==3'd1)
 						begin
 							// This is a strange FIX -- but a beautifull one ^^'
+							//if (screen_color==2'b01)
 							if (green == 1'b0)
 								begin
 									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };

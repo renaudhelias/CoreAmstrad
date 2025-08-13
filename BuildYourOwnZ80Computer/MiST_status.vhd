@@ -22,16 +22,18 @@ entity MIST_STATUS is
 	 
            status_0 : out  STD_LOGIC;
 			  megashark_select : out std_logic;
-			  --lowerVRAM : out std_logic_vector(1 downto 0);
-			  --upperVRAM : out std_logic_vector(1 downto 0);
 			  ppi_jumpers : out std_logic_vector(3 downto 0);
-			  green_scanlines : out std_logic_vector(1 downto 0);
-			  green : out std_logic;
+				
 			  crtc_type : out std_logic;
 			  ga_shunt: out std_logic;
+
+			  screen_vga : out std_logic_vector(1 downto 0);
+			  screen_color: out std_logic_vector(1 downto 0);
+-- old revision
+			  green_scanlines : out std_logic_vector(1 downto 0);
+			  green : out std_logic;
 			  vramORscandb: out std_logic
-			  --tv : out std_logic
-			  
+
 			 -- leds_select : out  STD_LOGIC_VECTOR (4 downto 0)
 			 );
 end MIST_STATUS;
@@ -48,13 +50,21 @@ status_0<=status(0);
 --upperVRAM(1)<=not(status(3));
 --ppi_jumpers<='1' & '1' & status(5) & '1';
 --megashark_select<=status(6);
-ppi_jumpers<='1' & '1' & status(1) & '1';
-crtc_type<=not(status(2));
-ga_shunt<=status(3);
+ppi_jumpers<='1' & '1' & status(1) & '1'; --Brand name
+--ppi_jumpers<='1' & '1' & '0' & '1';
+crtc_type<=not(status(2));--CRTC
+--ga_shunt<=status(2);--Wait_n
+ga_shunt<='0';
+
+screen_vga<=status(4) & status(3);
+screen_color<=status(6) & status(5);
+
 vramORscandb<=status(5); -- 1X scandb50Hz
 green_scanlines<=status(6) & (not(status(5)) and status(4)); -- 01 scanlines72Hz
 green<=status(6);
+
+
 megashark_select<=status(7);
---tv<=status(7);
+
 end Behavioral;
 

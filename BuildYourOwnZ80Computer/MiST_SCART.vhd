@@ -36,11 +36,16 @@ entity MIST_SCART is
 			  VSYNC_TV_in : in STD_logic;
 			  
 			  mode : in std_logic;
-			  green_scanlines : in std_logic_vector (1 downto 0);
+			  screen_vga : in std_logic_vector (1 downto 0);
   			  pclk_in : in std_logic;
 			  pclk_TV_CLK16MHz_in : in std_logic;
 			  pclk_TV_CLK32MHz_in : in std_logic;
+			  screen_color : in std_logic_vector (1 downto 0);
+
+
+			  green_scanlines : in std_logic_vector (1 downto 0);
 			  vramORscandb : in std_logic;
+
 			  pclk_out : out std_logic;
 			  
 			  HSYNC_XOR_out : out STD_logic;
@@ -60,102 +65,10 @@ signal canal_blueTV:STD_LOGIC_VECTOR (5 downto 0);
 -- for delta time purpose
 signal canal_vsync:std_logic;
 signal canal_hsync:std_logic;
---signal canal_clk:std_logic;
 signal canal_vsyncTV:std_logic;
 signal canal_hsyncTV:std_logic;
---signal canal_clkTV:std_logic;
-
-
-
---public class GreenScreen {
---
---	static final int MAX=2+2+2;
---	static final int MAX_TOP=64; // 6bits => 2^6=64.
---	static final int STEP=11; //MAX_TOP/MAX;
---
---	public static void main(String[] args) {
---		for (int red=0; red<4; red++) {
---			for (int green=0; green<4; green++) {
---				for (int blue=0; blue<4; blue++) {
---					try {
---						int r= value(red);
---						int g= value(green);
---						int b= value(blue);
---						int green_screen = r+g+b;
---						green_screen*=STEP;
---						// System.out.println(green_screen);
---						System.out.println("\""+max2flat(green_screen+MAX_TOP - MAX*STEP - 1)+"\", --"+r+","+g+","+b);
---					} catch (Exception e) {
---						// not mapped value !
---						System.out.println("\"000000\", --X,X,X");
---					}
---				}
---			}
---		}
---	}
---	
---	static int value(int color) throws Exception {
---		if (color==0) return 0;
---		if (color==1) return 1;
---		if (color==3) return 2;
---		throw new Exception("out of range");
---	}
---
---	static String max2flat(int sum) {
---		return fill(Integer.toBinaryString(sum),6);
---	}
---	
---	static String fill(String binary,int c) {
---		String out=binary;
---		while (out.length()<c) {
---			out="0"+out;
---		}
---		return out;
---	}
---}
-
-
--- manual calibration :
--- 111111 : 60/((2+2+2)/(2+2+2))=60 111100
--- 110100 : 60/((2+2+2)/(1+2+2))=50 110010
--- 101001 : 60/((2+2+2)/(0+2+2))=40 101000
--- 011110 : 60/((2+2+2)/(0+1+2))=30 011110
--- 010011 : 60/((2+2+2)/(0+0+2))=20 010100
--- 001000 : 60/((2+2+2)/(0+0+1))=10 001010
--- 000000 : 60/((2+2+2)/(0+0+0))=0  000000
-
--- "Les sucres en morceaux" calibration :
--- V[9,18],R[3,6],B[1,2]
--- 0,0,0 00 00 00 00
--- 0,0,1 00 00 01 01
--- 0,0,2 00 00 02 02
--- 0,1,0 00 03 00 03
--- 0,1,1 00 03 01 04
--- 0,1,2 00 03 02 05
--- 0,2,0 00 06 00 06
--- 0,2,1 00 06 01 07
--- 0,2,2 00 06 02 08
--- 1,0,0 09 00 00 09
--- 1,0,1 09 00 01 10
--- 1,0,2 09 00 02 11
--- 1,1,0 09 03 00 12
--- 1,1,1 09 03 01 13
--- 1,1,2 09 03 02 14
--- 1,2,0 09 06 00 15
--- 1,2,1 09 06 01 16
--- 1,2,2 09 06 02 17
--- 2,0,0 18 00 00 18
--- 2,0,1 18 00 01 19
--- 2,1,0 18 00 02 20
--- 2,1,0 18 03 00 21
--- 2,1,1 18 03 01 22
--- 2,1,2 18 03 02 23
--- 2,2,0 18 06 00 24
--- 2,2,1 18 06 01 25
--- 2,2,2 18 06 02 26
 
 -- 64/27=2,37 => 2 => 2*27=54
-
 type T_GREEN is array (0 to 63) --(63 downto 0)
         of STD_LOGIC_VECTOR(5 downto 0);
   constant GREEN_SCREEN : T_GREEN :=
@@ -283,6 +196,51 @@ VSYNC_XOR_out<= canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan w
 --GREEN_out<=canal_green when mode='0' else canal_greenTV;
 --BLUE_out<=canal_blue when mode='0' else canal_blueTV;
 
+
+--scandoubler entry
+--VIDEO_in<=canal_greenTV when screen_color(1 downto 0)="01" else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
+
+-- color
+--RED_out<=canal_red;-- when screen_color="00" and (screen_vga="00" or screen_vga="01") else 
+-- green
+--	"000000" when screen_color="01" and (screen_vga="00" or screen_vga="01") else
+-- scandoubler
+--	VIDEO_scan(5 downto 4) & "0000" when screen_vga="10" else
+-- TV (original)
+--	canal_redTV;
+	
+--color
+--GREEN_out<=canal_green;-- when screen_color="00" and (screen_vga="00" or screen_vga="01") else 
+--green
+--	VIDEO_scan when screen_color="01" and (screen_vga="00" or screen_vga="01") else
+--scandoubler
+--	VIDEO_scan(3 downto 2) & "0000" when screen_vga="10" else 
+-- TV (original)
+--	canal_greenTV;
+	
+--color
+--BLUE_out<=canal_blue; -- when screen_color="00" and (screen_vga="00" or screen_vga="01") else
+--green
+--	"000000" when screen_color="01" and (screen_vga="00" or screen_vga="01") else
+--scandoubler
+--	VIDEO_scan(1 downto 0) & "0000" when screen_vga="10" else
+-- TV (original)
+--	canal_blueTV;
+
+--scandoubler
+--HSYNC_XOR_out<= canal_hsync when screen_vga="10" else
+--VGA
+--	HSYNC_scan when screen_vga="00" or screen_vga="01" else
+--TV
+--	not(canal_hsyncTV xor canal_vsyncTV);
+	
+--scandoubler
+--VSYNC_XOR_out<= canal_vsync when screen_vga="10" else
+--VGA
+--	VSYNC_scan when screen_vga="00" or screen_vga="01" else
+--TV
+--	'1';
+
 green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
@@ -308,16 +266,48 @@ begin
 					canal_green<= "0" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 1); -- + "00" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 2);
 					canal_blue<= "000000";
 				end if;
+
+
+
+
+
+
+
+			--vert
+--			if screen_color="01" then
+--				if RED_in(3)='0' then
+--					canal_red<= "000000";
+--					-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
+--					canal_green<= GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)));
+--					canal_blue<= "000000";
+--				else
+--					canal_red<= "000000";
+--					-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
+--					canal_green<= "0" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 1);
+--					canal_blue<= "000000";
+--				end if;
+--			else
+--				-- du vrai rouge
+--				if RED_in(3)='0' then
+--					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
+--					canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
+--					canal_blue<= COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)));
+--				else
+--					canal_red<= "0" & COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 1);
+--					canal_green<= "0" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
+--					canal_blue<= "0" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);
+--				end if;
 			end if;
 			canal_hsync<=HSYNC_in;
 			canal_vsync<=VSYNC_in;
-			--canal_clk<=pclk_in;
 		end if;
 end process green_color_vga;
 
 green_color_tv : process(pclk_TV_CLK16MHz_in) is
 begin
 		if rising_edge(pclk_TV_CLK16MHz_in) then
+
+
 			if green_scanlines(1)='0' then
 				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
 				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
@@ -331,11 +321,27 @@ begin
 			canal_hsyncTV<=HSYNC_TV_in;
 			canal_vsyncTV<=VSYNC_TV_in;
 			--canal_clkTV<=pclk_TV_CLK16MHz_in;
+
+
+
+			--vert
+--			if screen_color="01" then
+--				canal_redTV<= "000000";
+--				-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
+--				canal_greenTV<= GREEN_SCREEN(conv_integer(GREEN_TV_in(5 downto 4) & RED_TV_in(5 downto 4) & BLUE_TV_in(5 downto 4)));
+--				canal_blueTV<= "000000";
+--			else
+--				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
+--				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
+--				canal_blueTV<= COLOR_SCREEN(conv_integer(BLUE_TV_in(5 downto 4)));
+--			end if;
+--			canal_hsyncTV<=HSYNC_TV_in;
+--			canal_vsyncTV<=VSYNC_TV_in;
 		end if;
 end process green_color_tv;
 
---assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
---assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
+
+
 HSYNC_out<=canal_hsync when mode='0' and vramORscandb='0' else HSYNC_scan when mode='0' and vramORscandb='1' else canal_hsyncTV;
 VSYNC_out<=canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan when mode='0' and vramORscandb='1' else canal_vsyncTV;
 HSYNC_XOR_video_out<= canal_hsyncTV;
@@ -344,6 +350,19 @@ VSYNC_XOR_video_out<= canal_vsyncTV;
 --HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
 --VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
 pclk_out<=pclk_in when mode='0' and vramORscandb='0' else pclk_TV_CLK16MHz_in;
+
+
+-- HSYNC_scan     --scandoubler     pas bon en vram72Hz, OSD visible
+-- canal_hsync c'est pire, mÃªme l'OSD dÃ©conne -> c'est TV
+
+--HSYNC_scan ? scandoubler en vert 20h
+--canal_hsync RATE certainement vram72Hz et vramdb72Hz
+--canal_hsyncTV ? certainement scandouler
+--HSYNC_out<=canal_hsync;--canal_hsync when screen_vga(1)='1' else HSYNC_scan when screen_vga(1)='0' else canal_hsyncTV;
+--VSYNC_out<=canal_vsync;--canal_vsync when screen_vga(1)='1' else VSYNC_scan when screen_vga(1)='0' else canal_vsyncTV;
+--HSYNC_XOR_video_out<= canal_hsyncTV;
+--VSYNC_XOR_video_out<= canal_vsyncTV;
+--pclk_out<=pclk_in when (screen_vga="00" or screen_vga="01") else pclk_TV_CLK16MHz_in;
 
 end Behavioral;
 

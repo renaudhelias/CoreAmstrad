@@ -20,9 +20,9 @@ applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 296 320)
+	(rect 16 16 296 352)
 	(text "MIST_SCART" (rect 5 0 68 12)(font "Arial" ))
-	(text "inst" (rect 8 288 20 300)(font "Arial" ))
+	(text "inst" (rect 8 320 20 332)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -103,8 +103,8 @@ applicable agreement for further details.
 	(port
 		(pt 0 208)
 		(input)
-		(text "green_scanlines[1..0]" (rect 0 0 82 12)(font "Arial" ))
-		(text "green_scanlines[1..0]" (rect 21 203 103 215)(font "Arial" ))
+		(text "screen_vga[1..0]" (rect 0 0 67 12)(font "Arial" ))
+		(text "screen_vga[1..0]" (rect 21 203 88 215)(font "Arial" ))
 		(line (pt 0 208)(pt 16 208)(line_width 3))
 	)
 	(port
@@ -131,9 +131,23 @@ applicable agreement for further details.
 	(port
 		(pt 0 272)
 		(input)
+		(text "screen_color[1..0]" (rect 0 0 70 12)(font "Arial" ))
+		(text "screen_color[1..0]" (rect 21 267 91 279)(font "Arial" ))
+		(line (pt 0 272)(pt 16 272)(line_width 3))
+	)
+	(port
+		(pt 0 288)
+		(input)
+		(text "green_scanlines[1..0]" (rect 0 0 82 12)(font "Arial" ))
+		(text "green_scanlines[1..0]" (rect 21 283 103 295)(font "Arial" ))
+		(line (pt 0 288)(pt 16 288)(line_width 3))
+	)
+	(port
+		(pt 0 304)
+		(input)
 		(text "vramORscandb" (rect 0 0 66 12)(font "Arial" ))
-		(text "vramORscandb" (rect 21 267 87 279)(font "Arial" ))
-		(line (pt 0 272)(pt 16 272)(line_width 1))
+		(text "vramORscandb" (rect 21 299 87 311)(font "Arial" ))
+		(line (pt 0 304)(pt 16 304)(line_width 1))
 	)
 	(port
 		(pt 280 32)
@@ -192,6 +206,6 @@ applicable agreement for further details.
 		(line (pt 280 144)(pt 264 144)(line_width 1))
 	)
 	(drawing
-		(rectangle (rect 16 16 264 288)(line_width 1))
+		(rectangle (rect 16 16 264 320)(line_width 1))
 	)
 )

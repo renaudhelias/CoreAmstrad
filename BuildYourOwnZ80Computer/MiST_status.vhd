@@ -54,7 +54,8 @@ ppi_jumpers<='1' & '1' & status(1) & '1'; --Brand name
 --ppi_jumpers<='1' & '1' & '0' & '1';
 crtc_type<=not(status(2));--CRTC
 --ga_shunt<=status(2);--Wait_n
-ga_shunt<='0';
+--2023 demo checkmate
+ga_shunt<='1';
 
 screen_vga<=status(4) & status(3);
 screen_color<=status(6) & status(5);
@@ -62,7 +63,7 @@ screen_color<=status(6) & status(5);
 vramORscandb<=status(4); -- 1X scandb50Hz
 green_scanlines<=status(5) & (not(status(4)) and status(3)); -- 01 scanlines72Hz
 green<=status(5);
---le status(6) eszt la seconde moitié de screen_color
+--le status(6) eszt la seconde moitiÃ© de screen_color
 
 megashark_select<=status(7);
 

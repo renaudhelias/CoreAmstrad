@@ -59,10 +59,10 @@ ga_shunt<='0';
 screen_vga<=status(4) & status(3);
 screen_color<=status(6) & status(5);
 
-vramORscandb<=status(5); -- 1X scandb50Hz
-green_scanlines<=status(6) & (not(status(5)) and status(4)); -- 01 scanlines72Hz
-green<=status(6);
-
+vramORscandb<=status(4); -- 1X scandb50Hz
+green_scanlines<=status(5) & (not(status(4)) and status(3)); -- 01 scanlines72Hz
+green<=status(5);
+--le status(6) eszt la seconde moitié de screen_color
 
 megashark_select<=status(7);
 

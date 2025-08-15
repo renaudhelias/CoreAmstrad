@@ -143,13 +143,6 @@ applicable agreement for further details.
 		(line (pt 0 288)(pt 16 288)(line_width 3))
 	)
 	(port
-		(pt 0 304)
-		(input)
-		(text "vramORscandb" (rect 0 0 66 12)(font "Arial" ))
-		(text "vramORscandb" (rect 21 299 87 311)(font "Arial" ))
-		(line (pt 0 304)(pt 16 304)(line_width 1))
-	)
-	(port
 		(pt 280 32)
 		(output)
 		(text "RED_out[5..0]" (rect 0 0 60 12)(font "Arial" ))

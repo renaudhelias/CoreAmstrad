@@ -30,9 +30,9 @@ entity MIST_STATUS is
 			  screen_vga : out std_logic_vector(1 downto 0);
 			  screen_color: out std_logic_vector(1 downto 0);
 -- old revision
-			  green_scanlines : out std_logic_vector(1 downto 0);
+			  green_scanlines : out std_logic_vector(1 downto 0)
 			  --green : out std_logic;
-			  vramORscandb: out std_logic
+			  --vramORscandb: out std_logic
 
 			 -- leds_select : out  STD_LOGIC_VECTOR (4 downto 0)
 			 );
@@ -60,7 +60,7 @@ ga_shunt<='1';
 screen_vga<=status(4) & status(3);
 screen_color<=status(6) & status(5);
 
-vramORscandb<=status(4); -- 1X scandb50Hz
+--vramORscandb<=status(4); -- 1X scandb50Hz-- screen_vga(1)
 green_scanlines<=status(5) & (not(status(4)) and status(3)); -- 01 scanlines72Hz
 --green<=status(5); -- screen_color(0)
 --le status(6) eszt la seconde moitié de screen_color

@@ -43,7 +43,7 @@ entity MIST_SCART is
 			  screen_color : in std_logic_vector (1 downto 0);
 
 
-			  green_scanlines : in std_logic_vector (1 downto 0);
+			  --green_scanlines : in std_logic_vector (1 downto 0);
 			  -- vramORscandb : in std_logic;
 
 			  pclk_out : out std_logic;
@@ -67,6 +67,8 @@ signal canal_vsync:std_logic;
 signal canal_hsync:std_logic;
 signal canal_vsyncTV:std_logic;
 signal canal_hsyncTV:std_logic;
+
+signal green_scanlines:STD_LOGIC_VECTOR(1 downto 0);
 
 -- 64/27=2,37 => 2 => 2*27=54
 type T_GREEN is array (0 to 63) --(63 downto 0)
@@ -166,6 +168,10 @@ signal VSYNC_scan : STD_LOGIC;
 signal HSYNC_scan : STD_LOGIC;
 
 begin
+
+--todo
+green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
+
 
 -- with scandoubler
 scanner : scandoubler

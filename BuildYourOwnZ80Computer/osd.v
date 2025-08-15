@@ -40,7 +40,7 @@ module osd (
     input [1:0] screen_vga,
 	input [1:0] screen_color,
 	
-	input green,
+	//input green, //screen_color(0)
 // debug 7seg input examples
 	input [7:0] leds8,
 	//input [3:0] leds4,
@@ -342,7 +342,8 @@ always @(posedge pclk) begin
 			// todo (green == 1'b0)
 			// couleur verte
 //			if (screen_color == 2'b00)
-			if (green == 1'b0)
+			//if (green == 1'b0)
+			if (screen_color[0] == 1'b0)
 				begin
 					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
 					blue_out  <= {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
@@ -380,7 +381,8 @@ always @(posedge pclk) begin
 					seg7_pixel<=matrice_pixel[seg7_i];
 					// vert
 					//if (screen_color == 2'b00)
-					if (green == 1'b0)
+					//if (green == 1'b0)
+					if (screen_color[0] == 1'b0)
 						begin
 							red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]};
 							green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
@@ -398,7 +400,7 @@ always @(posedge pclk) begin
 						begin
 							// separators
 							//if (screen_color== 2'b01)
-							if (green == 1'b0)
+							if (screen_color[0] == 1'b0)
 								begin
 									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
 									blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
@@ -416,7 +418,7 @@ always @(posedge pclk) begin
 						begin
 							// This is a strange FIX -- but a beautifull one ^^'
 							//if (screen_color==2'b01)
-							if (green == 1'b0)
+							if (screen_color[0] == 1'b0)
 								begin
 									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
 									blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };

@@ -89,16 +89,9 @@ applicable agreement for further details.
 	(port
 		(pt 224 160)
 		(output)
-		(text "green" (rect 0 0 22 12)(font "Arial" ))
-		(text "green" (rect 181 155 203 167)(font "Arial" ))
-		(line (pt 224 160)(pt 208 160)(line_width 1))
-	)
-	(port
-		(pt 224 176)
-		(output)
 		(text "vramORscandb" (rect 0 0 66 12)(font "Arial" ))
-		(text "vramORscandb" (rect 137 171 203 183)(font "Arial" ))
-		(line (pt 224 176)(pt 208 176)(line_width 1))
+		(text "vramORscandb" (rect 137 155 203 167)(font "Arial" ))
+		(line (pt 224 160)(pt 208 160)(line_width 1))
 	)
 	(drawing
 		(rectangle (rect 16 16 208 192)(line_width 1))

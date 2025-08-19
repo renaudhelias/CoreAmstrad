@@ -170,8 +170,8 @@ signal HSYNC_scan : STD_LOGIC;
 begin
 
 --todo
+--green_scanlines<=screen_color(0) and (screen_vga="01"); -- not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
 green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
-
 
 -- with scandoubler
 scanner : scandoubler
@@ -250,7 +250,11 @@ VSYNC_XOR_out<= canal_vsync when mode='0' and screen_vga(1)='0' else VSYNC_scan 
 green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
-			if green_scanlines(1)='0' then
+			if screen_color="10" then
+					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 0);
+					canal_green<= "0" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
+					canal_blue<= "00" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 2);			
+			elsif green_scanlines(1)='0' then
 				if green_scanlines(0)='0' or RED_in(3)='0' then
 					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
 					canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
@@ -272,7 +276,7 @@ begin
 					canal_green<= "0" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 1); -- + "00" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 2);
 					canal_blue<= "000000";
 				end if;
-
+			
 
 
 
@@ -359,7 +363,7 @@ pclk_out<=pclk_in when mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz_in;
 
 
 -- HSYNC_scan     --scandoubler     pas bon en vram72Hz, OSD visible
--- canal_hsync c'est pire, mÃªme l'OSD dÃ©conne -> c'est TV
+-- canal_hsync c'est pire, mÃƒÆ’Ã‚Âªme l'OSD dÃƒÆ’Ã‚Â©conne -> c'est TV
 
 --HSYNC_scan ? scandoubler en vert 20h
 --canal_hsync RATE certainement vram72Hz et vramdb72Hz

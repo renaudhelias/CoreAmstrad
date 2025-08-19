@@ -343,18 +343,37 @@ always @(posedge pclk) begin
 			// couleur verte
 //			if (screen_color == 2'b00)
 			//if (green == 1'b0)
-			if (screen_color[0] == 1'b0)
+			if (screen_color == 2'b00)
 				begin
+				  // color
 					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
 					blue_out  <= {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
 				end
-			else
+			else if (screen_color == 2'b01)
 				begin
+					//green
 					red_out   <= {1'b0, 1'b0, osd_color[2], red_in[5:3]  };
 					blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
 				end
+			else
+				begin
+					//orange
+					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
+					
+					blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
+				end
 			//end
-			green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
+			if (screen_color == 2'b10)
+				begin
+				//orange
+				green_out <= {1'b0, osd_pixel, osd_color[1], green_in[5:3]};
+				end
+			else
+				begin
+				//green
+                green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
+				green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
+				end
 			seg7_hB<=3'd0;
 			seg7_h<=2'd0;
 			seg7_i<=0;

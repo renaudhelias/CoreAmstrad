@@ -47,8 +47,11 @@ use ieee.std_logic_unsigned.all;
 
 entity scandoubler is
 Generic(
-	HSYNC_WIDTH:integer:=256-1; 
-	VSYNC_WIDTH:integer:=4; --4 original, parfois 3 ou 6 (6=>21cm de haut 9cm de relache)
+--720	576	50 Hz	31.2 kHz	ModeLine "720x576@50" 27 720 732 795 864 576 581 586 625 -hsync -vsync (https://www.mythtv.org/wiki/Modeline_Database)
+-- 720	576	50 Hz	31.2 kHz	ModeLine "720x576@50" 27 720<<HDsp 732<HSS 795<HSE 864<HTot 576<VDsp 581<VSS 586<VSE 625<VTot -hsync -vsync
+
+	HSYNC_WIDTH:integer:=795-732;--;256-1; 
+	VSYNC_WIDTH:integer:=586-581;--4; --4 original, parfois 3 ou 6 (6=>21cm de haut 9cm de relache)
 	HSYNC_OFFSET_POS:integer:=2-1;--300 (à droite et à gauche) --600 (à droite); --0 (à gauche?); -- HSYNC<=>DATA
 	HSYNC_OFFSET_NEG:integer:=2-1 -- VSYNC<=>HSYNC
 );

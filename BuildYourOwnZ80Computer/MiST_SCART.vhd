@@ -67,7 +67,7 @@ signal canal_vsync:std_logic;
 signal canal_hsync:std_logic;
 signal canal_vsyncTV:std_logic;
 signal canal_hsyncTV:std_logic;
-
+signal true_mode:std_logic;
 signal green_scanlines:STD_LOGIC_VECTOR(1 downto 0);
 
 -- 64/27=2,37 => 2 => 2*27=54
@@ -173,6 +173,9 @@ begin
 --green_scanlines<=screen_color(0) and (screen_vga="01"); -- not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
 green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
 
+--original signal
+true_mode<= '1' when mode='1' or screen_vga="11" else '0';
+
 -- with scandoubler
 scanner : scandoubler
       port map (video_in=>VIDEO_in,
@@ -186,21 +189,21 @@ scanner : scandoubler
 					 );
 					 
 VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
-RED_out<=canal_red when mode='0' and screen_vga(1)='0' else 
-	"000000" when mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	VIDEO_scan(5 downto 4) & "0000" when mode='0' and screen_vga(1)='1' else canal_redTV;
-GREEN_out<=canal_green when mode='0' and screen_vga(1)='0' else 
-	VIDEO_scan when mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	VIDEO_scan(3 downto 2) & "0000" when mode='0' and screen_vga(1)='1' else canal_greenTV;
-BLUE_out<=canal_blue when mode='0' and screen_vga(1)='0' else
-	"000000" when mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	VIDEO_scan(1 downto 0) & "0000" when mode='0' and screen_vga(1)='1' else canal_blueTV;
-HSYNC_XOR_out<= canal_hsync when mode='0' and screen_vga(1)='0' else HSYNC_scan when mode='0' and screen_vga(1)='1' else not(canal_hsyncTV xor canal_vsyncTV);
-VSYNC_XOR_out<= canal_vsync when mode='0' and screen_vga(1)='0' else VSYNC_scan when mode='0' and screen_vga(1)='1' else '1';
+RED_out<=canal_red when true_mode='0' and screen_vga(1)='0' else 
+	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
+	VIDEO_scan(5 downto 4) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_redTV;
+GREEN_out<=canal_green when true_mode='0' and screen_vga(1)='0' else 
+	VIDEO_scan when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
+	VIDEO_scan(3 downto 2) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_greenTV;
+BLUE_out<=canal_blue when true_mode='0' and screen_vga(1)='0' else
+	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
+	VIDEO_scan(1 downto 0) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_blueTV;
+HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='0' and screen_vga(1)='1' else not(canal_hsyncTV xor canal_vsyncTV);
+VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else '1';
 
---RED_out<=canal_red when mode='0' else canal_redTV;
---GREEN_out<=canal_green when mode='0' else canal_greenTV;
---BLUE_out<=canal_blue when mode='0' else canal_blueTV;
+--RED_out<=canal_red when true_mode='0' else canal_redTV;
+--GREEN_out<=canal_green when true_mode='0' else canal_greenTV;
+--BLUE_out<=canal_blue when true_mode='0' else canal_blueTV;
 
 
 --scandoubler entry
@@ -352,14 +355,14 @@ end process green_color_tv;
 
 
 
-HSYNC_out<=canal_hsync when mode='0' and screen_vga(1)='0' else HSYNC_scan when mode='0' and screen_vga(1)='1' else canal_hsyncTV;
-VSYNC_out<=canal_vsync when mode='0' and screen_vga(1)='0' else VSYNC_scan when mode='0' and screen_vga(1)='1' else canal_vsyncTV;
+HSYNC_out<=canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_hsyncTV;
+VSYNC_out<=canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_vsyncTV;
 HSYNC_XOR_video_out<= canal_hsyncTV;
 VSYNC_XOR_video_out<= canal_vsyncTV;
---pclk_out<=canal_clk when mode='0' else canal_clkTV;
---HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
---VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
-pclk_out<=pclk_in when mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz_in;
+--pclk_out<=canal_clk when true_mode='0' else canal_clkTV;
+--HSYNC_out<=HSYNC_in when true_mode='0' else HSYNC_TV_in;
+--VSYNC_out<=VSYNC_in when true_mode='0' else VSYNC_TV_in;
+pclk_out<=pclk_in when true_mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz_in;
 
 
 -- HSYNC_scan     --scandoubler     pas bon en vram72Hz, OSD visible

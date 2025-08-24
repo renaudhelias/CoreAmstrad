@@ -25,8 +25,8 @@ module scandoubler
 
 	// scanlines (00-none 01-25% 10-50% 11-75%)
 	input      [1:0] scanlines,
-	input            ce_x1,
-	input            ce_x2,
+	//input            ce_x1,
+	//input            ce_x2,
 
 	// shifter video interface
 	input            hs_in,
@@ -45,6 +45,33 @@ module scandoubler
 
 parameter HCNT_WIDTH = 9;
 parameter COLOR_DEPTH = 6;
+
+//refactor ce_x1, ce_x2
+reg [1:0] i_div;
+reg ce_x1, ce_x2;
+reg ce_divider=1'b0;
+
+always @(posedge clk_sys) begin
+	reg last_hs_in;
+	last_hs_in <= hs_in;
+	if(last_hs_in & !hs_in) begin
+		i_div <= 2'b00;
+	end else begin
+		i_div <= i_div + 2'd1;
+	end
+end
+
+always @(*) begin
+	if (!ce_divider) begin
+		ce_x1 = (i_div == 2'b01);
+		ce_x2 = i_div[0];
+	end else begin
+		ce_x1 = i_div[0];
+		ce_x2 = 1'b1;
+	end
+end
+
+
 
 // --------------------- create output signals -----------------
 // latch everything once more to make it glitch free and apply scanline effect

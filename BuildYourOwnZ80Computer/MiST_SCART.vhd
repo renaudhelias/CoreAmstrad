@@ -150,22 +150,43 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 );
 
 
-component scandoubler
-      port ( video_in	: in std_logic_vector(5 downto 0);
-	hsync_in	: in std_logic;
-	vsync_in	: in std_logic;
-	dblclk		: in std_logic;
-	pixclk		: in std_logic;
-	video_out	: out std_logic_vector(5 downto 0);
-	vsync_out	: out std_logic;
-	hsync_out	: out std_logic);
-   end component;
+
+
+component scandoubler is
+	  generic(
+			HCNT_WIDTH : integer;
+			COLOR_DEPTH : integer
+	  );
+	  port (
+			clk_sys : in std_logic;
+			-- scanlines (00-none 01-25% 10-50% 11-75%)
+			scanlines : in std_logic_vector(1 downto 0);
+			hs_in : in std_logic;
+			vs_in : in std_logic;
+			r_in : in std_logic_vector(COLOR_DEPTH-1 downto 0);
+			g_in : in std_logic_vector(COLOR_DEPTH-1 downto 0);
+			b_in : in std_logic_vector(COLOR_DEPTH-1 downto 0);
+			hs_out : out std_logic;
+			vs_out : out std_logic;
+			r_out : out std_logic_vector(1 downto 0);
+			g_out : out std_logic_vector(1 downto 0);
+			b_out : out std_logic_vector(1 downto 0)
+	  );
+end component;
+
+
+	 
 signal HSYNC_XOR_video_out : STD_logic;
 signal VSYNC_XOR_video_out : STD_logic;
 signal VIDEO_in : std_logic_vector(5 downto 0);
 signal VIDEO_scan : std_logic_vector(5 downto 0);
 signal VSYNC_scan : STD_LOGIC;
 signal HSYNC_scan : STD_LOGIC;
+
+-- adapter sorgelig
+signal fromageR:std_logic_vector(1 downto 0);
+signal fromageG:std_logic_vector(1 downto 0);
+signal fromageB:std_logic_vector(1 downto 0);
 
 begin
 
@@ -178,17 +199,26 @@ true_mode<= '1' when mode='1' or screen_vga="11" else '0';
 
 -- with scandoubler
 scanner : scandoubler
-      port map (video_in=>VIDEO_in,
-                hsync_in=>HSYNC_XOR_video_out,
-                vsync_in=>VSYNC_XOR_video_out,
-					 dblclk=>pclk_TV_CLK32MHz_in,
-                pixclk=>pclk_TV_CLK16MHz_in,
-                video_out=>VIDEO_scan,
-                vsync_out=>VSYNC_scan,
-					 hsync_out=>HSYNC_scan
+		generic map (
+			HCNT_WIDTH => 9,
+			COLOR_DEPTH => 2 --6 -- 1-6
+		)
+      port map (clk_sys=>pclk_TV_CLK32MHz_in,
+            scanlines=>"00",
+				hs_in=>HSYNC_XOR_video_out,
+            vs_in=>VSYNC_XOR_video_out,
+				r_in=>canal_redTV(5 downto 4), -->VIDEO_in,
+				g_in=>canal_greenTV(5 downto 4),
+				b_in=>canal_blueTV(5 downto 4),
+            r_out=>fromageR,
+				g_out=>fromageG, --VIDEO_scan,
+				b_out=>fromageB, --VIDEO_scan,
+            vs_out=>VSYNC_scan,
+				hs_out=>HSYNC_scan
 					 );
 					 
-VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
+VIDEO_scan<=fromageR(1 downto 0)  & fromageG(1 downto 0)  & fromageB(1 downto 0); -- 
+--VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
 RED_out<=canal_red when true_mode='0' and screen_vga(1)='0' else 
 	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
 	VIDEO_scan(5 downto 4) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_redTV;
@@ -366,7 +396,7 @@ pclk_out<=pclk_in when true_mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz
 
 
 -- HSYNC_scan     --scandoubler     pas bon en vram72Hz, OSD visible
--- canal_hsync c'est pire, mÃƒÆ’Ã‚Âªme l'OSD dÃƒÆ’Ã‚Â©conne -> c'est TV
+-- canal_hsync c'est pire, mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªme l'OSD dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©conne -> c'est TV
 
 --HSYNC_scan ? scandoubler en vert 20h
 --canal_hsync RATE certainement vram72Hz et vramdb72Hz

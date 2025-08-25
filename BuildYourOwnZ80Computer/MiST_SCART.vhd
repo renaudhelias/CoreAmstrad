@@ -200,13 +200,13 @@ true_mode<= '1' when mode='1' or screen_vga="11" else '0';
 -- with scandoubler
 scanner : scandoubler
 		generic map (
-			HCNT_WIDTH => 9,
+			HCNT_WIDTH => 4, --9,
 			COLOR_DEPTH => 2 --6 -- 1-6
 		)
       port map (clk_sys=>pclk_TV_CLK32MHz_in,
             scanlines=>"00",
-				hs_in=>HSYNC_XOR_video_out,
-            vs_in=>VSYNC_XOR_video_out,
+				hs_in=>canal_hsyncTV, --not(canal_hsyncTV xor canal_vsyncTV), --canal_hsync,
+            vs_in=>canal_vsyncTV, --'1', --canal_vsync,
 				r_in=>canal_redTV(5 downto 4), -->VIDEO_in,
 				g_in=>canal_greenTV(5 downto 4),
 				b_in=>canal_blueTV(5 downto 4),
@@ -217,19 +217,20 @@ scanner : scandoubler
 				hs_out=>HSYNC_scan
 					 );
 					 
-VIDEO_scan<=fromageR(1 downto 0)  & fromageG(1 downto 0)  & fromageB(1 downto 0); -- 
+VIDEO_scan<=fromageR(1 downto 0)  & "00"  & "00";
 --VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
 RED_out<=canal_red when true_mode='0' and screen_vga(1)='0' else 
 	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	VIDEO_scan(5 downto 4) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_redTV;
+	--VIDEO_scan(5 downto 4) & "0000" when true_mode='0' and screen_vga="01" else canal_redTV;
+	VIDEO_scan(5 downto 4) & "0000" when true_mode='1' and screen_vga="10" else canal_redTV;
 GREEN_out<=canal_green when true_mode='0' and screen_vga(1)='0' else 
 	VIDEO_scan when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
 	VIDEO_scan(3 downto 2) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_greenTV;
 BLUE_out<=canal_blue when true_mode='0' and screen_vga(1)='0' else
 	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
 	VIDEO_scan(1 downto 0) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_blueTV;
-HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='0' and screen_vga(1)='1' else not(canal_hsyncTV xor canal_vsyncTV);
-VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else '1';
+HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='1' and screen_vga="10" else not(canal_hsyncTV xor canal_vsyncTV);
+VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='1' and screen_vga="10" else '1';
 
 --RED_out<=canal_red when true_mode='0' else canal_redTV;
 --GREEN_out<=canal_green when true_mode='0' else canal_greenTV;

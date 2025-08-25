@@ -43,13 +43,14 @@ module scandoubler
 	output reg [5:0] b_out
 );
 
-parameter HCNT_WIDTH = 9;
-parameter COLOR_DEPTH = 6;
+parameter HCNT_WIDTH = 4; //9,
+parameter COLOR_DEPTH = 2; //6 -- 1-6
 
 //refactor ce_x1, ce_x2
 reg [1:0] i_div;
 reg ce_x1, ce_x2;
-reg ce_divider=1'b0;
+// non-scandoubled pixel clock divider 0 - clk_sys/4, 1 - clk_sys/2
+reg ce_divider=1'b1;
 
 always @(posedge clk_sys) begin
 	reg last_hs_in;

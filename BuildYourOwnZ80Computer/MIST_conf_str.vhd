@@ -18,7 +18,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 entity MIST_conf_str is
-    Port ( CONF_STR : out  STD_LOGIC_VECTOR (173*8-1 downto 0)
+    Port ( CONF_STR : out  STD_LOGIC_VECTOR (164*8-1 downto 0)
 			);
 end MIST_conf_str;
 
@@ -26,7 +26,7 @@ architecture Behavioral of MIST_conf_str is
 	--constant CONF_STRING : string := "AMSTRAD;DSK;O1,Brand name,Schneider,Amstrad;O2,Screen,color,green;O3,Scanlines,off,on;O4,Drive,A,B";
 	--AMSTRAD;;F,DSK,Load;F,CDT,Load;O1,Brand name,Schneider,Amstrad;O2,CRTC,1,0;O3,WAIT_n,quick,slow;O45,VGA,vram72Hz,scanlines72Hz,scandb50Hz;O6,Screen,color,green;O7,Drive,A,B
 --constant CONF_STRING : string := "AMSTRAD;F,DSK,Load;F,CDT,Load;O0,Brand name,Schneider,Amstrad;O1,CRTC,1,0;O2,WAIT_n,quick,slow;O3,VGA,vram72Hz,scanlines72Hz,scandb50Hz,original;O5,Screen,color,green,THSF_orange;O7,Drive,A,B";
-constant CONF_STRING : string := "AMSTRAD;;F,DSK,Load;F,CDT,Load;O1,Brand name,Schneider,Amstrad;O2,CRTC,1,0;O34,VGA,vram72Hz,scanlines72Hz,scandb50Hz,original;O56,Screen,color,green,THSF_orange;O7,Drive,A,B";
+constant CONF_STRING : string := "AMSTRAD;;F,DSK,Load;F,CDT,Load;O1,Brand name,Schneider,Amstrad;O2,CRTC,1,0;O34,VGA,vram72Hz,scanlines72Hz,scandb50Hz;O56,Screen,color,green,THSF_orange;O7,Drive,A,B";
 
 
  function to_slv(s: string) return std_logic_vector is 

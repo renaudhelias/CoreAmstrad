@@ -285,9 +285,16 @@ green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
 			if screen_color="10" then
+				--orange
+				if green_scanlines(0)='0' or RED_in(3)='0' then
 					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 0);
 					canal_green<= "0" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
-					canal_blue<= "00" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 2);			
+					canal_blue<= "00" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 2);
+				else
+					canal_red<= "0" & COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 1);
+					canal_green<= "00" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 2);
+					canal_blue<= "000" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 3);
+				end if;
 			elsif green_scanlines(1)='0' then
 				if green_scanlines(0)='0' or RED_in(3)='0' then
 					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));

@@ -37,12 +37,12 @@ module osd (
 	input				vs_in,
 	
 	// green/scanlines
-    input [1:0] screen_vga,
+   //input [1:0] screen_vga,
 	input [1:0] screen_color,
 	
 	//input green, //screen_color(0)
 // debug 7seg input examples
-	input [7:0] leds8,
+	//input [7:0] leds8,
 	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
@@ -277,10 +277,10 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug_crc_r[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug_crc_r[3:0]),.segment(segment[9]));
 
-osd_HEXA_7SEG my7segConverter0(.halfByte(leds8[7:4]),.segment(segment[0]));
-osd_HEXA_7SEG my7segConverter1(.halfByte(leds8[3:0]),.segment(segment[1]));
-osd_HEXA_7SEG my7segConverter8(.halfByte(screen_vga),.segment(segment[8]));
-osd_HEXA_7SEG my7segConverter9(.halfByte(screen_color),.segment(segment[9]));
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8[7:4]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8[3:0]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(screen_vga),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(screen_color),.segment(segment[9]));
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug[39:36]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug[35:32]),.segment(segment[1]));
@@ -304,16 +304,16 @@ osd_HEXA_7SEG my7segConverter9(.halfByte(screen_color),.segment(segment[9]));
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug2[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug2[3:0]),.segment(segment[9]));
 
-//osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
-//osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));
+osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
+osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));
 osd_HEXA_7SEG my7segConverter2(.halfByte(4'hA),.segment(segment[2]));
 osd_HEXA_7SEG my7segConverter3(.halfByte(4'hB),.segment(segment[3]));
 osd_HEXA_7SEG my7segConverter4(.halfByte(4'hC),.segment(segment[4]));
 osd_HEXA_7SEG my7segConverter5(.halfByte(4'hD),.segment(segment[5]));
 osd_HEXA_7SEG my7segConverter6(.halfByte(4'hE),.segment(segment[6]));
 osd_HEXA_7SEG my7segConverter7(.halfByte(4'hF),.segment(segment[7]));
-//osd_HEXA_7SEG my7segConverter8(.halfByte(4'h0),.segment(segment[8]));
-//osd_HEXA_7SEG my7segConverter9(.halfByte(4'h0),.segment(segment[9]));
+osd_HEXA_7SEG my7segConverter8(.halfByte(4'h0),.segment(segment[8]));
+osd_HEXA_7SEG my7segConverter9(.halfByte(4'h0),.segment(segment[9]));
 
 
 

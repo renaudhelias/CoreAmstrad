@@ -149,6 +149,66 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 "110100"
 );
 
+type T_C64 is array (0 to 15) --(15 downto 0)
+        of STD_LOGIC_VECTOR(5 downto 0);
+constant C64_SCREEN_RED:T_C64 :=
+("000000", --black 00
+"111111", --white 3F
+"101011", --red 2B
+"011000", --cyan 18
+"101100", --purple 2C
+"010010", --green 12
+"001101", --blue 0D
+"111001", --yellow 39
+"101101", --orange 2D
+"011010", --brown 1A
+"111010", --pink 3A
+"010011", --d. gray 13
+"100001", --gray 21
+"101001", --l. green 29
+"101001", --l. blue 1C
+"101101" --l. gray 2D
+);
+
+constant C64_SCREEN_GREEN:T_C64 :=
+("000000", --black 00
+"111111", --white 3F
+"001010", --red 0A
+"110110", --cyan 36
+"001111", --purple 0F
+"110001", --green 31
+"001110", --blue 0E
+"111011", --yellow 3B
+"010110", --orange 16
+"001110", --brown 0E
+"011101", --pink 1D
+"010011", --d. gray 13
+"100001", --gray 21
+"111110", --l. green 3E
+"011111", --l. blue 1F
+"101101" --l. gray 2D
+);
+
+constant C64_SCREEN_BLUE:T_C64 :=
+("000000", --black 00
+"111111", --white 3F
+"001010", --red 0A
+"110011", --cyan 33
+"101101", --purple 2D
+"010010", --green 12
+"110001", --blue 31
+"010011", --yellow 13
+"000111", --orange 07
+"000010", --brown 02
+"011011", --pink 1B
+"010011", --d. gray 13
+"100001", --gray 21
+"100111", --l. green 27
+"111001", --l. blue 39
+"101101" --l. gray 2D
+);
+
+
 
 
 
@@ -232,59 +292,22 @@ BLUE_out<=canal_blue when true_mode='0' and screen_vga(1)='0' else
 HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='1' and screen_vga="10" else not(canal_hsyncTV xor canal_vsyncTV);
 VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='1' and screen_vga="10" else '1';
 
---RED_out<=canal_red when true_mode='0' else canal_redTV;
---GREEN_out<=canal_green when true_mode='0' else canal_greenTV;
---BLUE_out<=canal_blue when true_mode='0' else canal_blueTV;
-
-
---scandoubler entry
---VIDEO_in<=canal_greenTV when screen_color(1 downto 0)="01" else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
-
--- color
---RED_out<=canal_red;-- when screen_color="00" and (screen_vga="00" or screen_vga="01") else 
--- green
---	"000000" when screen_color="01" and (screen_vga="00" or screen_vga="01") else
--- scandoubler
---	VIDEO_scan(5 downto 4) & "0000" when screen_vga="10" else
--- TV (original)
---	canal_redTV;
-	
---color
---GREEN_out<=canal_green;-- when screen_color="00" and (screen_vga="00" or screen_vga="01") else 
---green
---	VIDEO_scan when screen_color="01" and (screen_vga="00" or screen_vga="01") else
---scandoubler
---	VIDEO_scan(3 downto 2) & "0000" when screen_vga="10" else 
--- TV (original)
---	canal_greenTV;
-	
---color
---BLUE_out<=canal_blue; -- when screen_color="00" and (screen_vga="00" or screen_vga="01") else
---green
---	"000000" when screen_color="01" and (screen_vga="00" or screen_vga="01") else
---scandoubler
---	VIDEO_scan(1 downto 0) & "0000" when screen_vga="10" else
--- TV (original)
---	canal_blueTV;
-
---scandoubler
---HSYNC_XOR_out<= canal_hsync when screen_vga="10" else
---VGA
---	HSYNC_scan when screen_vga="00" or screen_vga="01" else
---TV
---	not(canal_hsyncTV xor canal_vsyncTV);
-	
---scandoubler
---VSYNC_XOR_out<= canal_vsync when screen_vga="10" else
---VGA
---	VSYNC_scan when screen_vga="00" or screen_vga="01" else
---TV
---	'1';
 
 green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
-			if screen_color="10" then
+			if screen_color="11" then
+				--C64 -- couleur en hexa
+				if green_scanlines(0)='0' or RED_in(3)='0' then
+					canal_red<= C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 0);
+					canal_green<= C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 0);
+					canal_blue<= C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 0);
+				else
+					canal_red<= "0" & C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 1);
+					canal_green<= "0" & C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
+					canal_blue<= "0" & C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);
+				end if;
+			elsif screen_color="10" then
 				--orange
 				if green_scanlines(0)='0' or RED_in(3)='0' then
 					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 0);
@@ -317,37 +340,6 @@ begin
 					canal_green<= "0" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 1); -- + "00" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 2);
 					canal_blue<= "000000";
 				end if;
-			
-
-
-
-
-
-
-			--vert
---			if screen_color="01" then
---				if RED_in(3)='0' then
---					canal_red<= "000000";
---					-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
---					canal_green<= GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)));
---					canal_blue<= "000000";
---				else
---					canal_red<= "000000";
---					-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
---					canal_green<= "0" & GREEN_SCREEN(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4)))(5 downto 1);
---					canal_blue<= "000000";
---				end if;
---			else
---				-- du vrai rouge
---				if RED_in(3)='0' then
---					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
---					canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
---					canal_blue<= COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)));
---				else
---					canal_red<= "0" & COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 1);
---					canal_green<= "0" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
---					canal_blue<= "0" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);
---				end if;
 			end if;
 			canal_hsync<=HSYNC_in;
 			canal_vsync<=VSYNC_in;
@@ -371,23 +363,6 @@ begin
 			end if;
 			canal_hsyncTV<=HSYNC_TV_in;
 			canal_vsyncTV<=VSYNC_TV_in;
-			--canal_clkTV<=pclk_TV_CLK16MHz_in;
-
-
-
-			--vert
---			if screen_color="01" then
---				canal_redTV<= "000000";
---				-- "Les sucres en morceaux" : V[9,18],R[3,6],B[1,2] 
---				canal_greenTV<= GREEN_SCREEN(conv_integer(GREEN_TV_in(5 downto 4) & RED_TV_in(5 downto 4) & BLUE_TV_in(5 downto 4)));
---				canal_blueTV<= "000000";
---			else
---				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
---				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
---				canal_blueTV<= COLOR_SCREEN(conv_integer(BLUE_TV_in(5 downto 4)));
---			end if;
---			canal_hsyncTV<=HSYNC_TV_in;
---			canal_vsyncTV<=VSYNC_TV_in;
 		end if;
 end process green_color_tv;
 
@@ -397,23 +372,7 @@ HSYNC_out<=canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan 
 VSYNC_out<=canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_vsyncTV;
 HSYNC_XOR_video_out<= canal_hsyncTV;
 VSYNC_XOR_video_out<= canal_vsyncTV;
---pclk_out<=canal_clk when true_mode='0' else canal_clkTV;
---HSYNC_out<=HSYNC_in when true_mode='0' else HSYNC_TV_in;
---VSYNC_out<=VSYNC_in when true_mode='0' else VSYNC_TV_in;
 pclk_out<=pclk_in when true_mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz_in;
-
-
--- HSYNC_scan     --scandoubler     pas bon en vram72Hz, OSD visible
--- canal_hsync c'est pire, mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªme l'OSD dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©conne -> c'est TV
-
---HSYNC_scan ? scandoubler en vert 20h
---canal_hsync RATE certainement vram72Hz et vramdb72Hz
---canal_hsyncTV ? certainement scandouler
---HSYNC_out<=canal_hsync;--canal_hsync when screen_vga(1)='1' else HSYNC_scan when screen_vga(1)='0' else canal_hsyncTV;
---VSYNC_out<=canal_vsync;--canal_vsync when screen_vga(1)='1' else VSYNC_scan when screen_vga(1)='0' else canal_vsyncTV;
---HSYNC_XOR_video_out<= canal_hsyncTV;
---VSYNC_XOR_video_out<= canal_vsyncTV;
---pclk_out<=pclk_in when (screen_vga="00" or screen_vga="01") else pclk_TV_CLK16MHz_in;
 
 end Behavioral;
 

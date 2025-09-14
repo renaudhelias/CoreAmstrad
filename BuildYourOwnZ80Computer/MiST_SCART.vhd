@@ -149,6 +149,206 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 "110100"
 );
 
+--https://www.cpcwiki.eu/index.php/CPC_Palette
+--Firmware Number	Hardware Number	Colour Name	R %	G %	B %	Hexadecimal	RGB values	Colour
+--0	54h	Black	0	0	0	#000000	0/0/0	
+--1	44h (or 50h)	Blue	0	0	50	#000080	0/0/128	
+--2	55h	Bright Blue	0	0	100	#0000FF	0/0/255	
+--3	5Ch	Red	50	0	0	#800000	128/0/0	
+--4	58h	Magenta	50	0	50	#800080	128/0/128	
+--5	5Dh	Mauve	50	0	100	#8000FF	128/0/255	
+--6	4Ch	Bright Red	100	0	0	#FF0000	255/0/0	
+--7	45h (or 48h)	Purple	100	0	50	#FF0080	255/0/128	
+--8	4Dh	Bright Magenta	100	0	100	#FF00FF	255/0/255	
+--9	56h	Green	0	50	0	#008000	0/128/0	
+--10	46h	Cyan	0	50	50	#008080	0/128/128	
+--11	57h	Sky Blue	0	50	100	#0080FF	0/128/255	
+--12	5Eh	Yellow	50	50	0	#808000	128/128/0	
+--13	40h (or 41h)	White	50	50	50	#808080	128/128/128	
+--14	5Fh	Pastel Blue	50	50	100	#8080FF	128/128/255	
+--15	4Eh	Orange	100	50	0	#FF8000	255/128/0	
+--16	47h	Pink	100	50	50	#FF8080	255/128/128	
+--17	4Fh	Pastel Magenta	100	50	100	#FF80FF	255/128/255	
+--18	52h	Bright Green	0	100	0	#00FF00	0/255/0	
+--19	42h (or 51h)	Sea Green	0	100	50	#00FF80	0/255/128	
+--20	53h	Bright Cyan	0	100	100	#00FFFF	0/255/255	
+--21	5Ah	Lime	50	100	0	#80FF00	128/255/0	
+--22	59h	Pastel Green	50	100	50	#80FF80	128/255/128	
+--23	5Bh	Pastel Cyan	50	100	100	#80FFFF	128/255/255	
+--24	4Ah	Bright Yellow	100	100	0	#FFFF00	255/255/0	
+--25	43h (or 49h)	Pastel Yellow	100	100	50	#FFFF80	255/255/128	
+--26	4Bh	Bright White	100	100	100	#FFFFFF	255/255/255	
+
+type T_PALETTE is array (0 to 63) --(15 downto 0)
+        of integer;
+--constant PALETTE_RGB_v0:T_PALETTE :=
+---- todo : réordonnancer suivant ordre incrementation hexa
+----todo trie, puis trous (plein (exemple border 26) ou vrai trou)
+--(0, -- 000000
+--1, -- 000080
+--2, -- 0000FF
+--3, -- 800000
+--4, -- 800080
+--5, -- 8000FF
+--6, -- FF0000
+--7, -- FF0080
+--8, -- FF00FF
+--9, -- 008000
+--10, -- 008080
+--11, -- 0080FF
+--12, -- 808000
+--13, -- 808080
+--14, -- 8080FF
+--15, -- FF8000
+--(others=>0)
+--);
+
+--constant PALETTE_RGB_v1:T_PALETTE :=
+--(0, -- 000000
+--1, -- 000080
+--2, -- 0000FF
+--9, -- 008000
+--10, -- 008080
+--11, -- 0080FF
+--0, -- 00FF00
+--0, -- 00FF80
+--0, -- 00FFFF
+--3, -- 800000
+--4, -- 800080
+--5, -- 8000FF
+--12, -- 808000
+--13, -- 808080
+--14, -- 8080FF
+--0, -- 80FF00
+--0, -- 80FF80
+--0, -- 80FFFF
+--6, -- FF0000
+--7, -- FF0080
+--8, -- FF00FF
+--15, -- FF8000
+--(others=>0)
+--);
+
+--constant PALETTE_RGB_v2:T_PALETTE :=
+--(0, -- 000000
+--1, -- 000080
+--2, -- 0000FF
+--9, -- 008000
+--10, -- 008080
+--11, -- 0080FF
+--0, -- 00FF00
+--0, -- 00FF80
+--0, -- 00FFFF
+--3, -- 800000
+--4, -- 800080
+--5, -- 8000FF
+--12, -- 808000
+--13, -- 808080
+--14, -- 8080FF
+--0, -- 80FF00
+--0, -- 80FF80
+--0, -- 80FFFF
+--6, -- FF0000
+--7, -- FF0080
+--8, -- FF00FF
+--15, -- FF8000
+--(others=>0)
+--);
+
+-- Red_in & Green_in & BluE_in
+
+constant PALETTE_RGB:T_PALETTE :=
+( 0, -- 00 00 00
+  1,-- 00 00 01
+  1,-- 00 00 10
+  2,-- 00 00 11
+  
+  9,-- 00 01 OO
+  10,
+  10,
+  11,
+  
+  0,
+  0,
+  0,
+  0,
+  
+  5,
+  4,
+  4,
+  5,
+  
+  12,
+  13,
+  13,
+  14,
+  
+  0,
+  0,
+  0,
+  0,
+  
+  
+  6,
+  7,
+  7,
+  8,
+  
+  15,
+  
+  -- bouclage de couleurs
+  1,1,2,
+  
+  9,10,10,11,
+    
+  5,4,4,5,
+  
+  12, 13,13,14,
+  
+  0,0,0,0,
+  
+  6,7,7,8,
+  
+  -- rebouclage de couleurs
+  0,1,1,2,
+  
+  9,10,10,11,
+    
+  5,4,4,5
+  
+  --12, 13,13,14,
+  
+  --6,7,7,8
+);
+
+--constant PALETTE_RGB_v3:T_PALETTE :=
+--(0, -- 000000
+--1, -- 000080
+--2, -- 0000FF
+--9, -- 008000
+--10, -- 008080
+--11, -- 0080FF
+--0, -- 00FF00
+--0, -- 00FF80
+--0, -- 00FFFF
+--3, -- 800000
+--4, -- 800080
+--5, -- 8000FF
+--12, -- 808000
+--13, -- 808080
+--14, -- 8080FF
+--0, -- 80FF00
+--0, -- 80FF80
+--0, -- 80FFFF
+--6, -- FF0000
+--7, -- FF0080
+--8, -- FF00FF
+--15, -- FF8000
+--(others=>0)
+--);
+
+--mauvais mapping, on devrait avoir en paramètre une valeur composé parallèle
+--se baser sur les couleurs système
 type T_C64 is array (0 to 15) --(15 downto 0)
         of STD_LOGIC_VECTOR(5 downto 0);
 constant C64_SCREEN_RED:T_C64 :=
@@ -299,13 +499,21 @@ begin
 			if screen_color="11" then
 				--C64 -- couleur en hexa
 				if green_scanlines(0)='0' or RED_in(3)='0' then
-					canal_red<= C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 0);
-					canal_green<= C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 0);
-					canal_blue<= C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 0);
+					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					--canal_red<= C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 0);
+					--canal_green<= C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 0);
+					--canal_blue<= C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 0);
 				else
-					canal_red<= "0" & C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 1);
-					canal_green<= "0" & C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
-					canal_blue<= "0" & C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);
+					--pas de scanline pour le moment
+					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					
+					--canal_red<= "0" & C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 1);
+					--canal_green<= "0" & C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
+					--canal_blue<= "0" & C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);
 				end if;
 			elsif screen_color="10" then
 				--orange

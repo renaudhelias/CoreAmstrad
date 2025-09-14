@@ -499,17 +499,17 @@ begin
 			if screen_color="11" then
 				--C64 -- couleur en hexa
 				if green_scanlines(0)='0' or RED_in(3)='0' then
-					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
-					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
-					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
 					--canal_red<= C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 0);
 					--canal_green<= C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 0);
 					--canal_blue<= C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 0);
 				else
 					--pas de scanline pour le moment
-					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
-					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
-					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(GREEN_in(5 downto 4) & RED_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_red<= "0" & C64_SCREEN_RED(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
+					canal_green<= "0" & C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
+					canal_blue<= "0" & C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
 					
 					--canal_red<= "0" & C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 1);
 					--canal_green<= "0" & C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);

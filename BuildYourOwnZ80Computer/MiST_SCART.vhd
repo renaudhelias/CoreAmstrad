@@ -181,83 +181,7 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 
 type T_PALETTE is array (0 to 63) --(15 downto 0)
         of integer;
---constant PALETTE_RGB_v0:T_PALETTE :=
----- todo : réordonnancer suivant ordre incrementation hexa
-----todo trie, puis trous (plein (exemple border 26) ou vrai trou)
---(0, -- 000000
---1, -- 000080
---2, -- 0000FF
---3, -- 800000
---4, -- 800080
---5, -- 8000FF
---6, -- FF0000
---7, -- FF0080
---8, -- FF00FF
---9, -- 008000
---10, -- 008080
---11, -- 0080FF
---12, -- 808000
---13, -- 808080
---14, -- 8080FF
---15, -- FF8000
---(others=>0)
---);
 
---constant PALETTE_RGB_v1:T_PALETTE :=
---(0, -- 000000
---1, -- 000080
---2, -- 0000FF
---9, -- 008000
---10, -- 008080
---11, -- 0080FF
---0, -- 00FF00
---0, -- 00FF80
---0, -- 00FFFF
---3, -- 800000
---4, -- 800080
---5, -- 8000FF
---12, -- 808000
---13, -- 808080
---14, -- 8080FF
---0, -- 80FF00
---0, -- 80FF80
---0, -- 80FFFF
---6, -- FF0000
---7, -- FF0080
---8, -- FF00FF
---15, -- FF8000
---(others=>0)
---);
-
---constant PALETTE_RGB_v2:T_PALETTE :=
---(0, -- 000000
---1, -- 000080
---2, -- 0000FF
---9, -- 008000
---10, -- 008080
---11, -- 0080FF
---0, -- 00FF00
---0, -- 00FF80
---0, -- 00FFFF
---3, -- 800000
---4, -- 800080
---5, -- 8000FF
---12, -- 808000
---13, -- 808080
---14, -- 8080FF
---0, -- 80FF00
---0, -- 80FF80
---0, -- 80FFFF
---6, -- FF0000
---7, -- FF0080
---8, -- FF00FF
---15, -- FF8000
---(others=>0)
---);
-
--- Red_in & Green_in & BluE_in
--- 3, -- 01,00,00
--- 14 -- 01,01,11
 constant PALETTE_RGB:T_PALETTE :=
 ( 0, -- 00 00 00
   1,-- 00 00 01
@@ -343,31 +267,6 @@ constant PALETTE_RGB:T_PALETTE :=
   5 -- 11,11,11
 );
 
---constant PALETTE_RGB_v3:T_PALETTE :=
---(0, -- 000000
---1, -- 000080
---2, -- 0000FF
---9, -- 008000
---10, -- 008080
---11, -- 0080FF
---0, -- 00FF00
---0, -- 00FF80
---0, -- 00FFFF
---3, -- 800000
---4, -- 800080
---5, -- 8000FF
---12, -- 808000
---13, -- 808080
---14, -- 8080FF
---0, -- 80FF00
---0, -- 80FF80
---0, -- 80FFFF
---6, -- FF0000
---7, -- FF0080
---8, -- FF00FF
---15, -- FF8000
---(others=>0)
---);
 
 --mauvais mapping, on devrait avoir en paramètre une valeur composé parallèle
 --se baser sur les couleurs système

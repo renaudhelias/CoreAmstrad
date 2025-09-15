@@ -256,69 +256,91 @@ type T_PALETTE is array (0 to 63) --(15 downto 0)
 --);
 
 -- Red_in & Green_in & BluE_in
-
+-- 3, -- 01,00,00
+-- 14 -- 01,01,11
 constant PALETTE_RGB:T_PALETTE :=
 ( 0, -- 00 00 00
   1,-- 00 00 01
-  1,-- 00 00 10
+  1,-- 00 00 >10< trou
   2,-- 00 00 11
   
   9,-- 00 01 OO
-  10,
-  10,
-  11,
+  10,-- 00,01,01
+  10,-- 00,01,>10< trou
+  11,-- 00,01,11
   
-  0,
-  0,
-  0,
-  0,
+  9, -- 00,>10<,00 trou
+  10, -- 00,>10<,01 trou 
+  10, -- 00,>10<,>10< trou 
+  11, -- 00,>10<,11 trou 
   
-  5,
-  4,
-  4,
-  5,
+  5, --  00,11,00
+  4, --  00,11,01
+  4, --  00,11,>10< trou
+  5,--  00,11,11
   
-  12,
-  13,
-  13,
-  14,
+  3, -- 01,00,00 fixe x cyan
+  13, -- 01,00,01
+  13, -- 01,00,>10< trou
+  14, -- 01,00,11
   
-  0,
-  0,
-  0,
-  0,
+  12, -- 01,01,00
+  13, -- 01,01,01
+  13, -- 01,01,>10< trou
+  14, -- 01,01,11
   
+  6, -- 01,>10<,00 trou
+  7, -- 01,>10<,01 trou
+  7, -- 01,>10<,>10< trou
+  8, -- 01,>10<,11 trou
   
-  6,
-  7,
-  7,
-  8,
-  
-  15,
-  
+  15, -- 01,11,00
   -- bouclage de couleurs
-  1,1,2,
+  1, -- 01,11,01
+  1, -- 01,11,>10< trou
+  2, -- 01,11,11
   
-  9,10,10,11,
-    
-  5,4,4,5,
+  12,  -- >10<<,00,00 trou
+  13, -- >10<,00,01 trou
+  13, -- >10<,00,>10< trou
+  14, -- >10<,00,11 trou
+	 
+  12, -- >10<,01,00 trou
+  13, -- >10<,01,01 trou
+  13, -- >10<,01,10 trou
+  14, -- >10<,01,11 trou
   
-  12, 13,13,14,
+  12, -- >10<,>10<,00 trou
+  13, -- >10<,>10<,01 trou
+  13, -- >10<,>10<,10 trou
+  14, -- >10<,>10<,11 trou
   
-  0,0,0,0,
+  --0,0,0,0,
+  12, -- >10<,11,00 trou
+  13, -- >10<,11,01 trou
+  13, -- >10<,11,>10< trou
+  14, -- >10<,11,11 trou
   
-  6,7,7,8,
+  6, -- 11,00,00
+  7, -- 11,00,01
+  7, -- 11,00,>10< trou
+  8, -- 11,00,11
   
   -- rebouclage de couleurs
-  0,1,1,2,
+  0, -- 11,01,00
+  1, -- 11,01,01
+  1, -- 11,01,>10< trou
+  2, -- 11,01,11
   
-  9,10,10,11,
+  9, -- 11,>10<,00
+  10, -- 11,>10<,01
+  10, -- 11,>10<,>10< trou
+  11, --  11,>10<,11
     
-  5,4,4,5
-  
-  --12, 13,13,14,
-  
-  --6,7,7,8
+  5, -- 11,11,00
+  4, -- 11,11,01
+  4, -- 11,11,>10< trou
+  5 -- 11,11,11
 );
 
 --constant PALETTE_RGB_v3:T_PALETTE :=
@@ -455,7 +477,7 @@ begin
 green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
 
 --original signal
-true_mode<= '1' when mode='1' or screen_vga="11" else '0';
+true_mode<= '1' when mode='1' or screen_vga="10" else '0';
 
 -- with scandoubler
 scanner : scandoubler
@@ -502,6 +524,13 @@ begin
 					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
 					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
 					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
+					--cyan 3 KO
+					-- 4 purple
+					--vert 5 OK
+					--canal_red<= C64_SCREEN_RED(5);
+					--canal_green<= C64_SCREEN_GREEN(5);
+					--canal_blue<= C64_SCREEN_BLUE(5);
+					
 					--canal_red<= C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 0);
 					--canal_green<= C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 0);
 					--canal_blue<= C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 0);
@@ -510,6 +539,10 @@ begin
 					canal_red<= "0" & C64_SCREEN_RED(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
 					canal_green<= "0" & C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
 					canal_blue<= "0" & C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
+
+--					canal_red<= C64_SCREEN_RED(5);
+--					canal_green<= C64_SCREEN_GREEN(5);
+--					canal_blue<= C64_SCREEN_BLUE(5);
 					
 					--canal_red<= "0" & C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 1);
 					--canal_green<= "0" & C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);

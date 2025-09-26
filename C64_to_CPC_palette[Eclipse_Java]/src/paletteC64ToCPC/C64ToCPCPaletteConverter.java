@@ -1,5 +1,10 @@
 package paletteC64ToCPC;
 
+import java.awt.Graphics;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
 public class C64ToCPCPaletteConverter {
 	
 	
@@ -123,6 +128,8 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 //"101101" --l. gray 2D
 //);
 	
+	private Graphics g;
+
 	public static void main(String [] args) throws Exception {
 		
 		if (C64_SCREEN_RED.length != 16) throw new Exception("C64_SCREEN_RED");
@@ -141,6 +148,8 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		// RGB FF to RGB 3F
 		System.out.println("RGB result : "+ rgb);
 		System.out.println("--------------------------------------------");
+		app.openBoite();
+		//app.show(rgb,2);
 		for (int j = 0;j<3;j++) {
 			System.out.println("");
 			if (j==0) {
@@ -160,6 +169,9 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				yuv.U = v;
 				yuv.V = u;
 				rgbFF=app.yuv2rgbFF(yuv);
+				
+				rgbFF.getColor();
+				
 				RGB result3F = app.convertTo3F(rgbFF);
 				if (j==0) {
 					System.out.println("\""+Integer.toBinaryString((int)result3F.r)+"\",");
@@ -170,6 +182,33 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				}
 			}
 		}
+	}
+
+	private void openBoite() {
+		JFrame f = new JFrame();
+		f.setTitle("C64 to CPC palette");
+		f.setSize(100*16,100*4);
+		JPanel p = new JPanel() {
+	       
+
+			@Override
+			public void paint(Graphics g) {
+	            super.paintComponent(g);
+	            C64ToCPCPaletteConverter.this.g = g;
+	            C64ToCPCPaletteConverter.this.show(new RGB(100,200,254),4);
+	        }
+	    };
+	    f.add(p);
+	    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    f.getContentPane().add(p);
+	    f.setVisible(true);
+	}
+	private void show(RGB rgb, int numero) {
+	            g.drawLine(0, 0, 100, 100);
+	            
+//	            g.drawRect(25, 25, 50, 50);
+	            g.setColor(rgb.getColor());
+	            g.fillRect(25,25, 50, 50);
 	}
 
 	private RGB convertToFF(RGB rgb3F) {

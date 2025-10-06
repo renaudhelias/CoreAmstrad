@@ -155,6 +155,7 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		// RGB FF to RGB 3F
 		System.out.println("RGB result : "+ rgb);
 		System.out.println("--------------------------------------------");
+		//app.openBoite();
 		//app.show(rgb,2);
 		for (int j = 0;j<3;j++) {
 			System.out.println("");

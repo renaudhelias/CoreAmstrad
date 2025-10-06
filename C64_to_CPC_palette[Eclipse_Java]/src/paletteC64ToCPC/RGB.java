@@ -3,16 +3,16 @@ package paletteC64ToCPC;
 import java.awt.Color;
 
 public class RGB {
-	public double r;
-	public double g;
-	public double b;
+	public int r;
+	public int g;
+	public int b;
 	public RGB() {
 		
 	}
-	public RGB(double R, double G, double B) {
-		this.r = R;
-		this.g = G;
-		this.b = B;
+	public RGB(int r, int g, int b) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
 	}
 			
 			
@@ -20,19 +20,19 @@ public class RGB {
 	public double getR() {
 		return r;
 	}
-	public void setR(double r) {
+	public void setR(int r) {
 		this.r = r;
 	}
 	public double getG() {
 		return g;
 	}
-	public void setG(double g) {
+	public void setG(int g) {
 		this.g = g;
 	}
 	public double getB() {
 		return b;
 	}
-	public void setB(double b) {
+	public void setB(int b) {
 		this.b = b;
 	}
 	@Override
@@ -41,7 +41,7 @@ public class RGB {
 	}
 	
 	public Color getColor() {
-		return new Color((int)r,(int)g,(int)b);
+		return new Color((int)r%256,(int)g%256,(int)b%256);
 	}
 	
 	

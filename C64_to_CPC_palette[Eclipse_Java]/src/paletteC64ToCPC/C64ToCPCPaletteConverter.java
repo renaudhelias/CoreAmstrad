@@ -234,35 +234,39 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	            g.fillRect(25*numero,25, 50, 50);
 	}
 
-	private RGB convertToFF(RGB rgb3F) {
+	protected RGB convertToFF(RGB rgb3F) {
 		// 3F -> FF
 		// x  -> ?
+		
+		//r = (x*0xFF)/0x3F; FAUX
+		//r = ((x+1)*(0xFF+1))/(0x3F+1) -1; OK
+		
 		RGB result = new RGB();
-		result.r = (rgb3F.r*0x3F)/0xFF;
-		result.g = (rgb3F.g*0x3F)/0xFF;
-		result.b = (rgb3F.b*0x3F)/0xFF;
+		result.r = rgb3F.r == 0 ? 0 : ((rgb3F.r+1)*(0xFF+1))/(0x3F+1)-1;
+		result.g = rgb3F.g == 0 ? 0 : ((rgb3F.g+1)*(0xFF+1))/(0x3F+1)-1;
+		result.b = rgb3F.b == 0 ? 0 : ((rgb3F.b+1)*(0xFF+1))/(0x3F+1)-1;
 		return result;
 	}
 
-	private RGB convertTo3F(RGB rgbFF) {
+	protected RGB convertTo3F(RGB rgbFF) {
 		// FF -> 3F
 		// x  -> ?
 		RGB result = new RGB();
-		result.r = (rgbFF.r*0xFF)/0x3F;
-		result.g = (rgbFF.g*0xFF)/0x3F;
-		result.b = (rgbFF.b*0xFF)/0x3F;
+		result.r = rgbFF.r == 0 ? 0 : ((rgbFF.r+1)*(0x3F+1))/(0xFF+1)-1;
+		result.g = rgbFF.g == 0 ? 0 : ((rgbFF.g+1)*(0x3F+1))/(0xFF+1)-1;
+		result.b = rgbFF.b == 0 ? 0 : ((rgbFF.b+1)*(0x3F+1))/(0xFF+1)-1;
 		return result;
 	}
 
-	private RGB yuv2rgbFF(YUV yuv) {
+	protected RGB yuv2rgbFF(YUV yuv) {
 		RGB rgb = new RGB();
-		rgb.r = yuv.Y + 1.4075 * (yuv.V - 128);
-		rgb.g = yuv.Y - 0.3455 * (yuv.U - 128) - (0.7169 * (yuv.V - 128));
-		rgb.b = yuv.Y + 1.7790 * (yuv.U - 128);
+		rgb.r = (int)(yuv.Y + 1.4075 * (yuv.V - 128));
+		rgb.g = (int)(yuv.Y - 0.3455 * (yuv.U - 128) - (0.7169 * (yuv.V - 128)));
+		rgb.b = (int)(yuv.Y + 1.7790 * (yuv.U - 128));
 		return rgb;
 	}
 
-	private YUV rgb2yuvFF(RGB rgb) {
+	protected YUV rgb2yuvFF(RGB rgb) {
 		YUV yuv = new YUV();
 		yuv.Y = rgb.r *  0.299000 + rgb.g *  .587000 + rgb.b *  0.114000;
 		yuv.U = rgb.r * -.168736 + rgb.g * -.331264 + rgb.b *  0.500000 + 128;

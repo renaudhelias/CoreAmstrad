@@ -41,7 +41,8 @@ public class RGB {
 	}
 	
 	public Color getColor() {
-		return new Color((int)r%256,(int)g%256,(int)b%256);
+		//return new Color((int)r%256,(int)g%256,(int)b%256);
+		return new Color(Math.min(255, r),Math.min(255,g),Math.min(255,b));
 	}
 	
 	

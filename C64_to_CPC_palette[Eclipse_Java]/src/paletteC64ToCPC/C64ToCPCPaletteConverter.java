@@ -196,7 +196,7 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	private void openBoite() {
 		JFrame f = new JFrame();
 		f.setTitle("C64 to CPC palette");
-		f.setSize(100*16,100*4);
+		f.setSize(50*16+16,50*4-10);
 		JPanel p = new JPanel() {
 	       
 
@@ -214,7 +214,7 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		            	}
 		            	
 		            	System.out.println(j+" "+al);
-			            C64ToCPCPaletteConverter.this.show(al,i);
+			            C64ToCPCPaletteConverter.this.show(al,i,j);
 //			            C64ToCPCPaletteConverter.this.show(new RGB(100,200,254),4);
 		            	
 		            }
@@ -226,12 +226,12 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	    f.getContentPane().add(p);
 	    f.setVisible(true);
 	}
-	private void show(RGB rgb, int numero) {
-	            g.drawLine(0, 0, 100, 100);
+	private void show(RGB rgb, int ligne, int colonne) {
+	            //g.drawLine(0, 0, 100, 100);
 	            
 //	            g.drawRect(25, 25, 50, 50);
 	            g.setColor(rgb.getColor());
-	            g.fillRect(25*numero,25, 50, 50);
+	            g.fillRect(25*(ligne*2),25*(colonne*4), 50, 50);
 	}
 
 	protected RGB convertToFF(RGB rgb3F) {

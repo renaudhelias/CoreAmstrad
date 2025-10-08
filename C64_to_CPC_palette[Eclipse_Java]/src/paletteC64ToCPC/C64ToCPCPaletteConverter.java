@@ -2,6 +2,7 @@ package paletteC64ToCPC;
 
 import java.awt.Graphics;
 import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,7 +135,9 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	
 	private Graphics g;
 	List<RGB> paletteOrigine = new ArrayList<RGB>();
+	List<YUV> paletteOrigineYUV = new ArrayList<YUV>();
 	List<RGB> newPaletteGenerated = new ArrayList<RGB>();
+	List<YUV> newPaletteGeneratedYUV = new ArrayList<YUV>();
 
 	public static void main(String [] args) throws Exception {
 		
@@ -171,11 +174,13 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				RGB rgbFF = app.convertToFF(rbg3F);
 				app.paletteOrigine.add(rgbFF);
 				yuv = app.rgb2yuvFF(rgbFF);
+				app.paletteOrigineYUV.add(yuv);
 				double u = yuv.U;
 				double v = yuv.V;
-				// on inverse U et V
+				// on inverse U et V FIXMEs
 				yuv.U = v;
 				yuv.V = u;
+				app.newPaletteGeneratedYUV.add(yuv);
 				rgbFF=app.yuv2rgbFF(yuv);
 				
 				app.newPaletteGenerated.add(rgbFF);
@@ -190,6 +195,22 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				}
 			}
 		}
+		
+		// Y distincts
+		List<Double> discoverY= new ArrayList<Double>();
+		for (int i = 0;i<16;i++) {
+			YUV yuvY = app.paletteOrigineYUV.get(i);
+			if (!discoverY.contains(yuvY.Y)) {
+				discoverY.add(yuvY.Y);
+			}
+		}
+		//FIXME
+		// discoverY pas 3 : [0.0, 1.0, 0.3, 0.7, 0.4, 0.6, 0.9, 0.5, 0.8]
+		// [0.3:0.9] + blanc 1.0 et noir 0.0
+		//  \\=> c'est une palette compatible noir et blanc !
+		//   \\=> près à parier que le step est de 0.05 ^^'
+		if (discoverY.size() != 3) System.out.println("discoverY pas 3 : "+discoverY);
+		
 		app.openBoite();
 	}
 
@@ -207,10 +228,13 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	            for (int j = 0;j<2;j++) {
 		            for (int i = 0;i<16;i++) {
 		            	RGB al;
+		            	YUV yuv;
 		            	if (j==0) {
-				            al = paletteOrigine.get(i);		            		
+				            al = paletteOrigine.get(i);
+				            yuv = paletteOrigineYUV.get(i);
 		            	} else {
 				            al = newPaletteGenerated.get(i);
+				            yuv = newPaletteGeneratedYUV.get(i);
 		            	}
 		            	
 		            	System.out.println(j+" "+al);
@@ -260,17 +284,32 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 
 	protected RGB yuv2rgbFF(YUV yuv) {
 		RGB rgb = new RGB();
-		rgb.r = (int)(yuv.Y + 1.4075 * (yuv.V - 128));
-		rgb.g = (int)(yuv.Y - 0.3455 * (yuv.U - 128) - (0.7169 * (yuv.V - 128)));
-		rgb.b = (int)(yuv.Y + 1.7790 * (yuv.U - 128));
+		
+		double r = yuv.Y + 1.13983*yuv.V;
+		double g = yuv.Y - 0.39465*yuv.U - 0.58060*yuv.V;
+		double b = yuv.Y + 2.03211*yuv.U;
+		
+		rgb.r = (int)(r*256.0);
+		rgb.g = (int)(g*256.0);
+		rgb.b = (int)(b*256.0);
+		
 		return rgb;
 	}
 
 	protected YUV rgb2yuvFF(RGB rgb) {
+		double r=((double)rgb.r)/256.0;
+		double g=((double)rgb.g)/256.0;
+		double b=((double)rgb.b)/256.0;
+		
 		YUV yuv = new YUV();
-		yuv.Y = rgb.r *  0.299000 + rgb.g *  .587000 + rgb.b *  0.114000;
-		yuv.U = rgb.r * -.168736 + rgb.g * -.331264 + rgb.b *  0.500000 + 128;
-		yuv.V = rgb.r *  0.500000 + rgb.g * -.418688 + rgb.b * -0.081312 + 128;
+		yuv.Y = r *  0.299000 + g *  0.587000 + b *  0.114000;
+		yuv.U =  -0.14713*r - 0.28886*g + 0.436*b;
+		yuv.V = 0.615*r - 0.51498*g - 0.10001*b;
+
+		yuv.Y = Math.round(yuv.Y*10)/10d;
+		yuv.U = Math.round(yuv.U*10)/10d;
+		yuv.V = Math.round(yuv.V*10)/10d;
+		
 		return yuv;
 	}
 }

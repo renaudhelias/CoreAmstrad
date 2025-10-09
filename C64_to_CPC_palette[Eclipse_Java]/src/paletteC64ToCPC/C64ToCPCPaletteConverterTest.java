@@ -24,9 +24,9 @@ public class C64ToCPCPaletteConverterTest {
 		
 		C64ToCPCPaletteConverter app = new C64ToCPCPaletteConverter();
 		RGB test =app.convertTo3F(new RGB(0xFF,0x7F,0x00));
-		assertEquals(0x3F, test.getR(), 0.0);
-		assertEquals(0x1F, test.getG(), 0.0);
-		assertEquals(0x0, test.getB(), 0.0);
+		assertEquals(0x3F, test.r, 0.0);
+		assertEquals(0x1F, test.g, 0.0);
+		assertEquals(0x0, test.b, 0.0);
 	}
 
 	@Test
@@ -56,9 +56,9 @@ public class C64ToCPCPaletteConverterTest {
 		
 		C64ToCPCPaletteConverter app = new C64ToCPCPaletteConverter();
 		RGB test =app.convertToFF(new RGB(0x3F,0x1F,0x00));
-		assertEquals(0xFF, test.getR(), 0.0);
-		assertEquals(0x7F, test.getG(), 0.0);
-		assertEquals(0x0,  test.getB(), 0.0);
+		assertEquals(0xFF, test.r, 0.0);
+		assertEquals(0x7F, test.g, 0.0);
+		assertEquals(0x0,  test.b, 0.0);
 	}
 
 	@Test

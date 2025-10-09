@@ -217,7 +217,7 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	private void openBoite() {
 		JFrame f = new JFrame();
 		f.setTitle("C64 to CPC palette");
-		f.setSize(50*16+16,50*4-10);
+		f.setSize(50*16+16,(50*4-10)+(480));
 		JPanel p = new JPanel() {
 	       
 
@@ -225,6 +225,8 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 			public void paint(Graphics g) {
 	            super.paintComponent(g);
 	            C64ToCPCPaletteConverter.this.g = g;
+	            g.setColor(Color.BLACK);
+	            g.drawOval(0, (50*4-10), 400, 400);
 	            for (int j = 0;j<2;j++) {
 		            for (int i = 0;i<16;i++) {
 		            	RGB al;
@@ -232,6 +234,7 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		            	if (j==0) {
 				            al = paletteOrigine.get(i);
 				            yuv = paletteOrigineYUV.get(i);
+				            C64ToCPCPaletteConverter.this.show(yuv,al.getColor());
 		            	} else {
 				            al = newPaletteGenerated.get(i);
 				            yuv = newPaletteGeneratedYUV.get(i);
@@ -257,6 +260,16 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	            g.setColor(rgb.getColor());
 	            g.fillRect(25*(ligne*2),25*(colonne*4), 50, 50);
 	}
+	private final static double CIRCLE_CENTER=200.0;
+	private final static double RATIO=500.0;
+	private void show(YUV yuv, Color color) {
+        //g.drawLine(0, 0, 100, 100);
+        
+//        g.drawRect(25, 25, 50, 50);
+        g.setColor(color);
+        g.fillRect((int)(CIRCLE_CENTER+RATIO*yuv.U) -10,(50*4-10)+(int)(CIRCLE_CENTER+RATIO*yuv.V) -10, 20, 20);
+        // 5 niveau de gris + 9 couleurs
+}
 
 	protected RGB convertToFF(RGB rgb3F) {
 		// 3F -> FF
@@ -266,9 +279,9 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		//r = ((x+1)*(0xFF+1))/(0x3F+1) -1; OK
 		
 		RGB result = new RGB();
-		result.r = rgb3F.r == 0 ? 0 : ((rgb3F.r+1)*(0xFF+1))/(0x3F+1)-1;
-		result.g = rgb3F.g == 0 ? 0 : ((rgb3F.g+1)*(0xFF+1))/(0x3F+1)-1;
-		result.b = rgb3F.b == 0 ? 0 : ((rgb3F.b+1)*(0xFF+1))/(0x3F+1)-1;
+		result.r = Math.min(255,rgb3F.r == 0 ? 0 : ((rgb3F.r+1)*(0xFF+1))/(0x3F+1)-1);
+		result.g = Math.min(255,rgb3F.g == 0 ? 0 : ((rgb3F.g+1)*(0xFF+1))/(0x3F+1)-1);
+		result.b = Math.min(255,rgb3F.b == 0 ? 0 : ((rgb3F.b+1)*(0xFF+1))/(0x3F+1)-1);
 		return result;
 	}
 
@@ -276,9 +289,9 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		// FF -> 3F
 		// x  -> ?
 		RGB result = new RGB();
-		result.r = rgbFF.r == 0 ? 0 : ((rgbFF.r+1)*(0x3F+1))/(0xFF+1)-1;
-		result.g = rgbFF.g == 0 ? 0 : ((rgbFF.g+1)*(0x3F+1))/(0xFF+1)-1;
-		result.b = rgbFF.b == 0 ? 0 : ((rgbFF.b+1)*(0x3F+1))/(0xFF+1)-1;
+		result.r = Math.min(255,rgbFF.r == 0 ? 0 : ((rgbFF.r+1)*(0x3F+1))/(0xFF+1)-1);
+		result.g = Math.min(255,rgbFF.g == 0 ? 0 : ((rgbFF.g+1)*(0x3F+1))/(0xFF+1)-1);
+		result.b = Math.min(255,rgbFF.b == 0 ? 0 : ((rgbFF.b+1)*(0x3F+1))/(0xFF+1)-1);
 		return result;
 	}
 
@@ -289,9 +302,9 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		double g = yuv.Y - 0.39465*yuv.U - 0.58060*yuv.V;
 		double b = yuv.Y + 2.03211*yuv.U;
 		
-		rgb.r = (int)(r*256.0);
-		rgb.g = (int)(g*256.0);
-		rgb.b = (int)(b*256.0);
+		rgb.r = Math.min(255,(int)(r*256.0));
+		rgb.g = Math.min(255,(int)(g*256.0));
+		rgb.b = Math.min(255,(int)(b*256.0));
 		
 		return rgb;
 	}

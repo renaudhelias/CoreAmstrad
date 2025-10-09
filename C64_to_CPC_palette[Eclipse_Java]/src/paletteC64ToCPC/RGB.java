@@ -10,13 +10,13 @@ public class RGB {
 		
 	}
 	public RGB(int r, int g, int b) {
-		this.r = r;
-		this.g = g;
-		this.b = b;
+		this.r = Math.min(255, r);
+		this.g = Math.min(255, g);
+		this.b = Math.min(255, b);
 	}
 			
 			
-			
+			/*
 	public double getR() {
 		return r;
 	}
@@ -34,15 +34,14 @@ public class RGB {
 	}
 	public void setB(int b) {
 		this.b = b;
-	}
+	}*/
 	@Override
 	public String toString() {
-		return "RGB [R=" + String.format("%2x",(int)r) + ", G=" + String.format("%2x",(int)g) + ", B=" + String.format("%2x",(int)b) + "]";
+		return "RGB [R=" + String.format("%2x",r) + ", G=" + String.format("%2x",g) + ", B=" + String.format("%2x",b) + "]";
 	}
 	
 	public Color getColor() {
-		//return new Color((int)r%256,(int)g%256,(int)b%256);
-		return new Color(Math.min(255, r),Math.min(255,g),Math.min(255,b));
+		return new Color(r,g,b);
 	}
 	
 	

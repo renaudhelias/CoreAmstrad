@@ -175,13 +175,12 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				app.paletteOrigine.add(rgbFF);
 				yuv = app.rgb2yuvFF(rgbFF);
 				app.paletteOrigineYUV.add(yuv);
-				double u = yuv.U;
-				double v = yuv.V;
+				YUV yuvGen = new YUV(yuv);
 				// on inverse U et V FIXMEs
-				yuv.U = v;
-				yuv.V = u;
-				app.newPaletteGeneratedYUV.add(yuv);
-				rgbFF=app.yuv2rgbFF(yuv);
+				yuvGen.U = yuv.V;
+				yuvGen.V = yuv.U;
+				app.newPaletteGeneratedYUV.add(yuvGen);
+				rgbFF=app.yuv2rgbFF(yuvGen);
 				
 				app.newPaletteGenerated.add(rgbFF);
 				
@@ -234,10 +233,11 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		            	if (j==0) {
 				            al = paletteOrigine.get(i);
 				            yuv = paletteOrigineYUV.get(i);
-				            C64ToCPCPaletteConverter.this.show(yuv,al.getColor());
+				            C64ToCPCPaletteConverter.this.show(yuv,al.getColor(), false);
 		            	} else {
 				            al = newPaletteGenerated.get(i);
 				            yuv = newPaletteGeneratedYUV.get(i);
+				            C64ToCPCPaletteConverter.this.show(yuv,al.getColor(), true);
 		            	}
 		            	
 		            	System.out.println(j+" "+al);
@@ -262,14 +262,17 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	}
 	private final static double CIRCLE_CENTER=200.0;
 	private final static double RATIO=500.0;
-	private void show(YUV yuv, Color color) {
-        //g.drawLine(0, 0, 100, 100);
-        
-//        g.drawRect(25, 25, 50, 50);
+	private void show(YUV yuv, Color color, boolean isCircle) {
         g.setColor(color);
-        g.fillRect((int)(CIRCLE_CENTER+RATIO*yuv.U) -10,(50*4-10)+(int)(CIRCLE_CENTER+RATIO*yuv.V) -10, 20, 20);
-        // 5 niveau de gris + 9 couleurs
-}
+        int x = (int)(CIRCLE_CENTER+RATIO*yuv.U) -10;
+        int y = (50*4-10)+(int)(CIRCLE_CENTER+RATIO*yuv.V) -10;
+        if (isCircle) {
+        	g.fillOval(x, y, 20, 20);
+        } else {
+            g.fillRect( x, y, 20, 20);
+            // 5 niveau de gris + 9 couleurs
+        }
+	}
 
 	protected RGB convertToFF(RGB rgb3F) {
 		// 3F -> FF

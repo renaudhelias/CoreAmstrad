@@ -13,6 +13,11 @@ public class YUV {
 		this.V = V;
 	}
 	
+	public YUV(YUV yuv) {
+		this.Y = yuv.Y;
+		this.U = yuv.U;
+		this.V = yuv.V;
+	}
 	public double getY() {
 		return Y;
 	}

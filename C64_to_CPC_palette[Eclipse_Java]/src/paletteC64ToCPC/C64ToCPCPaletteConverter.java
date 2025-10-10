@@ -1,6 +1,9 @@
 package paletteC64ToCPC;
 
 import java.awt.Graphics;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -176,7 +179,7 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				yuv = app.rgb2yuvFF(rgbFF);
 				app.paletteOrigineYUV.add(yuv);
 				YUV yuvGen = new YUV(yuv);
-				// on inverse U et V FIXMEs
+				// on inverse U et V
 				yuvGen.U = yuv.V;
 				yuvGen.V = yuv.U;
 				app.newPaletteGeneratedYUV.add(yuvGen);
@@ -213,6 +216,10 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		app.openBoite();
 	}
 
+	int numeroPaletteGen;
+	int draggedX;
+	int draggedY;
+	
 	private void openBoite() {
 		JFrame f = new JFrame();
 		f.setTitle("C64 to CPC palette");
@@ -237,6 +244,11 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		            	} else {
 				            al = newPaletteGenerated.get(i);
 				            yuv = newPaletteGeneratedYUV.get(i);
+				            try {
+				            	al.getColor();
+				            } catch (Exception e) {
+				            	System.out.println("bad color range "+al);
+				            }
 				            C64ToCPCPaletteConverter.this.show(yuv,al.getColor(), true);
 		            	}
 		            	
@@ -248,6 +260,81 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	            }
 	        }
 	    };
+	    
+	    p.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				System.out.println("released "+e.getX()+","+e.getY());
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				System.out.println("pressed "+e.getX()+","+e.getY());
+				// init dragged
+				draggedX = e.getX();
+				draggedY = e.getY();
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				System.out.println("exited "+e.getX()+","+e.getY());
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				System.out.println("entered "+e.getX()+","+e.getY());
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				System.out.println("clicked "+e.getX()+","+e.getY());
+				//g.fillRect(25*(ligne*2),25*(colonne*4), 50, 50);
+				if (e.getY()>25*4 && e.getY()<25*6) {
+					//System.out.println("dans ligne palette gen"+e.getX());
+					numeroPaletteGen = e.getX()/50;
+					System.out.println("dans ligne palette gen "+newPaletteGenerated.get(numeroPaletteGen));
+				}
+//				if (e.getX()>25*2 && e.getX()<25*4) {
+//					System.out.println("dans ligne palette gen"+e.getY());
+//				}
+			}
+		});
+	    p.addMouseMotionListener(new MouseMotionListener() {
+			
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				System.out.println("moved "+e.getX()+","+e.getY());	
+			}
+			
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				System.out.println("dragged "+e.getX()+","+e.getY());
+				YUV yuv = newPaletteGeneratedYUV.get(numeroPaletteGen);
+				double stepX= draggedX-e.getX();
+				double stepY= draggedY-e.getY();
+				
+				
+		        //int x = (int)(CIRCLE_CENTER+RATIO*yuv.U) -10;
+				//int y = (50*4-10)+(int)(CIRCLE_CENTER+RATIO*yuv.V) -10;
+
+				
+				yuv.U=yuv.U+stepX/RATIO;
+				yuv.V=yuv.V+stepY/RATIO;
+
+		        // FIXME maj newPaletteGenerated
+				RGB rgb = newPaletteGenerated.get(numeroPaletteGen);
+				RGB rgbValue = yuv2rgbFF(yuv);
+				rgb.r=Math.max(0,Math.min(255,rgbValue.r));
+				rgb.g=Math.max(0,Math.min(255,rgbValue.g));
+				rgb.b=Math.max(0,Math.min(255,rgbValue.b));
+
+				p.repaint();
+
+				draggedX = e.getX();
+				draggedY = e.getY();
+			}
+		});
 	    f.add(p);
 	    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    f.getContentPane().add(p);

@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import java.awt.Color;
 public class C64ToCPCPaletteConverter {
@@ -163,15 +164,15 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		System.out.println("--------------------------------------------");
 		//app.openBoite();
 		//app.show(rgb,2);
-		for (int j = 0;j<3;j++) {
+//		for (int j = 0;j<3;j++) {
 			System.out.println("");
-			if (j==0) {
-				System.out.println("C64_SCREEN_RED");
-			} else if (j == 1) {
-				System.out.println("C64_SCREEN_GREEN");
-			} else {
-				System.out.println("C64_SCREEN_BLUE");
-			}
+//			if (j==0) {
+//				System.out.println("C64_SCREEN_RED");
+//			} else if (j == 1) {
+//				System.out.println("C64_SCREEN_GREEN");
+//			} else {
+//				System.out.println("C64_SCREEN_BLUE");
+//			}
 			for (int i=0;i<16;i++) {
 				RGB rbg3F = new RGB(C64_SCREEN_RED[i],C64_SCREEN_GREEN[i],C64_SCREEN_BLUE[i]);
 				RGB rgbFF = app.convertToFF(rbg3F);
@@ -188,15 +189,15 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 				app.newPaletteGenerated.add(rgbFF);
 				
 				RGB result3F = app.convertTo3F(rgbFF);
-				if (j==0) {
-					System.out.println("\""+Integer.toBinaryString((int)result3F.r)+"\",");
-				} else if (j == 1) {
-					System.out.println("\""+Integer.toBinaryString((int)result3F.g)+"\",");
-				} else {
-					System.out.println("\""+Integer.toBinaryString((int)result3F.b)+"\",");
-				}
+//				if (j==0) {
+//					System.out.println("\""+Integer.toBinaryString((int)result3F.r)+"\",");
+//				} else if (j == 1) {
+//					System.out.println("\""+Integer.toBinaryString((int)result3F.g)+"\",");
+//				} else {
+//					System.out.println("\""+Integer.toBinaryString((int)result3F.b)+"\",");
+//				}
 			}
-		}
+		//}
 		
 		// Y distincts
 		List<Double> discoverY= new ArrayList<Double>();
@@ -219,12 +220,14 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	int numeroPaletteGen;
 	int draggedX;
 	int draggedY;
+	int mouseButton;
+	JPanel p;
 	
 	private void openBoite() {
 		JFrame f = new JFrame();
 		f.setTitle("C64 to CPC palette");
 		f.setSize(50*16+16,(50*4-10)+(480));
-		JPanel p = new JPanel() {
+		p = new JPanel() {
 	       
 
 			@Override
@@ -260,7 +263,8 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 	            }
 	        }
 	    };
-	    
+	    JPopupMenuImportExport popupMenu = new JPopupMenuImportExport(this, paletteOrigine,paletteOrigineYUV,newPaletteGenerated,newPaletteGeneratedYUV);
+		p.setComponentPopupMenu(popupMenu);
 	    p.addMouseListener(new MouseListener() {
 			
 			@Override
@@ -270,10 +274,13 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
-				System.out.println("pressed "+e.getX()+","+e.getY());
-				// init dragged
-				draggedX = e.getX();
-				draggedY = e.getY();
+				System.out.println("pressed button "+ e.getButton()+" at "+e.getX()+","+e.getY());
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					// init dragged
+					draggedX = e.getX();
+					draggedY = e.getY();
+				}
+				mouseButton=e.getButton();
 			}
 			
 			@Override
@@ -304,35 +311,38 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 			
 			@Override
 			public void mouseMoved(MouseEvent e) {
-				System.out.println("moved "+e.getX()+","+e.getY());	
+				//System.out.println("moved "+e.getX()+","+e.getY());	
 			}
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				System.out.println("dragged "+e.getX()+","+e.getY());
-				YUV yuv = newPaletteGeneratedYUV.get(numeroPaletteGen);
-				double stepX= draggedX-e.getX();
-				double stepY= draggedY-e.getY();
-				
-				
-		        //int x = (int)(CIRCLE_CENTER+RATIO*yuv.U) -10;
-				//int y = (50*4-10)+(int)(CIRCLE_CENTER+RATIO*yuv.V) -10;
-
-				
-				yuv.U=yuv.U+stepX/RATIO;
-				yuv.V=yuv.V+stepY/RATIO;
-
-		        // FIXME maj newPaletteGenerated
-				RGB rgb = newPaletteGenerated.get(numeroPaletteGen);
-				RGB rgbValue = yuv2rgbFF(yuv);
-				rgb.r=Math.max(0,Math.min(255,rgbValue.r));
-				rgb.g=Math.max(0,Math.min(255,rgbValue.g));
-				rgb.b=Math.max(0,Math.min(255,rgbValue.b));
-
-				p.repaint();
-
-				draggedX = e.getX();
-				draggedY = e.getY();
+				if (mouseButton == MouseEvent.BUTTON1) {
+		
+					System.out.println("dragged button "+ e.getButton()+" at "+e.getX()+","+e.getY());
+					YUV yuv = newPaletteGeneratedYUV.get(numeroPaletteGen);
+					double stepX= draggedX-e.getX();
+					double stepY= draggedY-e.getY();
+					
+					
+			        //int x = (int)(CIRCLE_CENTER+RATIO*yuv.U) -10;
+					//int y = (50*4-10)+(int)(CIRCLE_CENTER+RATIO*yuv.V) -10;
+		
+					
+					yuv.U=yuv.U+stepX/RATIO;
+					yuv.V=yuv.V+stepY/RATIO;
+		
+			        // FIXME maj newPaletteGenerated
+					RGB rgb = newPaletteGenerated.get(numeroPaletteGen);
+					RGB rgbValue = yuv2rgbFF(yuv);
+					rgb.r=Math.max(0,Math.min(255,rgbValue.r));
+					rgb.g=Math.max(0,Math.min(255,rgbValue.g));
+					rgb.b=Math.max(0,Math.min(255,rgbValue.b));
+		
+					p.repaint();
+		
+					draggedX = e.getX();
+					draggedY = e.getY();
+				}
 			}
 		});
 	    f.add(p);
@@ -392,9 +402,9 @@ public static final int[] C64_SCREEN_BLUE = new int[] {
 		double g = yuv.Y - 0.39465*yuv.U - 0.58060*yuv.V;
 		double b = yuv.Y + 2.03211*yuv.U;
 		
-		rgb.r = Math.min(255,(int)(r*256.0));
-		rgb.g = Math.min(255,(int)(g*256.0));
-		rgb.b = Math.min(255,(int)(b*256.0));
+		rgb.r = Math.max(0, Math.min(255,(int)(r*256.0)));
+		rgb.g = Math.max(0, Math.min(255,(int)(g*256.0)));
+		rgb.b = Math.max(0, Math.min(255,(int)(b*256.0)));
 		
 		return rgb;
 	}

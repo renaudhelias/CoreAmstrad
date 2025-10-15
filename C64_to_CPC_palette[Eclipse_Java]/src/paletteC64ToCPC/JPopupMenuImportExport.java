@@ -56,7 +56,7 @@ public class JPopupMenuImportExport extends JPopupMenu {
 							    			newPaletteGenerated.removeLast();
 							    			newPaletteGeneratedYUV.removeLast();
 							    		}
-							    	} else if (i<16){
+							    	} else if (i<=16){
 							    		// on zap paletteOrigine
 							    	} else {
 							    		String [] colors = line.split(";");
@@ -92,7 +92,7 @@ public class JPopupMenuImportExport extends JPopupMenu {
 							    			newPaletteGenerated.removeLast();
 							    			newPaletteGeneratedYUV.removeLast();
 							    		}
-							    	} else if (i<16+1){
+							    	} else if (i<=16){
 							    		// on zap paletteOrigine
 							    	} else {
 							    		String [] colors = line.split(";");

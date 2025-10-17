@@ -57,8 +57,8 @@ crtc_type<=not(status(2));--CRTC
 --2023 demo checkmate
 ga_shunt<='1';
 
-screen_vga<=status(4) & status(3);
-screen_color<=status(6) & status(5);
+screen_vga<='0' & status(3);
+screen_color<=status(5) & status(4);
 
 --vramORscandb<=status(4); -- 1X scandb50Hz-- screen_vga(1)
 --green_scanlines<=status(5) & (not(status(4)) and status(3)); -- 01 scanlines72Hz
@@ -67,7 +67,7 @@ screen_color<=status(6) & status(5);
 --green<=status(5); -- screen_color(0)
 --le status(6) eszt la seconde moitié de screen_color
 
-megashark_select<=status(7);
+megashark_select<=status(6);
 
 end Behavioral;
 

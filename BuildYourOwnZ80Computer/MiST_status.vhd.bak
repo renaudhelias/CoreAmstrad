@@ -22,16 +22,18 @@ entity MIST_STATUS is
 	 
            status_0 : out  STD_LOGIC;
 			  megashark_select : out std_logic;
-			  --lowerVRAM : out std_logic_vector(1 downto 0);
-			  --upperVRAM : out std_logic_vector(1 downto 0);
 			  ppi_jumpers : out std_logic_vector(3 downto 0);
-			  green_scanlines : out std_logic_vector(1 downto 0);
-			  green : out std_logic;
+				
 			  crtc_type : out std_logic;
 			  ga_shunt: out std_logic;
-			  vramORscandb: out std_logic
-			  --tv : out std_logic
-			  
+
+			  screen_vga : out std_logic_vector(1 downto 0);
+			  screen_color: out std_logic_vector(1 downto 0)
+-- old revision
+			  --green_scanlines : out std_logic_vector(1 downto 0)
+			  --green : out std_logic;
+			  --vramORscandb: out std_logic
+
 			 -- leds_select : out  STD_LOGIC_VECTOR (4 downto 0)
 			 );
 end MIST_STATUS;
@@ -48,13 +50,28 @@ status_0<=status(0);
 --upperVRAM(1)<=not(status(3));
 --ppi_jumpers<='1' & '1' & status(5) & '1';
 --megashark_select<=status(6);
-ppi_jumpers<='1' & '1' & status(1) & '1';
-crtc_type<=not(status(2));
-ga_shunt<=status(3);
-vramORscandb<=status(4);
-green_scanlines<=status(4) & status(5);
-green<=status(5);
-megashark_select<=status(6);
---tv<=status(7);
+
+--AMSTRAD;;F,DSK,Load;F,CDT,Load;O1,Brand name,Schneider,Amstrad;O2,CRTC,1,0;O34,VGA,vram72Hz,scanlines72Hz,scandb50Hz;O56,Screen,color,green,THSF_orange,C64;O7,Drive,A,B
+
+
+ppi_jumpers<='1' & '1' & status(1) & '1'; --Brand name
+--ppi_jumpers<='1' & '1' & '0' & '1';
+crtc_type<=not(status(2));--CRTC
+--ga_shunt<=status(2);--Wait_n
+--2023 demo checkmate
+ga_shunt<='1';
+
+screen_vga<=status(4) & status(3); -- ok pour moi
+screen_color<=status(6) & status(5); -- ok pour moi
+
+--vramORscandb<=status(4); -- 1X scandb50Hz-- screen_vga(1)
+--green_scanlines<=status(5) & (not(status(4)) and status(3)); -- 01 scanlines72Hz
+--green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
+
+--green<=status(5); -- screen_color(0)
+--le status(6) eszt la seconde moitié de screen_color
+
+megashark_select<=status(7);
+
 end Behavioral;
 

@@ -359,7 +359,6 @@ always @(posedge pclk) begin
 				begin
 					//orange
 					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
-					
 					blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
 				end
 			//end

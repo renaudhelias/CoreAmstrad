@@ -37,14 +37,13 @@ entity MIST_SCART is
 			  
 			  mode : in std_logic;
 			  screen_vga : in std_logic_vector (1 downto 0);
+			  --green_scanlines : in std_logic_vector (1 downto 0);
+  			  
   			  pclk_in : in std_logic;
 			  pclk_TV_CLK16MHz_in : in std_logic;
 			  pclk_TV_CLK32MHz_in : in std_logic;
 			  screen_color : in std_logic_vector (1 downto 0);
-
-
-			  --green_scanlines : in std_logic_vector (1 downto 0);
-			  -- vramORscandb : in std_logic;
+			  --vramORscandb : in std_logic;
 
 			  pclk_out : out std_logic;
 			  
@@ -70,7 +69,96 @@ signal canal_hsyncTV:std_logic;
 signal true_mode:std_logic;
 signal green_scanlines:STD_LOGIC_VECTOR(1 downto 0);
 
+
+--public class GreenScreen {
+--
+--	static final int MAX=2+2+2;
+--	static final int MAX_TOP=64; // 6bits => 2^6=64.
+--	static final int STEP=11; //MAX_TOP/MAX;
+--
+--	public static void main(String[] args) {
+--		for (int red=0; red<4; red++) {
+--			for (int green=0; green<4; green++) {
+--				for (int blue=0; blue<4; blue++) {
+--					try {
+--						int r= value(red);
+--						int g= value(green);
+--						int b= value(blue);
+--						int green_screen = r+g+b;
+--						green_screen*=STEP;
+--						// System.out.println(green_screen);
+--						System.out.println("\""+max2flat(green_screen+MAX_TOP - MAX*STEP - 1)+"\", --"+r+","+g+","+b);
+--					} catch (Exception e) {
+--						// not mapped value !
+--						System.out.println("\"000000\", --X,X,X");
+--					}
+--				}
+--			}
+--		}
+--	}
+--	
+--	static int value(int color) throws Exception {
+--		if (color==0) return 0;
+--		if (color==1) return 1;
+--		if (color==3) return 2;
+--		throw new Exception("out of range");
+--	}
+--
+--	static String max2flat(int sum) {
+--		return fill(Integer.toBinaryString(sum),6);
+--	}
+--	
+--	static String fill(String binary,int c) {
+--		String out=binary;
+--		while (out.length()<c) {
+--			out="0"+out;
+--		}
+--		return out;
+--	}
+--}
+
+
+-- manual calibration :
+-- 111111 : 60/((2+2+2)/(2+2+2))=60 111100
+-- 110100 : 60/((2+2+2)/(1+2+2))=50 110010
+-- 101001 : 60/((2+2+2)/(0+2+2))=40 101000
+-- 011110 : 60/((2+2+2)/(0+1+2))=30 011110
+-- 010011 : 60/((2+2+2)/(0+0+2))=20 010100
+-- 001000 : 60/((2+2+2)/(0+0+1))=10 001010
+-- 000000 : 60/((2+2+2)/(0+0+0))=0  000000
+
+-- "Les sucres en morceaux" calibration :
+-- V[9,18],R[3,6],B[1,2]
+-- 0,0,0 00 00 00 00
+-- 0,0,1 00 00 01 01
+-- 0,0,2 00 00 02 02
+-- 0,1,0 00 03 00 03
+-- 0,1,1 00 03 01 04
+-- 0,1,2 00 03 02 05
+-- 0,2,0 00 06 00 06
+-- 0,2,1 00 06 01 07
+-- 0,2,2 00 06 02 08
+-- 1,0,0 09 00 00 09
+-- 1,0,1 09 00 01 10
+-- 1,0,2 09 00 02 11
+-- 1,1,0 09 03 00 12
+-- 1,1,1 09 03 01 13
+-- 1,1,2 09 03 02 14
+-- 1,2,0 09 06 00 15
+-- 1,2,1 09 06 01 16
+-- 1,2,2 09 06 02 17
+-- 2,0,0 18 00 00 18
+-- 2,0,1 18 00 01 19
+-- 2,1,0 18 00 02 20
+-- 2,1,0 18 03 00 21
+-- 2,1,1 18 03 01 22
+-- 2,1,2 18 03 02 23
+-- 2,2,0 18 06 00 24
+-- 2,2,1 18 06 01 25
+-- 2,2,2 18 06 02 26
+
 -- 64/27=2,37 => 2 => 2*27=54
+
 type T_GREEN is array (0 to 63) --(63 downto 0)
         of STD_LOGIC_VECTOR(5 downto 0);
   constant GREEN_SCREEN : T_GREEN :=
@@ -397,30 +485,17 @@ constant C64_SCREEN_BLUE:T_C64 :=
 );
 
 
+component scandoubler
+      port ( video_in	: in std_logic_vector(5 downto 0);
+	hsync_in	: in std_logic;
+	vsync_in	: in std_logic;
+	dblclk		: in std_logic;
+	pixclk		: in std_logic;
+	video_out	: out std_logic_vector(5 downto 0);
+	vsync_out	: out std_logic;
+	hsync_out	: out std_logic);
+   end component;
 
-
-
-component scandoubler is
-	  generic(
-			HCNT_WIDTH : integer;
-			COLOR_DEPTH : integer
-	  );
-	  port (
-			clk_sys : in std_logic;
-			-- scanlines (00-none 01-25% 10-50% 11-75%)
-			scanlines : in std_logic_vector(1 downto 0);
-			hs_in : in std_logic;
-			vs_in : in std_logic;
-			r_in : in std_logic_vector(COLOR_DEPTH-1 downto 0);
-			g_in : in std_logic_vector(COLOR_DEPTH-1 downto 0);
-			b_in : in std_logic_vector(COLOR_DEPTH-1 downto 0);
-			hs_out : out std_logic;
-			vs_out : out std_logic;
-			r_out : out std_logic_vector(1 downto 0);
-			g_out : out std_logic_vector(1 downto 0);
-			b_out : out std_logic_vector(1 downto 0)
-	  );
-end component;
 
 
 	 
@@ -431,45 +506,31 @@ signal VIDEO_scan : std_logic_vector(5 downto 0);
 signal VSYNC_scan : STD_LOGIC;
 signal HSYNC_scan : STD_LOGIC;
 
--- adapter sorgelig
-signal fromageR:std_logic_vector(1 downto 0);
-signal fromageG:std_logic_vector(1 downto 0);
-signal fromageB:std_logic_vector(1 downto 0);
-
 begin
 
 --todo
 --green_scanlines<=screen_color(0) and (screen_vga="01"); -- not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
 green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
 
---original signal
+--original signal (non présent dans MYST_CONFIG_STRING
 true_mode<= '1' when mode='1' or screen_vga="10" else '0';
 
 -- with scandoubler
 scanner : scandoubler
-		generic map (
-			HCNT_WIDTH => 4, --9,
-			COLOR_DEPTH => 2 --6 -- 1-6
-		)
-      port map (clk_sys=>pclk_TV_CLK32MHz_in,
-            scanlines=>"00",
-				hs_in=>canal_hsyncTV, --not(canal_hsyncTV xor canal_vsyncTV), --canal_hsync,
-            vs_in=>canal_vsyncTV, --'1', --canal_vsync,
-				r_in=>canal_redTV(5 downto 4), -->VIDEO_in,
-				g_in=>canal_greenTV(5 downto 4),
-				b_in=>canal_blueTV(5 downto 4),
-            r_out=>fromageR,
-				g_out=>fromageG, --VIDEO_scan,
-				b_out=>fromageB, --VIDEO_scan,
-            vs_out=>VSYNC_scan,
-				hs_out=>HSYNC_scan
+      port map (video_in=>VIDEO_in,
+                hsync_in=>HSYNC_XOR_video_out,
+                vsync_in=>VSYNC_XOR_video_out,
+					 dblclk=>pclk_TV_CLK32MHz_in,
+                pixclk=>pclk_TV_CLK16MHz_in,
+                video_out=>VIDEO_scan,
+                vsync_out=>VSYNC_scan,
+					 hsync_out=>HSYNC_scan
 					 );
 					 
-VIDEO_scan<=fromageR(1 downto 0)  & "00"  & "00";
---VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
+--VIDEO_scan<=fromageR(1 downto 0)  & "00"  & "00";
+VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
 RED_out<=canal_red when true_mode='0' and screen_vga(1)='0' else 
 	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	--VIDEO_scan(5 downto 4) & "0000" when true_mode='0' and screen_vga="01" else canal_redTV;
 	VIDEO_scan(5 downto 4) & "0000" when true_mode='1' and screen_vga="10" else canal_redTV;
 GREEN_out<=canal_green when true_mode='0' and screen_vga(1)='0' else 
 	VIDEO_scan when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
@@ -480,6 +541,9 @@ BLUE_out<=canal_blue when true_mode='0' and screen_vga(1)='0' else
 HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='1' and screen_vga="10" else not(canal_hsyncTV xor canal_vsyncTV);
 VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='1' and screen_vga="10" else '1';
 
+--RED_out<=canal_red when mode='0' else canal_redTV;
+--GREEN_out<=canal_green when mode='0' else canal_greenTV;
+--BLUE_out<=canal_blue when mode='0' else canal_blueTV;
 
 green_color_vga : process(pclk_in) is
 begin
@@ -556,8 +620,6 @@ end process green_color_vga;
 green_color_tv : process(pclk_TV_CLK16MHz_in) is
 begin
 		if rising_edge(pclk_TV_CLK16MHz_in) then
-
-
 			if green_scanlines(1)='0' then
 				canal_redTV<= COLOR_SCREEN(conv_integer(RED_TV_in(5 downto 4)));
 				canal_greenTV<= COLOR_SCREEN(conv_integer(GREEN_TV_in(5 downto 4)));
@@ -573,8 +635,8 @@ begin
 		end if;
 end process green_color_tv;
 
-
-
+--assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
+--assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
 HSYNC_out<=canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_hsyncTV;
 VSYNC_out<=canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_vsyncTV;
 HSYNC_XOR_video_out<= canal_hsyncTV;

@@ -36,11 +36,15 @@ entity MIST_SCART is
 			  VSYNC_TV_in : in STD_logic;
 			  
 			  mode : in std_logic;
-			  green_scanlines : in std_logic_vector (1 downto 0);
+			  screen_vga : in std_logic_vector (1 downto 0);
+			  --green_scanlines : in std_logic_vector (1 downto 0);
+  			  
   			  pclk_in : in std_logic;
 			  pclk_TV_CLK16MHz_in : in std_logic;
 			  pclk_TV_CLK32MHz_in : in std_logic;
-			  vramORscandb : in std_logic;
+			  screen_color : in std_logic_vector (1 downto 0);
+			  --vramORscandb : in std_logic;
+
 			  pclk_out : out std_logic;
 			  
 			  HSYNC_XOR_out : out STD_logic;
@@ -60,11 +64,10 @@ signal canal_blueTV:STD_LOGIC_VECTOR (5 downto 0);
 -- for delta time purpose
 signal canal_vsync:std_logic;
 signal canal_hsync:std_logic;
---signal canal_clk:std_logic;
 signal canal_vsyncTV:std_logic;
 signal canal_hsyncTV:std_logic;
---signal canal_clkTV:std_logic;
-
+signal true_mode:std_logic;
+signal green_scanlines:STD_LOGIC_VECTOR(1 downto 0);
 
 
 --public class GreenScreen {
@@ -234,6 +237,253 @@ type T_COLOR is array (0 to 3) --(63 downto 0)
 "110100"
 );
 
+--https://www.cpcwiki.eu/index.php/CPC_Palette
+--Firmware Number	Hardware Number	Colour Name	R %	G %	B %	Hexadecimal	RGB values	Colour
+--0	54h	Black          0	0	0  	#000000	0/0/0	
+--1	44h (or 50h)	Blue	0	0	50 	#000080	0/0/128	
+--2	55h	Bright Blue    0	0	100	#0000FF	0/0/255	
+--3	5Ch	Red	         50	0	0  	#800000	128/0/0	
+--4	58h	Magenta        50	0	50 	#800080	128/0/128	
+--5	5Dh	Mauve          50	0	100	#8000FF	128/0/255	
+--6	4Ch	Bright Red    100	0	0  	#FF0000	255/0/0	
+--7	45h (or 48h) Purple 100	0	50 	#FF0080	255/0/128	
+--8	4Dh	Bright Magenta100	0	100	#FF00FF	255/0/255	
+--9	56h	Green          0	50	0   	#008000	0/128/0	
+--10	46h	Cyan           0	50	50 	#008080	0/128/128	
+--11	57h	Sky Blue       0	50	100	#0080FF	0/128/255	
+--12	5Eh	Yellow         50	50	0  	#808000	128/128/0	
+--13	40h (or 41h)	White	50	50	50 	#808080	128/128/128	
+--14	5Fh	Pastel Blue    50	50	100	#8080FF	128/128/255	
+--15	4Eh	Orange        100	50	0  	#FF8000	255/128/0	
+--16	47h	Pink          100	50	50 	#FF8080	255/128/128	
+--17	4Fh	Pastel Magenta100	50	100	#FF80FF	255/128/255	
+--18	52h	Bright Green   0 100	0  	#00FF00	0/255/0	
+--19	42h (or 51h)Sea Green0 100	50 	#00FF80	0/255/128	
+--20	53h	Bright Cyan    0 100	100	#00FFFF	0/255/255	
+--21	5Ah	Lime          50 100	0  	#80FF00	128/255/0	
+--22	59h	Pastel Green  50 100	50 	#80FF80	128/255/128	
+--23	5Bh	Pastel Cyan	  50 100	100	#80FFFF	128/255/255	
+--24	4Ah	Bright Yellow100 100	0  	#FFFF00	255/255/0	
+--25	43h (or 49h)PYellow100 100	50 	#FFFF80	255/255/128	
+--26	4Bh	Bright White 100 100	100	#FFFFFF	255/255/255	
+
+type T_PALETTE is array (0 to 63) --(15 downto 0)
+        of integer;
+
+constant PALETTE_RGB:T_PALETTE :=
+( 0, -- 00 00 00
+  1, -- 00 00 01
+  1, -- 00 00 >10< trou
+  2, -- 00 00 11 OK
+  
+  9, -- 00 01 OO
+  10,-- 00,01,01
+  10,-- 00,01,>10< trou
+  11,-- 00,01,11 OK
+  
+  9, -- 00,>10<,00 trou
+  10,-- 00,>10<,01 trou 
+  10,-- 00,>10<,>10< trou 
+  11,-- 00,>10<,11 trou OK
+
+  18,--  00,11,00
+  19,--  00,11,01
+  19,--  00,11,>10< trou
+  20,--  00,11,11 OK
+  
+  3, -- 01,00,00
+  4, -- 01,00,01
+  4, -- 01,00,>10< trou
+  5, -- 01,00,11 OK
+  
+  12, -- 01,01,00
+  13, -- 01,01,01
+  13, -- 01,01,>10< trou
+  14, -- 01,01,11 OK
+  
+  12, -- 01,>10<,00 trou
+  13, -- 01,>10<,01 trou
+  13, -- 01,>10<,>10< trou
+  14, -- 01,>10<,11 trou OK
+  
+  21, -- 01,11,00
+  22, -- 01,11,01
+  22, -- 01,11,>10< trou
+  23, -- 01,11,11 OK
+  
+  3,  -- >10<<,00,00 trou
+  4, -- >10<,00,01 trou
+  4, -- >10<,00,>10< trou
+  5, -- >10<,00,11 trou OK
+	 
+  12, -- >10<,01,00 trou
+  13, -- >10<,01,01 trou
+  13, -- >10<,01,>10< trou
+  14, -- >10<,01,11 trou >OK
+  
+  12, -- >10<,>10<,00 trou
+  13, -- >10<,>10<,01 trou
+  13, -- >10<,>10<,10 trou
+  14, -- >10<,>10<,11 trou OK
+  
+  21, -- >10<,11,00 trou
+  22, -- >10<,11,01 trou
+  22, -- >10<,11,>10< trou
+  23, -- >10<,11,11 trou OK
+  
+  6, -- 11,00,00
+  7, -- 11,00,01
+  7, -- 11,00,>10< trou
+  8, -- 11,00,11 OK
+  
+  15, -- 11,01,00 
+  16, -- 11,01,01
+  16, -- 11,01,>10< trou
+  17, -- 11,01,11 OK
+  
+  15, -- 11,>10<,00
+  16, -- 11,>10<,01
+  16, -- 11,>10<,>10< trou
+  17, --  11,>10<,11 OK
+    
+  24, -- 11,11,00
+  25, -- 11,11,01
+  25, -- 11,11,>10< trou
+  26  -- 11,11,11
+);
+
+
+--mauvais mapping, on devrait avoir en paramètre une valeur composé parallèle
+--se baser sur les couleurs système
+type T_C64 is array (0 to 31) --(15 downto 0)
+        of STD_LOGIC_VECTOR(5 downto 0);
+constant C64_SCREEN_RED:T_C64 :=
+("000000", --black 00
+"111111", --white 3F
+"101011", --red 2B
+"011000", --cyan 18
+"101100", --purple 2C
+"010010", --green 12
+"001101", --blue 0D
+"111001", --yellow 39
+"101101", --orange 2D
+"011010", --brown 1A
+"111010", --pink 3A
+"010011", --d. gray 13
+"100001", --gray 21
+"101001", --l. green 29
+"101001", --l. blue 1C
+"101101", --l. gray 2D
+
+
+
+"010111",
+"110101",
+"010000",
+"001001",
+"100001",
+"011111",
+"111100",
+"010000",
+"011111",
+"100110",
+"011111",
+"101101",
+"000010",
+"110101",
+"010111",
+"101101"
+
+
+
+
+);
+
+constant C64_SCREEN_GREEN:T_C64 :=
+("000000", --black 00
+"111111", --white 3F
+"001010", --red 0A
+"110110", --cyan 36
+"001111", --purple 0F
+"110001", --green 31
+"001110", --blue 0E
+"111011", --yellow 3B
+"010110", --orange 16
+"001110", --brown 0E
+"011101", --pink 1D
+"010011", --d. gray 13
+"100001", --gray 21
+"111110", --l. green 3E
+"011111", --l. blue 1F
+"101101", --l. gray 2D
+
+
+
+
+"011011",
+"001111",
+"101110",
+"100101",
+"110000",
+"100110",
+"001101",
+"100001",
+"011010",
+"010011",
+"010111",
+"010111",
+"110011",
+"011001",
+"101000",
+"011010"
+
+
+
+
+
+);
+
+constant C64_SCREEN_BLUE:T_C64 :=
+("000000", --black 00
+"111111", --white 3F
+"001010", --red 0A
+"110011", --cyan 33
+"101101", --purple 2D
+"010010", --green 12
+"110001", --blue 31
+"010011", --yellow 13
+"000111", --orange 07
+"000010", --brown 02
+"011011", --pink 1B
+"010011", --d. gray 13
+"100001", --gray 21
+"100111", --l. green 27
+"111001", --l. blue 39
+"101101", --l. gray 2D
+
+
+"111111",
+"111001",
+"000000",
+"111001",
+"110011",
+"000000",
+"101100",
+"111001",
+"111001",
+"111111",
+"111111",
+"011111",
+"000101",
+"000101",
+"000101",
+"010010"
+
+
+
+
+);
+
 
 component scandoubler
       port ( video_in	: in std_logic_vector(5 downto 0);
@@ -245,6 +495,10 @@ component scandoubler
 	vsync_out	: out std_logic;
 	hsync_out	: out std_logic);
    end component;
+
+
+
+	 
 signal HSYNC_XOR_video_out : STD_logic;
 signal VSYNC_XOR_video_out : STD_logic;
 signal VIDEO_in : std_logic_vector(5 downto 0);
@@ -253,6 +507,13 @@ signal VSYNC_scan : STD_LOGIC;
 signal HSYNC_scan : STD_LOGIC;
 
 begin
+
+--todo
+--green_scanlines<=screen_color(0) and (screen_vga="01"); -- not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
+green_scanlines<=screen_color(0) & (not(screen_vga(1)) and screen_vga(0)); -- 01 scanlines72Hz
+
+--original signal (non présent dans MYST_CONFIG_STRING
+true_mode<= '1' when mode='1' or screen_vga="10" else '0';
 
 -- with scandoubler
 scanner : scandoubler
@@ -266,18 +527,19 @@ scanner : scandoubler
 					 hsync_out=>HSYNC_scan
 					 );
 					 
-VIDEO_in<=canal_greenTV when green='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
-RED_out<=canal_red when mode='0' and vramORscandb='0' else 
-	"000000" when mode='0' and vramORscandb='1' and green='1' else
-	VIDEO_scan(5 downto 4) & "0000" when mode='0' and vramORscandb='1' else canal_redTV;
-GREEN_out<=canal_green when mode='0' and vramORscandb='0' else 
-	VIDEO_scan when mode='0' and vramORscandb='1' and green='1' else
-	VIDEO_scan(3 downto 2) & "0000" when mode='0' and vramORscandb='1' else canal_greenTV;
-BLUE_out<=canal_blue when mode='0' and vramORscandb='0' else
-	"000000" when mode='0' and vramORscandb='1' and green='1' else
-	VIDEO_scan(1 downto 0) & "0000" when mode='0' and vramORscandb='1' else canal_blueTV;
-HSYNC_XOR_out<= canal_hsync when mode='0' and vramORscandb='0' else HSYNC_scan when mode='0' and vramORscandb='1' else not(canal_hsyncTV xor canal_vsyncTV);
-VSYNC_XOR_out<= canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan when mode='0' and vramORscandb='1' else '1';
+--VIDEO_scan<=fromageR(1 downto 0)  & "00"  & "00";
+VIDEO_in<=canal_greenTV when green_scanlines(1)='1' else canal_redTV(5 downto 4) & canal_greenTV(5 downto 4) & canal_blueTV(5 downto 4);
+RED_out<=canal_red when true_mode='0' and screen_vga(1)='0' else 
+	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
+	VIDEO_scan(5 downto 4) & "0000" when true_mode='1' and screen_vga="10" else canal_redTV;
+GREEN_out<=canal_green when true_mode='0' and screen_vga(1)='0' else 
+	VIDEO_scan when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
+	VIDEO_scan(3 downto 2) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_greenTV;
+BLUE_out<=canal_blue when true_mode='0' and screen_vga(1)='0' else
+	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
+	VIDEO_scan(1 downto 0) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_blueTV;
+HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='1' and screen_vga="10" else not(canal_hsyncTV xor canal_vsyncTV);
+VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='1' and screen_vga="10" else '1';
 
 --RED_out<=canal_red when mode='0' else canal_redTV;
 --GREEN_out<=canal_green when mode='0' else canal_greenTV;
@@ -286,7 +548,48 @@ VSYNC_XOR_out<= canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan w
 green_color_vga : process(pclk_in) is
 begin
 		if rising_edge(pclk_in) then
-			if green_scanlines(1)='0' then
+			if screen_color="11" then
+				--C64 -- couleur en hexa
+				if green_scanlines(0)='0' or RED_in(3)='0' then
+					canal_red<= C64_SCREEN_RED(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_green<= C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
+					canal_blue<= C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))));
+					--cyan 3 KO
+					-- 4 purple
+					--vert 5 OK
+					--canal_red<= C64_SCREEN_RED(5);
+					--canal_green<= C64_SCREEN_GREEN(5);
+					--canal_blue<= C64_SCREEN_BLUE(5);
+					
+					--canal_red<= C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 0);
+					--canal_green<= C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 0);
+					--canal_blue<= C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 0);
+				else
+					--pas de scanline pour le moment
+					canal_red<= "0" & C64_SCREEN_RED(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
+					canal_green<= "0" & C64_SCREEN_GREEN(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
+					canal_blue<= "0" & C64_SCREEN_BLUE(PALETTE_RGB(conv_integer(RED_in(5 downto 4) & GREEN_in(5 downto 4) & BLUE_in(5 downto 4))))(5 downto 1);
+
+--					canal_red<= C64_SCREEN_RED(5);
+--					canal_green<= C64_SCREEN_GREEN(5);
+--					canal_blue<= C64_SCREEN_BLUE(5);
+					
+					--canal_red<= "0" & C64_SCREEN_RED(conv_integer(RED_in(5 downto 4)))(5 downto 1);
+					--canal_green<= "0" & C64_SCREEN_GREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
+					--canal_blue<= "0" & C64_SCREEN_BLUE(conv_integer(BLUE_in(5 downto 4)))(5 downto 1);
+				end if;
+			elsif screen_color="10" then
+				--orange
+				if green_scanlines(0)='0' or RED_in(3)='0' then
+					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 0);
+					canal_green<= "0" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 1);
+					canal_blue<= "00" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 2);
+				else
+					canal_red<= "0" & COLOR_SCREEN(conv_integer(RED_in(5 downto 4)))(5 downto 1);
+					canal_green<= "00" & COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)))(5 downto 2);
+					canal_blue<= "000" & COLOR_SCREEN(conv_integer(BLUE_in(5 downto 4)))(5 downto 3);
+				end if;
+			elsif green_scanlines(1)='0' then
 				if green_scanlines(0)='0' or RED_in(3)='0' then
 					canal_red<= COLOR_SCREEN(conv_integer(RED_in(5 downto 4)));
 					canal_green<= COLOR_SCREEN(conv_integer(GREEN_in(5 downto 4)));
@@ -311,7 +614,6 @@ begin
 			end if;
 			canal_hsync<=HSYNC_in;
 			canal_vsync<=VSYNC_in;
-			--canal_clk<=pclk_in;
 		end if;
 end process green_color_vga;
 
@@ -330,20 +632,16 @@ begin
 			end if;
 			canal_hsyncTV<=HSYNC_TV_in;
 			canal_vsyncTV<=VSYNC_TV_in;
-			--canal_clkTV<=pclk_TV_CLK16MHz_in;
 		end if;
 end process green_color_tv;
 
---assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
---assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
-HSYNC_out<=canal_hsync when mode='0' and vramORscandb='0' else HSYNC_scan when mode='0' and vramORscandb='1' else canal_hsyncTV;
-VSYNC_out<=canal_vsync when mode='0' and vramORscandb='0' else VSYNC_scan when mode='0' and vramORscandb='1' else canal_vsyncTV;
+
+
+HSYNC_out<=canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_hsyncTV;
+VSYNC_out<=canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_vsyncTV;
 HSYNC_XOR_video_out<= canal_hsyncTV;
 VSYNC_XOR_video_out<= canal_vsyncTV;
---pclk_out<=canal_clk when mode='0' else canal_clkTV;
---HSYNC_out<=HSYNC_in when mode='0' else HSYNC_TV_in;
---VSYNC_out<=VSYNC_in when mode='0' else VSYNC_TV_in;
-pclk_out<=pclk_in when mode='0' and vramORscandb='0' else pclk_TV_CLK16MHz_in;
+pclk_out<=pclk_in when true_mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz_in;
 
 end Behavioral;
 

@@ -37,15 +37,21 @@ module osd (
 	input				vs_in,
 	
 	// green/scanlines
-	input green,
+   //input [1:0] screen_vga,
+	input [1:0] screen_color,
 	
-	// debug 7seg input examples
+	//input green, //screen_color(0)
+// debug 7seg input examples
 	//input [7:0] leds8,
 	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
-//	input [39:0] leds8_debug,
-//	input [7:0] leds8,
+	
+	//input [39:0] leds8_debug,
+	//input [19:0] leds8_debug1,
+	//input [19:0] leds8_debug2,
+	
+	//input [7:0] leds8,
 	
 	//input [16:0] leds_mouse_data,
 	
@@ -273,6 +279,8 @@ wire [6:0] segment [9:0];
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(leds8[7:4]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds8[3:0]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(screen_vga),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(screen_color),.segment(segment[9]));
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug[39:36]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug[35:32]),.segment(segment[1]));
@@ -284,6 +292,17 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug[11:8]),.segment(segment[7]));
 //osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug[7:4]),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug[3:0]),.segment(segment[9]));
+
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug1[19:16]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug1[15:12]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug1[11:8]),.segment(segment[2]));
+//osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug1[7:4]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug1[3:0]),.segment(segment[4]));
+//osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug2[19:16]),.segment(segment[5]));
+//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug2[15:12]),.segment(segment[6]));
+//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug2[11:8]),.segment(segment[7]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug2[7:4]),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug2[3:0]),.segment(segment[9]));
 
 osd_HEXA_7SEG my7segConverter0(.halfByte(4'h0),.segment(segment[0]));
 osd_HEXA_7SEG my7segConverter1(.halfByte(4'h0),.segment(segment[1]));
@@ -320,18 +339,41 @@ reg [3:0] seg7_i=0; // current 7segment selected
 always @(posedge pclk) begin
 	if (osd_de)
 		begin
-			if (green == 1'b0)
+			// todo (green == 1'b0)
+			// couleur verte
+//			if (screen_color == 2'b00)
+			//if (green == 1'b0)
+			if (screen_color == 2'b00)
 				begin
+				  // color
 					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
 					blue_out  <= {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
 				end
-			else
+			else if (screen_color == 2'b01)
 				begin
+					//green
 					red_out   <= {1'b0, 1'b0, osd_color[2], red_in[5:3]  };
 					blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
 				end
+			else
+				begin
+					//orange
+					red_out   <= {osd_pixel, osd_pixel, osd_color[2], red_in[5:3]  };
+					
+					blue_out  <= {1'b0, 1'b0, osd_color[0], blue_in[5:3] };
+				end
 			//end
-			green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
+			if (screen_color == 2'b10)
+				begin
+				//orange
+				green_out <= {1'b0, osd_pixel, osd_color[1], green_in[5:3]};
+				end
+			else
+				begin
+				//green
+                green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
+				green_out <= {osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
+				end
 			seg7_hB<=3'd0;
 			seg7_h<=2'd0;
 			seg7_i<=0;
@@ -356,11 +398,14 @@ always @(posedge pclk) begin
 					matrice_v[seg7_i]<=seg7_vcntDiv4[2:0];
 					matrice_h[seg7_i]<=seg7_h;
 					seg7_pixel<=matrice_pixel[seg7_i];
-					if (green == 1'b0)
+					// vert
+					//if (screen_color == 2'b00)
+					//if (green == 1'b0)
+					if (screen_color[0] == 1'b0)
 						begin
-							red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]  };
+							red_out   <= {seg7_pixel, seg7_pixel, osd_color[2], red_in[5:3]};
 							green_out <= {osd_color[1], osd_color[1], osd_color[1], green_in[5:3]};
-							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
+							blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3]};
 						end
 					else
 						begin
@@ -373,7 +418,8 @@ always @(posedge pclk) begin
 					if (seg7_hB==3'd0 || seg7_hB==3'd5)
 						begin
 							// separators
-							if (green == 1'b0)
+							//if (screen_color== 2'b01)
+							if (screen_color[0] == 1'b0)
 								begin
 									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
 									blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };
@@ -390,7 +436,8 @@ always @(posedge pclk) begin
 					if (seg7_hB==3'd1)
 						begin
 							// This is a strange FIX -- but a beautifull one ^^'
-							if (green == 1'b0)
+							//if (screen_color==2'b01)
+							if (screen_color[0] == 1'b0)
 								begin
 									red_out   <= {osd_color[2], osd_color[2], osd_color[2], red_in[5:3]  };
 									blue_out  <= {osd_color[0], osd_color[0], osd_color[0], blue_in[5:3] };

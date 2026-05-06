@@ -534,10 +534,10 @@ RED_out<=canal_red when true_mode='0' and screen_vga(1)='0' else
 	VIDEO_scan(5 downto 4) & "0000" when true_mode='1' and screen_vga="10" else canal_redTV;
 GREEN_out<=canal_green when true_mode='0' and screen_vga(1)='0' else 
 	VIDEO_scan when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	VIDEO_scan(3 downto 2) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_greenTV;
+	VIDEO_scan(3 downto 2) & "0000" when true_mode='1' and screen_vga="10" else canal_greenTV;
 BLUE_out<=canal_blue when true_mode='0' and screen_vga(1)='0' else
 	"000000" when true_mode='0' and screen_vga(1)='1' and green_scanlines(1)='1' else
-	VIDEO_scan(1 downto 0) & "0000" when true_mode='0' and screen_vga(1)='1' else canal_blueTV;
+	VIDEO_scan(1 downto 0) & "0000" when true_mode='1' and screen_vga="10" else canal_blueTV;
 HSYNC_XOR_out<= canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='1' and screen_vga="10" else not(canal_hsyncTV xor canal_vsyncTV);
 VSYNC_XOR_out<= canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='1' and screen_vga="10" else '1';
 

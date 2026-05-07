@@ -637,8 +637,8 @@ end process green_color_tv;
 
 --assign VGA_HS = scandoubler_disable?!(video_hs^video_vs):sd_hs;
 --assign VGA_VS = scandoubler_disable?1'b1:sd_vs;
-HSYNC_out<=canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_hsyncTV;
-VSYNC_out<=canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='0' and screen_vga(1)='1' else canal_vsyncTV;
+HSYNC_out<=canal_hsync when true_mode='0' and screen_vga(1)='0' else HSYNC_scan when true_mode='1' and screen_vga="10" else canal_hsyncTV;
+VSYNC_out<=canal_vsync when true_mode='0' and screen_vga(1)='0' else VSYNC_scan when true_mode='1' and screen_vga="10" else canal_vsyncTV;
 HSYNC_XOR_video_out<= canal_hsyncTV;
 VSYNC_XOR_video_out<= canal_vsyncTV;
 pclk_out<=pclk_in when true_mode='0' and screen_vga(1)='0' else pclk_TV_CLK16MHz_in;

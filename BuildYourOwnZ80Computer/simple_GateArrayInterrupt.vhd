@@ -2187,7 +2187,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			
 			ADRESSE_maStore_mem:=(others=>'0');
 			ADRESSE_MAcurrent_mem:=(others=>'0');
-			LineCounter:=x"00";
+			LineCounter:=x"01";
 			RasterCounter:=x"00";
 			hCC:=x"00";
 			
@@ -2381,7 +2381,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					dispV:='0';
 					-- Scan is not currently running in vertical blanking time-span.
 					--VBLANK<='1';
-				elsif LineCounter=0 then
+				elsif LineCounter=1 then
 					dispV:='1';
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
@@ -2389,7 +2389,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--redondance ici de cas newFrame() (dÃ©jÃ  traitÃ© ailleur)
 					dispV:='0';
 				end if;
-				if LineCounter=0 then
+				if LineCounter=1 then
 					LineCounter_is0<=true;
 				else
 					LineCounter_is0<=false;
@@ -2570,6 +2570,7 @@ end if;
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 							
 							LineCounter:=(others=>'0');
+							LineCounter(0):='1';
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 							if interlace = '0' then
 								frame_oddEven:='0';
@@ -2612,7 +2613,7 @@ end if;
 						RasterCounter:=(RasterCounter + scanAdd) and x"1F";
 						if RVtotAdjust_do then
 							RVtotAdjust_mem:=RVtotAdjust_mem+1;
-						elsif LineCounter = 0 and crtc_type='1' then
+						elsif LineCounter = 1 and crtc_type='1' then
 							--if (CRTCType == 0 && LineCounter == 0 && RasterCounter == 0 && maScroll == 0) {
 							--if (CRTCType == 1 && LineCounter == 0/*
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 

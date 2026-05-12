@@ -2287,7 +2287,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--checkVSync();
 					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
 					--WakeUp!
-					if RasterCounter=0 and LineCounter=RVsyncpos then -- and etat_vsync=DO_NOTHING then
+					if RasterCounter=0 and LineCounter-1=RVsyncpos then -- and etat_vsync=DO_NOTHING then
 					--if LineCounter=RVsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
@@ -2375,7 +2375,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 				
 				--DISPTMG signal defines the border. When DISPTMG is "1" the border colour is output by the Gate-Array to the display.
 				--The DISPTMG can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
-				if LineCounter=RVDisp and RasterCounter=0 and crtc_type='1' then
+				if LineCounter-1=RVDisp and RasterCounter=0 and crtc_type='1' then
 					--redondance ici de cas newFrame() (dÃ©jÃ  traitÃ© ailleur)
 					--checkHDisp() -- if (reg[6] != 0) { --listener.hDispStart();
 					dispV:='0';
@@ -2385,7 +2385,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					dispV:='1';
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
-				elsif LineCounter=RVDisp and RasterCounter=0 and crtc_type='0' then
+				elsif LineCounter-1=RVDisp and RasterCounter=0 and crtc_type='0' then
 					--redondance ici de cas newFrame() (dÃ©jÃ  traitÃ© ailleur)
 					dispV:='0';
 				end if;

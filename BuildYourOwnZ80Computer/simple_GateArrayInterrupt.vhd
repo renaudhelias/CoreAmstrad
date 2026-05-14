@@ -2612,7 +2612,7 @@ end if;
 						-- RasterCounter = (RasterCounter + scanAdd) & 0x07;
 						RasterCounter:=(RasterCounter + scanAdd) and x"1F";
 						if RVtotAdjust_do then
-							RVtotAdjust_mem:=RVtotAdjust_mem+1;
+							--RVtotAdjust_mem:=RVtotAdjust_mem+1;
 						elsif LineCounter = 1 and crtc_type='1' then
 							--if (CRTCType == 0 && LineCounter == 0 && RasterCounter == 0 && maScroll == 0) {
 							--if (CRTCType == 1 && LineCounter == 0/*

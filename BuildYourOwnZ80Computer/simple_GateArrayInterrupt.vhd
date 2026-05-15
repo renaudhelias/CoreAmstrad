@@ -2287,7 +2287,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--checkVSync();
 					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
 					--WakeUp!
-					if RasterCounter=0 and LineCounter-1=RVsyncpos then -- and etat_vsync=DO_NOTHING then
+					if RasterCounter=0 and LineCounter=RVsyncpos then -- and etat_vsync=DO_NOTHING then
 					--if LineCounter=RVsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
@@ -2375,7 +2375,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 				
 				--DISPTMG signal defines the border. When DISPTMG is "1" the border colour is output by the Gate-Array to the display.
 				--The DISPTMG can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
-				if LineCounter-1=RVDisp and RasterCounter=0 and crtc_type='1' then
+				if LineCounter=RVDisp and RasterCounter=0 and crtc_type='1' then
 					--redondance ici de cas newFrame() (dÃ©jÃ  traitÃ© ailleur)
 					--checkHDisp() -- if (reg[6] != 0) { --listener.hDispStart();
 					dispV:='0';
@@ -2385,7 +2385,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					dispV:='1';
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
-				elsif LineCounter-1=RVDisp and RasterCounter=0 and crtc_type='0' then
+				elsif LineCounter=RVDisp and RasterCounter=0 and crtc_type='0' then
 					--redondance ici de cas newFrame() (dÃ©jÃ  traitÃ© ailleur)
 					dispV:='0';
 				end if;
@@ -2613,7 +2613,7 @@ end if;
 						RasterCounter:=(RasterCounter + scanAdd) and x"1F";
 						if RVtotAdjust_do then
 							--RVtotAdjust_mem:=RVtotAdjust_mem+1;
-						elsif LineCounter = 1 and crtc_type='1' then
+						elsif LineCounter = 0 and crtc_type='1' then
 							--if (CRTCType == 0 && LineCounter == 0 && RasterCounter == 0 && maScroll == 0) {
 							--if (CRTCType == 1 && LineCounter == 0/*
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
@@ -2784,7 +2784,7 @@ end if;
 		variable newMode_mem : STD_LOGIC_VECTOR(1 downto 0);
 	begin
 		if reset='1' then
-			InterruptLineCount:=(others=>'0');
+			InterruptLineCount:="000000";
 			InterruptSyncCount:=2;
 			--IO_ACK_old:='0';
 			etat_hsync_old:=DO_NOTHING;
@@ -2824,7 +2824,7 @@ end if;
 					if D(6) = '0' then
 						-- It only applies once
 						if D(4) = '1' then
-							InterruptLineCount:=(others=>'0');
+							InterruptLineCount:="000000";
 	--Grimware : if set (1), this will (only) reset the interrupt counter. --int<='0'; -- JavaCPC 2015
 	--the interrupt request is cleared and the 6-bit counter is reset to "0".  -- http://cpctech.cpc-live.com/docs/ints.html
 							int<='0';
@@ -2847,7 +2847,7 @@ end if;
 				if conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
 					--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
 					--InterruptLineCount = 0;
-					InterruptLineCount:=(others=>'0');
+					InterruptLineCount:="000000";
 					--GateArray_Interrupt();
 					int<='1';
 				end if;
@@ -2864,7 +2864,7 @@ end if;
 							--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
 						end if;
 						--InterruptLineCount = 0;
-						InterruptLineCount:=(others=>'0');
+						InterruptLineCount:="000000";
 					end if;
 				end if;
 				

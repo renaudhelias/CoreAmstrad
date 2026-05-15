@@ -2187,7 +2187,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			
 			ADRESSE_maStore_mem:=(others=>'0');
 			ADRESSE_MAcurrent_mem:=(others=>'0');
-			LineCounter:=x"01";
+			LineCounter:=x"00";
 			RasterCounter:=x"00";
 			hCC:=x"00";
 			
@@ -2381,7 +2381,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					dispV:='0';
 					-- Scan is not currently running in vertical blanking time-span.
 					--VBLANK<='1';
-				elsif LineCounter=1 then
+				elsif LineCounter=0 then
 					dispV:='1';
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
@@ -2389,7 +2389,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--redondance ici de cas newFrame() (dÃ©jÃ  traitÃ© ailleur)
 					dispV:='0';
 				end if;
-				if LineCounter=1 then
+				if LineCounter=0 then
 					LineCounter_is0<=true;
 				else
 					LineCounter_is0<=false;
@@ -2570,7 +2570,6 @@ end if;
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 							
 							LineCounter:=(others=>'0');
-							LineCounter(0):='1';
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 							if interlace = '0' then
 								frame_oddEven:='0';
@@ -2611,8 +2610,8 @@ end if;
 					else
 						-- RasterCounter = (RasterCounter + scanAdd) & 0x07;
 						RasterCounter:=(RasterCounter + scanAdd) and x"1F";
-						if RVtotAdjust_do then
-							--RVtotAdjust_mem:=RVtotAdjust_mem+1;
+						if RVtotAdjust_do then --batman scrolling text at begin
+							RVtotAdjust_mem:=RVtotAdjust_mem+1;
 						elsif LineCounter = 0 and crtc_type='1' then
 							--if (CRTCType == 0 && LineCounter == 0 && RasterCounter == 0 && maScroll == 0) {
 							--if (CRTCType == 1 && LineCounter == 0/*
@@ -2784,7 +2783,7 @@ end if;
 		variable newMode_mem : STD_LOGIC_VECTOR(1 downto 0);
 	begin
 		if reset='1' then
-			InterruptLineCount:="000000";
+			InterruptLineCount:=(others=>'0');
 			InterruptSyncCount:=2;
 			--IO_ACK_old:='0';
 			etat_hsync_old:=DO_NOTHING;
@@ -2824,7 +2823,7 @@ end if;
 					if D(6) = '0' then
 						-- It only applies once
 						if D(4) = '1' then
-							InterruptLineCount:="000000";
+							InterruptLineCount:=(others=>'0');
 	--Grimware : if set (1), this will (only) reset the interrupt counter. --int<='0'; -- JavaCPC 2015
 	--the interrupt request is cleared and the 6-bit counter is reset to "0".  -- http://cpctech.cpc-live.com/docs/ints.html
 							int<='0';
@@ -2847,7 +2846,7 @@ end if;
 				if conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
 					--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
 					--InterruptLineCount = 0;
-					InterruptLineCount:="000000";
+					InterruptLineCount:=(others=>'0');
 					--GateArray_Interrupt();
 					int<='1';
 				end if;
@@ -2864,7 +2863,7 @@ end if;
 							--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
 						end if;
 						--InterruptLineCount = 0;
-						InterruptLineCount:="000000";
+						InterruptLineCount:=(others=>'0');
 					end if;
 				end if;
 				

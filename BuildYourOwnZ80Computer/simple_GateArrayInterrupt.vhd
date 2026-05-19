@@ -2051,7 +2051,7 @@ begin
 						else
 							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 							--CRTC1 UM6845R: Start Address Registers cannot be read.
-							Dout<=x"00"; -- type 1
+							Dout<=x"00"; -- type 1 -- demo From Scratch (Vanity)
 						end if;
 						
 					elsif reg_select32 = x"0D" then -- R13
@@ -2077,7 +2077,7 @@ begin
 					elsif reg_select32 = x"11" then -- R17
 						--	Light Pen Address (read only, don't dependant on write !!!) - "Emulator Sucks"
 						Dout<=x"00"; --registres(17);-- all types
-					elsif reg_select32 = x"FF" then
+					elsif reg_select32 = x"1F" then -- R31
 						if crtc_type='1' then
 							--10 MODE 1:' Reinitialize screen
 							--20 OUT &BC00,31:IF INP(&BF00)=255 THEN PRINT"crtc 1":END

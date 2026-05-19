@@ -2078,7 +2078,12 @@ begin
 						--	Light Pen Address (read only, don't dependant on write !!!) - "Emulator Sucks"
 						Dout<=x"00"; --registres(17);-- all types
 					elsif reg_select32 = x"FF" then
-						if crtc_type='0' then
+						if crtc_type='1' then
+							--10 MODE 1:' Reinitialize screen
+							--20 OUT &BC00,31:IF INP(&BF00)=255 THEN PRINT"crtc 1":END
+							--30 OUT &BC00,12:IF INP(&BF00)=0 THEN PRINT"crtc 2":END
+							--40 OUT &BC00,20:IF INP(&BF00)=0 THEN PRINT"crtc 0":END
+							--50 PRINT"crtc 3/4"
 							-- registers 18-30 read as 0 on type1, register 31 reads as 0x0ff.
 							Dout<=x"FF";
 						else

@@ -1834,15 +1834,15 @@ begin
 				-- VSync width can only be changed on type 3 and 4 (???)
 				-- The Vsync has a fixed length for CRTC 2, which is 16 scan lines (and not 8 as programmed by the firmware, implicitly using CRTC 0). 
 				--http://cpctech.cpc-live.com/source/split.html
-				--if crtc_type='1' then
+				if crtc_type='1' then
 					--CRTC1 MC6845/MC6845R/UM6845R have a fixed Vertical Sync Width of 16 scanlines.
 					--vSyncWidth = 0;
-				--	R3Vwidth<=x"0"; --registres(3)(6 downto 4) & "0";
-				--else
+					R3Vwidth<=x"0"; --registres(3)(6 downto 4) & "0";
+				else
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
-				--	R3Vwidth<=registres(3)(7 downto 4);
-				--end if;
+					R3Vwidth<=registres(3)(7 downto 4);
+				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
 				--CRTC1 MC6845/UM6845: Note for UM6845: When the Horizontal Sync width is set to 0, then no Horizontal Syncs will be generated. (This feature can be used to distinguish between the UM6845 and MC6845).
@@ -2052,7 +2052,7 @@ begin
 						else
 							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 							--CRTC1 UM6845R: Start Address Registers cannot be read.
-							Dout<=x"FF"; -- type 1 -- demo From Scratch (Vanity)
+							Dout<=x"00"; -- sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
 						end if;
 						
 					elsif reg_select32 = x"0D" then -- R13

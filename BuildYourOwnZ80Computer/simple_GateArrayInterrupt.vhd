@@ -2052,7 +2052,7 @@ begin
 						else
 							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 							--CRTC1 UM6845R: Start Address Registers cannot be read.
-							Dout<=x"00"; -- sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
+							Dout<=x"3F"; -- mask + pull up -- #30 sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
 						end if;
 						
 					elsif reg_select32 = x"0D" then -- R13

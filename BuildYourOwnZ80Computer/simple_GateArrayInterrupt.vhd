@@ -2046,13 +2046,17 @@ begin
 					elsif reg_select32 = x"0B" then -- R11
 						Dout<=x"00"; --Dout<=registres(11) and x"1f"; -- applying the write mask here
 					elsif reg_select32 = x"0C" then -- R12
+						-- 10 mode 1
+						-- 15 for a = 0 to 31
+						-- out &bc00,a:print a, inp(&BF00)
+						-- 25 next
 						if crtc_type='0' then
 							--CRTC0 HD6845S/MC6845: Start Address Registers (R12 and R13) can be read.
 							Dout<=registres(12) and x"3f";  -- applying the write mask here
 						else
 							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 							--CRTC1 UM6845R: Start Address Registers cannot be read.
-							Dout<=x"3F"; -- mask + pull up -- #30 sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
+							Dout<=x"30"; -- mask + pull up -- #30 sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
 						end if;
 						
 					elsif reg_select32 = x"0D" then -- R13

@@ -2069,11 +2069,14 @@ begin
 							Dout<=x"00"; -- type 1 & 2
 						end if;
 					elsif reg_select32 = x"0E" then -- R14
-						--if crtc_type='0' then
-						Dout<=registres(14) and x"3f"; -- applying the write mask here
-						--else
-						--	Dout<=registres(14);
-						--end if;
+						if crtc_type='0' then
+							-- Impact sega ?
+							Dout<=registres(14) and x"3f"; -- applying the write mask here
+						else
+							-- batman ?
+							--Dout<=registres(14);
+							Dout<=x"00";
+						end if;
 					elsif reg_select32 = x"0F" then -- R15	
 						Dout<=registres(15);-- all types
 					elsif reg_select32 = x"10" then -- R16

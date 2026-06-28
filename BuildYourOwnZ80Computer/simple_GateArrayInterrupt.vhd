@@ -2042,9 +2042,9 @@ begin
 					-- type 1 : read status
 					-- https://www.cpcwiki.eu/index.php/CRTC#CRTC_Differences
 					if reg_select32 = x"0A" then -- R10
-						Dout<=x"00"; --registres(10) and x"7f"; -- applying the write mask here
+						Dout<=registres(10); -- applying the write mask here
 					elsif reg_select32 = x"0B" then -- R11
-						Dout<=x"00"; --Dout<=registres(11) and x"1f"; -- applying the write mask here
+						Dout<=registres(11); --Dout<=registres(11) and x"1f"; -- applying the write mask here
 					elsif reg_select32 = x"0C" then -- R12
 						-- 10 mode 1
 						-- 15 for a = 0 to 31
@@ -2052,11 +2052,11 @@ begin
 						-- 25 next
 						if crtc_type='0' then
 							--CRTC0 HD6845S/MC6845: Start Address Registers (R12 and R13) can be read.
-							Dout<=registres(12) and x"3f";  -- applying the write mask here
+							Dout<=registres(12);-- and x"3f";  -- applying the write mask here
 						else
 							-- Lecture des registres 12 and 13 sur le port &BFxx : >>non<<
 							--CRTC1 UM6845R: Start Address Registers cannot be read.
-							Dout<=x"30"; -- mask + pull up -- #30 sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
+							Dout<=x"00"; -- mask + pull up -- #30 sinon perte du double select shift -- type 1 -- demo From Scratch (Vanity)
 						end if;
 						
 					elsif reg_select32 = x"0D" then -- R13
@@ -2069,22 +2069,9 @@ begin
 							Dout<=x"00"; -- type 1 & 2
 						end if;
 					elsif reg_select32 = x"0E" then -- R14
-						if crtc_type='0' then
-							-- Impact sega ?
-							Dout<=registres(14) and x"3f"; -- applying the write mask here
-						else
-							-- batman ?
-							--Dout<=registres(14);
-							Dout<=x"00";
-						end if;
+							Dout<=registres(14); -- and x"3f"; -- all types
 					elsif reg_select32 = x"0F" then -- R15	
 						Dout<=registres(15);-- all types
-					elsif reg_select32 = x"10" then -- R16
-						--	Light Pen Address (read only, don't dependant on write !!!) - "Emulator Sucks"
-						Dout<=x"00"; --registres(16) and x"3f";-- all types
-					elsif reg_select32 = x"11" then -- R17
-						--	Light Pen Address (read only, don't dependant on write !!!) - "Emulator Sucks"
-						Dout<=x"00"; --registres(17);-- all types
 					elsif reg_select32 = x"1F" then -- R31
 						if crtc_type='1' then
 							--10 MODE 1:' Reinitialize screen

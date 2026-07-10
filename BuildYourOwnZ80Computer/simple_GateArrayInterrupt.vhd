@@ -1980,6 +1980,7 @@ begin
 				if A15_A14_A9_A8(0)='0' then
 					if IO_REQ_W='1' then
 						-- DÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©codage complet du numÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ro de registre sur le port &BFxx : Oui
+						-- tetalab2026 addr <= DI[4:0]; -- égal à 11111 donc 1F
 						reg_select32:=D and x"1F";
 						if reg_select32<=x"11" then -- < 17
 							reg_select:=conv_integer(reg_select32);
@@ -1991,8 +1992,44 @@ begin
 						reg_select32:=x"1F";
 					end if;
 				elsif reg_select32<=x"11" then
+					-- switch case reg_select32
+					-- case data_step is
+					--	when 0=>
+					-- when others=>NULL;
+					-- x"11" c'est de l'hexa (17 integer)
 					if IO_REQ_W='1' then
-						registres(reg_select):=D;
+						-- Tetalab2026
+						case reg_select is
+							when 4=>
+								registres(reg_select):=D(6 downto 0);
+							when 5=>
+								registres(reg_select):=D(4 downto 0);
+							when 6=>
+								registres(reg_select):=D(6 downto 0);
+							when 7=>
+								registres(reg_select):=D(6 downto 0);
+							-- 8 en deux morceaux ?
+							-- 08: {R8_skew, R8_interlace} <= {DI[5:4],DI[1:0]};
+							when 9=>
+								registres(reg_select):=D(4 downto 0);
+							when 10=>
+								-- 10 en deux morceaux (cursor), ok pour moi
+								-- 10: {R10_cursor_mode,R10_cursor_start} <= DI[6:0];
+								registres(reg_select):=D(6 downto 0);
+							when 11=>
+								registres(reg_select):=D(4 downto 0);
+							when 12=>
+								registres(reg_select):=D(5 downto 0);
+							when 13=>
+								registres(reg_select):=D;
+							when 14=>
+								registres(reg_select):=D(5 downto 0);
+							when 15=>
+								registres(reg_select):=D;
+							
+							when others=>
+								registres(reg_select):=D;
+						end case;
 					else
 						-- parasite : pull up
 						registres(reg_select):=x"FF";

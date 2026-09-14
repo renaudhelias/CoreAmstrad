@@ -149,6 +149,7 @@ entity simple_GateArrayInterrupt is
 end simple_GateArrayInterrupt;
 
 architecture Behavioral of simple_GateArrayInterrupt is
+	signal C0_is_zero:boolean:=true;
 	-- init values are for test bench javacpc ! + Grimware
 	signal R0Htot:std_logic_vector(7 downto 0):="00111111";
 	signal R1Hdisp:std_logic_vector(7 downto 0):="00101000";
@@ -1777,6 +1778,11 @@ ctrcConfig_process:process(reset,nCLK4_1) is
 	-- normally 0..17 but 0..31 in JavaCPC
 	type registres_type is array(0 to 17) of std_logic_vector(7 downto 0);
 	variable registres:registres_type := (others=>(others=>'0'));
+	--c1 CRTC fire
+	--Lorsque C0 passe à 0, différents compteurs sont mis à jour (C4, « C5 », C9, …).  
+	--Le compteur C0 est aussi comparé à R1 (gestion du border/pointeur vidéo) et R2 (gestion 
+	--HSYNC).   
+	variable registres2:registres_type := (others=>(others=>'0'));
 	variable halfR0_mem:std_logic_vector(7 downto 0);
 	variable ink:STD_LOGIC_VECTOR(3 downto 0);
 	variable border_ink:STD_LOGIC;
@@ -1810,9 +1816,16 @@ begin
 		
 		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
 		-- Seascape.dsk (delay of WRITE REGISTER)
+if C0_is_zero then
+	registres2:=registres;
+end if;
 		case reg_select is
 			when 0=>
-				R0Htot<=registres(0);
+				if crtc_type='1' then
+					R0Htot<=registres(0);
+				elsif C0_is_zero then
+					R0Htot<=registres2(0);
+				end if;
 				--hChars = reg[0] + 1;
 				--halfR0 = hChars >> 1;
 				halfR0_mem:=registres(0)+1;
@@ -1853,7 +1866,11 @@ begin
 			when 4=>
 				-- Validation des registres 9 et 4 aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation (Pendant que C4 = 0, buffÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©risÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©s sinon)
 				-- Rupture ligne-ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
-				R4Vtot<=registres(4) and x"7f";
+				if crtc_type='1' then
+					R4Vtot<=registres(4) and x"7f";
+				elsif C0_is_zero then
+					--suck plenty registres2:=registres;					R4Vtot<=registres2(4) and x"7f";
+				end if;
 			when 5=>
 				R5VtotAdjust<=registres(5) and x"1f";
 			when 6=>
@@ -1901,7 +1918,13 @@ begin
 			when 9=> -- max raster adress
 				-- Validation des registres 9 et 4 aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation (Pendant que C4 = 0, buffÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©risÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©s sinon)
 				--maxRaster = value | interlaceVideo;
-				R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
+				if crtc_type='1' then
+					R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
+				elsif C0_is_zero then
+-- suck plently
+					-- registres2:=registres;
+					R9Rmax<=(registres2(9) and x"1f") or "0000000" & interlaceVideo;
+				end if;
 			when 10=>NULL; -- and x"7f";
 				-- cursor start raster 
 			when 11=>NULL; -- and x"1f";
@@ -2578,9 +2601,11 @@ end if;
 -- Not certain, as this old component was really old ones : using state and no rising_egde...
 				-- if (hCC == reg[0]) {
 				-- Valeur minimale du registre 0 CRTC0:1 CRTC1:0
+				c0_is_zero<=false;
 				if hCC=R0Htot and (crtc_type='1' or R0Htot/=0) then -- tot-1 ok
 					--hCC = 0;
 					hCC:=(others=>'0');
+					C0_is_zero<=true;
 					--scanStart(); ====> vSyncWidth ....
 					--if (reg[9] == 0 && reg[4] == 0 && (CRTCType == 0 || CRTCType == 3)) {
 					--	vtAdj = 1;

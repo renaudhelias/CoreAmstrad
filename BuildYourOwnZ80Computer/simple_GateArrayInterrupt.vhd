@@ -2067,7 +2067,11 @@ registres2<=registres;
 						-- Tetalab2026
 						case reg_select is
 							when 4=>
-								registres(reg_select):=D(6 downto 0);
+								if crtc_type='1' then
+									  registres(reg_select):=D and x"03";
+								 else
+									  registres(reg_select):=D and x"F3";
+								 end if;
 							when 5=>
 								registres(reg_select):=D(4 downto 0);
 							when 6=>
@@ -2624,9 +2628,9 @@ if vram_vertical_counter<VRAM_VDsp then
 		-- big capture.
 		border_begin_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
 		if CRTC_TYPE='0' then
-			R1Hdisp_mem:=R1Hdisp;
-		elsif CRTC_TYPE='1' then
 			R1Hdisp_mem:=registres2(1);
+		elsif CRTC_TYPE='1' then
+			R1Hdisp_mem:=R1Hdisp;
 		end if;
 		last_dispH:='1';
 	end if;

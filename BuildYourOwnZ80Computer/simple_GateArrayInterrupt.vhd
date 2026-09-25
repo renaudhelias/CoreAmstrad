@@ -2998,13 +2998,13 @@ end if;
 					--GateArray_Interrupt();
 					int<='1';
 				end if;
-				
+				InterruptSyncCount:=2;
 				--if (InterruptSyncCount > 0 && --InterruptSyncCount == 0) {
 				if InterruptSyncCount < 2 then
 					InterruptSyncCount := InterruptSyncCount + 1;
 					if InterruptSyncCount = 2 then
 						--if (InterruptLineCount >= 32) {
-						if conv_integer(InterruptLineCount)>=32 then
+						if conv_integer(InterruptLineCount)>=30 then
 							--GateArray_Interrupt();
 							int<='1';
 						--else
@@ -3025,7 +3025,7 @@ end if;
 				--In both cases the following interrupt requests are synchronised with the VSYNC. 
 				-- JavaCPC
 				--InterruptSyncCount = 2;
-				InterruptSyncCount := 0;
+				InterruptSyncCount := 2;
 			end if;
 			-- InterruptLineCount end
 			

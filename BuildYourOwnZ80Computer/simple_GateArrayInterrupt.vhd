@@ -1829,8 +1829,6 @@ registres2<=registres;
 			when 0=>
 				if crtc_type='1' then
 					R0Htot<=registres(0);
-				--elsif C0_is_zero then
-				--	R0Htot<=registres2(0);
 				end if;
 				--hChars = reg[0] + 1;
 				--halfR0 = hChars >> 1;
@@ -1844,22 +1842,18 @@ registres2<=registres;
 			when 1=> --copilot
 				if crtc_type='1' then
 					R1Hdisp<=registres(1);
-				--elsif C0_is_zero then
-				--	R1Hdisp<=registres2(1);
 				end if;
 			when 2=> --copilot
 				if crtc_type='1' then
 					R2Hsyncpos<=registres(2);
-				--elsif C0_is_zero then
-				--	R2Hsyncpos<=registres2(2);
 				end if;
 			when 3=>
 -- following DataSheet and Arnold emulator (Arnold says it exists a conversion table HSYNC crtc.c.GA_HSyncWidth)
 				--hSyncWidth = value & 0x0f;
 				if crtc_type='1' then
 					R3Hwidth<=registres(3)(3 downto 0); -- DataSheet
-				--elsif C0_is_zero then
-				--	R3Hwidth<=registres2(3)(3 downto 0); -- DataSheet
+				else
+					R3Hwidth<=registres2(3)(3 downto 0); -- DataSheet
 				end if;
 				--R8Vwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula
 -- Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111";
@@ -1874,10 +1868,10 @@ registres2<=registres;
 					--CRTC1 MC6845/MC6845R/UM6845R have a fixed Vertical Sync Width of 16 scanlines.
 					--vSyncWidth = 0;
 					R3Vwidth<=x"0"; --registres(3)(6 downto 4) & "0";
-				--else --if C0_is_zero then
+				else --if C0_is_zero then
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
-				--	R3Vwidth<=registres(3)(7 downto 4);
+					R3Vwidth<=registres(3)(7 downto 4);
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -1891,27 +1885,19 @@ registres2<=registres;
 				-- Rupture ligne -ligne possible (R9 = R4 =0 ) >>oui<<
 				if crtc_type='1' then
 					R4Vtot<=registres(4) and x"7f";
-				--elsif C0_is_zero then
-				--	R4Vtot<=registres2(4) and x"7f";
 				end if;
 			when 5=>
 				if crtc_type='1' then
 					R5VtotAdjust<=registres(5) and x"1f";
-				--elsif C0_is_zero then
-				--	R5VtotAdjust<=registres2(5) and x"1f";
 				end if;
 			when 6=> --copilot
 				--The DISPTMG (Activation du split-border) can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
 				if crtc_type='1' then
 					R6Vdisp<=registres(6) and x"7f";
-				--elsif C0_is_zero then
-				--	R6Vdisp<=registres2(6) and x"7f";
 				end if;
 			when 7=> --copilot
 				if crtc_type='1' then
 					R7Vsyncpos<=registres(7) and x"7f";
-				--elsif C0_is_zero then
-				--	R7Vsyncpos<=registres2(7) and x"7f";
 				end if;
 			when 8=>-- and x"f3"; and x"03" (type 1)
 				-- interlace & skew
@@ -1959,7 +1945,7 @@ registres2<=registres;
 -- suck plently
 					-- registres2:=registres;
 					-- FIXME ?
-					R9Rmax<=(registres2(9) and x"1f") or "0000000" & interlaceVideo;
+					R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
 				end if;
 			when 10=>NULL; -- and x"7f";
 				-- cursor start raster 
@@ -1972,19 +1958,13 @@ registres2<=registres;
 				-- start adress H
 				--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
 				-- and x"3f" donc (5 downto 0)
-				if crtc_type='1' then
-					ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
-				--elsif C0_is_zero then
-				--	ADRESSE_maRegister<=registres2(12)(5 downto 0) & registres2(13);
-				end if;
+				ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
 			when 13=> --NULL;  (read/write type 0) (write only type 1)
 				-- start adress L
 				--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
-				if crtc_type='1' then
-					ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
+				ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
 				--elsif C0_is_zero then
 				--	ADRESSE_maRegister<=registres2(12)(5 downto 0) & registres2(13);
-				end if;
 			when 14=>NULL; -- and x"3f"
 				-- cursor H (read/write)
 			when 15=>NULL;
@@ -2406,7 +2386,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
 					--WakeUp!
 					--if (CRTC_TYPE='0' and RasterCounter=0 and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then -- and etat_vsync=DO_NOTHING then
-					if (CRTC_TYPE='0' and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
+					if (CRTC_TYPE='0' and RasterCounter=0 and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
 					--if LineCounter=R7Vsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
@@ -2419,7 +2399,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then -- and not(R5VtotAdjust_do) then
 						vSyncCount:=vSyncCount+1;
-						if (CRTC_TYPE='0' and vSyncCount=registres2(3)) or (CRTC_TYPE='1' and vSyncCount=R3Vwidth) then -- following Grim (forum)
+						if (CRTC_TYPE='0' and vSyncCount=registres2(3)(7 downto 4)) or (CRTC_TYPE='1' and vSyncCount=R3Vwidth) then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
 --crtc_VSYNC<=DO_NOTHING;
@@ -2998,7 +2978,7 @@ end if;
 					--GateArray_Interrupt();
 					int<='1';
 				end if;
-				InterruptSyncCount:=2;
+				--InterruptSyncCount:=2;
 				--if (InterruptSyncCount > 0 && --InterruptSyncCount == 0) {
 				if InterruptSyncCount < 2 then
 					InterruptSyncCount := InterruptSyncCount + 1;
@@ -3025,7 +3005,7 @@ end if;
 				--In both cases the following interrupt requests are synchronised with the VSYNC. 
 				-- JavaCPC
 				--InterruptSyncCount = 2;
-				InterruptSyncCount := 2;
+				InterruptSyncCount := 0;
 			end if;
 			-- InterruptLineCount end
 			

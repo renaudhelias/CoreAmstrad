@@ -2354,7 +2354,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--hSyncCount = (hSyncCount + 1) & 0x0f;
 					hSyncCount:=hSyncCount+1;
 					--if (hSyncCount == hSyncWidth) {
-					if (CRTC_TYPE='0' and hSyncCount=registres2(3)) or (CRTC_TYPE='1' and hSyncCount=R3Hwidth) then
+					if (CRTC_TYPE='0' and hSyncCount=registres2(3)(3 downto 0)) or (CRTC_TYPE='1' and hSyncCount=R3Hwidth) then
 						--inHSync = false;
 						etat_hsync:=DO_NOTHING;
 						--listener.hSyncEnd();

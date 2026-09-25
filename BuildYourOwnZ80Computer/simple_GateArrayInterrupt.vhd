@@ -2344,13 +2344,15 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 				-- http://cpctech.cpc-live.com/docs/hd6845s/hd6845sp.htm 0=>16
 				-- http://cpctech.cpc-live.com/docs/um6845r/um6845r.htm 0=>???
 				-- http://cpctech.cpc-live.com/docs/mc6845/mc6845.htm 0=>ignore
-				if (((frame_oddEven='1' and hCC = halfR0)
-				or (frame_oddEven='0' and hCC+1=registres2(2))) and (CRTC_TYPE='0' and registres2(3)(7 downto 4)/=x"0"))
+				
+				
+				if (CRTC_TYPE='0' and ((frame_oddEven='1' and hCC = halfR0)
+				or (frame_oddEven='0' and hCC+1=registres2(2) and registres2(3)(7 downto 4)/=x"0")))
 				
 				or
 				
-				(((frame_oddEven='1' and hCC = halfR0)
-				or (frame_oddEven='0' and hCC+1=R2Hsyncpos)) and (CRTC_TYPE='1')) then -- and etat_hsync=DO_NOTHING					--hSyncCount = 0;
+				(CRTC_TYPE='1' and ((frame_oddEven='1' and hCC = halfR0)
+				or (frame_oddEven='0' and hCC+1=R2Hsyncpos))) then -- and etat_hsync=DO_NOTHING					--hSyncCount = 0;
 					hSyncCount:= x"0";
 					--if (hDisp && CRTCType == 1 && hSyncWidth == (reg[3] & 0x0f)) {
 					--if dispH_skew0='1' and crtc_type='1' then

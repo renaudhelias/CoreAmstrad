@@ -1570,7 +1570,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis   un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1882,7 +1882,7 @@ registres2<=registres;
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligne -ligne possible (R9 = R4 =0 ) >>oui<<
+				-- Rupture ligneÂ -ligne possible (R9 = R4 =0 ) >>oui<<
 				if crtc_type='1' then
 					R4Vtot<=registres(4) and x"7f";
 				end if;
@@ -2222,6 +2222,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable RasterCounter:STD_LOGIC_VECTOR(7 downto 0):=(others=>'0'); -- buggy boy has value R9Rmax=5
 		variable frame_oddEven:std_logic:='0';
 		variable ADRESSE_maStore_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		variable MALine:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		-- ADRESSE_ma_mem
 		variable ADRESSE_MAcurrent_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
@@ -2275,7 +2277,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			etat_monitor_vsync:=(others=>DO_NOTHING);
 			etat_monitor_vhsync:=(others=>DO_NOTHING);
 			
-			ADRESSE_maStore_mem:=(others=>'0');
+			ADRESSE_maStore_mem := (others=>'0');
+			MALine := (others=>'0');
 			ADRESSE_MAcurrent_mem:=(others=>'0');
 			LineCounter:=x"00";
 			RasterCounter:=x"00";
@@ -2422,6 +2425,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					dispH_skew0:='0';
 					
 						--if ((getRA() | interlaceVideo) == maxRaster) {
+						-- RA reached R9
 						if (RasterCounter = R9Rmax) then
 							if crtc_type='1' then
 								--maStore = (maStore + reg[1]) & 0x3fff;
@@ -2430,7 +2434,9 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 							else
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
 								--CRTC_InternalState.MAStore = CRTC_InternalState.MALine + CRTC_InternalState.HCount;
-								ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
+								--youpi
+								--ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
+								MALine := ADRESSE_maStore_mem;
 							end if;
 						end if;
 
@@ -2642,6 +2648,7 @@ end if;
 				-- if (hCC == reg[0]) {
 				-- Valeur minimale du registre 0 CRTC0:1 CRTC1:0
 				--c0_is_zero<=false;
+				-- End of displayed line
 				if (crtc_type='0' and hCC=registres2(0)) or (crtc_type='1' and hCC=R0Htot) then -- tot-1 ok
 					--hCC = 0;
 					hCC:=(others=>'0');
@@ -2689,11 +2696,17 @@ end if;
 							--updateScreen()
 							--ma = maBase = ADRESSE_maRegister;
 							--maCurrent = maStore = maRegister;
-							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
-							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
+							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 							
 							LineCounter:=(others=>'0');
-							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+							if CRTC_TYPE='0' then
+								ADRESSE_maStore_mem := ADRESSE_maStore_mem + registres2(1) + Skew;
+								MALine := MALine + registres2(1) + Skew;
+								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
+							else
+								ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+							end if;
+							
 							if interlace = '0' then
 								frame_oddEven:='0';
 							else
@@ -2722,8 +2735,11 @@ end if;
 						--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 
 						--hDispStart()
-						--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
-						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+						--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+						--youpi
+						--ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+						--ADRESSE_ma_mem := MALine;
+						ADRESSE_MAcurrent_mem := MALine;
 						--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un R9Rmax atteind)
 						--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un R9Rmax atteind)
 						--if crtc_type='1' or not(R5VtotAdjust_do) then
@@ -2745,11 +2761,11 @@ end if;
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 							--updateScreen()
 							--maCurrent = maStore = maRegister;
-							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 						end if;
 						--hDispStart()
-						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 					end if;
 					

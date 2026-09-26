@@ -2651,7 +2651,7 @@ end if;
 					--}
 					--if (vtAdj > 0 && --vtAdj == 0) newFrame();
 					-- else if ((ra | interlaceVideo) == maxRaster) {
-					if ((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
+					if ((RasterCounter = R9Rmax) and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
 						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust) then
 
 --					if 
@@ -2699,7 +2699,7 @@ end if;
 								frame_oddEven:=not(frame_oddEven);
 							end if;
 							-- R4Vtot vs R5VtotAdjust ? R5VtotAdjust ne serait-il pas dynamique par hazard ? NON selon JavaCPC c'est meme le contraire
-					elsif (RasterCounter or "0000000" & interlaceVideo)=R9Rmax then
+					elsif (RasterCounter = R9Rmax) then
 						--RasterCounter = (frame & interlaceVideo) & 0x07;
 						RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0');
 						-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;

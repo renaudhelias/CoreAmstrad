@@ -1942,10 +1942,8 @@ registres2<=registres;
 				if crtc_type='1' then
 					R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
 				elsif CRTC_TYPE='0' then
--- suck plently
 					-- registres2:=registres;
-					-- FIXME ?
-					R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
+					R9Rmax<=(registres2(9) and x"1f") or "0000000" & interlaceVideo;
 				end if;
 			when 10=>NULL; -- and x"7f";
 				-- cursor start raster 

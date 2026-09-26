@@ -2421,7 +2421,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					dispH_skew0:='0';
 					
 						--if ((getRA() | interlaceVideo) == maxRaster) {
-						if (RasterCounter or "0000000" & interlaceVideo)=R9Rmax then
+						if (RasterCounter = R9Rmax) then
 							if crtc_type='1' then
 								--maStore = (maStore + reg[1]) & 0x3fff;
 								--0x3fff est ok : ADRESSE_maStore_mem(13:0)

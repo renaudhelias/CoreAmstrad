@@ -2384,7 +2384,8 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
 					--WakeUp!
 					--if (CRTC_TYPE='0' and RasterCounter=0 and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then -- and etat_vsync=DO_NOTHING then
-					if (CRTC_TYPE='0' and RasterCounter=0 and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
+					-- on CRTC type 0 and 1, Vsync can be triggered on any line of the char.
+					if (CRTC_TYPE='0' and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
 					--if LineCounter=R7Vsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...

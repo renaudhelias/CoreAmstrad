@@ -144,7 +144,8 @@ entity simple_GateArrayInterrupt is
            GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
            BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 			  HSYNC_out : out STD_logic;
-			  VSYNC_out : out STD_logic
+			  VSYNC_out : out STD_logic;
+			  leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
 end simple_GateArrayInterrupt;
 
@@ -1824,6 +1825,8 @@ begin
 --if C0_is_zero then
 --	registres2:=registres;
 registres2<=registres;
+-- 4 5 6 7 9
+leds8_debug<=registres(4) & registres(5) & registres(6) & registres(7) & registres(9);
 --end if;
 		case reg_select is
 			when 0=>

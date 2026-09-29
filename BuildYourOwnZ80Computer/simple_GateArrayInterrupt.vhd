@@ -2473,7 +2473,9 @@ leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 do
 								ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
 							else
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
-								ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
+								--ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
+								-- coreH3.rbf
+								ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem;
 							end if;
 						end if;
 

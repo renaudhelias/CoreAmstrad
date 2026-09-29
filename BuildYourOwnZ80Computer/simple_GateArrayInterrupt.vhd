@@ -2351,10 +2351,10 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 
 
 --coreM2.rbf
---MALine high
---MALine low
 --MAStore high
 --MAStore low
+--MACurrent high
+--MACurrent low
 leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
 
 
@@ -2473,7 +2473,6 @@ leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 do
 								ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
 							else
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
-								--CRTC_InternalState.MAStore = CRTC_InternalState.MALine + CRTC_InternalState.HCount;
 								ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
 							end if;
 						end if;

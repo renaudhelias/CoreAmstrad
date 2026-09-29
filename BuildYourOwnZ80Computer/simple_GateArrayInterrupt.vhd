@@ -1826,7 +1826,8 @@ begin
 --	registres2:=registres;
 registres2<=registres;
 -- 4 5 6 7 9
-leds8_debug<=registres(4) & registres(5) & registres(6) & registres(7) & registres(9);
+--leds8_debug<=registres(4) & registres(5) & registres(6) & registres(7) & registres(9);
+
 --end if;
 		case reg_select is
 			when 0=>
@@ -2316,7 +2317,47 @@ bvram_W<='0';
 crtc_VSYNC<=etat_vsync;
 vsync_int<=etat_vsync;
 hsync_int<=etat_hsync; -- Seascape.dsk
-			
+
+--coreL.rbf :
+--LineCounter (VCC)
+--RasterCounter (RA)
+--VTAdj counter
+--MA high byte
+--MA low byte
+--leds8_debug<=LineCounter & RasterCounter & R5VtotAdjust & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0);
+
+--coreV.rbf :
+--VCC
+--RA
+--R4
+--R5
+--MA high byte
+--leds8_debug<=LineCounter & RasterCounter & registres2(4) & registres2(5) & "00" & ADRESSE_MAcurrent_mem(13 downto 8);
+
+--coreM.rbf
+--MAStore high
+--MAStore low
+--MA current high
+--MA current low
+--VSync state
+--leds8_debug<="00" & ADRESSE_MAstore_mem(13 downto 8) & ADRESSE_MAstore_mem(7 downto 0) & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0) & R7Vsyncpos ;
+
+--corel2.rbf
+--LineCounter
+--R7Vsyncpos
+--VsyncCount
+--VSYNC
+--leds8_debug<=LineCounter & R7Vsyncpos & x"0" & VsyncCount & "0000000" & VSYNC & x"00";
+
+
+--coreM2.rbf
+--MALine high
+--MALine low
+--MAStore high
+--MAStore low
+leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
+
+
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
 

@@ -1552,7 +1552,14 @@ others=>0);
 	
 	type registres_type is array(0 to 17) of std_logic_vector(7 downto 0);
 	signal registres2:registres_type:= (others=>(others=>'0'));
+	
+	-- H1 : 1. Add a counter
+	signal VSyncIntDelay : integer range 0 to 2 := 0;
+	signal VSYNC_prev    : std_logic := '0';
 
+	-- H2
+	signal MAStoreSource : std_logic_vector(7 downto 0);
+	
 begin
 
 
@@ -2292,6 +2299,11 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 	--it's Z80 time !
 		elsif rising_edge(nCLK4_1) then
 		
+		-- H1 : 2. Detect VSYNC rising edge
+		VSYNC_prev <= VSYNC;
+		if (VSYNC_prev = '0') and (VSYNC = '1') then
+			VSyncIntDelay <= 2;
+		end if;
 		
 		if compteur1MHz=SOUND_OFFSET then
 			SOUND_CLK<='0';
@@ -2355,7 +2367,11 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --MAStore low
 --MACurrent high
 --MACurrent low
-leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
+--leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
+
+--coreH3H1H2.rbf
+leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0) & LineCounter & RasterCounter & MAStoreSource;
+
 
 
 				--setEvents() HSync strange behaviour : part 1
@@ -2471,11 +2487,15 @@ leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 do
 								--maStore = (maStore + reg[1]) & 0x3fff;
 								--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 								ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
+								-- H2
+								MAStoreSource <= x"01";
 							else
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
 								--ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
 								-- coreH3.rbf
 								ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem;
+								-- H2
+								MAStoreSource <= x"05";
 							end if;
 						end if;
 
@@ -2736,7 +2756,8 @@ end if;
 							--maCurrent = maStore = maRegister;
 							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-							
+							-- H2
+							MAStoreSource <= x"10";
 							LineCounter:=(others=>'0');
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 							if interlace = '0' then
@@ -2792,6 +2813,7 @@ end if;
 							--maCurrent = maStore = maRegister;
 							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
+							MAStoreSource <= x"50";
 						end if;
 						--hDispStart()
 						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
@@ -3010,16 +3032,44 @@ end if;
 			
 			--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
 			--hSyncEnd()
+			-- H1 4. Generate IRQ on HSYNC #2
+			-- H1 Locate the code handling HSYNC end. Add:
+			-- if HSYNC_end = '1' then
 			if etat_hsync_old=DO_HSYNC and hsync_int=DO_NOTHING then
+				-- H1
+				-- H1 if CRTC_TYPE='0' and VSyncIntDelay > 0 then
+				if CRTC_TYPE='0' and InterruptSyncCount > 0 then
+					 --VSyncIntDelay <= VSyncIntDelay - 1;
+					 -- remarque - cyclique : integer range 0 to 2
+					 InterruptSyncCount := InterruptSyncCount - 1;
+					 --if VSyncIntDelay = 1 then
+					 if InterruptSyncCount = 1 then
+						  -- Markus behaviour:
+						  --interrupt_counter <= 0;
+						  InterruptLineCount:=(others=>'0');
+						  --interrupt_pending <= '1';
+						  int <= '1';
+					 end if;
+				end if;
+
+			
+			
+			
 			-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
 				-- JavaCPC interrupt style...
 				--if (++InterruptLineCount == 52) {
-				InterruptLineCount:=InterruptLineCount+1;
-				if conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
+				if CRTC_TYPE='1' then
+					InterruptLineCount:=InterruptLineCount+1;
+				end if;
+				if CRTC_TYPE='1' and conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
 					--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
 					--InterruptLineCount = 0;
+					-- H1 3. Remove immediate IRQ on VSYNC
+					-- H1 IRQ is no longer generated immediately on VSYNC start.
+					-- H1 comment : interrupt_counter <= 0;
 					InterruptLineCount:=(others=>'0');
 					--GateArray_Interrupt();
+					-- H1 comment : interrupt_pending <= '1';
 					int<='1';
 				end if;
 				--InterruptSyncCount:=2;

@@ -2493,9 +2493,9 @@ leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0)
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
 								--ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
 								-- coreH3.rbf
-								ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem;
+								ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem; -- + 1;
 								-- H2
-								MAStoreSource <= x"05";
+								MAStoreSource <= x"06";
 							end if;
 						end if;
 
@@ -3036,20 +3036,18 @@ end if;
 			-- H1 Locate the code handling HSYNC end. Add:
 			-- if HSYNC_end = '1' then
 			if etat_hsync_old=DO_HSYNC and hsync_int=DO_NOTHING then
+
 				-- H1
 				-- H1 if CRTC_TYPE='0' and VSyncIntDelay > 0 then
 				if CRTC_TYPE='0' and InterruptSyncCount > 0 then
-					 --VSyncIntDelay <= VSyncIntDelay - 1;
-					 -- remarque - cyclique : integer range 0 to 2
-					 InterruptSyncCount := InterruptSyncCount - 1;
-					 --if VSyncIntDelay = 1 then
-					 if InterruptSyncCount = 1 then
-						  -- Markus behaviour:
-						  --interrupt_counter <= 0;
-						  InterruptLineCount:=(others=>'0');
-						  --interrupt_pending <= '1';
-						  int <= '1';
-					 end if;
+					-- remarque - cyclique : integer range 0 to 2
+					InterruptSyncCount := InterruptSyncCount - 1;
+					if InterruptSyncCount = 1 then
+						if conv_integer(InterruptLineCount) >= 32 then
+							int <= '1';
+							InterruptLineCount := (others=>'0');
+						end if;
+					end if;
 				end if;
 
 			
@@ -3078,11 +3076,8 @@ end if;
 					InterruptSyncCount := InterruptSyncCount + 1;
 					if InterruptSyncCount = 2 then
 						--if (InterruptLineCount >= 32) {
-						if conv_integer(InterruptLineCount)>=30 then
-							--GateArray_Interrupt();
+						if conv_integer(InterruptLineCount)>=32 then
 							int<='1';
-						--else
-							--int<='0'; -- Circle- DEMO ? / Markus JavaCPC doesn't have this instruction
 						end if;
 						--InterruptLineCount = 0;
 						InterruptLineCount:=(others=>'0');
@@ -3098,8 +3093,7 @@ end if;
 				--A VSYNC triggers a delay action of 2 HSYNCs in the GA
 				--In both cases the following interrupt requests are synchronised with the VSYNC. 
 				-- JavaCPC
-				--InterruptSyncCount = 2;
-				InterruptSyncCount := 0;
+				InterruptSyncCount := 2;
 			end if;
 			-- InterruptLineCount end
 			

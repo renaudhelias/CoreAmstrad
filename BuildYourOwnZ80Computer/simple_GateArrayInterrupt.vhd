@@ -3036,20 +3036,28 @@ end if;
 			-- H1 4. Generate IRQ on HSYNC #2
 			-- H1 Locate the code handling HSYNC end. Add:
 			-- if HSYNC_end = '1' then
+			-- endHSync();
 			if etat_hsync_old=DO_HSYNC and hsync_int=DO_NOTHING then
 
 				-- H1
 				-- H1 if CRTC_TYPE='0' and VSyncIntDelay > 0 then
-				if CRTC_TYPE='0' and InterruptSyncCount > 0 then
-					-- remarque - cyclique : integer range 0 to 2
-					InterruptSyncCount := InterruptSyncCount - 1;
-					if InterruptSyncCount = 1 then
-						if conv_integer(InterruptLineCount) >= 32 then
-							int <= '1';
-						end if;
-						InterruptLineCount := (others=>'0');
-					end if;
-				end if;
+				--} else if (this.InterruptSyncCount > 0 &&
+				-- r52 est dans le gatearray donc CRTC_TYPE='1' est inutile ici
+--				if CRTC_TYPE='0' and InterruptSyncCount > 0 then
+--					-- remarque - cyclique : integer range 0 to 2
+--					--this.InterruptSyncCount
+--					InterruptSyncCount := InterruptSyncCount - 1;
+--					--&& --this.InterruptSyncCount == 0) {
+--					if InterruptSyncCount = 1 then
+--						-- if (this.InterruptLineCount >= 32) {
+--						if conv_integer(InterruptLineCount) >= 32 then
+--							--GateArray_Interrupt();
+--							int <= '1';
+--						end if;
+--						--this.InterruptLineCount = 0;
+--						InterruptLineCount := (others=>'0');
+--					end if;
+--				end if;
 
 			
 			
@@ -3057,10 +3065,9 @@ end if;
 			-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
 				-- JavaCPC interrupt style...
 				--if (++InterruptLineCount == 52) {
-				if CRTC_TYPE='1' then
-					InterruptLineCount:=InterruptLineCount+1;
-				end if;
-				if CRTC_TYPE='1' and conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
+				-- r52 est dans le gatearray donc CRTC_TYPE='1' est inutile ici
+				InterruptLineCount:=InterruptLineCount+1;
+				if conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
 					--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
 					--InterruptLineCount = 0;
 					-- H1 3. Remove immediate IRQ on VSYNC

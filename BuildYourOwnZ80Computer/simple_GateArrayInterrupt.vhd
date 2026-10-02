@@ -2493,9 +2493,10 @@ leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0)
 								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
 								--ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
 								-- coreH3.rbf
-								ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem; -- + 1;
+								--ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem; -- + 1;
+								ADRESSE_maStore_mem := ADRESSE_maStore_mem + registres2(1);
 								-- H2
-								MAStoreSource <= x"06";
+								MAStoreSource <= x"02";
 							end if;
 						end if;
 
@@ -3072,9 +3073,9 @@ end if;
 				end if;
 				--InterruptSyncCount:=2;
 				--if (InterruptSyncCount > 0 && --InterruptSyncCount == 0) {
-				if InterruptSyncCount < 2 then
-					InterruptSyncCount := InterruptSyncCount + 1;
-					if InterruptSyncCount = 2 then
+				if InterruptSyncCount > 0 then
+					InterruptSyncCount := InterruptSyncCount - 1;
+					if InterruptSyncCount = 0 then
 						--if (InterruptLineCount >= 32) {
 						if conv_integer(InterruptLineCount)>=32 then
 							int<='1';

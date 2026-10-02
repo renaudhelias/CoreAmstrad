@@ -2496,7 +2496,7 @@ leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0)
 								--ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem; -- + 1;
 								ADRESSE_maStore_mem := ADRESSE_maStore_mem + registres2(1);
 								-- H2
-								MAStoreSource <= x"02";
+								-- test provocant : MAStoreSource <= x"02";
 							end if;
 						end if;
 
@@ -3046,8 +3046,8 @@ end if;
 					if InterruptSyncCount = 1 then
 						if conv_integer(InterruptLineCount) >= 32 then
 							int <= '1';
-							InterruptLineCount := (others=>'0');
 						end if;
+						InterruptLineCount := (others=>'0');
 					end if;
 				end if;
 

@@ -2343,7 +2343,23 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
 
 --coreH3H1H2.rbf
-leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0) & x"00";
+--leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0) & x"00";
+--skeleton
+--hCC x
+--RasterCounter x
+--LineCounter x
+--MACurrent
+--MAStore
+--leds8_debug<=hCC & RasterCounter & LineCounter & x"0000";
+--skeleton
+--hCC
+--RasterCounter
+--LineCounter
+--MACurrent x
+--MAStore x
+leds8_debug<="00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & "00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & x"00";
+
+
 --MACurrent
 --MAStore
 --LineCounter
@@ -2686,7 +2702,7 @@ end if;
             if hCC = x"00" then
                 ADRESSE_MACurrent_mem := ADRESSE_MAStore_mem;
             else
-                ADRESSE_MACurrent_mem := ADRESSE_MACurrent_mem + 1;
+                ADRESSE_MACurrent_mem := ADRESSE_MAStore_mem + hCC;
             end if;
         end if;
     ------------------------------------------------------------------

@@ -2232,6 +2232,12 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
+		variable crtc0_state:integer:=0;
+		constant STATE_NORMAL_0:integer:=0;
+		constant STATE_END_RASTER_9:integer:=9;
+		constant STATE_END_ROW_4:integer:=4;
+		constant STATE_VADJUST_5:integer:=5;
+		
 	begin
 		if reset='1' then
 			vsync_int<=DO_NOTHING;
@@ -2657,126 +2663,141 @@ end if;
 				-- if (hCC == reg[0]) {
 				-- Valeur minimale du registre 0 CRTC0:1 CRTC1:0
 				--c0_is_zero<=false;
-				if hCC=R0Htot then -- tot-1 ok
-					--hCC = 0;
-					hCC:=(others=>'0');
-					
-					--scanStart(); ====> vSyncWidth ....
-					--if (reg[9] == 0 && reg[4] == 0 && (CRTCType == 0 || CRTCType == 3)) {
-					--	vtAdj = 1;
-					--}
-					--if (vtAdj > 0 && --vtAdj == 0) newFrame();
-					-- else if ((ra | interlaceVideo) == maxRaster) {
-					if ((RasterCounter = R9Rmax) and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
-						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust) then
-
---					if 
---					
---					(CRTC_TYPE='0' and (((RasterCounter or "0000000" & interlaceVideo)=registres2(9) and LineCounter=registres2(4) and registre2(5)=0 and not(registres2(5)) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=registres2(5)))))
---					
---					or
---					
---					(CRTC_TYPE='1' and (((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust))) then
---					if (CRTC_TYPE='0' and ((RasterCounter or "0000000" & interlaceVideo)=registres2(9) and LineCounter=registres2(4) and registres2(5)=0 and not(R5VtotAdjust_do) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust)))
---					
---					or
---					
---					(CRTC_TYPE='1' and ((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust)))
---						then
-						-- on a fini R5VtotAdjust (ou sinon on a eu un R4Vtot fini sans R5VtotAdjust)
-							--C0_is_zero<=true;
-							R5VtotAdjust_do:=false;
-							--newFrame()
-							-- on commence R4Vtot
-							--if (vCC == reg[4] && vtAdj == 0) {
-							RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0'); -- pulse ?
-							zap_scan:=false;
---This method requires careful timing for the CRTC register updates,
---	it also needs testing on all CRTC because there are differences
--- of when each will accept and use the values programmed. However,
---	the result can be made to work on all with more simple ruptures.
---	Care must also be taken to ensure the timings are setup for a 50Hz screen. 
---When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
-							--updateScreen()
-							--ma = maBase = ADRESSE_maRegister;
-							--maCurrent = maStore = maRegister;
-							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
-							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-							-- H2
-							MAStoreSource <= x"10";
-							LineCounter:=(others=>'0');
-							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-							if interlace = '0' then
-								frame_oddEven:='0';
-							else
-								frame_oddEven:=not(frame_oddEven);
-							end if;
-							-- R4Vtot vs R5VtotAdjust ? R5VtotAdjust ne serait-il pas dynamique par hazard ? NON selon JavaCPC c'est meme le contraire
-					elsif (RasterCounter = R9Rmax) then
-						--RasterCounter = (frame & interlaceVideo) & 0x07;
-						RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0');
-						-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;
-						if LineCounter=R4Vtot and not(R5VtotAdjust_do) then
-							--if (interlace && frame == 0) {
-							--	vtAdj++;
-							--}
-							R5VtotAdjust_mem:=x"01";
-							R5VtotAdjust_do:=true;
-						elsif R5VtotAdjust_do then
-							R5VtotAdjust_mem:=R5VtotAdjust_mem+1;
-						end if;
-						-- Linear Address Generator
-						-- Nhd+0
-						--if ((getRA() | interlaceVideo) == maxRaster) {
-						--	maStore = (maStore + reg[1]) & 0x3fff;
-						--}
-						--maStore = (maStore + reg[1]) & 0x3fff;
-						--0x3fff est ok : ADRESSE_maStore_mem(13:0)
-
-						--hDispStart()
-						--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
-						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-						--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un R9Rmax atteind)
-						--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un R9Rmax atteind)
-						--if crtc_type='1' or not(R5VtotAdjust_do) then
-							-- LineCounter = (LineCounter + 1) & 0x7f;
-							--LineCounter:=(LineCounter+1) and x"7F";
-						--end if;
-						 -- Experimental CRTC0 fix:
-						-- always advance the row counter on character-row
-						-- transitions, including the entry into VTA (R5).
-						LineCounter:=(LineCounter+1) and x"7F";
-					else
-						-- RasterCounter = (RasterCounter + scanAdd) & 0x07;
-						RasterCounter:=(RasterCounter + scanAdd) and x"1F";
-						if R5VtotAdjust_do then --batman scrolling text at begin
-							R5VtotAdjust_mem:=R5VtotAdjust_mem+1;
-						elsif LineCounter = 0 and crtc_type='1' then
-							--if (CRTCType == 0 && LineCounter == 0 && RasterCounter == 0 && maScroll == 0) {
-							--if (CRTCType == 1 && LineCounter == 0/*
-							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
-							--updateScreen()
-							--maCurrent = maStore = maRegister;
-							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
-							ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-							MAStoreSource <= x"50";
-						end if;
-						--hDispStart()
-						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
-						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-					end if;
-					
+				if CRTC_type='0' then
+					-- skeleton switch for CRTC0 AI
+					case crtc0_state is
+						when STATE_NORMAL_0=>
+							crtc0_state:=STATE_END_RASTER_9;
+						when STATE_END_RASTER_9=>
+							crtc0_state:=STATE_END_ROW_4;
+						when STATE_END_ROW_4=>
+							crtc0_state:=STATE_VADJUST_5;
+						when STATE_VADJUST_5=>
+							crtc0_state:=STATE_NORMAL_0;
+						when others=>NULL;
+					end case;
 				else
-					-- hCCMask : so var is size 256 and mod is 128...
-					--protected int hCCMask = 0x7f;
-					--hCC = (hCC + 1) & hCCMask;
-					hCC:=(hCC+1) and x"7F";
-					--maCurrent = (maStore + hCC) & 0x3fff;
-					ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem+hCC; -- WakeUp color raster while girl is here. Better if this code is here.
+					if hCC=R0Htot then -- tot-1 ok
+						--hCC = 0;
+						hCC:=(others=>'0');
+						
+						--scanStart(); ====> vSyncWidth ....
+						--if (reg[9] == 0 && reg[4] == 0 && (CRTCType == 0 || CRTCType == 3)) {
+						--	vtAdj = 1;
+						--}
+						--if (vtAdj > 0 && --vtAdj == 0) newFrame();
+						-- else if ((ra | interlaceVideo) == maxRaster) {
+						if ((RasterCounter = R9Rmax) and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
+							or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust) then
+	
+		--					if 
+		--					
+		--					(CRTC_TYPE='0' and (((RasterCounter or "0000000" & interlaceVideo)=registres2(9) and LineCounter=registres2(4) and registre2(5)=0 and not(registres2(5)) -- tot-1 ok ok
+		--						or (R5VtotAdjust_do and R5VtotAdjust_mem=registres2(5)))))
+		--					
+		--					or
+		--					
+		--					(CRTC_TYPE='1' and (((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
+		--						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust))) then
+		--					if (CRTC_TYPE='0' and ((RasterCounter or "0000000" & interlaceVideo)=registres2(9) and LineCounter=registres2(4) and registres2(5)=0 and not(R5VtotAdjust_do) -- tot-1 ok ok
+		--						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust)))
+		--					
+		--					or
+		--					
+		--					(CRTC_TYPE='1' and ((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do) -- tot-1 ok ok
+		--						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust)))
+		--						then
+							-- on a fini R5VtotAdjust (ou sinon on a eu un R4Vtot fini sans R5VtotAdjust)
+								--C0_is_zero<=true;
+								R5VtotAdjust_do:=false;
+								--newFrame()
+								-- on commence R4Vtot
+								--if (vCC == reg[4] && vtAdj == 0) {
+								RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0'); -- pulse ?
+								zap_scan:=false;
+		--This method requires careful timing for the CRTC register updates,
+		--	it also needs testing on all CRTC because there are differences
+		-- of when each will accept and use the values programmed. However,
+		--	the result can be made to work on all with more simple ruptures.
+		--	Care must also be taken to ensure the timings are setup for a 50Hz screen. 
+		--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
+								--updateScreen()
+								--ma = maBase = ADRESSE_maRegister;
+								--maCurrent = maStore = maRegister;
+								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
+								-- H2
+								MAStoreSource <= x"10";
+								LineCounter:=(others=>'0');
+								ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+								if interlace = '0' then
+									frame_oddEven:='0';
+								else
+									frame_oddEven:=not(frame_oddEven);
+								end if;
+								-- R4Vtot vs R5VtotAdjust ? R5VtotAdjust ne serait-il pas dynamique par hazard ? NON selon JavaCPC c'est meme le contraire
+						elsif (RasterCounter = R9Rmax) then
+							--RasterCounter = (frame & interlaceVideo) & 0x07;
+							RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0');
+							-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;
+							if LineCounter=R4Vtot and not(R5VtotAdjust_do) then
+								--if (interlace && frame == 0) {
+								--	vtAdj++;
+								--}
+								R5VtotAdjust_mem:=x"01";
+								R5VtotAdjust_do:=true;
+							elsif R5VtotAdjust_do then
+								R5VtotAdjust_mem:=R5VtotAdjust_mem+1;
+							end if;
+							-- Linear Address Generator
+							-- Nhd+0
+							--if ((getRA() | interlaceVideo) == maxRaster) {
+							--	maStore = (maStore + reg[1]) & 0x3fff;
+							--}
+							--maStore = (maStore + reg[1]) & 0x3fff;
+							--0x3fff est ok : ADRESSE_maStore_mem(13:0)
+	
+							--hDispStart()
+							--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+							--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un R9Rmax atteind)
+							--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un R9Rmax atteind)
+							--if crtc_type='1' or not(R5VtotAdjust_do) then
+								-- LineCounter = (LineCounter + 1) & 0x7f;
+								--LineCounter:=(LineCounter+1) and x"7F";
+							--end if;
+							 -- Experimental CRTC0 fix:
+							-- always advance the row counter on character-row
+							-- transitions, including the entry into VTA (R5).
+							LineCounter:=(LineCounter+1) and x"7F";
+						else
+							-- RasterCounter = (RasterCounter + scanAdd) & 0x07;
+							RasterCounter:=(RasterCounter + scanAdd) and x"1F";
+							if R5VtotAdjust_do then --batman scrolling text at begin
+								R5VtotAdjust_mem:=R5VtotAdjust_mem+1;
+							elsif LineCounter = 0 and crtc_type='1' then
+								--if (CRTCType == 0 && LineCounter == 0 && RasterCounter == 0 && maScroll == 0) {
+								--if (CRTCType == 1 && LineCounter == 0/*
+								--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
+								--updateScreen()
+								--maCurrent = maStore = maRegister;
+								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
+								MAStoreSource <= x"50";
+							end if;
+							--hDispStart()
+							--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
+						end if;
+						
+					else
+						-- hCCMask : so var is size 256 and mod is 128...
+						--protected int hCCMask = 0x7f;
+						--hCC = (hCC + 1) & hCCMask;
+						hCC:=(hCC+1) and x"7F";
+						--maCurrent = (maStore + hCC) & 0x3fff;
+						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem+hCC; -- WakeUp color raster while girl is here. Better if this code is here.
+					end if;
 				end if;
 
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '1';

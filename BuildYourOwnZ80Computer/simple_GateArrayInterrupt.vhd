@@ -2370,8 +2370,11 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
 
 --coreH3H1H2.rbf
-leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0) & LineCounter & RasterCounter & MAStoreSource;
-
+leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0) & x"00";
+--MACurrent
+--MAStore
+--LineCounter
+--RasterCounter
 
 
 				--setEvents() HSync strange behaviour : part 1

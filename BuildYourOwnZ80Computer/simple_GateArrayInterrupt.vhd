@@ -2200,6 +2200,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable frame_oddEven:std_logic:='0';
 		variable ADRESSE_maStore_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable ADRESSE_MAcurrent_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		-- ADRESSE_maRegister variable StartAddress:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0'); -- AI constante ?
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem_delta:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
@@ -2665,25 +2666,132 @@ end if;
 				--c0_is_zero<=false;
 				if CRTC_type='0' then
 					-- skeleton switch for CRTC0 AI
+					
 					case crtc0_state is
-						when STATE_NORMAL_0=>
-							if hCC = R0Htot then
-								crtc0_state := STATE_END_RASTER_9;
-							end if;
-						when STATE_END_RASTER_9=>
-							if RasterCounter = R9Rmax then
-								crtc0_state := STATE_END_ROW_4;
-							end if;
-						when STATE_END_ROW_4=>
-							if LineCounter = R4Vtot then
-								crtc0_state := STATE_VADJUST_5;
-							end if;
-						when STATE_VADJUST_5=>
-							if R5VtotAdjust_mem = R5VtotAdjust then
-								crtc0_state := STATE_NORMAL_0;
-							end if;
-						when others=>NULL;
-					end case;
+    ------------------------------------------------------------------
+    -- STATE 0 : Normal display
+    ------------------------------------------------------------------
+    when STATE_NORMAL_0 =>
+        if hCC = R0Htot then
+            hCC := x"00";
+            ------------------------------------------------------------------
+            -- End of scanline reached
+            ------------------------------------------------------------------
+            crtc0_state := STATE_END_RASTER_9;
+        else
+            hCC := hCC + 1;
+            ------------------------------------------------------------------
+            -- MA generation
+            ------------------------------------------------------------------
+            if hCC = x"00" then
+                ADRESSE_MACurrent_mem := ADRESSE_MAStore_mem;
+            else
+                ADRESSE_MACurrent_mem := ADRESSE_MACurrent_mem + 1;
+            end if;
+        end if;
+    ------------------------------------------------------------------
+    -- STATE 9 : Raster processing
+    ------------------------------------------------------------------
+    when STATE_END_RASTER_9 =>
+        if RasterCounter = R9Rmax then
+            RasterCounter := (others => '0');
+            ------------------------------------------------------------------
+            -- Character row finished
+            ------------------------------------------------------------------
+            crtc0_state := STATE_END_ROW_4;
+        else
+            RasterCounter := RasterCounter + 1;
+            ------------------------------------------------------------------
+            -- Continue next raster line
+            ------------------------------------------------------------------
+            crtc0_state := STATE_NORMAL_0;
+        end if;
+    ------------------------------------------------------------------
+    -- STATE 4 : Character row processing
+    ------------------------------------------------------------------
+    when STATE_END_ROW_4 =>
+        ------------------------------------------------------------------
+        -- VSYNC start
+        ------------------------------------------------------------------
+        if LineCounter = R7Vsyncpos then
+            crtc_VSYNC <= '1';
+            VSyncCount := (others => '0');
+        end if;
+        ------------------------------------------------------------------
+        -- VSYNC width management
+        ------------------------------------------------------------------
+        if VSYNC = '1' then
+            if VSyncCount = R3Vwidth then
+                crtc_VSYNC <= '0';
+            else
+                VSyncCount := VSyncCount + 1;
+            end if;
+        end if;
+        ------------------------------------------------------------------
+        -- End of displayed area
+        ------------------------------------------------------------------
+        if LineCounter = R6Vdisp then
+            dispV := '0';
+        end if;
+        ------------------------------------------------------------------
+        -- End of frame ?
+        ------------------------------------------------------------------
+        if LineCounter = R4Vtot then
+            ------------------------------------------------------------------
+            -- Vertical adjust required
+            ------------------------------------------------------------------
+            if R5VtotAdjust /= 0 then
+                R5VtotAdjust_mem := (others => '0');
+                crtc0_state := STATE_VADJUST_5;
+            else
+                ------------------------------------------------------------------
+                -- Immediate new frame
+                ------------------------------------------------------------------
+                LineCounter   := (others => '0');
+                RasterCounter := (others => '0');
+                ADRESSE_MAStore_mem   := ADRESSE_maRegister;
+                ADRESSE_MACurrent_mem := ADRESSE_maRegister;
+                dispV := '1';
+                crtc0_state := STATE_NORMAL_0;
+            end if;
+        else
+            ------------------------------------------------------------------
+            -- Next character row
+            ------------------------------------------------------------------
+            LineCounter := LineCounter + 1;
+            ------------------------------------------------------------------
+            -- Next row memory base
+            ------------------------------------------------------------------
+            ADRESSE_MAStore_mem := ADRESSE_MACurrent_mem;
+            crtc0_state := STATE_NORMAL_0;
+        end if;
+    ------------------------------------------------------------------
+    -- STATE 5 : Vertical adjust
+    ------------------------------------------------------------------
+    when STATE_VADJUST_5 =>
+        if hCC = R0Htot then
+            hCC := x"00";
+            if R5VtotAdjust_mem = (R5VtotAdjust - 1) then
+                ------------------------------------------------------------------
+                -- Start of next frame
+                ------------------------------------------------------------------
+                R5VtotAdjust_mem  := (others => '0');
+                LineCounter  := (others => '0');
+                RasterCounter := (others => '0');
+                ADRESSE_MAStore_mem   := ADRESSE_maRegister; -- biearre StartAddress
+                ADRESSE_MACurrent_mem := ADRESSE_maRegister;
+                dispV := '1';
+                crtc0_state := STATE_NORMAL_0;
+            else
+                R5VtotAdjust_mem := R5VtotAdjust_mem + 1;
+            end if;
+        else
+            hCC := hCC + 1;
+        end if;
+    when others =>
+        crtc0_state := STATE_NORMAL_0;
+end case;
+					
 				else
 					if hCC=R0Htot then -- tot-1 ok
 						--hCC = 0;

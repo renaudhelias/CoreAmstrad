@@ -2667,13 +2667,21 @@ end if;
 					-- skeleton switch for CRTC0 AI
 					case crtc0_state is
 						when STATE_NORMAL_0=>
-							crtc0_state:=STATE_END_RASTER_9;
+							if hCC = R0Htot then
+								crtc0_state := STATE_END_RASTER_9;
+							end if;
 						when STATE_END_RASTER_9=>
-							crtc0_state:=STATE_END_ROW_4;
+							if RasterCounter = R9Rmax then
+								crtc0_state := STATE_END_ROW_4;
+							end if;
 						when STATE_END_ROW_4=>
-							crtc0_state:=STATE_VADJUST_5;
+							if LineCounter = R4Vtot then
+								crtc0_state := STATE_VADJUST_5;
+							end if;
 						when STATE_VADJUST_5=>
-							crtc0_state:=STATE_NORMAL_0;
+							if R5VtotAdjust_mem = R5VtotAdjust then
+								crtc0_state := STATE_NORMAL_0;
+							end if;
 						when others=>NULL;
 					end case;
 				else

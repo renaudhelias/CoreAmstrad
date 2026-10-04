@@ -2299,7 +2299,7 @@ bvram_W<='0';
 			-- z80 mode 1 : the byte need no be sent, as the z80 restarts at logical address x38 regardless(z80 datasheet)
 			case compteur1MHz is
 			when 0=>
---crtc_VSYNC<=etat_vsync; -- no way
+crtc_VSYNC<=etat_vsync; -- no way
 vsync_int<=etat_vsync;
 hsync_int<=etat_hsync; -- Seascape.dsk
 
@@ -2741,16 +2741,16 @@ end if;
         ------------------------------------------------------------------
         -- VSYNC width management
         ------------------------------------------------------------------
-        if crtc_VSYNC_mem = '1' then
+        --if etat_vsync = '1' then -- crtc_VSYNC_mem = '1' then
 				if VSyncCount=x"0" then
-					crtc_VSYNC_mem := '1';
+					etat_vsync := '1'; -- crtc_VSYNC_mem := '1';
 				end if;
             if VSyncCount = R3Vwidth then
-                crtc_VSYNC_mem := '0';
+                etat_vsync := '0'; --crtc_VSYNC_mem := '0';
             else
                 VSyncCount := VSyncCount + 1;
             end if;
-        end if;
+        --end if;
         ------------------------------------------------------------------
         -- End of displayed area
         ------------------------------------------------------------------

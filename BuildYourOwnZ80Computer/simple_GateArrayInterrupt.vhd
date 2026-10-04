@@ -1576,7 +1576,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis   un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1875,7 +1875,7 @@ begin
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligne -ligne possible (R9 = R4 =0 ) >>oui<<
+				-- Rupture ligneÂ -ligne possible (R9 = R4 =0 ) >>oui<<
 				R4Vtot<=registres(4) and x"7f";
 			when 5=>
 				R5VtotAdjust<=registres(5) and x"1f";
@@ -2190,6 +2190,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		-- protected int hCCMask = 0x7f; "char_counter256 HMAX n'est pas une valeur en dur, mais un label comme VT et VS..."
 		variable hCC : std_logic_vector(7 downto 0):=(others=>'0'); --640/16
 		variable LineCounter : std_logic_vector(7 downto 0):=(others=>'0'); --600
+		variable VAdjustCounter : std_logic_vector(7 downto 0):=(others=>'0');
 		variable etat_hsync : STD_LOGIC:=DO_NOTHING;
 		variable etat_monitor_hsync : STD_LOGIC_VECTOR(3 downto 0):=(others=>DO_NOTHING);
 		variable etat_vsync : STD_LOGIC:=DO_NOTHING;
@@ -2200,7 +2201,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable frame_oddEven:std_logic:='0';
 		variable ADRESSE_maStore_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable ADRESSE_MAcurrent_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
-		-- ADRESSE_maRegister variable StartAddress:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0'); -- AI constante ?
+		-- ADRESSE_maRegister
+		variable StartAddress:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0'); -- AI constante ?
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem_delta:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
@@ -2361,12 +2363,19 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 -- maStore
 -- maCurrent
 -- hCC
-leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & hCC;
+--leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & hCC;
 --MACurrent
 --MAStore
 --LineCounter
 --RasterCounter
-
+--coreSkeleton9.1.rbf
+--ADRESSE_maStore_mem
+--ADRESSE_maCurrent_mem
+--coreSkeleton9.2.rbf
+--LineCounter
+--RasterCounter
+--leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & x"00";
+leds8_debug<=LineCounter & RasterCounter & x"000000";
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
@@ -2688,134 +2697,74 @@ end if;
 					crtc_VSYNC<=crtc_VSYNC_mem;
 					-- skeleton switch for CRTC0 AI
 					
-					case crtc0_state is
-    ------------------------------------------------------------------
-    -- STATE 0 : Normal display
-    ------------------------------------------------------------------
-    when STATE_NORMAL_0 =>
-        if hCC = R0Htot then
-            hCC := x"00";
-            ------------------------------------------------------------------
-            -- End of scanline reached
-            ------------------------------------------------------------------
+case crtc0_state is
+----------------------------------------------------------------------------
+when STATE_NORMAL_0 =>
+----------------------------------------------------------------------------
+    if hCC = R0Htot then
+        hCC := x"00";
+        if RasterCounter = R9Rmax then
             crtc0_state := STATE_END_RASTER_9;
         else
-            hCC := hCC + 1;
-            ------------------------------------------------------------------
-            -- MA generation
-            ------------------------------------------------------------------
-            if hCC = x"00" then
-                ADRESSE_MACurrent_mem := ADRESSE_MAStore_mem;
-            else
-                ADRESSE_MACurrent_mem := ADRESSE_MAStore_mem + hCC;
-            end if;
-        end if;
-    ------------------------------------------------------------------
-    -- STATE 9 : Raster processing
-    ------------------------------------------------------------------
-    when STATE_END_RASTER_9 =>
-        if RasterCounter = R9Rmax then
-            RasterCounter := (others => '0');
-            ------------------------------------------------------------------
-            -- Character row finished
-            ------------------------------------------------------------------
-            crtc0_state := STATE_END_ROW_4;
-        else
             RasterCounter := RasterCounter + 1;
-            ------------------------------------------------------------------
-            -- Continue next raster line
-            ------------------------------------------------------------------
+            ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+        end if;
+    else
+        hCC := hCC + 1;
+        if dispH='1' then
+            ADRESSE_MAcurrent_mem := ADRESSE_MAcurrent_mem + 1;
+        end if;
+    end if;
+----------------------------------------------------------------------------
+when STATE_END_RASTER_9 =>
+----------------------------------------------------------------------------
+    RasterCounter := x"00";
+    if LineCounter = R6VDisp then
+        dispV := '0';
+    end if;
+    if LineCounter = R4VTot then
+        if R5VtotAdjust /= x"00" then
+            crtc0_state := STATE_VADJUST_5;
+            VAdjustCounter := x"00";
+        else
+            LineCounter := x"00";
+            dispV := '1';
+            -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+            ADRESSE_MAcurrent_mem := StartAddress;
             crtc0_state := STATE_NORMAL_0;
         end if;
-    ------------------------------------------------------------------
-    -- STATE 4 : Character row processing
-    ------------------------------------------------------------------
-    when STATE_END_ROW_4 =>
-        ------------------------------------------------------------------
-        -- VSYNC start
-        ------------------------------------------------------------------
-        if LineCounter = R7Vsyncpos then
-            -- cannot write CRTC crtc_VSYNC <= '1';
-            VSyncCount := (others => '0');
-        end if;
-        ------------------------------------------------------------------
-        -- VSYNC width management
-        ------------------------------------------------------------------
-        --if etat_vsync = '1' then -- crtc_VSYNC_mem = '1' then
-				if VSyncCount=x"0" then
-					etat_vsync := '1'; -- crtc_VSYNC_mem := '1';
-				end if;
-            if VSyncCount = R3Vwidth then
-                etat_vsync := '0'; --crtc_VSYNC_mem := '0';
-            else
-                VSyncCount := VSyncCount + 1;
-            end if;
-        --end if;
-        ------------------------------------------------------------------
-        -- End of displayed area
-        ------------------------------------------------------------------
-        if LineCounter = R6Vdisp then
-            dispV := '0';
-        end if;
-        ------------------------------------------------------------------
-        -- End of frame ?
-        ------------------------------------------------------------------
-        if LineCounter = R4Vtot then
-            ------------------------------------------------------------------
-            -- Vertical adjust required
-            ------------------------------------------------------------------
-            if R5VtotAdjust /= 0 then
-                R5VtotAdjust_mem := (others => '0');
-                crtc0_state := STATE_VADJUST_5;
-            else
-                ------------------------------------------------------------------
-                -- Immediate new frame
-                ------------------------------------------------------------------
-                LineCounter   := (others => '0');
-                RasterCounter := (others => '0');
-                ADRESSE_MAStore_mem   := ADRESSE_maRegister;
-                ADRESSE_MACurrent_mem := ADRESSE_maRegister;
-                dispV := '1';
-                crtc0_state := STATE_NORMAL_0;
-            end if;
-        else
-            ------------------------------------------------------------------
-            -- Next character row
-            ------------------------------------------------------------------
-            LineCounter := LineCounter + 1;
-            ------------------------------------------------------------------
-            -- Next row memory base
-            ------------------------------------------------------------------
-            ADRESSE_MAStore_mem := ADRESSE_MACurrent_mem;
+    else
+        crtc0_state := STATE_END_ROW_4;
+    end if;
+----------------------------------------------------------------------------
+when STATE_END_ROW_4 =>
+----------------------------------------------------------------------------
+    LineCounter := LineCounter + 1;
+    ADRESSE_MAStore_mem := ADRESSE_MAcurrent_mem;
+    -- wtf ? ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+    if LineCounter = R7VSyncPos then
+        crtc_vsync <= '1';
+        VSyncCount := x"0";
+    end if;
+    crtc0_state := STATE_NORMAL_0;
+----------------------------------------------------------------------------
+when STATE_VADJUST_5 =>
+----------------------------------------------------------------------------
+    if hCC = R0Htot then
+        hCC := x"00";
+        VAdjustCounter := VAdjustCounter + 1;
+        if VAdjustCounter >= R5VtotAdjust then
+            LineCounter := x"00";
+            dispV := '1';
+            ADRESSE_MAStore_mem := StartAddress;
+            ADRESSE_MAcurrent_mem := StartAddress;
             crtc0_state := STATE_NORMAL_0;
         end if;
-    ------------------------------------------------------------------
-    -- STATE 5 : Vertical adjust
-    ------------------------------------------------------------------
-    when STATE_VADJUST_5 =>
-        if hCC = R0Htot then
-            hCC := x"00";
-            if R5VtotAdjust_mem = (R5VtotAdjust - 1) then
-                ------------------------------------------------------------------
-                -- Start of next frame
-                ------------------------------------------------------------------
-                R5VtotAdjust_mem  := (others => '0');
-                LineCounter  := (others => '0');
-                RasterCounter := (others => '0');
-                ADRESSE_MAStore_mem   := ADRESSE_maRegister; -- biearre StartAddress
-                ADRESSE_MACurrent_mem := ADRESSE_maRegister;
-                dispV := '1';
-                crtc0_state := STATE_NORMAL_0;
-            else
-                R5VtotAdjust_mem := R5VtotAdjust_mem + 1;
-            end if;
-        else
-            hCC := hCC + 1;
-        end if;
-    when others =>
-        crtc0_state := STATE_NORMAL_0;
-end case;
-					
+    else
+        hCC := hCC + 1;
+    end if;
+when others=>NULL;
+end case;					
 				else
 					if hCC=R0Htot then -- tot-1 ok
 						--hCC = 0;
@@ -2864,7 +2813,7 @@ end case;
 								--updateScreen()
 								--ma = maBase = ADRESSE_maRegister;
 								--maCurrent = maStore = maRegister;
-								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 								-- H2
 								MAStoreSource <= x"10";
@@ -2898,7 +2847,7 @@ end case;
 							--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 	
 							--hDispStart()
-							--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+							--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 							--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un R9Rmax atteind)
 							--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un R9Rmax atteind)
@@ -2921,12 +2870,12 @@ end case;
 								--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 								--updateScreen()
 								--maCurrent = maStore = maRegister;
-								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 								MAStoreSource <= x"50";
 							end if;
 							--hDispStart()
-							--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+							--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 						end if;
 						

@@ -2682,6 +2682,7 @@ end if;
 				-- if (hCC == reg[0]) {
 				-- Valeur minimale du registre 0 CRTC0:1 CRTC1:0
 				--c0_is_zero<=false;
+				-- CRTC section
 				if CRTC_type='0' then
 				
 					crtc_VSYNC<=crtc_VSYNC_mem;
@@ -2939,6 +2940,9 @@ end case;
 					end if;
 				end if;
 
+				
+				-- strange section 
+				
 				bvram_A(14 downto 0)<=bvram_A_mem_delta(13 downto 0) & '1';
 				DATA_mem:=crtc_D;
 				DATA_action<='1';

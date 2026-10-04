@@ -2238,7 +2238,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		constant STATE_END_RASTER_9:integer:=9;
 		constant STATE_END_ROW_4:integer:=4;
 		constant STATE_VADJUST_5:integer:=5;
-		
+		variable crtc_VSYNC_mem:STD_LOGIC:='0';
 	begin
 		if reset='1' then
 			vsync_int<=DO_NOTHING;
@@ -2251,7 +2251,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 --			InterruptLineCount:=(others=>'0');
 --			InterruptSyncCount:=2;
 --			int<='0';
-			crtc_VSYNC<=DO_NOTHING;
+			--crtc_VSYNC<=DO_NOTHING;
 			
 			etat_hsync:=DO_NOTHING;
 			etat_monitor_hsync:=(others=>DO_NOTHING);
@@ -2299,7 +2299,7 @@ bvram_W<='0';
 			-- z80 mode 1 : the byte need no be sent, as the z80 restarts at logical address x38 regardless(z80 datasheet)
 			case compteur1MHz is
 			when 0=>
-crtc_VSYNC<=etat_vsync;
+--crtc_VSYNC<=etat_vsync; -- no way
 vsync_int<=etat_vsync;
 hsync_int<=etat_hsync; -- Seascape.dsk
 
@@ -2357,9 +2357,11 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --LineCounter
 --MACurrent x
 --MAStore x
-leds8_debug<="00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & "00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & x"00";
-
-
+--leds8_debug<="00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & "00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & x"00";
+-- maStore
+-- maCurrent
+-- hCC
+leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & hCC;
 --MACurrent
 --MAStore
 --LineCounter
@@ -2681,6 +2683,8 @@ end if;
 				-- Valeur minimale du registre 0 CRTC0:1 CRTC1:0
 				--c0_is_zero<=false;
 				if CRTC_type='0' then
+				
+					crtc_VSYNC<=crtc_VSYNC_mem;
 					-- skeleton switch for CRTC0 AI
 					
 					case crtc0_state is
@@ -2730,15 +2734,18 @@ end if;
         -- VSYNC start
         ------------------------------------------------------------------
         if LineCounter = R7Vsyncpos then
-            crtc_VSYNC <= '1';
+            -- cannot write CRTC crtc_VSYNC <= '1';
             VSyncCount := (others => '0');
         end if;
         ------------------------------------------------------------------
         -- VSYNC width management
         ------------------------------------------------------------------
-        if VSYNC = '1' then
+        if crtc_VSYNC_mem = '1' then
+				if VSyncCount=x"0" then
+					crtc_VSYNC_mem := '1';
+				end if;
             if VSyncCount = R3Vwidth then
-                crtc_VSYNC <= '0';
+                crtc_VSYNC_mem := '0';
             else
                 VSyncCount := VSyncCount + 1;
             end if;

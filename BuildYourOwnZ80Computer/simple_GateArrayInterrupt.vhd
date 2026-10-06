@@ -2100,6 +2100,7 @@ begin
 						--if (LineCounter == 0) {
 						--Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border is active. i.e. VCC>=R6.
 						--It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output (used by the CPC to display the border colour) because that output is a combination of horizontal and vertical blanking. This bit will be 0 when pixels are being displayed.
+					else
 						Dout<=x"00"; 
 					end if;
 				else
@@ -2202,7 +2203,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable ADRESSE_maStore_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable ADRESSE_MAcurrent_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		-- ADRESSE_maRegister
-		variable StartAddress:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0'); -- AI constante ?
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem_delta:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
@@ -2253,7 +2253,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 --			InterruptLineCount:=(others=>'0');
 --			InterruptSyncCount:=2;
 --			int<='0';
-			--crtc_VSYNC<=DO_NOTHING;
+			crtc_VSYNC<=DO_NOTHING;
 			
 			etat_hsync:=DO_NOTHING;
 			etat_monitor_hsync:=(others=>DO_NOTHING);
@@ -2730,7 +2730,7 @@ when STATE_END_RASTER_9 =>
             LineCounter := x"00";
             dispV := '1';
             -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
-            ADRESSE_MAcurrent_mem := StartAddress;
+            ADRESSE_MAcurrent_mem := ADRESSE_maRegister;
             crtc0_state := STATE_NORMAL_0;
         end if;
     else
@@ -2756,8 +2756,8 @@ when STATE_VADJUST_5 =>
         if VAdjustCounter >= R5VtotAdjust then
             LineCounter := x"00";
             dispV := '1';
-            ADRESSE_MAStore_mem := StartAddress;
-            ADRESSE_MAcurrent_mem := StartAddress;
+            ADRESSE_MAStore_mem := ADRESSE_maRegister;
+            ADRESSE_MAcurrent_mem := ADRESSE_maRegister;
             crtc0_state := STATE_NORMAL_0;
         end if;
     else
@@ -3101,27 +3101,7 @@ end if;
 			-- endHSync();
 			if etat_hsync_old=DO_HSYNC and hsync_int=DO_NOTHING then
 
-				-- H1
-				-- H1 if CRTC_TYPE='0' and VSyncIntDelay > 0 then
-				--} else if (this.InterruptSyncCount > 0 &&
-				-- r52 est dans le gatearray donc CRTC_TYPE='1' est inutile ici
---				if CRTC_TYPE='0' and InterruptSyncCount > 0 then
---					-- remarque - cyclique : integer range 0 to 2
---					--this.InterruptSyncCount
---					InterruptSyncCount := InterruptSyncCount - 1;
---					--&& --this.InterruptSyncCount == 0) {
---					if InterruptSyncCount = 1 then
---						-- if (this.InterruptLineCount >= 32) {
---						if conv_integer(InterruptLineCount) >= 32 then
---							--GateArray_Interrupt();
---							int <= '1';
---						end if;
---						--this.InterruptLineCount = 0;
---						InterruptLineCount := (others=>'0');
---					end if;
---				end if;
-
-			
+				
 			
 			
 			-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
@@ -3145,7 +3125,7 @@ end if;
 				if InterruptSyncCount > 0 then
 					InterruptSyncCount := InterruptSyncCount - 1;
 					--&& --this.InterruptSyncCount == 0) {
-					if InterruptSyncCount = 1 then
+					if InterruptSyncCount = 0 then
 						--if (InterruptLineCount >= 32) {
 						if conv_integer(InterruptLineCount)>=32 then
 							int<='1';

@@ -2707,8 +2707,9 @@ when STATE_NORMAL_0 =>
 ----------------------------------------------------------------------------
 	 if RasterCounter = R9Rmax then
          crtc0_state := STATE_END_RASTER_9;
+        ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     else
-        RasterCounter := RasterCounter + 1;
+        RasterCounter := (RasterCounter + 1) and x"1F";
         ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     end if;
 
@@ -2728,6 +2729,7 @@ when STATE_END_RASTER_9 =>
             dispV := '1';
             -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
             ADRESSE_MAcurrent_mem := ADRESSE_maRegister;
+				ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
             crtc0_state := STATE_NORMAL_0;
         end if;
     else
@@ -2736,7 +2738,7 @@ when STATE_END_RASTER_9 =>
 ----------------------------------------------------------------------------
 when STATE_END_ROW_4 =>
 ----------------------------------------------------------------------------
-    LineCounter := LineCounter + 1;
+    LineCounter := (LineCounter + 1) and x"7F";
     ADRESSE_MAStore_mem := ADRESSE_MAcurrent_mem;
     -- wtf ? ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     if LineCounter = R7VSyncPos then

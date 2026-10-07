@@ -1576,7 +1576,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis Ã‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1875,7 +1875,7 @@ begin
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligneÂ -ligne possible (R9 = R4 =0 ) >>oui<<
+				-- Rupture ligneÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
 				R4Vtot<=registres(4) and x"7f";
 			when 5=>
 				R5VtotAdjust<=registres(5) and x"1f";
@@ -2267,13 +2267,15 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			RasterCounter:=x"00";
 			hCC:=x"00";
 			
+			crtc0_state:=STATE_NORMAL_0;
+			
 			--bvram
 			crtc_R<='0';
 			bvram_D<=(others=>'0');
 			bvram_W<='0';
 	--it's Z80 time !
 		elsif rising_edge(nCLK4_1) then
-		
+		-- horizontal section
 		-- H1 : 2. Detect VSYNC rising edge
 		VSYNC_prev <= VSYNC;
 		if (VSYNC_prev = '0') and (VSYNC = '1') then
@@ -2696,25 +2698,20 @@ end if;
 				
 					crtc_VSYNC<=crtc_VSYNC_mem;
 					-- skeleton switch for CRTC0 AI
-					
-case crtc0_state is
+    if hCC = R0Htot then
+		  --hCC = 0;
+        hCC := x"00";
+case crtc0_state is					
 ----------------------------------------------------------------------------
 when STATE_NORMAL_0 =>
 ----------------------------------------------------------------------------
-    if hCC = R0Htot then
-        hCC := x"00";
-        if RasterCounter = R9Rmax then
-            crtc0_state := STATE_END_RASTER_9;
-        else
-            RasterCounter := RasterCounter + 1;
-            ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
-        end if;
+	 if RasterCounter = R9Rmax then
+         crtc0_state := STATE_END_RASTER_9;
     else
-        hCC := hCC + 1;
-        if dispH='1' then
-            ADRESSE_MAcurrent_mem := ADRESSE_MAcurrent_mem + 1;
-        end if;
+        RasterCounter := RasterCounter + 1;
+        ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     end if;
+
 ----------------------------------------------------------------------------
 when STATE_END_RASTER_9 =>
 ----------------------------------------------------------------------------
@@ -2745,13 +2742,18 @@ when STATE_END_ROW_4 =>
     if LineCounter = R7VSyncPos then
         crtc_vsync <= '1';
         VSyncCount := x"0";
+			etat_vsync:=DO_VSYNC;
+			etat_monitor_vsync(0):=DO_VSYNC;
+	 elsif LineCounter = R3Vwidth then
+		   etat_vsync:=DO_NOTHING;
+			etat_monitor_vsync:="0000";	
     end if;
     crtc0_state := STATE_NORMAL_0;
 ----------------------------------------------------------------------------
 when STATE_VADJUST_5 =>
 ----------------------------------------------------------------------------
-    if hCC = R0Htot then
-        hCC := x"00";
+    --if hCC = R0Htot then
+    --    hCC := x"00";
         VAdjustCounter := VAdjustCounter + 1;
         if VAdjustCounter >= R5VtotAdjust then
             LineCounter := x"00";
@@ -2760,12 +2762,22 @@ when STATE_VADJUST_5 =>
             ADRESSE_MAcurrent_mem := ADRESSE_maRegister;
             crtc0_state := STATE_NORMAL_0;
         end if;
-    else
-        hCC := hCC + 1;
-    end if;
+    --else
+    --    hCC := hCC + 1;
+    --end if;
 when others=>NULL;
-end case;					
-				else
+end case;
+
+			--end if;  -- if hcc
+
+    else -- if CRTC_TYPE='0' -> 1
+        hCC := (hCC+1) and x"7F";
+        --if dispH='1' then
+            ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem + hCC; --WakeUp color raster while girl is here. Better if this code is here.
+        --end if;
+    end if;
+
+				else -- CRTC_TYPE='1' isolation
 					if hCC=R0Htot then -- tot-1 ok
 						--hCC = 0;
 						hCC:=(others=>'0');
@@ -2813,7 +2825,7 @@ end case;
 								--updateScreen()
 								--ma = maBase = ADRESSE_maRegister;
 								--maCurrent = maStore = maRegister;
-								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 								-- H2
 								MAStoreSource <= x"10";
@@ -2847,7 +2859,7 @@ end case;
 							--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 	
 							--hDispStart()
-							--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+							--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 							--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un R9Rmax atteind)
 							--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un R9Rmax atteind)
@@ -2870,12 +2882,12 @@ end case;
 								--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 								--updateScreen()
 								--maCurrent = maStore = maRegister;
-								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
 								MAStoreSource <= x"50";
 							end if;
 							--hDispStart()
-							--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+							--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 						end if;
 						

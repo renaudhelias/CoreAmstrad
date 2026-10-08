@@ -2701,7 +2701,7 @@ when STATE_END_RASTER_9 =>
 ----------------------------------------------------------------------------
 	if RasterCounter = R9Rmax then
         RasterCounter := x"00";
-        crtc0_state := STATE_END_RASTER_9;
+        crtc0_state := STATE_END_ROW_4;
         ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     else
         RasterCounter := (RasterCounter + 1) and x"1F";

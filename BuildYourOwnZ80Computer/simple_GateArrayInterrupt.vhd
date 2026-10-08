@@ -1555,9 +1555,8 @@ others=>0);
 	signal VSyncIntDelay : integer range 0 to 2 := 0;
 	signal VSYNC_prev    : std_logic := '0';
 
-	-- H2
-	signal MAStoreSource : std_logic_vector(7 downto 0);
-	
+	signal ADRESSE_maRegister_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
+		
 begin
 
 
@@ -1936,13 +1935,12 @@ begin
 				-- start adress H
 				--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
 				-- and x"3f" donc (5 downto 0)
-				ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
+				ADRESSE_maRegister_mem<=registres(12)(5 downto 0) & registres(13);
 			when 13=> --NULL;  (read/write type 0) (write only type 1)
 				-- start adress L
 				--maRegister = (reg[13] + (reg[12] << 8)) & 0x3fff;
-				ADRESSE_maRegister<=registres(12)(5 downto 0) & registres(13);
+				ADRESSE_maRegister_mem<=registres(12)(5 downto 0) & registres(13);
 				--elsif C0_is_zero then
-				--	ADRESSE_maRegister<=registres2(12)(5 downto 0) & registres2(13);
 			when 14=>NULL; -- and x"3f"
 				-- cursor H (read/write)
 			when 15=>NULL;
@@ -2202,7 +2200,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable frame_oddEven:std_logic:='0';
 		variable ADRESSE_maStore_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		variable ADRESSE_MAcurrent_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
-		-- ADRESSE_maRegister
 		variable crtc_A_mem:std_logic_vector(14 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
 		variable bvram_A_mem_delta:std_logic_vector(13 downto 0):=(others=>'0'); -- 16bit memory
@@ -2235,8 +2232,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
-		variable crtc0_state:integer:=0;
-		constant STATE_NORMAL_0:integer:=0;
+		variable crtc0_state:integer:=9;
 		constant STATE_END_RASTER_9:integer:=9;
 		constant STATE_END_ROW_4:integer:=4;
 		constant STATE_VADJUST_5:integer:=5;
@@ -2267,7 +2263,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			RasterCounter:=x"00";
 			hCC:=x"00";
 			
-			crtc0_state:=STATE_NORMAL_0;
+			crtc0_state:=STATE_END_RASTER_9;
 			
 			--bvram
 			crtc_R<='0';
@@ -2493,8 +2489,6 @@ leds8_debug<=LineCounter & RasterCounter & x"000000";
 							--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 							--this.maStore = this.maStore + reg[1] & 0x3FFF; 
 							ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
-							-- H2
-							--MAStoreSource <= x"01"; --Batman calibrate ???
 						end if;
 
 					
@@ -2701,46 +2695,26 @@ end if;
     if hCC = R0Htot then
 		  --hCC = 0;
         hCC := x"00";
-case crtc0_state is					
+case crtc0_state is
 ----------------------------------------------------------------------------
-when STATE_NORMAL_0 =>
+when STATE_END_RASTER_9 =>
 ----------------------------------------------------------------------------
-	 if RasterCounter = R9Rmax then
-         crtc0_state := STATE_END_RASTER_9;
+	if RasterCounter = R9Rmax then
+        RasterCounter := x"00";
+        crtc0_state := STATE_END_RASTER_9;
         ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     else
         RasterCounter := (RasterCounter + 1) and x"1F";
         ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
     end if;
-
-----------------------------------------------------------------------------
-when STATE_END_RASTER_9 =>
-----------------------------------------------------------------------------
-    RasterCounter := x"00";
-    if LineCounter = R6VDisp then
-        dispV := '0';
-    end if;
-    if LineCounter = R4VTot then
-        if R5VtotAdjust /= x"00" then
-            crtc0_state := STATE_VADJUST_5;
-            VAdjustCounter := x"00";
-        else
-            LineCounter := x"00";
-            dispV := '1';
-            -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
-            ADRESSE_MAcurrent_mem := ADRESSE_maRegister;
-				ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-            crtc0_state := STATE_NORMAL_0;
-        end if;
-    else
-        crtc0_state := STATE_END_ROW_4;
-    end if;
+	 
 ----------------------------------------------------------------------------
 when STATE_END_ROW_4 =>
 ----------------------------------------------------------------------------
-    LineCounter := (LineCounter + 1) and x"7F";
-    ADRESSE_MAStore_mem := ADRESSE_MAcurrent_mem;
-    -- wtf ? ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+
+    if LineCounter = R6VDisp then
+        dispV := '0';
+    end if;
     if LineCounter = R7VSyncPos then
         crtc_vsync <= '1';
         VSyncCount := x"0";
@@ -2750,7 +2724,25 @@ when STATE_END_ROW_4 =>
 		   etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:="0000";	
     end if;
-    crtc0_state := STATE_NORMAL_0;
+
+    if LineCounter = R4VTot then
+        if R5VtotAdjust /= x"00" then
+            crtc0_state := STATE_VADJUST_5;
+            VAdjustCounter := x"00";
+            LineCounter := x"00";
+        else
+            LineCounter := x"00";
+            dispV := '1';
+            -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+            ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
+				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+            crtc0_state := STATE_END_RASTER_9;
+        end if;
+    else
+        LineCounter := (LineCounter + 1) and x"7F";
+		  -- to check
+        ADRESSE_MAStore_mem := ADRESSE_MAcurrent_mem;
+    end if;
 ----------------------------------------------------------------------------
 when STATE_VADJUST_5 =>
 ----------------------------------------------------------------------------
@@ -2758,11 +2750,11 @@ when STATE_VADJUST_5 =>
     --    hCC := x"00";
         VAdjustCounter := VAdjustCounter + 1;
         if VAdjustCounter >= R5VtotAdjust then
-            LineCounter := x"00";
             dispV := '1';
-            ADRESSE_MAStore_mem := ADRESSE_maRegister;
-            ADRESSE_MAcurrent_mem := ADRESSE_maRegister;
-            crtc0_state := STATE_NORMAL_0;
+				--check maRegister que ici ???
+            ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
+            ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
+            crtc0_state := STATE_END_RASTER_9;
         end if;
     --else
     --    hCC := hCC + 1;
@@ -2829,8 +2821,6 @@ end case;
 								--maCurrent = maStore = maRegister;
 								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-								-- H2
-								MAStoreSource <= x"10";
 								LineCounter:=(others=>'0');
 								ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 								if interlace = '0' then
@@ -2886,7 +2876,6 @@ end case;
 								--maCurrent = maStore = maRegister;
 								--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 								ADRESSE_maStore_mem:=ADRESSE_maRegister(13 downto 0);
-								MAStoreSource <= x"50";
 							end if;
 							--hDispStart()
 							--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC

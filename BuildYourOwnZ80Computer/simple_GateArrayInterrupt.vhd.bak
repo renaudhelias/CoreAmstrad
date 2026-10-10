@@ -144,8 +144,8 @@ entity simple_GateArrayInterrupt is
            GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
            BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 			  HSYNC_out : out STD_logic;
-			  VSYNC_out : out STD_logic;
-			  leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+			  VSYNC_out : out STD_logic
+			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
 end simple_GateArrayInterrupt;
 
@@ -207,6 +207,7 @@ signal R9Rmax:std_logic_vector(7 downto 0):="00000111";
 	constant DO_VSYNC : STD_LOGIC:='1';
 	
 	signal ADRESSE_maRegister:STD_LOGIC_VECTOR(13 downto 0):="110000" & "00000000";--(others=>'0');
+	signal LineCounter_is0:boolean:=true;
 	signal RED : STD_LOGIC_VECTOR(1 downto 0);
    signal GREEN : STD_LOGIC_VECTOR(1 downto 0);
    signal BLUE : STD_LOGIC_VECTOR(1 downto 0);
@@ -2095,9 +2096,11 @@ begin
 					--  return (1 << 5); x"20"
 					if crtc_type='0' then
 						Dout<=x"FF";
+					elsif LineCounter_is0 then
 						--if (LineCounter == 0) {
 						--Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border is active. i.e. VCC>=R6.
 						--It is cleared when the frame is started (VCC=0). It is not directly related to the DISPTMG output (used by the CPC to display the border colour) because that output is a combination of horizontal and vertical blanking. This bit will be 0 when pixels are being displayed.
+						Dout<=x"20";
 					else
 						Dout<=x"00"; 
 					end if;
@@ -2236,7 +2239,6 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		constant STATE_END_RASTER_9:integer:=9;
 		constant STATE_END_ROW_4:integer:=4;
 		constant STATE_VADJUST_5:integer:=5;
-		variable crtc_VSYNC_mem:STD_LOGIC:='0';
 	begin
 		if reset='1' then
 			vsync_int<=DO_NOTHING;
@@ -2299,7 +2301,7 @@ bvram_W<='0';
 			-- z80 mode 1 : the byte need no be sent, as the z80 restarts at logical address x38 regardless(z80 datasheet)
 			case compteur1MHz is
 			when 0=>
-crtc_VSYNC<=etat_vsync; -- no way
+crtc_VSYNC<=etat_vsync;
 vsync_int<=etat_vsync;
 hsync_int<=etat_hsync; -- Seascape.dsk
 
@@ -2373,7 +2375,8 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --LineCounter
 --RasterCounter
 --leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) & ADRESSE_mAstore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem(13 downto 8) & ADRESSE_maCurrent_mem(7 downto 0) & x"00";
-leds8_debug<=LineCounter & RasterCounter & x"000000";
+--leds8_debug<=LineCounter & RasterCounter & x"000000";
+--leds8_debug<=x"00ABCDEF00"; -- batman doesn't run
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
@@ -2541,6 +2544,11 @@ leds8_debug<=LineCounter & RasterCounter & x"000000";
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
 				end if;
+				if LineCounter=0 then
+					LineCounter_is0<=true;
+				else
+					LineCounter_is0<=false;
+				end if;
 				
 				if dispH='1' and dispV='1' then
 					--etat_rgb<=DO_READ;
@@ -2690,7 +2698,6 @@ end if;
 				-- CRTC section
 				if CRTC_type='0' then
 				
-					crtc_VSYNC<=crtc_VSYNC_mem;
 					-- skeleton switch for CRTC0 AI
     if hCC = R0Htot then
 		  --hCC = 0;

@@ -2188,128 +2188,6 @@ applicable agreement for further details.
 	(annotation_block (parameter)(rect 792 -184 974 -156))
 )
 (symbol
-	(rect 1808 384 2048 624)
-	(text "osd" (rect 5 0 22 12)(font "Arial" ))
-	(text "inst8" (rect 8 224 31 236)(font "Arial" ))
-	(port
-		(pt 0 32)
-		(input)
-		(text "pclk" (rect 0 0 20 12)(font "Arial" ))
-		(text "pclk" (rect 21 27 41 39)(font "Arial" ))
-		(line (pt 0 32)(pt 16 32))
-	)
-	(port
-		(pt 0 48)
-		(input)
-		(text "sck" (rect 0 0 17 12)(font "Arial" ))
-		(text "sck" (rect 21 43 38 55)(font "Arial" ))
-		(line (pt 0 48)(pt 16 48))
-	)
-	(port
-		(pt 0 64)
-		(input)
-		(text "ss" (rect 0 0 11 12)(font "Arial" ))
-		(text "ss" (rect 21 59 32 71)(font "Arial" ))
-		(line (pt 0 64)(pt 16 64))
-	)
-	(port
-		(pt 0 80)
-		(input)
-		(text "sdi" (rect 0 0 14 12)(font "Arial" ))
-		(text "sdi" (rect 21 75 35 87)(font "Arial" ))
-		(line (pt 0 80)(pt 16 80))
-	)
-	(port
-		(pt 0 96)
-		(input)
-		(text "red_in[5..0]" (rect 0 0 55 12)(font "Arial" ))
-		(text "red_in[5..0]" (rect 21 91 76 103)(font "Arial" ))
-		(line (pt 0 96)(pt 16 96)(line_width 3))
-	)
-	(port
-		(pt 0 112)
-		(input)
-		(text "green_in[5..0]" (rect 0 0 67 12)(font "Arial" ))
-		(text "green_in[5..0]" (rect 21 107 88 119)(font "Arial" ))
-		(line (pt 0 112)(pt 16 112)(line_width 3))
-	)
-	(port
-		(pt 0 128)
-		(input)
-		(text "blue_in[5..0]" (rect 0 0 60 12)(font "Arial" ))
-		(text "blue_in[5..0]" (rect 21 123 81 135)(font "Arial" ))
-		(line (pt 0 128)(pt 16 128)(line_width 3))
-	)
-	(port
-		(pt 0 144)
-		(input)
-		(text "hs_in" (rect 0 0 25 12)(font "Arial" ))
-		(text "hs_in" (rect 21 139 46 151)(font "Arial" ))
-		(line (pt 0 144)(pt 16 144))
-	)
-	(port
-		(pt 0 160)
-		(input)
-		(text "vs_in" (rect 0 0 27 12)(font "Arial" ))
-		(text "vs_in" (rect 21 155 48 167)(font "Arial" ))
-		(line (pt 0 160)(pt 16 160))
-	)
-	(port
-		(pt 0 176)
-		(input)
-		(text "screen_color[1..0]" (rect 0 0 88 12)(font "Arial" ))
-		(text "screen_color[1..0]" (rect 21 171 109 183)(font "Arial" ))
-		(line (pt 0 176)(pt 16 176)(line_width 3))
-	)
-	(port
-		(pt 0 192)
-		(input)
-		(text "leds8_debug[39..0]" (rect 0 0 93 12)(font "Arial" ))
-		(text "leds8_debug[39..0]" (rect 21 187 114 199)(font "Arial" ))
-		(line (pt 0 192)(pt 16 192)(line_width 3))
-	)
-	(port
-		(pt 240 32)
-		(output)
-		(text "red_out[5..0]" (rect 0 0 62 12)(font "Arial" ))
-		(text "red_out[5..0]" (rect 167 27 219 39)(font "Arial" ))
-		(line (pt 240 32)(pt 224 32)(line_width 3))
-	)
-	(port
-		(pt 240 48)
-		(output)
-		(text "green_out[5..0]" (rect 0 0 74 12)(font "Arial" ))
-		(text "green_out[5..0]" (rect 157 43 219 55)(font "Arial" ))
-		(line (pt 240 48)(pt 224 48)(line_width 3))
-	)
-	(port
-		(pt 240 64)
-		(output)
-		(text "blue_out[5..0]" (rect 0 0 67 12)(font "Arial" ))
-		(text "blue_out[5..0]" (rect 163 59 219 71)(font "Arial" ))
-		(line (pt 240 64)(pt 224 64)(line_width 3))
-	)
-	(parameter
-		"OSD_X_OFFSET"
-		"0000000000"
-		""
-		(type "PARAMETER_UNSIGNED_BIN")	)
-	(parameter
-		"OSD_Y_OFFSET"
-		"0000000000"
-		""
-		(type "PARAMETER_UNSIGNED_BIN")	)
-	(parameter
-		"OSD_COLOR"
-		"000"
-		""
-		(type "PARAMETER_UNSIGNED_BIN")	)
-	(drawing
-		(rectangle (rect 16 16 224 224))
-	)
-	(annotation_block (parameter)(rect 1840 648 2088 704))
-)
-(symbol
 	(rect -168 352 184 944)
 	(text "FPGAmstrad_amstrad_motherboard" (rect 5 0 182 12)(font "Arial" ))
 	(text "inst16" (rect 8 576 37 588)(font "Arial" ))
@@ -2761,13 +2639,6 @@ applicable agreement for further details.
 		(text "jacquie_done" (rect 278 491 331 503)(font "Arial" ))
 		(line (pt 352 496)(pt 336 496))
 	)
-	(port
-		(pt 352 512)
-		(output)
-		(text "leds8_debug[39..0]" (rect 0 0 93 12)(font "Arial" ))
-		(text "leds8_debug[39..0]" (rect 253 507 331 519)(font "Arial" ))
-		(line (pt 352 512)(pt 336 512)(line_width 3))
-	)
 	(parameter
 		"USE_AZ80"
 		"false"
@@ -2782,6 +2653,121 @@ applicable agreement for further details.
 		(rectangle (rect 16 16 336 576))
 	)
 	(annotation_block (parameter)(rect 168 288 336 330))
+)
+(symbol
+	(rect 1808 376 2040 584)
+	(text "osd" (rect 5 0 22 12)(font "Arial" ))
+	(text "inst8" (rect 8 192 31 204)(font "Arial" ))
+	(port
+		(pt 0 32)
+		(input)
+		(text "pclk" (rect 0 0 20 12)(font "Arial" ))
+		(text "pclk" (rect 21 27 41 39)(font "Arial" ))
+		(line (pt 0 32)(pt 16 32))
+	)
+	(port
+		(pt 0 48)
+		(input)
+		(text "sck" (rect 0 0 17 12)(font "Arial" ))
+		(text "sck" (rect 21 43 38 55)(font "Arial" ))
+		(line (pt 0 48)(pt 16 48))
+	)
+	(port
+		(pt 0 64)
+		(input)
+		(text "ss" (rect 0 0 11 12)(font "Arial" ))
+		(text "ss" (rect 21 59 32 71)(font "Arial" ))
+		(line (pt 0 64)(pt 16 64))
+	)
+	(port
+		(pt 0 80)
+		(input)
+		(text "sdi" (rect 0 0 14 12)(font "Arial" ))
+		(text "sdi" (rect 21 75 35 87)(font "Arial" ))
+		(line (pt 0 80)(pt 16 80))
+	)
+	(port
+		(pt 0 96)
+		(input)
+		(text "red_in[5..0]" (rect 0 0 55 12)(font "Arial" ))
+		(text "red_in[5..0]" (rect 21 91 76 103)(font "Arial" ))
+		(line (pt 0 96)(pt 16 96)(line_width 3))
+	)
+	(port
+		(pt 0 112)
+		(input)
+		(text "green_in[5..0]" (rect 0 0 67 12)(font "Arial" ))
+		(text "green_in[5..0]" (rect 21 107 88 119)(font "Arial" ))
+		(line (pt 0 112)(pt 16 112)(line_width 3))
+	)
+	(port
+		(pt 0 128)
+		(input)
+		(text "blue_in[5..0]" (rect 0 0 60 12)(font "Arial" ))
+		(text "blue_in[5..0]" (rect 21 123 81 135)(font "Arial" ))
+		(line (pt 0 128)(pt 16 128)(line_width 3))
+	)
+	(port
+		(pt 0 144)
+		(input)
+		(text "hs_in" (rect 0 0 25 12)(font "Arial" ))
+		(text "hs_in" (rect 21 139 46 151)(font "Arial" ))
+		(line (pt 0 144)(pt 16 144))
+	)
+	(port
+		(pt 0 160)
+		(input)
+		(text "vs_in" (rect 0 0 27 12)(font "Arial" ))
+		(text "vs_in" (rect 21 155 48 167)(font "Arial" ))
+		(line (pt 0 160)(pt 16 160))
+	)
+	(port
+		(pt 0 176)
+		(input)
+		(text "screen_color[1..0]" (rect 0 0 88 12)(font "Arial" ))
+		(text "screen_color[1..0]" (rect 21 171 109 183)(font "Arial" ))
+		(line (pt 0 176)(pt 16 176)(line_width 3))
+	)
+	(port
+		(pt 232 32)
+		(output)
+		(text "red_out[5..0]" (rect 0 0 62 12)(font "Arial" ))
+		(text "red_out[5..0]" (rect 159 27 211 39)(font "Arial" ))
+		(line (pt 232 32)(pt 216 32)(line_width 3))
+	)
+	(port
+		(pt 232 48)
+		(output)
+		(text "green_out[5..0]" (rect 0 0 74 12)(font "Arial" ))
+		(text "green_out[5..0]" (rect 149 43 211 55)(font "Arial" ))
+		(line (pt 232 48)(pt 216 48)(line_width 3))
+	)
+	(port
+		(pt 232 64)
+		(output)
+		(text "blue_out[5..0]" (rect 0 0 67 12)(font "Arial" ))
+		(text "blue_out[5..0]" (rect 155 59 211 71)(font "Arial" ))
+		(line (pt 232 64)(pt 216 64)(line_width 3))
+	)
+	(parameter
+		"OSD_X_OFFSET"
+		"0000000000"
+		""
+		(type "PARAMETER_UNSIGNED_BIN")	)
+	(parameter
+		"OSD_Y_OFFSET"
+		"0000000000"
+		""
+		(type "PARAMETER_UNSIGNED_BIN")	)
+	(parameter
+		"OSD_COLOR"
+		"000"
+		""
+		(type "PARAMETER_UNSIGNED_BIN")	)
+	(drawing
+		(rectangle (rect 16 16 216 192))
+	)
+	(annotation_block (parameter)(rect 1840 640 2088 696))
 )
 (connector
 	(pt -176 -40)
@@ -5168,113 +5154,159 @@ applicable agreement for further details.
 	(bus)
 )
 (connector
-	(pt 1216 416)
-	(pt 1216 448)
-)
-(connector
-	(pt 1744 560)
-	(pt 1744 416)
-)
-(connector
-	(pt 1744 416)
-	(pt 1808 416)
-)
-(connector
-	(pt 1320 432)
-	(pt 1808 432)
-)
-(connector
-	(pt 1216 448)
-	(pt 1808 448)
-)
-(connector
-	(pt 1344 464)
-	(pt 1808 464)
-)
-(connector
-	(pt 1320 952)
-	(pt 1320 432)
-)
-(connector
-	(pt 1344 944)
-	(pt 1344 464)
+	(pt 2248 416)
+	(pt 2240 416)
+	(bus)
 )
 (connector
 	(pt 1696 480)
-	(pt 1808 480)
+	(pt 1704 480)
 	(bus)
 )
 (connector
 	(pt 1696 496)
-	(pt 1808 496)
+	(pt 1712 496)
 	(bus)
 )
 (connector
 	(pt 1696 512)
-	(pt 1808 512)
+	(pt 1720 512)
 	(bus)
 )
 (connector
 	(pt 1696 528)
-	(pt 1808 528)
+	(pt 1728 528)
 )
 (connector
 	(pt 1696 544)
-	(pt 1808 544)
-)
-(connector
-	(pt 1776 288)
-	(pt 1776 560)
-	(bus)
-)
-(connector
-	(pt 1776 560)
-	(pt 1808 560)
-	(bus)
-)
-(connector
-	(pt 2248 416)
-	(pt 2048 416)
-	(bus)
-)
-(connector
-	(pt 2048 416)
-	(pt 2040 416)
-	(bus)
+	(pt 1736 544)
 )
 (connector
 	(pt 2248 432)
-	(pt 2048 432)
-	(bus)
-)
-(connector
-	(pt 2048 432)
-	(pt 2040 432)
+	(pt 2232 432)
 	(bus)
 )
 (connector
 	(pt 2248 448)
-	(pt 2048 448)
+	(pt 2224 448)
 	(bus)
 )
 (connector
-	(pt 2048 448)
-	(pt 2040 448)
+	(pt 1216 416)
+	(pt 1216 440)
+)
+(connector
+	(pt 1744 560)
+	(pt 1744 408)
+)
+(connector
+	(pt 1744 408)
+	(pt 1808 408)
+)
+(connector
+	(pt 1320 424)
+	(pt 1808 424)
+)
+(connector
+	(pt 1216 440)
+	(pt 1808 440)
+)
+(connector
+	(pt 1344 456)
+	(pt 1808 456)
+)
+(connector
+	(pt 1320 952)
+	(pt 1320 424)
+)
+(connector
+	(pt 1344 944)
+	(pt 1344 456)
+)
+(connector
+	(pt 2240 416)
+	(pt 2240 408)
 	(bus)
 )
 (connector
-	(pt 1808 576)
-	(pt 1776 576)
+	(pt 1704 480)
+	(pt 1704 472)
 	(bus)
 )
 (connector
-	(pt 1776 864)
-	(pt 1776 576)
+	(pt 1704 472)
+	(pt 1808 472)
 	(bus)
 )
 (connector
-	(pt 1776 864)
-	(pt 184 864)
+	(pt 1712 496)
+	(pt 1712 488)
+	(bus)
+)
+(connector
+	(pt 1712 488)
+	(pt 1808 488)
+	(bus)
+)
+(connector
+	(pt 1720 512)
+	(pt 1720 504)
+	(bus)
+)
+(connector
+	(pt 1720 504)
+	(pt 1808 504)
+	(bus)
+)
+(connector
+	(pt 1728 528)
+	(pt 1728 520)
+)
+(connector
+	(pt 1728 520)
+	(pt 1808 520)
+)
+(connector
+	(pt 1736 544)
+	(pt 1736 536)
+)
+(connector
+	(pt 1736 536)
+	(pt 1808 536)
+)
+(connector
+	(pt 1776 288)
+	(pt 1776 552)
+	(bus)
+)
+(connector
+	(pt 1776 552)
+	(pt 1808 552)
+	(bus)
+)
+(connector
+	(pt 2232 432)
+	(pt 2232 424)
+	(bus)
+)
+(connector
+	(pt 2224 448)
+	(pt 2224 440)
+	(bus)
+)
+(connector
+	(pt 2040 408)
+	(pt 2240 408)
+	(bus)
+)
+(connector
+	(pt 2040 424)
+	(pt 2232 424)
+	(bus)
+)
+(connector
+	(pt 2040 440)
+	(pt 2224 440)
 	(bus)
 )
 (junction (pt -512 40))
@@ -5288,7 +5320,4 @@ applicable agreement for further details.
 (junction (pt -208 1016))
 (junction (pt 1920 224))
 (junction (pt 1328 288))
-(junction (pt 2048 416))
-(junction (pt 2048 432))
-(junction (pt 2048 448))
 (text "LED=0 on; LED=1 off" (rect 2784 224 2902 238)(font "Arial" (font_size 8)))

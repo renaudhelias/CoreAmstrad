@@ -404,8 +404,8 @@ entity FPGAmstrad_amstrad_motherboard is
 			  jacquie_byte : in STD_LOGIC_VECTOR(8-1 downto 0); -- data byte
 			  jacquie_do : in STD_LOGIC;
 			  jacquie_done : out STD_LOGIC;
-			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
-			  leds8_debug : out std_logic_vector (39 downto 0)
+			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0)
+			  --leds8_debug : out std_logic_vector (39 downto 0)
 			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
@@ -566,8 +566,8 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 				 GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
 				 BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 				 HSYNC_out : out STD_logic;
-				 VSYNC_out : out STD_logic;
-				 leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+				 VSYNC_out : out STD_logic
+				-- leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 				 );
    end component;
    
@@ -896,8 +896,8 @@ end generate;
 					 GREEN_out=>GREEN_out,
 					 BLUE_out=>BLUE_out,
 					 HSYNC_out=>HSYNC_out,
-					 VSYNC_out=>VSYNC_out,
-					 leds8_debug=>leds8_debug
+					 VSYNC_out=>VSYNC_out
+					 --leds8_debug=>leds8_debug
 					 );
    
    MyROMSelect : ROMselect

@@ -2639,6 +2639,13 @@ applicable agreement for further details.
 		(text "jacquie_done" (rect 278 491 331 503)(font "Arial" ))
 		(line (pt 352 496)(pt 336 496))
 	)
+	(port
+		(pt 352 512)
+		(output)
+		(text "leds8_debug[39..0]" (rect 0 0 93 12)(font "Arial" ))
+		(text "leds8_debug[39..0]" (rect 253 507 331 519)(font "Arial" ))
+		(line (pt 352 512)(pt 336 512)(line_width 3))
+	)
 	(parameter
 		"USE_AZ80"
 		"false"
@@ -2655,9 +2662,9 @@ applicable agreement for further details.
 	(annotation_block (parameter)(rect 168 288 336 330))
 )
 (symbol
-	(rect 1808 376 2040 584)
+	(rect 1808 376 2048 616)
 	(text "osd" (rect 5 0 22 12)(font "Arial" ))
-	(text "inst8" (rect 8 192 31 204)(font "Arial" ))
+	(text "inst8" (rect 8 224 31 236)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -2729,25 +2736,32 @@ applicable agreement for further details.
 		(line (pt 0 176)(pt 16 176)(line_width 3))
 	)
 	(port
-		(pt 232 32)
+		(pt 0 192)
+		(input)
+		(text "leds8_debug[39..0]" (rect 0 0 93 12)(font "Arial" ))
+		(text "leds8_debug[39..0]" (rect 21 187 114 199)(font "Arial" ))
+		(line (pt 0 192)(pt 16 192)(line_width 3))
+	)
+	(port
+		(pt 240 32)
 		(output)
 		(text "red_out[5..0]" (rect 0 0 62 12)(font "Arial" ))
-		(text "red_out[5..0]" (rect 159 27 211 39)(font "Arial" ))
-		(line (pt 232 32)(pt 216 32)(line_width 3))
+		(text "red_out[5..0]" (rect 167 27 219 39)(font "Arial" ))
+		(line (pt 240 32)(pt 224 32)(line_width 3))
 	)
 	(port
-		(pt 232 48)
+		(pt 240 48)
 		(output)
 		(text "green_out[5..0]" (rect 0 0 74 12)(font "Arial" ))
-		(text "green_out[5..0]" (rect 149 43 211 55)(font "Arial" ))
-		(line (pt 232 48)(pt 216 48)(line_width 3))
+		(text "green_out[5..0]" (rect 157 43 219 55)(font "Arial" ))
+		(line (pt 240 48)(pt 224 48)(line_width 3))
 	)
 	(port
-		(pt 232 64)
+		(pt 240 64)
 		(output)
 		(text "blue_out[5..0]" (rect 0 0 67 12)(font "Arial" ))
-		(text "blue_out[5..0]" (rect 155 59 211 71)(font "Arial" ))
-		(line (pt 232 64)(pt 216 64)(line_width 3))
+		(text "blue_out[5..0]" (rect 163 59 219 71)(font "Arial" ))
+		(line (pt 240 64)(pt 224 64)(line_width 3))
 	)
 	(parameter
 		"OSD_X_OFFSET"
@@ -2765,7 +2779,7 @@ applicable agreement for further details.
 		""
 		(type "PARAMETER_UNSIGNED_BIN")	)
 	(drawing
-		(rectangle (rect 16 16 216 192))
+		(rectangle (rect 16 16 224 224))
 	)
 	(annotation_block (parameter)(rect 1840 640 2088 696))
 )
@@ -5295,18 +5309,48 @@ applicable agreement for further details.
 	(bus)
 )
 (connector
-	(pt 2040 408)
 	(pt 2240 408)
+	(pt 2048 408)
 	(bus)
 )
 (connector
-	(pt 2040 424)
+	(pt 2048 408)
+	(pt 2040 408)
+	(bus)
+)
+(connector
 	(pt 2232 424)
+	(pt 2048 424)
 	(bus)
 )
 (connector
-	(pt 2040 440)
+	(pt 2048 424)
+	(pt 2040 424)
+	(bus)
+)
+(connector
 	(pt 2224 440)
+	(pt 2048 440)
+	(bus)
+)
+(connector
+	(pt 2048 440)
+	(pt 2040 440)
+	(bus)
+)
+(connector
+	(pt 1808 568)
+	(pt 1776 568)
+	(bus)
+)
+(connector
+	(pt 1776 864)
+	(pt 184 864)
+	(bus)
+)
+(connector
+	(pt 1776 568)
+	(pt 1776 864)
 	(bus)
 )
 (junction (pt -512 40))
@@ -5320,4 +5364,7 @@ applicable agreement for further details.
 (junction (pt -208 1016))
 (junction (pt 1920 224))
 (junction (pt 1328 288))
+(junction (pt 2048 408))
+(junction (pt 2048 424))
+(junction (pt 2048 440))
 (text "LED=0 on; LED=1 off" (rect 2784 224 2902 238)(font "Arial" (font_size 8)))

@@ -144,8 +144,8 @@ entity simple_GateArrayInterrupt is
            GREEN_out : out  STD_LOGIC_VECTOR (5 downto 0);
            BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 			  HSYNC_out : out STD_logic;
-			  VSYNC_out : out STD_logic
-			  --leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+			  VSYNC_out : out STD_logic;
+			  leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
 			  );
 end simple_GateArrayInterrupt;
 
@@ -2375,7 +2375,8 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 
 --coreH3H1H2.rbf
 --leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0) & LineCounter & RasterCounter & MAStoreSource;
-
+--core.rbf
+leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter  & x"00";
 
 
 				--setEvents() HSync strange behaviour : part 1
@@ -2714,14 +2715,14 @@ end if;
 				if CRTC_type='0' then
 				
 					-- skeleton switch for CRTC0 AI
-    if hCC = R0Htot then
+    if hCC = registres2(0) then --R0Htot
 		  --hCC = 0;
         hCC := x"00";
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_END_RASTER_9 =>
 ----------------------------------------------------------------------------
-	if RasterCounter = R9Rmax then
+	if RasterCounter = registres2(9)then --R9Rmax 
         RasterCounter := x"00";
         crtc0_state := STATE_END_ROW_4;
         ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
@@ -2734,21 +2735,21 @@ when STATE_END_RASTER_9 =>
 when STATE_END_ROW_4 =>
 ----------------------------------------------------------------------------
 
-    if LineCounter = R6VDisp then
+    if LineCounter = registres2(6) then --R6VDisp
         dispV := '0';
     end if;
-    if LineCounter = R7VSyncPos then
+    if LineCounter = registres2(7) then --R7VSyncPos
         crtc_vsync <= '1';
         VSyncCount := x"0";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
-	 elsif LineCounter = R3Vwidth then
+	 elsif LineCounter = registres2(3) then --R3Vwidth
 		   etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:="0000";	
     end if;
 
-    if LineCounter = R4VTot then
-        if R5VtotAdjust /= x"00" then
+    if LineCounter = registres2(4) then --R4VTot
+        if registres2(5) /= x"00" then --R5VtotAdjust 
             crtc0_state := STATE_VADJUST_5;
             VAdjustCounter := x"00";
             LineCounter := x"00";
@@ -2771,7 +2772,7 @@ when STATE_VADJUST_5 =>
     --if hCC = R0Htot then
     --    hCC := x"00";
         VAdjustCounter := VAdjustCounter + 1;
-        if VAdjustCounter >= R5VtotAdjust then
+        if VAdjustCounter >= registres2(5) then --R5VtotAdjust
             dispV := '1';
 				--check maRegister que ici ???
             ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;

@@ -1550,13 +1550,7 @@ others=>0);
 	signal prefix_DD_FD_CB:boolean:=false;
 	
 	type registres_type is array(0 to 17) of std_logic_vector(7 downto 0);
-	signal registres2:registres_type:= (others=>(others=>'0'));
 	
-	-- H1 : 1. Add a counter
-	signal VSyncIntDelay : integer range 0 to 2 := 0;
-	signal VSYNC_prev    : std_logic := '0';
-
-	-- H2
 	signal ADRESSE_maRegister_mem:STD_LOGIC_VECTOR(13 downto 0):=(others=>'0');
 		
 begin
@@ -1577,7 +1571,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis Ã‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1794,7 +1788,6 @@ ctrcConfig_process:process(reset,nCLK4_1) is
 	--Lorsque C0 passe 0, diffrents compteurs sont mis  jour (C4, C5 , C9, ).  
 	--Le compteur C0 est aussi compar R1 (gestion du border/pointeur vido) et R2 (gestion 
 	--HSYNC).   
-	--variable registres2:registres_type := (others=>(others=>'0'));
 	variable halfR0_mem:std_logic_vector(7 downto 0);
 	variable ink:STD_LOGIC_VECTOR(3 downto 0);
 	variable border_ink:STD_LOGIC;
@@ -1828,43 +1821,25 @@ begin
 		
 		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
 		-- Seascape.dsk (delay of WRITE REGISTER)
---if C0_is_zero then
---	registres2:=registres;
-registres2<=registres;
 -- 4 5 6 7 9
 --leds8_debug<=registres(4) & registres(5) & registres(6) & registres(7) & registres(9);
 
 --end if;
 		case reg_select is
 			when 0=>
-				if crtc_type='1' then
-					R0Htot<=registres(0);
-				end if;
+				R0Htot<=registres(0);
 				--hChars = reg[0] + 1;
 				--halfR0 = hChars >> 1;
-				if crtc_type='1' then
-					halfR0_mem:=registres(0)+1;
-					halfR0<="0" & halfR0_mem(7 downto 1);
-				elsif CRTC_TYPE='0' then
-					halfR0_mem:=registres(0)+1;
-					halfR0<="0" & halfR0_mem(7 downto 1);
-				end if;
-			when 1=> --copilot
-				if crtc_type='1' then
-					R1Hdisp<=registres(1);
-				end if;
-			when 2=> --copilot
-				if crtc_type='1' then
-					R2Hsyncpos<=registres(2);
-				end if;
+				halfR0_mem:=registres(0)+1;
+				halfR0<="0" & halfR0_mem(7 downto 1);
+			when 1=>
+				R1Hdisp<=registres(1);
+			when 2=>
+				R2Hsyncpos<=registres(2);
 			when 3=>
 -- following DataSheet and Arnold emulator (Arnold says it exists a conversion table HSYNC crtc.c.GA_HSyncWidth)
 				--hSyncWidth = value & 0x0f;
-				if crtc_type='1' then
-					R3Hwidth<=registres(3)(3 downto 0); -- DataSheet
-				else
-					R3Hwidth<=registres(3)(3 downto 0); -- DataSheet
-				end if;
+				R3Hwidth<=registres(3)(3 downto 0); -- DataSheet
 				--R8Vwidth<=conv_std_logic_vector(NB_LINEH_BY_VSYNC,5);-- (24+1) using Arnold formula
 -- Arnold formula ctrct.c.MONITOR_VSYNC_COUNT "01111";
 -- Arkanoid does use width VSYNC while hurting a monster or firing with bonus gun
@@ -1878,7 +1853,7 @@ registres2<=registres;
 					--CRTC1 MC6845/MC6845R/UM6845R have a fixed Vertical Sync Width of 16 scanlines.
 					--vSyncWidth = 0;
 					R3Vwidth<=x"0"; --registres(3)(6 downto 4) & "0";
-				else --if C0_is_zero then
+				else
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
 					R3Vwidth<=registres(3)(7 downto 4);
@@ -1892,23 +1867,15 @@ registres2<=registres;
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligneÂ -ligne possible (R9 = R4 =0 ) >>oui<<
-				if crtc_type='1' then
-					R4Vtot<=registres(4) and x"7f";
-				end if;
+				-- Rupture ligneÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
+				R4Vtot<=registres(4) and x"7f";
 			when 5=>
-				if crtc_type='1' then
-					R5VtotAdjust<=registres(5) and x"1f";
-				end if;
-			when 6=> --copilot
+				R5VtotAdjust<=registres(5) and x"1f";
+			when 6=>
 				--The DISPTMG (Activation du split-border) can be forced using R8 (DISPTMG Skew) on type 0,3 and 4 or by setting R6=0 on type 1.
-				if crtc_type='1' then
-					R6Vdisp<=registres(6) and x"7f";
-				end if;
-			when 7=> --copilot
-				if crtc_type='1' then
-					R7Vsyncpos<=registres(7) and x"7f";
-				end if;
+				R6Vdisp<=registres(6) and x"7f";
+			when 7=>
+				R7Vsyncpos<=registres(7) and x"7f";
 			when 8=>-- and x"f3"; and x"03" (type 1)
 				-- interlace & skew
 				-- arnoldemu's crtc.c
@@ -1949,12 +1916,7 @@ registres2<=registres;
 			when 9=> -- max raster adress
 				-- Validation des registres 9 et 4 aprs sinon)
 				--maxRaster = value | interlaceVideo;
-				if crtc_type='1' then
-					R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
-				elsif CRTC_TYPE='0' then
-					-- registres2:=registres;
-					R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
-				end if;
+				R9Rmax<=(registres(9) and x"1f") or "0000000" & interlaceVideo;
 			when 10=>NULL; -- and x"7f";
 				-- cursor start raster 
 			when 11=>NULL; -- and x"1f";
@@ -2302,13 +2264,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			bvram_W<='0';
 	--it's Z80 time !
 		elsif rising_edge(nCLK4_1) then
-		-- horizontal section
-		-- H1 : 2. Detect VSYNC rising edge
-		VSYNC_prev <= VSYNC;
-		if (VSYNC_prev = '0') and (VSYNC = '1') then
-			VSyncIntDelay <= 2;
-		end if;
-		
+		-- horizontal section		
 		if compteur1MHz=SOUND_OFFSET then
 			SOUND_CLK<='0';
 		else 
@@ -2348,7 +2304,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --R4
 --R5
 --MA high byte
---leds8_debug<=LineCounter & RasterCounter & registres2(4) & registres2(5) & "00" & ADRESSE_MAcurrent_mem(13 downto 8);
+--leds8_debug<=LineCounter & RasterCounter & x"0000" & "00" & ADRESSE_MAcurrent_mem(13 downto 8);
 
 --coreM.rbf
 --MAStore high
@@ -2390,7 +2346,7 @@ leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & Raster
 				
 				
 				if (CRTC_TYPE='0' and ((frame_oddEven='1' and hCC = halfR0)
-				or (frame_oddEven='0' and hCC+1=registres2(2) and registres2(3)(7 downto 4)/=x"0")))
+				or (frame_oddEven='0' and hCC+1=R2Hsyncpos and R3Vwidth/=x"0")))
 				
 				or
 				
@@ -2417,7 +2373,7 @@ leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & Raster
 					--hSyncCount = (hSyncCount + 1) & 0x0f;
 					hSyncCount:=hSyncCount+1;
 					--if (hSyncCount == hSyncWidth) {
-					if (CRTC_TYPE='0' and hSyncCount=registres2(3)(3 downto 0)) or (CRTC_TYPE='1' and hSyncCount=R3Hwidth) then
+					if hSyncCount=R3Hwidth then
 						--inHSync = false;
 						etat_hsync:=DO_NOTHING;
 						--listener.hSyncEnd();
@@ -2448,9 +2404,8 @@ leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & Raster
 					--checkVSync();
 					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
 					--WakeUp!
-					--if (CRTC_TYPE='0' and RasterCounter=0 and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then -- and etat_vsync=DO_NOTHING then
 					-- on CRTC type 0 and 1, Vsync can be triggered on any line of the char.
-					if (CRTC_TYPE='0' and LineCounter=registres2(7)) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
+					if (CRTC_TYPE='0' and LineCounter=R7Vsyncpos) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
 					--if LineCounter=R7Vsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
@@ -2463,7 +2418,7 @@ leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & Raster
 --vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
 					elsif etat_vsync=DO_VSYNC then -- and not(R5VtotAdjust_do) then
 						vSyncCount:=vSyncCount+1;
-						if (CRTC_TYPE='0' and vSyncCount=registres2(3)(7 downto 4)) or (CRTC_TYPE='1' and vSyncCount=R3Vwidth) then -- following Grim (forum)
+						if vSyncCount=R3Vwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
 							etat_monitor_vsync:="0000";
 --crtc_VSYNC<=DO_NOTHING;
@@ -2483,22 +2438,14 @@ leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & Raster
 				elsif hCC = 0 then -- and LineCounter<R6Vdisp*(R9Rmax+1) then
 					dispH_skew0:='1';
 					--hDispStart() (redondance avec hCC=R0Htot (hCC:=0) !) : donc ne rien faire ici...
-				elsif (crtc_type='0' and hCC = registres2(1)) or (crtc_type='1' and hCC = R1Hdisp) then -- or (crtc_type='0' and hCC=R1Hdisp+Skew) then
+				elsif hCC = R1Hdisp then -- or (crtc_type='0' and hCC=R1Hdisp+Skew) then
 					dispH_skew0:='0';
 					
 						--if ((getRA() | interlaceVideo) == maxRaster) {
 						if (RasterCounter = R9Rmax) then
-							if crtc_type='1' then
-								--maStore = (maStore + reg[1]) & 0x3fff;
-								--0x3fff est ok : ADRESSE_maStore_mem(13:0)
-								ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
-							else
-								--if (CRTC_InternalState.HCount == CRTC_InternalState.HEnd) -- c'est HDisp ce HEnd en fait...
-								--ADRESSE_maStore_mem:=ADRESSE_maStore_mem + registres2(1) + Skew;
-								-- coreH3.rbf
-								--ADRESSE_maStore_mem:=ADRESSE_maCurrent_mem; -- + 1;
-								ADRESSE_maStore_mem := ADRESSE_maStore_mem + registres2(1);
-							end if;
+							--maStore = (maStore + reg[1]) & 0x3fff;
+							--0x3fff est ok : ADRESSE_maStore_mem(13:0)
+							ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
 						end if;
 
 					
@@ -2550,7 +2497,7 @@ leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & Raster
 					dispV:='1';
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
-				elsif crtc_type='0' and LineCounter=registres2(6) and RasterCounter=0 then
+				elsif crtc_type='0' and LineCounter=R6Vdisp and RasterCounter=0 then
 					--redondance ici de cas newFrame() (d ailleur)
 					dispV:='0';
 				end if;
@@ -2679,11 +2626,7 @@ if vram_vertical_counter<VRAM_VDsp then
 	if dispH='1' and (vram_horizontal_counter=0 or last_dispH='0') then
 		-- big capture.
 		border_begin_mem:=conv_std_logic_vector(vram_horizontal_counter,8);
-		if CRTC_TYPE='0' then
-			R1Hdisp_mem:=registres2(1);
-		elsif CRTC_TYPE='1' then
-			R1Hdisp_mem:=R1Hdisp;
-		end if;
+		R1Hdisp_mem:=R1Hdisp;
 		last_dispH:='1';
 	end if;
 else
@@ -2715,14 +2658,14 @@ end if;
 				if CRTC_type='0' then
 				
 					-- skeleton switch for CRTC0 AI
-    if hCC = registres2(0) then --R0Htot
-		  --hCC = 0;
+    if hCC = R0Htot then
+	--hCC = 0;
         hCC := x"00";
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_END_RASTER_9 =>
 ----------------------------------------------------------------------------
-	if RasterCounter = registres2(9)then --R9Rmax 
+    if RasterCounter = R9Rmax then
         RasterCounter := x"00";
         crtc0_state := STATE_END_ROW_4;
         ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
@@ -2735,21 +2678,21 @@ when STATE_END_RASTER_9 =>
 when STATE_END_ROW_4 =>
 ----------------------------------------------------------------------------
 
-    if LineCounter = registres2(6) then --R6VDisp
+    if LineCounter = R6VDisp then
         dispV := '0';
     end if;
-    if LineCounter = registres2(7) then --R7VSyncPos
+    if LineCounter = R7VSyncPos then
         crtc_vsync <= '1';
         VSyncCount := x"0";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
-	 elsif LineCounter = registres2(3) then --R3Vwidth
+    elsif LineCounter = R3Vwidth then
 		   etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:="0000";	
     end if;
 
-    if LineCounter = registres2(4) then --R4VTot
-        if registres2(5) /= x"00" then --R5VtotAdjust 
+    if LineCounter = R4VTot then
+        if R5VtotAdjust /= x"00" then 
             crtc0_state := STATE_VADJUST_5;
             VAdjustCounter := x"00";
             LineCounter := x"00";
@@ -2758,7 +2701,7 @@ when STATE_END_ROW_4 =>
             dispV := '1';
             -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
             ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
-				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+	    ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
             crtc0_state := STATE_END_RASTER_9;
         end if;
     else
@@ -2769,19 +2712,13 @@ when STATE_END_ROW_4 =>
 ----------------------------------------------------------------------------
 when STATE_VADJUST_5 =>
 ----------------------------------------------------------------------------
-    --if hCC = R0Htot then
-    --    hCC := x"00";
         VAdjustCounter := VAdjustCounter + 1;
-        if VAdjustCounter >= registres2(5) then --R5VtotAdjust
+        if VAdjustCounter >= R5VtotAdjust then
             dispV := '1';
-				--check maRegister que ici ???
             ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
             ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
             crtc0_state := STATE_END_RASTER_9;
         end if;
-    --else
-    --    hCC := hCC + 1;
-    --end if;
 when others=>NULL;
 end case;
 
@@ -2798,7 +2735,7 @@ end case;
 
 
 
-				if (crtc_type='0' and hCC=registres2(0)) or (crtc_type='1' and hCC=R0Htot) then -- tot-1 ok
+				if hCC=R0Htot then -- tot-1 ok
 					--hCC = 0;
 					hCC:=(others=>'0');
 					
@@ -2811,23 +2748,6 @@ end case;
 					if ((RasterCounter = R9Rmax) and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
 						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust) then
 
---					if 
---					
---					(CRTC_TYPE='0' and (((RasterCounter or "0000000" & interlaceVideo)=registres2(9) and LineCounter=registres2(4) and registre2(5)=0 and not(registres2(5)) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=registres2(5)))))
---					
---					or
---					
---					(CRTC_TYPE='1' and (((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do)) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust))) then
---					if (CRTC_TYPE='0' and ((RasterCounter or "0000000" & interlaceVideo)=registres2(9) and LineCounter=registres2(4) and registres2(5)=0 and not(R5VtotAdjust_do) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust)))
---					
---					or
---					
---					(CRTC_TYPE='1' and ((RasterCounter or "0000000" & interlaceVideo)=R9Rmax and LineCounter=R4Vtot and R5VtotAdjust=0 and not(R5VtotAdjust_do) -- tot-1 ok ok
---						or (R5VtotAdjust_do and R5VtotAdjust_mem=R5VtotAdjust)))
---						then
 						-- on a fini R5VtotAdjust (ou sinon on a eu un R4Vtot fini sans R5VtotAdjust)
 							--C0_is_zero<=true;
 							R5VtotAdjust_do:=false;
@@ -2845,7 +2765,7 @@ end case;
 							--updateScreen()
 							--ma = maBase = ADRESSE_maRegister;
 							--maCurrent = maStore = maRegister;
-							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister_mem(13 downto 0);
 							LineCounter:=(others=>'0');
 							ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
@@ -2859,7 +2779,7 @@ end case;
 						--RasterCounter = (frame & interlaceVideo) & 0x07;
 						RasterCounter:="0000000" & frame_oddEven and "0000000" & interlaceVideo; --(others=>'0');
 						-- scanStart() : maBase = (maBase + reg[1]) & 0x3fff;
-						if (CRTC_TYPE='0' and LineCounter=registres2(4) and not(R5VtotAdjust_do)) or (CRTC_TYPE='1' and LineCounter=R4Vtot and not(R5VtotAdjust_do)) then
+						if LineCounter=R4Vtot and not(R5VtotAdjust_do) then
 							--if (interlace && frame == 0) {
 							--	vtAdj++;
 							--}
@@ -2877,7 +2797,7 @@ end case;
 						--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 
 						--hDispStart()
-						--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+						--maCurrent = maStore & 0x03fff; (cas 1 et 2 1/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 						--} else if (vcc && -- if (vtAdj == 0 || (CRTCType == 1)) { -- "vcc" est un boolean ici (un R9Rmax atteind)
 						--if (vcc && vtAdj == 0) { -- "vcc" est un boolean ici (un R9Rmax atteind)
@@ -2900,11 +2820,11 @@ end case;
 							--When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0. 
 							--updateScreen()
 							--maCurrent = maStore = maRegister;
-							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
+							--Validation de l'offset aprÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨s reprogrammation des registres 12 et 13
 							ADRESSE_maStore_mem:=ADRESSE_maRegister_mem(13 downto 0);
 						end if;
 						--hDispStart()
-						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
+						--maCurrent = maStore & 0x03fff; (cas 1 et 2 2/2) -- cas 1 hCC=0 cas 2 hDispStart() -- hDispStart() est lancÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lors vDisp dans JavaCPC
 						ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
 					end if;
 					
@@ -3123,23 +3043,9 @@ end if;
 			
 			--The GA has a counter that increments on every falling edge of the CRTC generated HSYNC signal.
 			--hSyncEnd()
-			-- H1 4. Generate IRQ on HSYNC #2
-			-- H1 Locate the code handling HSYNC end. Add:
-			-- if HSYNC_end = '1' then
 			if etat_hsync_old=DO_HSYNC and hsync_int=DO_NOTHING then
 
-				-- H1
-				-- H1 if CRTC_TYPE='0' and VSyncIntDelay > 0 then
-				if CRTC_TYPE='0' and InterruptSyncCount > 0 then
-					-- remarque - cyclique : integer range 0 to 2
-					InterruptSyncCount := InterruptSyncCount - 1;
-					if InterruptSyncCount = 1 then
-						if conv_integer(InterruptLineCount) >= 32 then
-							int <= '1';
-							InterruptLineCount := (others=>'0');
-						end if;
-					end if;
-				end if;
+				
 
 			
 			
@@ -3147,21 +3053,13 @@ end if;
 			-- It triggers 6 interrupts per frame http://pushnpop.net/topic-452-1.html
 				-- JavaCPC interrupt style...
 				--if (++InterruptLineCount == 52) {
-				if CRTC_TYPE='1' then
-					InterruptLineCount:=InterruptLineCount+1;
-				end if;
-				if CRTC_TYPE='1' and conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
+				InterruptLineCount:=InterruptLineCount+1;
+				if conv_integer(InterruptLineCount)=52 then -- Asphalt ? -- 52="110100"
 					--Once this counter reaches 52, the GA raises the INT signal and resets the counter to 0.
-					--InterruptLineCount = 0;
-					-- H1 3. Remove immediate IRQ on VSYNC
-					-- H1 IRQ is no longer generated immediately on VSYNC start.
-					-- H1 comment : interrupt_counter <= 0;
-					InterruptLineCount:=(others=>'0');
+					InterruptLineCount := (others=>'0');
 					--GateArray_Interrupt();
-					-- H1 comment : interrupt_pending <= '1';
 					int<='1';
 				end if;
-				--InterruptSyncCount:=2;
 				--if (InterruptSyncCount > 0 && --InterruptSyncCount == 0) {
 				if InterruptSyncCount > 0 then
 					InterruptSyncCount := InterruptSyncCount - 1;
@@ -3170,8 +3068,7 @@ end if;
 						if conv_integer(InterruptLineCount)>=32 then
 							int<='1';
 						end if;
-						--InterruptLineCount = 0;
-						InterruptLineCount:=(others=>'0');
+						InterruptLineCount := (others=>'0');
 					end if;
 				end if;
 				

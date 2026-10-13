@@ -2332,7 +2332,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --coreH3H1H2.rbf
 --leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0) & LineCounter & RasterCounter & MAStoreSource;
 --core.rbf
-leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter  & x"00";
+leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
 
 
 				--setEvents() HSync strange behaviour : part 1
@@ -2697,7 +2697,7 @@ when STATE_END_ROW_4 =>
 			etat_monitor_vsync:="0000";	
     end if;
 
-    if LineCounter = R4VTot then
+    if LineCounter = R4VTot + 1 then
         if R5VtotAdjust /= x"00" then 
             crtc0_state := STATE_VADJUST_5;
             VAdjustCounter := x"00";

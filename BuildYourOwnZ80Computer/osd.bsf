@@ -96,8 +96,8 @@ applicable agreement for further details.
 	(port
 		(pt 0 192)
 		(input)
-		(text "leds8_debug[39..0]" (rect 0 0 74 12)(font "Arial" ))
-		(text "leds8_debug[39..0]" (rect 21 187 95 199)(font "Arial" ))
+		(text "leds8_debug[119..0]" (rect 0 0 76 12)(font "Arial" ))
+		(text "leds8_debug[119..0]" (rect 21 187 97 199)(font "Arial" ))
 		(line (pt 0 192)(pt 16 192)(line_width 3))
 	)
 	(port

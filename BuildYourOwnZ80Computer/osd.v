@@ -46,8 +46,9 @@ module osd (
 	//input [3:0] leds4,
 	//input [2:0] leds3,
 	//input       leds1,
-	
-	input [39:0] leds8_debug,
+	//copilot
+	input [119:0] leds8_debug,
+	//input [39:0] leds8_debug,
 	//input [19:0] leds8_debug1,
 	//input [19:0] leds8_debug2,
 	
@@ -231,7 +232,8 @@ wire [2:0] osd_color = OSD_COLOR;
 //assign green_out = !osd_de?green_in:{osd_pixel, osd_pixel, osd_color[1], green_in[5:3]};
 //assign blue_out  = !osd_de?blue_in: {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
 
-wire [6:0] segment [9:0];
+//wire [6:0] segment [9:0];
+wire [6:0] segment [29:0];
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(3'b000 & leds_mouse_data[16]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds_mouse_data[15:12]),.segment(segment[1]));
@@ -282,16 +284,40 @@ wire [6:0] segment [9:0];
 //osd_HEXA_7SEG my7segConverter8(.halfByte(screen_vga),.segment(segment[8]));
 //osd_HEXA_7SEG my7segConverter9(.halfByte(screen_color),.segment(segment[9]));
 
-osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug[39:36]),.segment(segment[0]));
-osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug[35:32]),.segment(segment[1]));
-osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug[31:28]),.segment(segment[2]));
-osd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug[27:24]),.segment(segment[3]));
-osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug[23:20]),.segment(segment[4]));
-osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug[19:16]),.segment(segment[5]));
-osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug[15:12]),.segment(segment[6]));
-osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug[11:8]),.segment(segment[7]));
-osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug[7:4]),.segment(segment[8]));
-osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug[3:0]),.segment(segment[9]));
+//osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug[39:36]),.segment(segment[0]));
+//osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug[35:32]),.segment(segment[1]));
+//osd_HEXA_7SEG my7segConverter2(.halfByte(leds8_debug[31:28]),.segment(segment[2]));
+//vosd_HEXA_7SEG my7segConverter3(.halfByte(leds8_debug[27:24]),.segment(segment[3]));
+//osd_HEXA_7SEG my7segConverter4(.halfByte(leds8_debug[23:20]),.segment(segment[4]));
+//osd_HEXA_7SEG my7segConverter5(.halfByte(leds8_debug[19:16]),.segment(segment[5]));
+//osd_HEXA_7SEG my7segConverter6(.halfByte(leds8_debug[15:12]),.segment(segment[6]));
+//osd_HEXA_7SEG my7segConverter7(.halfByte(leds8_debug[11:8]),.segment(segment[7]));
+//osd_HEXA_7SEG my7segConverter8(.halfByte(leds8_debug[7:4]),.segment(segment[8]));
+//osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug[3:0]),.segment(segment[9]));
+//copilot
+genvar g;
+generate
+    for(g=0; g<30; g=g+1)
+    begin : GEN_HEX
+        osd_HEXA_7SEG conv(
+            .halfByte(leds8_debug[119-(g*4) -: 4]),
+            .segment(segment[g])
+        );
+    end
+endgenerate
+//copilot plus tards
+genvar d;
+generate
+    for(d=0; d<30; d=d+1)
+    begin : GEN_DISP
+        osd_7SEG disp(
+            .segment(segment[d]),
+            .h(matrice_h[d]),
+            .v(matrice_v[d]),
+            .pixel(matrice_pixel[d])
+        );
+    end
+endgenerate
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(leds8_debug1[19:16]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds8_debug1[15:12]),.segment(segment[1]));
@@ -317,23 +343,31 @@ osd_HEXA_7SEG my7segConverter9(.halfByte(leds8_debug[3:0]),.segment(segment[9]))
 
 
 
-wire matrice_pixel [9:0];
-reg [1:0] matrice_h [9:0];
-reg [2:0] matrice_v [9:0];
-osd_7SEG my7segDisplayer0(.segment(segment[0]), .h(matrice_h[0]), .v(matrice_v[0]), .pixel(matrice_pixel[0]) ); 
-osd_7SEG my7segDisplayer1(.segment(segment[1]), .h(matrice_h[1]), .v(matrice_v[1]), .pixel(matrice_pixel[1]) ); 
-osd_7SEG my7segDisplayer2(.segment(segment[2]), .h(matrice_h[2]), .v(matrice_v[2]), .pixel(matrice_pixel[2]) ); 
-osd_7SEG my7segDisplayer3(.segment(segment[3]), .h(matrice_h[3]), .v(matrice_v[3]), .pixel(matrice_pixel[3]) ); 
-osd_7SEG my7segDisplayer4(.segment(segment[4]), .h(matrice_h[4]), .v(matrice_v[4]), .pixel(matrice_pixel[4]) ); 
-osd_7SEG my7segDisplayer5(.segment(segment[5]), .h(matrice_h[5]), .v(matrice_v[5]), .pixel(matrice_pixel[5]) ); 
-osd_7SEG my7segDisplayer6(.segment(segment[6]), .h(matrice_h[6]), .v(matrice_v[6]), .pixel(matrice_pixel[6]) ); 
-osd_7SEG my7segDisplayer7(.segment(segment[7]), .h(matrice_h[7]), .v(matrice_v[7]), .pixel(matrice_pixel[7]) ); 
-osd_7SEG my7segDisplayer8(.segment(segment[8]), .h(matrice_h[8]), .v(matrice_v[8]), .pixel(matrice_pixel[8]) ); 
-osd_7SEG my7segDisplayer9(.segment(segment[9]), .h(matrice_h[9]), .v(matrice_v[9]), .pixel(matrice_pixel[9]) ); 
+//wire matrice_pixel [9:0];
+//reg [1:0] matrice_h [9:0];
+//reg [2:0] matrice_v [9:0];
+//copilot
+wire matrice_pixel [29:0];
+reg [1:0] matrice_h [29:0];
+reg [2:0] matrice_v [29:0];
+
+//osd_7SEG my7segDisplayer0(.segment(segment[0]), .h(matrice_h[0]), .v(matrice_v[0]), .pixel(matrice_pixel[0]) ); 
+//osd_7SEG my7segDisplayer1(.segment(segment[1]), .h(matrice_h[1]), .v(matrice_v[1]), .pixel(matrice_pixel[1]) ); 
+//osd_7SEG my7segDisplayer2(.segment(segment[2]), .h(matrice_h[2]), .v(matrice_v[2]), .pixel(matrice_pixel[2]) ); 
+//osd_7SEG my7segDisplayer3(.segment(segment[3]), .h(matrice_h[3]), .v(matrice_v[3]), .pixel(matrice_pixel[3]) ); 
+//osd_7SEG my7segDisplayer4(.segment(segment[4]), .h(matrice_h[4]), .v(matrice_v[4]), .pixel(matrice_pixel[4]) ); 
+//osd_7SEG my7segDisplayer5(.segment(segment[5]), .h(matrice_h[5]), .v(matrice_v[5]), .pixel(matrice_pixel[5]) ); 
+//osd_7SEG my7segDisplayer6(.segment(segment[6]), .h(matrice_h[6]), .v(matrice_v[6]), .pixel(matrice_pixel[6]) ); 
+//osd_7SEG my7segDisplayer7(.segment(segment[7]), .h(matrice_h[7]), .v(matrice_v[7]), .pixel(matrice_pixel[7]) ); 
+//osd_7SEG my7segDisplayer8(.segment(segment[8]), .h(matrice_h[8]), .v(matrice_v[8]), .pixel(matrice_pixel[8]) ); 
+//osd_7SEG my7segDisplayer9(.segment(segment[9]), .h(matrice_h[9]), .v(matrice_v[9]), .pixel(matrice_pixel[9]) ); 
 
 reg [2:0] seg7_hB=3'd0; // horizontal big pixel counter from 0 to 5 (include borders)
 reg [1:0] seg7_h=2'd0; // horizontal big pixel counter from 0 to 3
 wire [4:0] seg7_vcntDiv4=seg7_vcnt[6:2]; // vertical big pixel counter
+wire [1:0] seg7_row = seg7_vcntDiv4 / 8;
+wire [2:0] seg7_row_v = seg7_vcntDiv4 % 8;
+wire seg7_row_valid = (seg7_row < 3) && (seg7_row_v < 7);
 wire [1:0] seg7_hcntModulo4=seg7_hcnt[1:0]; // inside a big pixel
 reg [3:0] seg7_i=0; // current 7segment selected
 always @(posedge pclk) begin
@@ -377,7 +411,8 @@ always @(posedge pclk) begin
 			seg7_h<=2'd0;
 			seg7_i<=0;
 		end
-	else if (seg7_de && seg7_vcntDiv4<7)
+	//copilot else if (seg7_de && seg7_vcntDiv4<7)
+	else if (seg7_de && seg7_row_valid)
 		begin
 			// 7 SEGMENTS // 4 pixels width/7 pixels height + horizontal border 1 left 1 right.
 			if (seg7_hcnt/4<2 || seg7_hcnt/4>2+10*6)
@@ -394,9 +429,17 @@ always @(posedge pclk) begin
 			else
 				begin
 					reg seg7_pixel = 1'b0;
-					matrice_v[seg7_i]<=seg7_vcntDiv4[2:0];
-					matrice_h[seg7_i]<=seg7_h;
-					seg7_pixel<=matrice_pixel[seg7_i];
+					//copilot replace
+					//matrice_v[seg7_i]<=seg7_vcntDiv4[2:0];
+					//matrice_h[seg7_i]<=seg7_h;
+					//seg7_pixel<=matrice_pixel[seg7_i];
+					//copilot
+					reg [5:0] seg_idx;
+					seg_idx = seg7_row * 10 + seg7_i;
+					matrice_v[seg_idx] <= seg7_row_v;
+					matrice_h[seg_idx] <= seg7_h;
+					seg7_pixel <= matrice_pixel[seg_idx];
+
 					// vert
 					//if (screen_color == 2'b00)
 					//if (green == 1'b0)

@@ -474,8 +474,8 @@ applicable agreement for further details.
 	(port
 		(pt 352 512)
 		(output)
-		(text "leds8_debug[39..0]" (rect 0 0 74 12)(font "Arial" ))
-		(text "leds8_debug[39..0]" (rect 257 507 331 519)(font "Arial" ))
+		(text "leds8_debug[119..0]" (rect 0 0 76 12)(font "Arial" ))
+		(text "leds8_debug[119..0]" (rect 255 507 331 519)(font "Arial" ))
 		(line (pt 352 512)(pt 336 512)(line_width 3))
 	)
 	(parameter

@@ -405,7 +405,7 @@ entity FPGAmstrad_amstrad_motherboard is
 			  jacquie_do : in STD_LOGIC;
 			  jacquie_done : out STD_LOGIC;
 			  jacquie_no_block : in STD_LOGIC_VECTOR(15 downto 0);
-			  leds8_debug : out std_logic_vector (39 downto 0)
+			  leds8_debug : out std_logic_vector (119 downto 0)
 			  --leds8_debug : out STD_LOGIC_VECTOR (19 downto 0)
 			  );
 end FPGAmstrad_amstrad_motherboard;
@@ -567,7 +567,7 @@ architecture BEHAVIORAL of FPGAmstrad_amstrad_motherboard is
 				 BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 				 HSYNC_out : out STD_logic;
 				 VSYNC_out : out STD_logic;
-				 leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+				 leds8_debug : out STD_LOGIC_VECTOR (119 downto 0)
 				 );
    end component;
    

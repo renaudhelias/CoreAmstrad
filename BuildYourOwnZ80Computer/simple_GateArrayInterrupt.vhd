@@ -145,7 +145,7 @@ entity simple_GateArrayInterrupt is
            BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 			  HSYNC_out : out STD_logic;
 			  VSYNC_out : out STD_logic;
-			  leds8_debug : out STD_LOGIC_VECTOR (39 downto 0)
+			  leds8_debug : out STD_LOGIC_VECTOR (119 downto 0)
 			  );
 end simple_GateArrayInterrupt;
 
@@ -2332,7 +2332,9 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 --coreH3H1H2.rbf
 --leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0) & LineCounter & RasterCounter & MAStoreSource;
 --core.rbf
-leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
+leds8_debug<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
+& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
+& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
 
 
 				--setEvents() HSync strange behaviour : part 1
@@ -2679,6 +2681,13 @@ when STATE_END_ROW_4 =>
 ----------------------------------------------------------------------------
 
 	if LineCounter = 0 then
+		if RasterCounter = 0 then
+			-- at top left
+			dispV := '1';
+            -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+			ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
+			ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+		end if;
 		LineCounter_is0 <= true;
 	else
 		LineCounter_is0 <= false;
@@ -2697,7 +2706,7 @@ when STATE_END_ROW_4 =>
 			etat_monitor_vsync:="0000";	
     end if;
 
-    if LineCounter = R4VTot + 1 then
+    if LineCounter = R4VTot then
         if R5VtotAdjust /= x"00" then 
             crtc0_state := STATE_VADJUST_5;
             VAdjustCounter := x"00";
@@ -2707,10 +2716,7 @@ when STATE_END_ROW_4 =>
         else
             LineCounter := x"00";
 				RasterCounter := x"00";
-            dispV := '1';
-            -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
-            ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
-	    ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+            
             crtc0_state := STATE_END_ROW_4;--STATE_END_RASTER_9;
         end if;
     else
@@ -2738,7 +2744,7 @@ when STATE_VADJUST_5 =>
         if VAdjustCounter >= R5VtotAdjust then
             dispV := '1';
             ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
-            ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
+            ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
             crtc0_state := STATE_END_ROW_4;--STATE_END_RASTER_9;
         end if;
 when others=>NULL;

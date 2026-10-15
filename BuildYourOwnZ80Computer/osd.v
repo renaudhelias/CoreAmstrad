@@ -77,7 +77,7 @@ parameter OSD_COLOR    = 3'd0;
 
 localparam OSD_WIDTH  = 10'd256;
 localparam OSD_HEIGHT = 10'd128;
-localparam SEG7_HEIGHT = 10'd256;
+localparam SEG7_HEIGHT = 11'd384; // 10'd256;
 
 // *********************************************************************************
 // spi client
@@ -160,12 +160,12 @@ always @(posedge pclk) begin
 end
 
 // vertical counter
-reg [9:0] v_cnt;
+reg [10:0] v_cnt;
 reg vsD, vsD2;
-reg [9:0] vs_low, vs_high;
+reg [10:0] vs_low, vs_high;
 wire vs_pol = vs_high < vs_low;
-wire [9:0] v_dsp_width = vs_pol?vs_low:vs_high;
-wire [9:0] v_dsp_ctr = { 1'b0, v_dsp_width[9:1] };
+wire [10:0] v_dsp_width = vs_pol?vs_low:vs_high;
+wire [10:0] v_dsp_ctr = { 1'b0, v_dsp_width[9:1] };
 
 always @(posedge hs_in) begin
 	// bring vsync into local clock domain
@@ -191,9 +191,9 @@ end
 // area in which OSD is being displayed
 wire [9:0] h_osd_start = h_dsp_ctr + OSD_X_OFFSET - (OSD_WIDTH >> 1);
 wire [9:0] h_osd_end   = h_dsp_ctr + OSD_X_OFFSET + (OSD_WIDTH >> 1) - 1;
-wire [9:0] v_osd_start = v_dsp_ctr + OSD_Y_OFFSET - (OSD_HEIGHT >> 1);
-wire [9:0] v_osd_end   = v_dsp_ctr + OSD_Y_OFFSET + (OSD_HEIGHT >> 1) - 1;
-wire [9:0] v_seg7_end   = v_dsp_ctr + OSD_Y_OFFSET + (SEG7_HEIGHT >> 1) - 1;
+wire [10:0] v_osd_start = v_dsp_ctr + OSD_Y_OFFSET - (OSD_HEIGHT >> 1);
+wire [10:0] v_osd_end   = v_dsp_ctr + OSD_Y_OFFSET + (OSD_HEIGHT >> 1) - 1;
+wire [10:0] v_seg7_end   = v_dsp_ctr + OSD_Y_OFFSET + (SEG7_HEIGHT >> 1) - 1;
 
 
 reg h_osd_active, v_osd_active, v_seg7_active;

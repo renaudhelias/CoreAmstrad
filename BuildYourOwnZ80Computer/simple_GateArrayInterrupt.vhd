@@ -2171,6 +2171,9 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 	variable dispV:std_logic:='0';
 	variable disp_delta:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
+	variable crossHV:std_logic:='0';
+	variable dispVBegin:std_logic:='0';
+	variable dispVEnd:std_logic:='0';
 	variable dispH_skew0:std_logic:='0';
 	variable dispH_skew1:std_logic:='0';
 	variable dispH_skew2:std_logic:='0';
@@ -2335,7 +2338,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 leds8_debug(40*2-1 downto 40*1)<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
-leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & x"00";
+leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & "00000" & dispVBegin & dispVEnd & crossHV;
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
@@ -2497,11 +2500,13 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem 
 					--VBLANK<='1';
 				elsif LineCounter=0 then
 					dispV:='1';
+					dispVBegin:='1';
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
 				elsif crtc_type='0' and LineCounter=R6Vdisp and RasterCounter=0 then
 					--redondance ici de cas newFrame() (d ailleur)
 					dispV:='0';
+					dispVEnd:='1';
 				end if;
 				if LineCounter=0 then
 					LineCounter_is0<=true;
@@ -2510,6 +2515,8 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem 
 				end if;
 				
 				if dispH='1' and dispV='1' then
+					crossHV := '1';
+				
 					--etat_rgb<=DO_READ;
 					-- http://quasar.cpcscene.com/doku.php?id=assem:crtc
 					-- Have to respect address cut ADRESSE_CONSTANT_mem:=conv_integer(ADRESSE_maRegister(13 downto 0)) mod (16*1024);

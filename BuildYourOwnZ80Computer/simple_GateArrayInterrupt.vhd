@@ -2335,7 +2335,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 leds8_debug(40*2-1 downto 40*1)<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
-leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & x"AB" & x"CD" & x"EF";
+leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & x"00";
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);

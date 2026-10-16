@@ -2230,8 +2230,8 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		variable crtc0_state:integer:=9;
-		--constant STATE_END_RASTER_9:integer:=9;
-		constant STATE_END_ROW_4:integer:=4;
+		constant STATE_INC_RASTER_9:integer:=9;
+		constant STATE_INC_LINE_7:integer:=7;
 		constant STATE_VADJUST_5:integer:=5;
 	begin
 		if reset='1' then
@@ -2259,7 +2259,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 			RasterCounter:=x"00";
 			hCC:=x"00";
 			
-			crtc0_state:=STATE_END_ROW_4;--STATE_END_RASTER_9;
+			crtc0_state:=STATE_INC_RASTER_9;
 			
 			--bvram
 			crtc_R<='0';
@@ -2672,49 +2672,30 @@ end if;
         hCC := x"00";
 case crtc0_state is
 ----------------------------------------------------------------------------
---when STATE_END_RASTER_9 =>
+when STATE_INC_RASTER_9  =>
 ----------------------------------------------------------------------------
---    if RasterCounter = R9Rmax then
---        RasterCounter := x"00";
---        crtc0_state := STATE_END_ROW_4;
---        ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
---    else
---        RasterCounter := (RasterCounter + 1) and x"1F";
---        ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
---    end if;
 	 
+	 if RasterCounter = R9Rmax then
+        RasterCounter := x"00";
+        crtc0_state := STATE_INC_LINE_7;
+        ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+    else
+        RasterCounter := (RasterCounter + 1) and x"1F";
+        ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+    end if;
 ----------------------------------------------------------------------------
-when STATE_END_ROW_4 =>
+when STATE_INC_LINE_7 =>
 ----------------------------------------------------------------------------
-
-	if LineCounter = 0 then
-		if RasterCounter = 0 then
-			-- at top left
-			-- déjà fait plus tôt dispV := '1';
-         -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+		if LineCounter = 0 then
 			ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
 			ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+			LineCounter_is0 <= true;
+		else
+			LineCounter_is0 <= false;
 		end if;
-		LineCounter_is0 <= true;
-	else
-		LineCounter_is0 <= false;
-	end if;
-
-	-- déjà fzit avaant
-    --if LineCounter = R6VDisp then
-    --    dispV := '0';
-    --end if;
-    if LineCounter = R7VSyncPos then
-        crtc_vsync <= '1';
-        VSyncCount := x"0";
-			etat_vsync:=DO_VSYNC;
-			etat_monitor_vsync(0):=DO_VSYNC;
-    elsif LineCounter = R3Vwidth then
-		   etat_vsync:=DO_NOTHING;
-			etat_monitor_vsync:="0000";	
-    end if;
-
-    if LineCounter = R4VTot then
+		LineCounter := LineCounter + 1;
+		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+		if LineCounter = R4Vtot + 1 then
         if R5VtotAdjust /= x"00" then 
             crtc0_state := STATE_VADJUST_5;
             VAdjustCounter := x"00";
@@ -2725,25 +2706,23 @@ when STATE_END_ROW_4 =>
             LineCounter := x"00";
 				RasterCounter := x"00";
             
-            crtc0_state := STATE_END_ROW_4;--STATE_END_RASTER_9;
+            crtc0_state := STATE_INC_RASTER_9;
         end if;
-    else
-	 
-	 
-	     if RasterCounter = R9Rmax then
-			  RasterCounter := x"00";
-			  crtc0_state := STATE_END_ROW_4;
-			  ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
-		     LineCounter := (LineCounter + 1) and x"7F";
-		     -- checked
-           -- ADRESSE_MAcurrent_mem:=ADRESSE_maStore_mem;
-		 else
-			  RasterCounter := (RasterCounter + 1) and x"1F";
-			  ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+		else
+		   crtc0_state := STATE_INC_RASTER_9;
 		 end if;
 
-	 
-	 
+
+
+
+    if LineCounter = R7VSyncPos then
+        crtc_vsync <= '1';
+        VSyncCount := x"0";
+			etat_vsync:=DO_VSYNC;
+			etat_monitor_vsync(0):=DO_VSYNC;
+    elsif LineCounter = R3Vwidth then
+		   etat_vsync:=DO_NOTHING;
+			etat_monitor_vsync:="0000";	
     end if;
 ----------------------------------------------------------------------------
 when STATE_VADJUST_5 =>
@@ -2753,7 +2732,7 @@ when STATE_VADJUST_5 =>
             -- deja fait avant dispV := '1';
             ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
             ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
-            crtc0_state := STATE_END_ROW_4;--STATE_END_RASTER_9;
+            crtc0_state := STATE_INC_RASTER_9;
         end if;
 when others=>NULL;
 end case;

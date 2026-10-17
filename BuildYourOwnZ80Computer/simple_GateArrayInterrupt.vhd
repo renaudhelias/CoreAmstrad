@@ -2172,6 +2172,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 	variable disp_delta:std_logic:='0';
 	variable dispH:std_logic:='0'; -- horizontal disp (easier to compute BORDER area)
 	variable crossHV:std_logic:='0';
+	variable adress_ok:std_logic:='0';
 	variable dispVBegin:std_logic:='0';
 	variable dispVEnd:std_logic:='0';
 	variable dispH_skew0:std_logic:='0';
@@ -2338,7 +2339,7 @@ hsync_int<=etat_hsync; -- Seascape.dsk
 leds8_debug(40*2-1 downto 40*1)<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
-leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & "00000" & dispVBegin & dispVEnd & crossHV;
+leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & "0000" & adress_ok & dispVBegin & dispVEnd & crossHV;
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
@@ -2570,6 +2571,11 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem 
 					crtc_A_mem:=(others=>'0');
 				end if;
 				-- it's not really 16MHz, but we don't care
+				--Renaud
+				if CRTC_type='0' and LineCounter=0 and RasterCounter=0 then
+					adress_ok:='1';
+					crtc_A_mem(14 downto 0):=ADRESSE_MAcurrent_mem(13 downto 12) & RasterCounter(2 downto 0) & ADRESSE_MAcurrent_mem(9 downto 0);
+				end if;
 				crtc_A(15 downto 0)<=crtc_A_mem(14 downto 0) & '0';
 
 -- VRAM_HDsp VRAM_VDsp
@@ -2698,7 +2704,7 @@ when STATE_INC_LINE_7 =>
 		else
 			LineCounter_is0 <= false;
 		end if;
-		LineCounter := LineCounter + 1;
+		LineCounter := (LineCounter + 1) and x"7F";
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 		if LineCounter = R4Vtot + 1 then
         if R5VtotAdjust /= x"00" then 
@@ -2729,10 +2735,14 @@ when STATE_INC_LINE_7 =>
         VSyncCount := x"0";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
-	elsif LineCounter = R6Vdisp then
+	end if;
+	--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
+	-- contre un double increment => +2 <= on perd le cap !!
+	if LineCounter = R6Vdisp then
 			dispV:='0';
 			dispVEnd := '1';
-    elsif LineCounter = R3Vwidth then
+    end if;
+	if LineCounter = R3Vwidth then
 		   etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:="0000";	
     end if;

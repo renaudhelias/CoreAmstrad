@@ -2506,8 +2506,9 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem 
 				elsif crtc_type='0' and LineCounter=R6Vdisp and RasterCounter=0 then
 					--redondance ici de cas newFrame() (d ailleur)
 					--dispV:='0';
-					dispVEnd:='1';
+					--dispVEnd:='1';
 				end if;
+				--duplicated ?
 				if LineCounter=0 then
 					LineCounter_is0<=true;
 				else
@@ -2688,7 +2689,7 @@ when STATE_INC_RASTER_9  =>
 when STATE_INC_LINE_7 =>
 ----------------------------------------------------------------------------
 		if LineCounter = 0 then
-			-- at top left
+			-- at top left checked 1
 			dispV := '1';
 			dispVBegin:='1';
 			ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
@@ -2709,8 +2710,8 @@ when STATE_INC_LINE_7 =>
         else
             LineCounter := x"00";
 				RasterCounter := x"00";
-            dispV := '0';
-				dispVEnd := '1';
+            --dispV := '0';
+				--dispVEnd := '1';
             -- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
             ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
 	         ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
@@ -2728,6 +2729,9 @@ when STATE_INC_LINE_7 =>
         VSyncCount := x"0";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
+	elsif LineCounter = R6Vdisp then
+			dispV:='0';
+			dispVEnd := '1';
     elsif LineCounter = R3Vwidth then
 		   etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:="0000";	

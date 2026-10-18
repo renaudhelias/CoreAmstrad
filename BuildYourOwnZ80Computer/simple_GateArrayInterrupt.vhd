@@ -1856,7 +1856,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(4) & registres(5) & registres(6) & re
 				else
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
-					R3Vwidth<=registres(3)(7 downto 4);
+					R3Vwidth<=x"0"; --R3Vwidth<=registres(3)(7 downto 4);
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -2352,7 +2352,7 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem 
 				
 				
 				if (CRTC_TYPE='0' and ((frame_oddEven='1' and hCC = halfR0)
-				or (frame_oddEven='0' and hCC+1=R2Hsyncpos and R3Vwidth/=x"0")))
+				or (frame_oddEven='0' and hCC+1=R2Hsyncpos))) -- and R3Vwidth/=x"0"
 				
 				or
 				

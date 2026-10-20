@@ -2341,7 +2341,7 @@ leds8_debug(40*2-1 downto 40*1)<="00" & ADRESSE_maRegister_mem & "00" & ADRESSE_
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
 --& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
 --leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & "0000" & adress_ok & dispVBegin & dispVEnd & crossHV;
-leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & x"0000" & conv_std_logic_vector(crtc0_state,8);
+leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & RasterCounter  & conv_std_logic_vector(crtc0_state,8);
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);

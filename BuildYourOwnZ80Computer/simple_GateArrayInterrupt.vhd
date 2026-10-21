@@ -2425,7 +2425,7 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & Rast
 						etat_monitor_vsync(0):=DO_VSYNC;
 --crtc_VSYNC<=DO_VSYNC; -- it is really '1' by here, because we need an interrupt while vsync=1 or else border is to too faster (border 1,2)
 --vsync_int<=DO_VSYNC; -- do start a counter permitting 2 hsync failing before interrupt
-					elsif etat_vsync=DO_VSYNC then -- and not(R5VtotAdjust_do) then
+					elsif crtc_type='1' and etat_vsync=DO_VSYNC then -- and not(R5VtotAdjust_do) then
 						vSyncCount:=vSyncCount+1;
 						if vSyncCount=R3Vwidth then -- following Grim (forum)
 							etat_vsync:=DO_NOTHING;
@@ -2740,7 +2740,20 @@ when STATE_INC_LINE_7 =>
 			VSyncCount := x"0";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
+		elsif etat_vsync=DO_VSYNC then
+			vSyncCount:=vSyncCount+1;
+			if vSyncCount=R3Vwidth then -- following Grim (forum)
+				etat_vsync:=DO_NOTHING;
+				etat_monitor_vsync:="0000";
+--crtc_VSYNC<=DO_NOTHING;
+--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+			else
+				if vSyncCount=2+2 then
+					etat_monitor_vsync:="0000";
+				end if;
+			end if;
 		end if;
+			
 		-- deja fait avant
 		--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
@@ -2749,10 +2762,10 @@ when STATE_INC_LINE_7 =>
 			dispVEnd := '1';
 		end if;
 		-- deja fait avant <=> très bizarre
-		--if LineCounter = R3Vwidth then
-		--	etat_vsync:=DO_NOTHING;
-		--	etat_monitor_vsync:="0000";	
-		--end if;
+		if LineCounter = R3Vwidth then
+			etat_vsync:=DO_NOTHING;
+			etat_monitor_vsync:="0000";	
+		end if;
 		if LineCounter = R4Vtot then
 		-- remise à zéro dans la fin de CHAR
 			LineCounter := x"00";

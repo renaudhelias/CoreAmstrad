@@ -1856,7 +1856,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(4) & registres(5) & registres(6) & re
 				else
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
-					R3Vwidth<=x"0"; --R3Vwidth<=registres(3)(7 downto 4);
+					R3Vwidth<=registres(3)(7 downto 4);
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -2501,14 +2501,14 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & Rast
 					dispV:='0';
 					-- Scan is not currently running in vertical blanking time-span.
 					--VBLANK<='1';
-				elsif crtc_type='1' and LineCounter=0 then
+				elsif LineCounter=0 then
 					dispV:='1';
 					
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
 				elsif crtc_type='0' and LineCounter=R6Vdisp and RasterCounter=0 then
 					--redondance ici de cas newFrame() (d ailleur)
-					--dispV:='0';
+					dispV:='0';
 					--dispVEnd:='1';
 				end if;
 				--duplicated ?
@@ -2673,22 +2673,24 @@ end if;
 
 
 				-- CRTC section
-				if CRTC_type='0' then
+				if CRTC_type='0' and false then
 				
 					-- skeleton switch for CRTC0 AI
     if hCC = R0Htot then
-	--hCC = 0;
+	     --hCC = 0;
         hCC := x"00";
 		  dispH:='0';
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
 ----------------------------------------------------------------------------
-	 
 	if RasterCounter = R9Rmax then
 		RasterCounter := x"00";
-		crtc0_state := STATE_INC_LINE_7;
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+		--maStore = (maStore + reg[1]) & 0x3fff;
+		--0x3fff est ok : ADRESSE_maStore_mem(13:0)
+		--ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
+		crtc0_state := STATE_INC_LINE_7;
 	else
 		RasterCounter := (RasterCounter + 1) and x"1F";
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
@@ -2698,7 +2700,8 @@ when STATE_INC_LINE_7 =>
 ----------------------------------------------------------------------------
 		if LineCounter = 0 then
 			-- at top left checked 1
-			dispV := '1';
+			--deja fait avant
+			--dispV := '1';
 			dispVBegin:='1';
 			ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
 			ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
@@ -2712,12 +2715,13 @@ when STATE_INC_LINE_7 =>
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
+		-- deja fait avant
 		--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
-		if LineCounter = R6Vdisp then
-			dispV:='0';
-			dispVEnd := '1';
-		end if;
+		--if LineCounter = R6Vdisp then
+		--	dispV:='0';
+		--	dispVEnd := '1';
+		--end if;
 		if LineCounter = R3Vwidth then
 			etat_vsync:=DO_NOTHING;
 			etat_monitor_vsync:="0000";	
@@ -2736,8 +2740,8 @@ when STATE_INC_LINE_7 =>
 				LineCounter := x"00";
 				RasterCounter := x"00";
 				-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
-				ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
 				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+				ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
 				crtc0_state := STATE_INC_RASTER_9;
 			end if;
 		else
@@ -2752,7 +2756,7 @@ when STATE_VADJUST_5 =>
 ----------------------------------------------------------------------------
         VAdjustCounter := VAdjustCounter + 1;
         if VAdjustCounter >= R5VtotAdjust then
-            dispV := '0';
+            --dispV := '0'; deja fait avant ?
             ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
             ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
             crtc0_state := STATE_INC_RASTER_9;
@@ -2764,9 +2768,7 @@ end case;
 
     else -- if hcc
         hCC := (hCC+1) and x"7F";
-        if dispH='1' then
-		ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem + hCC; --WakeUp color raster while girl is here. Better if this code is here.
-        end if;
+		  ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem + hCC; --WakeUp color raster while girl is here. Better if this code is here.
     end if;
 
 				else -- CRTC_TYPE='1' isolation

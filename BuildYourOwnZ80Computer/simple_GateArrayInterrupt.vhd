@@ -2413,7 +2413,8 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & Rast
 					--if (LineCounter == reg[7] && !inVSync) { -- (too clever for a CRTC, isn't it ? "do offset if problems")
 					--WakeUp!
 					-- on CRTC type 0 and 1, Vsync can be triggered on any line of the char.
-					if (CRTC_TYPE='0' and LineCounter=R7Vsyncpos) or (CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
+					if --(CRTC_TYPE='0' and LineCounter=R7Vsyncpos) or 
+						(CRTC_TYPE='1' and RasterCounter=0 and LineCounter=R7Vsyncpos) then
 					--if LineCounter=R7Vsyncpos then
 						--checkVSync(true); (idem newFrame() ?)
 						--Batman logo rotating still like this... but dislike the !inVSync filter (etat_vsync=DO_NOTHING) here...
@@ -2501,14 +2502,14 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & Rast
 					dispV:='0';
 					-- Scan is not currently running in vertical blanking time-span.
 					--VBLANK<='1';
-				elsif LineCounter=0 then
+				elsif crtc_type='1' and LineCounter=0 then
 					dispV:='1';
 					
 					-- Scan currently is in vertical blanking time-span.
 					--VBLANK<='0';
 				elsif crtc_type='0' and LineCounter=R6Vdisp and RasterCounter=0 then
 					--redondance ici de cas newFrame() (d ailleur)
-					dispV:='0';
+					--dispV:='0';
 					--dispVEnd:='1';
 				end if;
 				--duplicated ?
@@ -2722,7 +2723,7 @@ when STATE_INC_LINE_7 =>
 		if LineCounter = 0 then
 			-- at top left checked 1
 			--deja fait avant
-			--dispV := '1';
+			dispV := '1';
 			dispVBegin:='1';
 			
 			--ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
@@ -2733,21 +2734,21 @@ when STATE_INC_LINE_7 =>
 		else
 			LineCounter_is0 <= false;
 		end if;
-		-- deja fait avant
-		--if LineCounter = R7VSyncPos then
-		--	crtc_vsync <= '1';
-		--	VSyncCount := x"0";
-		--	etat_vsync:=DO_VSYNC;
-		--	etat_monitor_vsync(0):=DO_VSYNC;
-		--end if;
+		-- deja fait avant => mais pas correctement
+		if LineCounter = R7VSyncPos then
+			crtc_vsync <= '1';
+			VSyncCount := x"0";
+			etat_vsync:=DO_VSYNC;
+			etat_monitor_vsync(0):=DO_VSYNC;
+		end if;
 		-- deja fait avant
 		--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
-		--if LineCounter = R6Vdisp then
-		--	dispV:='0';
-		--	dispVEnd := '1';
-		--end if;
-		-- deja fait avant
+		if LineCounter = R6Vdisp then
+			dispV:='0';
+			dispVEnd := '1';
+		end if;
+		-- deja fait avant <=> très bizarre
 		--if LineCounter = R3Vwidth then
 		--	etat_vsync:=DO_NOTHING;
 		--	etat_monitor_vsync:="0000";	

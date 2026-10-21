@@ -2512,10 +2512,12 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & Rast
 					--dispVEnd:='1';
 				end if;
 				--duplicated ?
-				if LineCounter=0 then
-					LineCounter_is0<=true;
-				else
-					LineCounter_is0<=false;
+				if crtc_type='1' then
+					if LineCounter=0 then
+						LineCounter_is0<=true;
+					else
+						LineCounter_is0<=false;
+					end if;
 				end if;
 				
 				if dispH='1' and dispV='1' then
@@ -2691,6 +2693,25 @@ when STATE_INC_RASTER_9  =>
 		--0x3fff est ok : ADRESSE_maStore_mem(13:0)
 		--ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
 		crtc0_state := STATE_INC_LINE_7;
+		
+		-- fin de char d'une ligne
+		if LineCounter = 0 then --+ 1 then pb WakeUp
+			--ne pas stopper : passer en mode lignes d'un pixel de haut ?
+			if R5VtotAdjust /= x"00" then 
+				VAdjustCounter := x"00";
+				--LineCounter := x"00";
+				--RasterCounter := x"00";
+				crtc0_state := STATE_VADJUST_5;
+			else
+				--LineCounter := x"00";
+				-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+				ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
+				zap_scan:=false;
+				-- char en haut ? crtc0_state := STATE_INC_RASTER_9;
+				crtc0_state := STATE_INC_LINE_7;
+			end if;
+		end if;
 	else
 		RasterCounter := (RasterCounter + 1) and x"1F";
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
@@ -2708,9 +2729,9 @@ when STATE_INC_LINE_7 =>
 			--ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
 			--zap_scan:=false;
 			
-		--	LineCounter_is0 <= true; deja fait !
-		--else
-		--	LineCounter_is0 <= false;
+			LineCounter_is0 <= true;-- deja fait ! mais pas correctement
+		else
+			LineCounter_is0 <= false;
 		end if;
 		-- deja fait avant
 		--if LineCounter = R7VSyncPos then
@@ -2731,24 +2752,11 @@ when STATE_INC_LINE_7 =>
 		--	etat_vsync:=DO_NOTHING;
 		--	etat_monitor_vsync:="0000";	
 		--end if;
-
-
-		if LineCounter = R4Vtot then --+ 1 then pb WakeUp
-			--ne pas stopper : passer en mode lignes d'un pixel de haut ?
-			if R5VtotAdjust /= x"00" then 
-				VAdjustCounter := x"00";
-				LineCounter := x"00";
-				--RasterCounter := x"00";
-				crtc0_state := STATE_VADJUST_5;
-			else
-				LineCounter := x"00";
-				RasterCounter := x"00";
-				-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
-				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
-				ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
-				zap_scan:=false;
-				-- char en haut ? crtc0_state := STATE_INC_RASTER_9;
-			end if;
+		if LineCounter = R4Vtot then
+		-- remise à zéro dans la fin de CHAR
+			LineCounter := x"00";
+			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+			crtc0_state := STATE_INC_RASTER_9;
 		else
 			LineCounter := LineCounter + 1; --pas de mask: c'est vCC) and x"7F";
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;

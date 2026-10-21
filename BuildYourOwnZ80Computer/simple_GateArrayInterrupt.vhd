@@ -2673,13 +2673,13 @@ end if;
 
 
 				-- CRTC section
-				if CRTC_type='0' and false then
+				if CRTC_type='0' then -- and false then
 				
 					-- skeleton switch for CRTC0 AI
     if hCC = R0Htot then
 	     --hCC = 0;
         hCC := x"00";
-		  dispH:='0';
+		  --dispH:='0'; deja fait / refactor bon sang
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
@@ -2703,18 +2703,22 @@ when STATE_INC_LINE_7 =>
 			--deja fait avant
 			--dispV := '1';
 			dispVBegin:='1';
-			ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
-			ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
-			LineCounter_is0 <= true;
-		else
-			LineCounter_is0 <= false;
+			
+			--ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
+			--ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+			--zap_scan:=false;
+			
+		--	LineCounter_is0 <= true; deja fait !
+		--else
+		--	LineCounter_is0 <= false;
 		end if;
-		if LineCounter = R7VSyncPos then
-			crtc_vsync <= '1';
-			VSyncCount := x"0";
-			etat_vsync:=DO_VSYNC;
-			etat_monitor_vsync(0):=DO_VSYNC;
-		end if;
+		-- deja fait avant
+		--if LineCounter = R7VSyncPos then
+		--	crtc_vsync <= '1';
+		--	VSyncCount := x"0";
+		--	etat_vsync:=DO_VSYNC;
+		--	etat_monitor_vsync(0):=DO_VSYNC;
+		--end if;
 		-- deja fait avant
 		--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
@@ -2722,19 +2726,19 @@ when STATE_INC_LINE_7 =>
 		--	dispV:='0';
 		--	dispVEnd := '1';
 		--end if;
-		if LineCounter = R3Vwidth then
-			etat_vsync:=DO_NOTHING;
-			etat_monitor_vsync:="0000";	
-		end if;
+		-- deja fait avant
+		--if LineCounter = R3Vwidth then
+		--	etat_vsync:=DO_NOTHING;
+		--	etat_monitor_vsync:="0000";	
+		--end if;
 
 
-		if LineCounter = R4Vtot then --+ 1 then
+		if LineCounter = R4Vtot then --+ 1 then pb WakeUp
 			--ne pas stopper : passer en mode lignes d'un pixel de haut ?
 			if R5VtotAdjust /= x"00" then 
 				VAdjustCounter := x"00";
 				LineCounter := x"00";
-				--Renaud
-				RasterCounter := x"00";
+				--RasterCounter := x"00";
 				crtc0_state := STATE_VADJUST_5;
 			else
 				LineCounter := x"00";
@@ -2742,7 +2746,8 @@ when STATE_INC_LINE_7 =>
 				-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
 				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
 				ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
-				crtc0_state := STATE_INC_RASTER_9;
+				zap_scan:=false;
+				-- char en haut ? crtc0_state := STATE_INC_RASTER_9;
 			end if;
 		else
 			LineCounter := LineCounter + 1; --pas de mask: c'est vCC) and x"7F";

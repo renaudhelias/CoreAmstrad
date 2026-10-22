@@ -1571,7 +1571,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1867,7 +1867,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(4) & registres(5) & registres(6) & re
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligneÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
+				-- Rupture ligneÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
 				R4Vtot<=registres(4) and x"7f";
 			when 5=>
 				R5VtotAdjust<=registres(5) and x"1f";
@@ -2690,7 +2690,7 @@ when STATE_INC_RASTER_9  =>
 ----------------------------------------------------------------------------
 	if RasterCounter = R9Rmax then
 		RasterCounter := x"00";
-		if LineCounter = R6Vdisp then --ok en bas de l'écran
+		if LineCounter = R6Vdisp then --ok en bas de l'Ã©cran
 			dispV:='0';
 			--dispVEnd := '1';
 		end if;
@@ -2747,11 +2747,11 @@ when STATE_INC_LINE_7 =>
 		-- deja fait avant => mais pas correctement
 		if LineCounter = R7VSyncPos then
 			--crtc_vsync <= '1';			
-			vSyncCount:= x"1";  --x"0"; -- pulse ?
+			vSyncCount:= x"0";  --x"0"; -- pulse ?
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		elsif etat_vsync=DO_VSYNC then
-			vSyncCount:=vSyncCount+1;
+				vSyncCount:=vSyncCount+1;
 			if vSyncCount=R3Vwidth then -- following Grim (forum)
 				etat_vsync:=DO_NOTHING;
 				etat_monitor_vsync:="0000";
@@ -2765,19 +2765,19 @@ when STATE_INC_LINE_7 =>
 		end if;
 			
 		-- deja fait avant
-		--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
+		--en haut le curseur est visible et dÃ©cale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
 --		if LineCounter = R6Vdisp then
 --			dispV:='0';
 --			dispVEnd := '1';
 --		end if;
-		-- deja fait avant <=> très bizarre
-		if LineCounter = R3Vwidth then
-			etat_vsync:=DO_NOTHING;
-			etat_monitor_vsync:="0000";	
-		end if;
+		-- deja fait avant <=> trÃ¨s bizarre
+		--if LineCounter = R3Vwidth then
+		--	etat_vsync:=DO_NOTHING;
+		--	etat_monitor_vsync:="0000";	
+		--end if;
 		if LineCounter = R4Vtot then
-		-- remise à zéro dans la fin de CHAR
+		-- remise Ã  zÃ©ro dans la fin de CHAR
 			LineCounter := x"00";
 			--dispV := '1'; le pire : 7 char (sans ligne0)
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;

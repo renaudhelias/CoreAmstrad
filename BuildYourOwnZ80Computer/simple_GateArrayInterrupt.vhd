@@ -2734,10 +2734,11 @@ when STATE_INC_LINE_7 =>
 		else
 			LineCounter_is0 <= false;
 		end if;
+		
 		-- deja fait avant => mais pas correctement
 		if LineCounter = R7VSyncPos then
-			crtc_vsync <= '1';
-			VSyncCount := x"0";
+			--crtc_vsync <= '1';			
+			vSyncCount:= x"0"; -- pulse ?
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		elsif etat_vsync=DO_VSYNC then
@@ -2745,11 +2746,11 @@ when STATE_INC_LINE_7 =>
 			if vSyncCount=R3Vwidth then -- following Grim (forum)
 				etat_vsync:=DO_NOTHING;
 				etat_monitor_vsync:="0000";
---crtc_VSYNC<=DO_NOTHING;
---vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+				--crtc_VSYNC<=DO_NOTHING;
+				--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 			else
 				if vSyncCount=2+2 then
-					etat_monitor_vsync:="0000";
+					etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram
 				end if;
 			end if;
 		end if;

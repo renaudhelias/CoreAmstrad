@@ -2690,6 +2690,14 @@ when STATE_INC_RASTER_9  =>
 ----------------------------------------------------------------------------
 	if RasterCounter = R9Rmax then
 		RasterCounter := x"00";
+		if LineCounter = R6Vdisp then --ok en bas de l'écran
+			dispV:='0';
+			--dispVEnd := '1';
+		end if;
+		if lineCounter = x"00" then
+			dispV:='1'; -- harmonique
+		end if;
+		
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 		--maStore = (maStore + reg[1]) & 0x3fff;
 		--0x3fff est ok : ADRESSE_maStore_mem(13:0)
@@ -2724,7 +2732,7 @@ when STATE_INC_LINE_7 =>
 		if LineCounter = 0 then
 			-- at top left checked 1
 			--deja fait avant
-			dispV := '1';
+--			dispV := '1'; -- moins pire : ue ligne de pixel manque en haut.
 			dispVBegin:='1';
 			
 			--ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
@@ -2759,10 +2767,10 @@ when STATE_INC_LINE_7 =>
 		-- deja fait avant
 		--en haut le curseur est visible et décale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
-		if LineCounter = R6Vdisp then
-			dispV:='0';
-			dispVEnd := '1';
-		end if;
+--		if LineCounter = R6Vdisp then
+--			dispV:='0';
+--			dispVEnd := '1';
+--		end if;
 		-- deja fait avant <=> très bizarre
 		if LineCounter = R3Vwidth then
 			etat_vsync:=DO_NOTHING;
@@ -2771,6 +2779,7 @@ when STATE_INC_LINE_7 =>
 		if LineCounter = R4Vtot then
 		-- remise à zéro dans la fin de CHAR
 			LineCounter := x"00";
+			--dispV := '1'; le pire : 7 char (sans ligne0)
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
 			RasterCounter := (RasterCounter + 1) and x"1F";
@@ -2779,7 +2788,7 @@ when STATE_INC_LINE_7 =>
 			LineCounter := LineCounter + 1; --pas de mask: c'est vCC) and x"7F";
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
-			RasterCounter := (RasterCounter + 1) and x"1F";
+			RasterCounter := (RasterCounter + 1) and x"1F"; -- think about crtc_A_mem
 			crtc0_state := STATE_INC_RASTER_9;
 		end if;
 

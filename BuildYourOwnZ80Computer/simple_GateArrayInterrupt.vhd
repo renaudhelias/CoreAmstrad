@@ -2683,7 +2683,7 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
-		  LineCounter_is0 <= false; -- if one line at top of char begin
+		  --LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>

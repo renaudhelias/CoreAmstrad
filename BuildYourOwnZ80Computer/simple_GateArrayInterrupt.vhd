@@ -2683,6 +2683,7 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
+		  LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
@@ -2771,10 +2772,14 @@ when STATE_INC_LINE_7 =>
 		-- remise à zéro dans la fin de CHAR
 			LineCounter := x"00";
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+			-- start at 1, 0 is LineCounter
+			RasterCounter := (RasterCounter + 1) and x"1F";
 			crtc0_state := STATE_INC_RASTER_9;
 		else
 			LineCounter := LineCounter + 1; --pas de mask: c'est vCC) and x"7F";
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+			-- start at 1, 0 is LineCounter
+			RasterCounter := (RasterCounter + 1) and x"1F";
 			crtc0_state := STATE_INC_RASTER_9;
 		end if;
 

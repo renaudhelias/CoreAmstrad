@@ -1822,7 +1822,7 @@ begin
 		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
 		-- Seascape.dsk (delay of WRITE REGISTER)
 -- 4 5 6 7 9
-leds8_debug(40*3-1 downto 40*2)<=registres(4) & registres(5) & registres(6) & registres(7) & registres(9);
+leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & registres(7) & registres(9);
 
 --end if;
 		case reg_select is
@@ -2683,7 +2683,7 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
-		  --LineCounter_is0 <= false; -- if one line at top of char begin
+		  LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
@@ -2751,15 +2751,16 @@ when STATE_INC_LINE_7 =>
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		elsif etat_vsync=DO_VSYNC then
-				vSyncCount:=vSyncCount+1;
-			if vSyncCount=R3Vwidth then -- following Grim (forum)
+			vSyncCount:=vSyncCount+1;
+			-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
+			if vSyncCount=4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 				etat_vsync:=DO_NOTHING;
 				etat_monitor_vsync:="0000";
 				--crtc_VSYNC<=DO_NOTHING;
 				--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 			else
 				if vSyncCount=2+2 then
-					etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram
+					etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
 				end if;
 			end if;
 		end if;

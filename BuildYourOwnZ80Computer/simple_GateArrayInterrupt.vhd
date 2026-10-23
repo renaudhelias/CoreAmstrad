@@ -1856,7 +1856,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 				else
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
-					R3Vwidth<=registres(3)(7 downto 4);
+					R3Vwidth<= "0" & registres(3)(7 downto 5); -- brucle lee too fast
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -2753,7 +2753,7 @@ when STATE_INC_LINE_7 =>
 		elsif etat_vsync=DO_VSYNC then
 			vSyncCount:=vSyncCount+1;
 			-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
-			if vSyncCount=4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+			if vSyncCount=R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 				etat_vsync:=DO_NOTHING;
 				etat_monitor_vsync:="0000";
 				--crtc_VSYNC<=DO_NOTHING;

@@ -2697,7 +2697,7 @@ when STATE_INC_RASTER_9  =>
 
 -- fin de char d'une ligne
 		--CRTC0 Only reloads the screen offset (R12/R13) when the vertical line counter reaches its final character line. 1/2
-	if LineCounter = 0 then --+ 1 then pb WakeUp
+	if LineCounter = 0         and RasterCounter = R9Rmax           then --+ 1 then pb WakeUp
 		--ne pas stopper : passer en mode lignes d'un pixel de haut ?
 		--wtf if R5VtotAdjust /= x"00" then 
 		--	VAdjustCounter := x"00";

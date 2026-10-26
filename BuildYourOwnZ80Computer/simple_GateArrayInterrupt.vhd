@@ -1571,7 +1571,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1856,7 +1856,9 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 				else
 					--CRTC0 HD6845S allows the Vertical Sync Width to be programmed
 					--vSyncWidth = (value >> 4) & 0x0f;
-					R3Vwidth<= "0" & registres(3)(7 downto 5); -- brucle lee too fast
+					--Interpreted normally as a short width pulse.
+					--R3Vwidth<= "0" & registres(3)(7 downto 5); -- brucle lee too fast
+					R3Vwidth<= registres(3)(7 downto 4); -- brucle lee too fast
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -1867,7 +1869,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligneÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
+				-- Rupture ligneÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
 				R4Vtot<=registres(4) and x"7f";
 			when 5=>
 				R5VtotAdjust<=registres(5) and x"1f";
@@ -2086,7 +2088,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 					--if (LineCounter == 0) {
 					--  return (1 << 5); x"20"
 					if crtc_type='0' then
-						Dout<=x"FF";
+						Dout<=x"00"; --x"FF";
 					elsif LineCounter_is0 then
 						--if (LineCounter == 0) {
 						--Bit 5 is set to 1 when CRTC is in "vertical blanking". Vertical blanking is when the vertical border is active. i.e. VCC>=R6.
@@ -2100,9 +2102,11 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 					-- type 1 : read status
 					-- https://www.cpcwiki.eu/index.php/CRTC#CRTC_Differences
 					if reg_select32 = x"0A" then -- R10
-						Dout<=registres(10); -- applying the write mask here
+						--10	Cursor Start Raster	Write Only	Write Only
+						Dout<=x"00";--registres(10); -- applying the write mask here
 					elsif reg_select32 = x"0B" then -- R11
-						Dout<=registres(11); --Dout<=registres(11) and x"1f"; -- applying the write mask here
+						--11	Cursor End Raster	Write Only	Write Only
+						Dout<=x"00";--registres(11); --Dout<=registres(11) and x"1f"; -- applying the write mask here
 					elsif reg_select32 = x"0C" then -- R12
 						-- 10 mode 1
 						-- 15 for a = 0 to 31
@@ -2127,8 +2131,10 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 							Dout<=x"00"; -- type 1 & 2
 						end if;
 					elsif reg_select32 = x"0E" then -- R14
-							Dout<=registres(14); -- and x"3f"; -- all types
+						--14	Cursor Address (High)	Read/Write	Read/Write
+						Dout<=registres(14); -- and x"3f"; -- all types
 					elsif reg_select32 = x"0F" then -- R15	
+						--15	Cursor Address (Low)	Read/Write	Read/Write	
 						Dout<=registres(15);-- all types
 					elsif reg_select32 = x"1F" then -- R31
 						if crtc_type='1' then
@@ -2683,14 +2689,36 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
-		  LineCounter_is0 <= false; -- if one line at top of char begin
+		  --LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
 ----------------------------------------------------------------------------
+
+-- fin de char d'une ligne
+		--CRTC0 Only reloads the screen offset (R12/R13) when the vertical line counter reaches its final character line. 1/2
+	if LineCounter = 0 then --+ 1 then pb WakeUp
+		--ne pas stopper : passer en mode lignes d'un pixel de haut ?
+		--wtf if R5VtotAdjust /= x"00" then 
+		--	VAdjustCounter := x"00";
+		--	--LineCounter := x"00";
+		--	--RasterCounter := x"00";
+		--	crtc0_state := STATE_VADJUST_5;
+		--else
+			--LineCounter := x"00";
+			-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+			ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+			ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
+			zap_scan:=false;
+			-- char en haut ? crtc0_state := STATE_INC_RASTER_9;
+			--crtc0_state := STATE_INC_LINE_7;
+		--end if;
+	end if;
+
+
 	if RasterCounter = R9Rmax then
 		RasterCounter := x"00";
-		if LineCounter = R6Vdisp then --ok en bas de l'Ã©cran
+		if LineCounter = R6Vdisp then --ok en bas de l'ÃƒÂ©cran
 			dispV:='0';
 			--dispVEnd := '1';
 		end if;
@@ -2704,24 +2732,7 @@ when STATE_INC_RASTER_9  =>
 		--ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
 		crtc0_state := STATE_INC_LINE_7;
 		
-		-- fin de char d'une ligne
-		if LineCounter = 0 then --+ 1 then pb WakeUp
-			--ne pas stopper : passer en mode lignes d'un pixel de haut ?
-			if R5VtotAdjust /= x"00" then 
-				VAdjustCounter := x"00";
-				--LineCounter := x"00";
-				--RasterCounter := x"00";
-				crtc0_state := STATE_VADJUST_5;
-			else
-				--LineCounter := x"00";
-				-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
-				ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
-				ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
-				zap_scan:=false;
-				-- char en haut ? crtc0_state := STATE_INC_RASTER_9;
-				crtc0_state := STATE_INC_LINE_7;
-			end if;
-		end if;
+		
 	else
 		RasterCounter := (RasterCounter + 1) and x"1F";
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
@@ -2753,7 +2764,7 @@ when STATE_INC_LINE_7 =>
 		elsif etat_vsync=DO_VSYNC then
 			vSyncCount:=vSyncCount+1;
 			-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
-			if vSyncCount=R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+			if vSyncCount=R3Vwidth or (R3Vwidth=0 and vSyncCount=16) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 				etat_vsync:=DO_NOTHING;
 				etat_monitor_vsync:="0000";
 				--crtc_VSYNC<=DO_NOTHING;
@@ -2766,25 +2777,44 @@ when STATE_INC_LINE_7 =>
 		end if;
 			
 		-- deja fait avant
-		--en haut le curseur est visible et dÃ©cale bien, en bas le curseur disparait donc R6Vdisp + 1
+		--en haut le curseur est visible et dÃƒÂ©cale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
 --		if LineCounter = R6Vdisp then
 --			dispV:='0';
 --			dispVEnd := '1';
 --		end if;
-		-- deja fait avant <=> trÃ¨s bizarre
+		-- deja fait avant <=> trÃƒÂ¨s bizarre
 		--if LineCounter = R3Vwidth then
 		--	etat_vsync:=DO_NOTHING;
 		--	etat_monitor_vsync:="0000";	
 		--end if;
 		if LineCounter = R4Vtot then
-		-- remise Ã  zÃ©ro dans la fin de CHAR
+		-- remise ÃƒÂ  zÃƒÂ©ro dans la fin de CHAR
 			LineCounter := x"00";
 			--dispV := '1'; le pire : 7 char (sans ligne0)
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
-			RasterCounter := (RasterCounter + 1) and x"1F";
-			crtc0_state := STATE_INC_RASTER_9;
+			--CRTC0 Only reloads the screen offset (R12/R13) when the vertical line counter reaches its final character line. 2/2
+			if R9Rmax = x"00" then
+				--adresse_maRegister_mem
+				if R5VtotAdjust /= x"00" then 
+					VAdjustCounter := x"00";
+					--LineCounter := x"00";
+					--RasterCounter := x"00";
+					crtc0_state := STATE_VADJUST_5;
+				else
+					--LineCounter := x"00";
+					-- not in Markus ADRESSE_MAStore_mem := StartAddress -> only MaCurrent:=MaStore or MaStore:=MaStore
+					ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
+					ADRESSE_MAcurrent_mem := ADRESSE_maStore_mem;
+					zap_scan:=false;
+					-- char en haut ? crtc0_state := STATE_INC_RASTER_9;
+					crtc0_state := STATE_INC_LINE_7;
+				end if;
+			else
+				RasterCounter := (RasterCounter + 1) and x"1F";
+				crtc0_state := STATE_INC_RASTER_9;
+			end if;
 		else
 			LineCounter := LineCounter + 1; --pas de mask: c'est vCC) and x"7F";
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;

@@ -1571,7 +1571,7 @@ WAIT_n_D <= latences_CB(conv_integer(R2D2)) when prefix_CB
 				else latences_DDCB(conv_integer(R2D2)) when prefix_DD_FD_CB
 				else latences(conv_integer(R2D2));
 				
--- au dla valeur est fausse, puis ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
+-- au dla valeur est fausse, puis ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  un moment elle devient vrai, puis enfin elle est trait(c'est-y pas une formule de warrior --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 --WAIT_n_0 <= not(WAIT_n_D) when M1_n='0' and MEM_RD='1' else '1';
 WAIT_n_0 <= '0' when M1_n='0' and MEM_RD='1' and WAIT_n_D>0 else '1';
 
@@ -1858,7 +1858,9 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 					--vSyncWidth = (value >> 4) & 0x0f;
 					--Interpreted normally as a short width pulse.
 					--R3Vwidth<= "0" & registres(3)(7 downto 5); -- brucle lee too fast
-					R3Vwidth<= registres(3)(7 downto 4); -- brucle lee too fast
+					--R3Vwidth<= registres(3)(7 downto 4); -- brucle lee too fast
+					-- "00" ok : border 5,6 bonne vitesse, Brucelee bonne vitesse
+					R3Vwidth<= "00" & registres(3)(7 downto 6); -- write 8 (registre) read 2 (Logon)
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -1869,7 +1871,7 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 				
 			when 4=>
 				-- Validation des registres 9 et 4 apr sinon)
-				-- Rupture ligneÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
+				-- Rupture ligneÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â -ligne possible (R9 = R4 =0 ) >>oui<<
 				R4Vtot<=registres(4) and x"7f";
 			when 5=>
 				R5VtotAdjust<=registres(5) and x"1f";
@@ -2689,6 +2691,8 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
+		  -- Logon's run - 3D meets the aging bits 2017
+		  -- WakeUp - 2012
 		  --LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
@@ -2699,10 +2703,11 @@ when STATE_INC_RASTER_9  =>
 		--CRTC0 Only reloads the screen offset (R12/R13) when the vertical line counter reaches its final character line. 1/2
 	if LineCounter = 0         and RasterCounter = R9Rmax           then --+ 1 then pb WakeUp
 		--ne pas stopper : passer en mode lignes d'un pixel de haut ?
-		--wtf if R5VtotAdjust /= x"00" then 
+		-- WakeUp CRTC Emulator Detected
+		--if R5VtotAdjust /= x"00" then 
 		--	VAdjustCounter := x"00";
-		--	--LineCounter := x"00";
-		--	--RasterCounter := x"00";
+		--	LineCounter := x"00";
+		--	RasterCounter := x"00";
 		--	crtc0_state := STATE_VADJUST_5;
 		--else
 			--LineCounter := x"00";
@@ -2718,7 +2723,7 @@ when STATE_INC_RASTER_9  =>
 
 	if RasterCounter = R9Rmax then
 		RasterCounter := x"00";
-		if LineCounter = R6Vdisp then --ok en bas de l'ÃƒÂ©cran
+		if LineCounter = R6Vdisp then --ok en bas de l'ÃƒÆ’Ã‚Â©cran
 			dispV:='0';
 			--dispVEnd := '1';
 		end if;
@@ -2777,19 +2782,19 @@ when STATE_INC_LINE_7 =>
 		end if;
 			
 		-- deja fait avant
-		--en haut le curseur est visible et dÃƒÂ©cale bien, en bas le curseur disparait donc R6Vdisp + 1
+		--en haut le curseur est visible et dÃƒÆ’Ã‚Â©cale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
 --		if LineCounter = R6Vdisp then
 --			dispV:='0';
 --			dispVEnd := '1';
 --		end if;
-		-- deja fait avant <=> trÃƒÂ¨s bizarre
+		-- deja fait avant <=> trÃƒÆ’Ã‚Â¨s bizarre
 		--if LineCounter = R3Vwidth then
 		--	etat_vsync:=DO_NOTHING;
 		--	etat_monitor_vsync:="0000";	
 		--end if;
 		if LineCounter = R4Vtot then
-		-- remise ÃƒÂ  zÃƒÂ©ro dans la fin de CHAR
+		-- remise ÃƒÆ’Ã‚Â  zÃƒÆ’Ã‚Â©ro dans la fin de CHAR
 			LineCounter := x"00";
 			--dispV := '1'; le pire : 7 char (sans ligne0)
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;

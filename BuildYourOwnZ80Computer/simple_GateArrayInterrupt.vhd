@@ -2693,8 +2693,9 @@ end if;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
 			if etat_vsync=DO_VSYNC then
-				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
+				-- 0 is "1" & x"00"
 				vSyncCount:=vSyncCount+1;
+				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
 				if vSyncCount=R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 					etat_monitor_vsync:="0000";
@@ -2777,7 +2778,7 @@ when STATE_INC_LINE_7 =>
 		
 		-- deja fait avant => mais pas correctement
 		-- and R3Vwidth/=x"0" ecole first scroll hurt 1 line at top
-		if LineCounter = R7VSyncPos and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
+		if LineCounter = R7VSyncPos then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
 			--crtc_vsync <= '1';			
 			vSyncCount:= x"0";  --x"0"; -- pulse ?
 			etat_vsync:=DO_VSYNC;

@@ -1860,7 +1860,8 @@ leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & re
 					--R3Vwidth<= "0" & registres(3)(7 downto 5); -- brucle lee too fast
 					--R3Vwidth<= registres(3)(7 downto 4); -- brucle lee too fast
 					-- "00" ok : border 5,6 bonne vitesse, Brucelee bonne vitesse
-					R3Vwidth<= "00" & registres(3)(7 downto 6); -- write 8 (registre) read 2 (Logon)
+					--R3Vwidth<= "00" & registres(3)(7 downto 6); -- write 8 (registre) read 2 (Logon)
+					R3Vwidth<= registres(3)(7 downto 4); -- write 8 (registre) read 2 (Logon)
 				end if;
 				
 				--CRTC0 HD6845: Register 3: Sync Width Bit 7 Vertical Sync Width bit 3 Bit 6 Vertical Sync Width bit 2 Bit 5 Vertical Sync Width bit 1 Bit 4 Vertical Sync Width bit 0 Bit 3 Horizontal Sync Width bit 3 Bit 2 Horizontal Sync Width bit 2 Bit 1 Horizontal Sync Width bit 1 Bit 0 Horizontal Sync Width bit 0 
@@ -2691,6 +2692,20 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
+			if etat_vsync=DO_VSYNC then
+				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
+				vSyncCount:=vSyncCount+1;
+				if vSyncCount=R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+					etat_vsync:=DO_NOTHING;
+					etat_monitor_vsync:="0000";
+					--crtc_VSYNC<=DO_NOTHING;
+					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+				else
+					if vSyncCount=2+2 then
+						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
+					end if;
+				end if;
+			end if;
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012
 		  --LineCounter_is0 <= false; -- if one line at top of char begin
@@ -2761,24 +2776,12 @@ when STATE_INC_LINE_7 =>
 		end if;
 		
 		-- deja fait avant => mais pas correctement
-		if LineCounter = R7VSyncPos then
+		-- and R3Vwidth/=x"0" ecole first scroll hurt 1 line at top
+		if LineCounter = R7VSyncPos and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
 			--crtc_vsync <= '1';			
 			vSyncCount:= x"0";  --x"0"; -- pulse ?
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
-		elsif etat_vsync=DO_VSYNC then
-			vSyncCount:=vSyncCount+1;
-			-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
-			if vSyncCount=R3Vwidth or (R3Vwidth=0 and vSyncCount=16) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
-				etat_vsync:=DO_NOTHING;
-				etat_monitor_vsync:="0000";
-				--crtc_VSYNC<=DO_NOTHING;
-				--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
-			else
-				if vSyncCount=2+2 then
-					etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
-				end if;
-			end if;
 		end if;
 			
 		-- deja fait avant

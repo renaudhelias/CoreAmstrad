@@ -2693,7 +2693,7 @@ end if;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
 			if etat_vsync=DO_VSYNC then
-				-- 0 is "1" & x"00"
+				-- 0 is "1" & x"0"
 				vSyncCount:=vSyncCount+1;
 				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
 				if vSyncCount=R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
@@ -2706,6 +2706,8 @@ end if;
 						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
 					end if;
 				end if;
+				-- 0 is x"0"
+				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
 			end if;
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012

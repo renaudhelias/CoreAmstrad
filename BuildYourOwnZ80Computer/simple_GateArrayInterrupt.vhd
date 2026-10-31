@@ -2243,6 +2243,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		constant STATE_INC_RASTER_9:integer:=9;
 		constant STATE_INC_LINE_7:integer:=7;
 		constant STATE_VADJUST_5:integer:=5;
+		constant STATE_R3VWIDTH_3:integer:=3;
 	begin
 		if reset='1' then
 			vsync_int<=DO_NOTHING;
@@ -2692,23 +2693,7 @@ end if;
 	     --hCC = 0;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
-			if etat_vsync=DO_VSYNC then
-				-- 0 is "1" & x"0"
-				vSyncCount:=vSyncCount+1;
-				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
-				if vSyncCount=R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
-					etat_vsync:=DO_NOTHING;
-					etat_monitor_vsync:="0000";
-					--crtc_VSYNC<=DO_NOTHING;
-					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
-				else
-					if vSyncCount=2+2 then
-						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
-					end if;
-				end if;
-				-- 0 is x"0"
-				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
-			end if;
+		  
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012
 		  --LineCounter_is0 <= false; -- if one line at top of char begin
@@ -2778,15 +2763,13 @@ when STATE_INC_LINE_7 =>
 			LineCounter_is0 <= false;
 		end if;
 		
-		-- deja fait avant => mais pas correctement
-		-- and R3Vwidth/=x"0" ecole first scroll hurt 1 line at top
-		if LineCounter = R7VSyncPos then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
-			--crtc_vsync <= '1';			
+		if LineCounter = R7VSyncPos then
 			vSyncCount:= x"0";  --x"0"; -- pulse ?
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
-			
+		
+		
 		-- deja fait avant
 		--en haut le curseur est visible et dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
@@ -2834,6 +2817,14 @@ when STATE_INC_LINE_7 =>
 			crtc0_state := STATE_INC_RASTER_9;
 		end if;
 
+				-- deja fait avant => mais pas correctement
+		-- and R3Vwidth/=x"0" ecole first scroll hurt 1 line at top
+		if R3Vwidth/=x"8" and etat_vsync=DO_VSYNC then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
+			etat_vsync:=DO_NOTHING;
+			crtc0_state:=STATE_R3VWIDTH_3;
+		end if;
+			
+
 
 ----------------------------------------------------------------------------
 when STATE_VADJUST_5 =>
@@ -2845,10 +2836,35 @@ when STATE_VADJUST_5 =>
             ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
             crtc0_state := STATE_INC_RASTER_9;
         end if;
+----------------------------------------------------------------------------
+when STATE_R3VWIDTH_3 =>
+----------------------------------------------------------------------------
+		-- pas 8
 when others=>NULL;
 end case;
 
-			
+			--buggy boy, top of road has a palette offset
+			if etat_vsync=DO_VSYNC then
+				-- 0 is "1" & x"0" 16bits!
+				-- crtc address is 2 char per 2 char, so here x"8" is fine
+				-- human increment : compte a partir de 1
+				vSyncCount:=vSyncCount+1;
+				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
+				--CRTC0 use 2 bytes per char, so 8 is 16
+				-- R2Vwidth can be 0
+				if vSyncCount >= R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+					etat_vsync:=DO_NOTHING;
+					etat_monitor_vsync:="0000";
+					--crtc_VSYNC<=DO_NOTHING;
+					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+				else
+					if vSyncCount=2+2 then
+						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
+					end if;
+				end if;
+				-- 0 is x"0"
+				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
+			end if;
 
     else -- if hcc
         hCC := (hCC+1) and x"7F";

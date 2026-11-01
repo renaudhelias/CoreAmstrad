@@ -2696,7 +2696,7 @@ end if;
 		  
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012
-		  --LineCounter_is0 <= false; -- if one line at top of char begin
+		  LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
@@ -2748,20 +2748,7 @@ when STATE_INC_RASTER_9  =>
 ----------------------------------------------------------------------------
 when STATE_INC_LINE_7 =>
 ----------------------------------------------------------------------------
-		if LineCounter = 0 then
-			-- at top left checked 1
-			--deja fait avant
---			dispV := '1'; -- moins pire : ue ligne de pixel manque en haut.
-			dispVBegin:='1';
-			
-			--ADRESSE_MAcurrent_mem := ADRESSE_maRegister_mem;
-			--ADRESSE_maStore_mem:=ADRESSE_maRegister_mem;
-			--zap_scan:=false;
-			
-			LineCounter_is0 <= true;-- deja fait ! mais pas correctement
-		else
-			LineCounter_is0 <= false;
-		end if;
+		
 		
 		if LineCounter = R7VSyncPos then
 			vSyncCount:= x"0";  --x"0"; -- pulse ?
@@ -2785,6 +2772,9 @@ when STATE_INC_LINE_7 =>
 		if LineCounter = R4Vtot then
 		-- remise ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  zÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ro dans la fin de CHAR
 			LineCounter := x"00";
+			
+			LineCounter_is0 <= true;
+			
 			--dispV := '1'; le pire : 7 char (sans ligne0)
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
@@ -2811,6 +2801,9 @@ when STATE_INC_LINE_7 =>
 			end if;
 		else
 			LineCounter := LineCounter + 1; --pas de mask: c'est vCC) and x"7F";
+
+			LineCounter_is0 <= false;
+
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
 			RasterCounter := (RasterCounter + 1) and x"1F"; -- think about crtc_A_mem

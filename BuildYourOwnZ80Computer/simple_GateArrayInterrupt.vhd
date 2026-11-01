@@ -2750,8 +2750,13 @@ when STATE_INC_LINE_7 =>
 ----------------------------------------------------------------------------
 		
 		
-		if LineCounter = R7VSyncPos then
-			vSyncCount:= x"0";  --x"0"; -- pulse ?
+		if LineCounter = R7VSyncPos then		
+			--hack R3Vwidth=0 is black dog I think
+			if R3Vwidth=x"0" then
+				vSyncCount:= x"8";
+			else
+				vSyncCount:= R3Vwidth;  --x"0"; -- pulse ?
+			end if;
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
@@ -2846,19 +2851,20 @@ end case;
 				-- 0 is "1" & x"0" 16bits!
 				-- crtc address is 2 char per 2 char, so here x"8" is fine
 				-- human increment : compte a partir de 1
-				vSyncCount:=vSyncCount+1;
+				vSyncCount:=vSyncCount-1;
 				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
 				--CRTC0 use 2 bytes per char, so 8 is 16
 				-- R2Vwidth can be 0 but it is a suicide  => le lire au début ?
-				if (R3Vwidth=x"0" and vSyncCount=8) or (R3Vwidth/=x"0" and vSyncCount = R3Vwidth) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+				if vSyncCount=8 then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 					etat_monitor_vsync:="0000";
 					--crtc_VSYNC<=DO_NOTHING;
 					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
-				else
-					if vSyncCount=2+2 then
-						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
-					end if;
+			-- inc dec change have border effect around here :/
+			--	else
+			--		if vSyncCount=2+2 then
+			--			etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
+			--		end if;
 				end if;
 				-- 0 is x"0"
 				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 

@@ -2696,7 +2696,7 @@ end if;
 		  
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012
-		  LineCounter_is0 <= false; -- if one line at top of char begin
+		  --LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------
 when STATE_INC_RASTER_9  =>
@@ -2812,7 +2812,11 @@ when STATE_INC_LINE_7 =>
 
 				-- deja fait avant => mais pas correctement
 		-- and R3Vwidth/=x"0" ecole first scroll hurt 1 line at top
-		if R3Vwidth/=x"8" and etat_vsync=DO_VSYNC then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
+		if not(
+				R3Vwidth=x"8"
+				or R3Vwidth=x"0"
+				)
+				and etat_vsync=DO_VSYNC then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
 			etat_vsync:=DO_NOTHING;
 			crtc0_state:=STATE_R3VWIDTH_3;
 		end if;
@@ -2822,13 +2826,14 @@ when STATE_INC_LINE_7 =>
 ----------------------------------------------------------------------------
 when STATE_VADJUST_5 =>
 ----------------------------------------------------------------------------
-        VAdjustCounter := VAdjustCounter + 1;
-        if VAdjustCounter >= R5VtotAdjust then
+-- il y a de l'addressaage pendant le VAdjust ?
+--        VAdjustCounter := VAdjustCounter + 1;
+--        if VAdjustCounter = R5VtotAdjust then
             --dispV := '0'; deja fait avant ?
-            ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
-            ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
-            crtc0_state := STATE_INC_RASTER_9;
-        end if;
+--            ADRESSE_MAStore_mem := ADRESSE_maRegister_mem;
+--            ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+--            crtc0_state := STATE_INC_RASTER_9;
+--        end if;
 ----------------------------------------------------------------------------
 when STATE_R3VWIDTH_3 =>
 ----------------------------------------------------------------------------
@@ -2844,8 +2849,8 @@ end case;
 				vSyncCount:=vSyncCount+1;
 				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
 				--CRTC0 use 2 bytes per char, so 8 is 16
-				-- R2Vwidth can be 0
-				if vSyncCount >= R3Vwidth then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+				-- R2Vwidth can be 0 but it is a suicide  => le lire au début ?
+				if (R3Vwidth=x"0" and vSyncCount=8) or (R3Vwidth/=x"0" and vSyncCount = R3Vwidth) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 					etat_monitor_vsync:="0000";
 					--crtc_VSYNC<=DO_NOTHING;

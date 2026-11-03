@@ -1822,7 +1822,7 @@ begin
 		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
 		-- Seascape.dsk (delay of WRITE REGISTER)
 -- 4 5 6 7 9
-leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(5) & registres(6) & registres(7) & registres(9);
+leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(6) & registres(7) & registres(4) &  registres(9);
 
 --end if;
 		case reg_select is
@@ -2237,6 +2237,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable hSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
+		variable vSyncCountCRTC0:std_logic_vector(4 downto 0):=(others=>'0');
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		variable crtc0_state:integer:=9;
@@ -2244,6 +2245,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		constant STATE_INC_LINE_7:integer:=7;
 		constant STATE_VADJUST_5:integer:=5;
 		constant STATE_R3VWIDTH_3:integer:=3;
+		constant STATE_R9Hmax_9:integer:=9+1;
 	begin
 		if reset='1' then
 			vsync_int<=DO_NOTHING;
@@ -2740,10 +2742,13 @@ when STATE_INC_RASTER_9  =>
 		--ADRESSE_maStore_mem:=ADRESSE_maStore_mem+R1Hdisp;
 		crtc0_state := STATE_INC_LINE_7;
 		
-		
 	else
 		RasterCounter := (RasterCounter + 1) and x"1F";
 		ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
+	end if;
+	
+	if R9Rmax >= x"10" then -- au démarrage, puis R9Rmax est sur x"1F", donc le 16 est présent
+		crtc0_state := STATE_R9Hmax_9;
 	end if;
 ----------------------------------------------------------------------------
 when STATE_INC_LINE_7 =>
@@ -2752,11 +2757,7 @@ when STATE_INC_LINE_7 =>
 		
 		if LineCounter = R7VSyncPos then		
 			--hack R3Vwidth=0 is black dog I think
-			if R3Vwidth=x"0" then
-				vSyncCount:= x"8";
-			else
-				vSyncCount:= R3Vwidth;  --x"0"; -- pulse ?
-			end if;
+			vSyncCountCRTC0:="0" & x"1";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
@@ -2784,7 +2785,7 @@ when STATE_INC_LINE_7 =>
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
 			--CRTC0 Only reloads the screen offset (R12/R13) when the vertical line counter reaches its final character line. 2/2
-			if R9Rmax = x"00" then
+			if R9Rmax = x"00" or R9Rmax=x"01" then -- Logon's run has R9Rmax=x"01" showing gameboy rotate
 				--adresse_maRegister_mem
 				if R5VtotAdjust /= x"00" then 
 					VAdjustCounter := x"00";
@@ -2819,7 +2820,7 @@ when STATE_INC_LINE_7 =>
 		-- and R3Vwidth/=x"0" ecole first scroll hurt 1 line at top
 		if not(
 				R3Vwidth=x"8"
-				or R3Vwidth=x"0"
+				or R3Vwidth=x"0" --it's 16 here
 				)
 				and etat_vsync=DO_VSYNC then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
 			etat_vsync:=DO_NOTHING;
@@ -2843,6 +2844,11 @@ when STATE_VADJUST_5 =>
 when STATE_R3VWIDTH_3 =>
 ----------------------------------------------------------------------------
 		-- pas 8
+----------------------------------------------------------------------------
+when STATE_R9Hmax_9 =>
+----------------------------------------------------------------------------
+		-- x"00"
+
 when others=>NULL;
 end case;
 
@@ -2851,21 +2857,23 @@ end case;
 				-- 0 is "1" & x"0" 16bits!
 				-- crtc address is 2 char per 2 char, so here x"8" is fine
 				-- human increment : compte a partir de 1
-				vSyncCount:=vSyncCount-1;
 				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
 				--CRTC0 use 2 bytes per char, so 8 is 16
 				-- R2Vwidth can be 0 but it is a suicide  => le lire au début ?
-				if vSyncCount=8 then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+				--   1 2 3 4 5 6 7 8 = 8 step outa line
+				--ou 2 3 4 5 6 7 8 = 7 step outa line <=
+				if (R3Vwidth=x"0" and vSyncCountCRTC0=16) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 					etat_monitor_vsync:="0000";
 					--crtc_VSYNC<=DO_NOTHING;
 					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 			-- inc dec change have border effect around here :/
-			--	else
-			--		if vSyncCount=2+2 then
-			--			etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
-			--		end if;
+				else
+					if vSyncCountCRTC0=2+2 then
+						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
+					end if;
 				end if;
+				vSyncCountCRTC0:=vSyncCountCRTC0+1;
 				-- 0 is x"0"
 				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
 			end if;

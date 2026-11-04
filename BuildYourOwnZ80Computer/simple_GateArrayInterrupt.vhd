@@ -2237,7 +2237,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable hSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
-		variable vSyncCountCRTC0:std_logic_vector(4 downto 0):=(others=>'0'); -- pas 4 car on peut changer en live la valeur R3Vwidth
+		variable vSyncCountCRTC0:std_logic_vector(3 downto 0):=(others=>'0'); -- pas 3 downto 0 car on peut changer en live la valeur R3Vwidth
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		variable crtc0_state:integer:=9;
@@ -2723,10 +2723,10 @@ end if;
 					--crtc_VSYNC<=DO_NOTHING;
 					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
 			-- inc dec change have border effect around here :/
---				else
---					if vSyncCountCRTC0=2+2 then
---						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
---					end if;
+				else
+					if vSyncCountCRTC0=2+2 then
+						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
+					end if;
 				end if;
 				-- 0 is x"0"
 				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
@@ -2795,7 +2795,7 @@ when STATE_INC_LINE_7 =>
 		
 		if LineCounter = R7VSyncPos then		
 			--hack R3Vwidth=0 is black dog I think
-			vSyncCountCRTC0:="0" & x"0"; --"0" & x"1";
+			vSyncCountCRTC0:=x"0"; -- integer facility "0" & x"0"; --"0" & x"1";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;

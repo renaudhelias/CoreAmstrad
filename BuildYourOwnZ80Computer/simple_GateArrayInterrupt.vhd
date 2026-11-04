@@ -2237,7 +2237,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable hSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
-		variable vSyncCountCRTC0:std_logic_vector(4 downto 0):=(others=>'0');
+		variable vSyncCountCRTC0:std_logic_vector(3 downto 0):=(others=>'0'); -- pas 4 car on peut changer en live la valeur R3Vwidth
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		variable crtc0_state:integer:=9;
@@ -2696,6 +2696,42 @@ end if;
         hCC := x"00";
 		  --dispH:='0'; deja fait / refactor bon sang
 		  
+		  
+		  
+		  
+		  -- at top cause first line is line
+		  --buggy boy, top of road has a palette offset
+			if etat_vsync=DO_VSYNC then
+				vSyncCountCRTC0:=vSyncCountCRTC0+1;
+				-- 0 is "1" & x"0" 16bits!
+				-- crtc address is 2 char per 2 char, so here x"8" is fine
+				-- human increment : compte a partir de 1
+				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
+				--CRTC0 use 2 bytes per char, so 8 is 16
+				-- R2Vwidth can be 0 but it is a suicide  => le lire au dÃ©but ?
+				--   1 2 3 4 5 6 7 8 = 8 step outa line
+				--ou 2 3 4 5 6 7 8 = 7 step outa line <=
+				
+				--When a VSYNC starts on CRTC 0, 3 and 4, it is possible to modify the number of lines along the 
+				--way. => donc VSyncCounter max n'est pas 16 !
+				if (R3Vwidth=x"0" and vSyncCountCRTC0=0) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+					etat_vsync:=DO_NOTHING;
+					etat_monitor_vsync:="0000";
+					--crtc_VSYNC<=DO_NOTHING;
+					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
+			-- inc dec change have border effect around here :/
+--				else
+--					if vSyncCountCRTC0=2+2 then
+--						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
+--					end if;
+				end if;
+				-- 0 is x"0"
+				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
+			end if;
+		  
+		  
+		  
+		  
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012
 		  --LineCounter_is0 <= false; -- if one line at top of char begin
@@ -2756,7 +2792,7 @@ when STATE_INC_LINE_7 =>
 		
 		if LineCounter = R7VSyncPos then		
 			--hack R3Vwidth=0 is black dog I think
-			vSyncCountCRTC0:="0" & x"1";
+			vSyncCountCRTC0:=x"0"; --"0" & x"1";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
@@ -2862,31 +2898,7 @@ when STATE_R9Hmax_9 =>
 when others=>NULL;
 end case;
 
-			--buggy boy, top of road has a palette offset
-			if etat_vsync=DO_VSYNC then
-				-- 0 is "1" & x"0" 16bits!
-				-- crtc address is 2 char per 2 char, so here x"8" is fine
-				-- human increment : compte a partir de 1
-				-- brucelee too quick with 0, register is 8E (donc 8) vSyncCount+1
-				--CRTC0 use 2 bytes per char, so 8 is 16
-				-- R2Vwidth can be 0 but it is a suicide  => le lire au dÃ©but ?
-				--   1 2 3 4 5 6 7 8 = 8 step outa line
-				--ou 2 3 4 5 6 7 8 = 7 step outa line <=
-				if (R3Vwidth=x"0" and vSyncCountCRTC0=16) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
-					etat_vsync:=DO_NOTHING;
-					etat_monitor_vsync:="0000";
-					--crtc_VSYNC<=DO_NOTHING;
-					--vsync_int<=DO_NOTHING; -- useless, except to addition several vsync layering them each others
-			-- inc dec change have border effect around here :/
-				else
-					if vSyncCountCRTC0=2+2 then
-						etat_monitor_vsync:="0000"; -- plomb, pour afficher la vram, arkanoid ?
-					end if;
-				end if;
-				vSyncCountCRTC0:=vSyncCountCRTC0+1;
-				-- 0 is x"0"
-				--NO MORE Logon's run vSyncCount:=vSyncCount+1; 
-			end if;
+			
 
     else -- if hcc
         hCC := (hCC+1) and x"7F";

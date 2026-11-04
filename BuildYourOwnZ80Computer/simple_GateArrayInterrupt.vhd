@@ -2237,7 +2237,7 @@ simple_GateArray_process : process(reset,nCLK4_1) is
 		
 		variable hSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
 		variable vSyncCount:std_logic_vector(3 downto 0):=(others=>'0');
-		variable vSyncCountCRTC0:std_logic_vector(3 downto 0):=(others=>'0'); -- pas 4 car on peut changer en live la valeur R3Vwidth
+		variable vSyncCountCRTC0:std_logic_vector(4 downto 0):=(others=>'0'); -- pas 4 car on peut changer en live la valeur R3Vwidth
 		
 		variable DATA_mem:std_logic_vector(7 downto 0);
 		variable crtc0_state:integer:=9;
@@ -2714,7 +2714,10 @@ end if;
 				
 				--When a VSYNC starts on CRTC 0, 3 and 4, it is possible to modify the number of lines along the 
 				--way. => donc VSyncCounter max n'est pas 16 !
-				if (R3Vwidth=x"0" and vSyncCountCRTC0=0) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+				if (R3Vwidth=x"1" and vSyncCountCRTC0=16+1) then -- Logon System book
+					etat_vsync:=DO_NOTHING;
+					etat_monitor_vsync:="0000";
+				elsif (R3Vwidth=x"0" and vSyncCountCRTC0=16) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 					etat_monitor_vsync:="0000";
 					--crtc_VSYNC<=DO_NOTHING;
@@ -2792,7 +2795,7 @@ when STATE_INC_LINE_7 =>
 		
 		if LineCounter = R7VSyncPos then		
 			--hack R3Vwidth=0 is black dog I think
-			vSyncCountCRTC0:=x"0"; --"0" & x"1";
+			vSyncCountCRTC0:="0" & x"0"; --"0" & x"1";
 			etat_vsync:=DO_VSYNC;
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
@@ -2867,6 +2870,7 @@ when STATE_INC_LINE_7 =>
 		if not(
 				R3Vwidth=x"8"
 				or R3Vwidth=x"0" --it's 16 here
+				or R3Vwidth=x"1" --Logon run book 
 				)
 				and etat_vsync=DO_VSYNC then -- NO MORE Lognn's run --and R3Vwidth/=x"0" then -- and R3Vwidth/=x"0"
 			etat_vsync:=DO_NOTHING;

@@ -2761,7 +2761,10 @@ when STATE_INC_LINE_7 =>
 			etat_monitor_vsync(0):=DO_VSYNC;
 		end if;
 		
-		
+		if (R9Rmax=x"00") and LineCounter = R6Vdisp then --ok en bas de l'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©cran
+			dispV:='0';
+			--dispVEnd := '1';
+		end if;
 		-- deja fait avant
 		--en haut le curseur est visible et dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©cale bien, en bas le curseur disparait donc R6Vdisp + 1
 		-- contre un double increment => +2 <= on perd le cap !!
@@ -2783,11 +2786,16 @@ when STATE_INC_LINE_7 =>
 			
 			LineCounter_is0 <= true;
 			
+			if (R9Rmax=x"00") then
+				dispV:='1';
+			end if;
+
+			
 			--dispV := '1'; le pire : 7 char (sans ligne0)
 			ADRESSE_MAcurrent_mem := ADRESSE_MAStore_mem;
 			-- start at 1, 0 is LineCounter
 			--CRTC0 Only reloads the screen offset (R12/R13) when the vertical line counter reaches its final character line. 2/2
-			if R9Rmax = x"00" or R9Rmax=x"01" then -- Logon's run has R9Rmax=x"01" showing gameboy rotate
+			if R9Rmax = x"00" then -- or R9Rmax=x"01" then -- Logon's run has R9Rmax=x"01" showing gameboy rotate
 				--adresse_maRegister_mem
 				if R5VtotAdjust /= x"00" then 
 					VAdjustCounter := x"00";

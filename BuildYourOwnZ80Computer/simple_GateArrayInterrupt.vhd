@@ -2364,9 +2364,10 @@ leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & Rast
 				-- http://cpctech.cpc-live.com/docs/um6845r/um6845r.htm 0=>???
 				-- http://cpctech.cpc-live.com/docs/mc6845/mc6845.htm 0=>ignore
 				
-				
+				--https://www.cpcwiki.eu/index.php/CRTC#CRTC_Differences
+				--CRTC0 Bits 3..0 define Horizontal Sync Width. If 0 is programmed, no HSYNC is generated (and therefore, no interrupts).
 				if (CRTC_TYPE='0' and ((frame_oddEven='1' and hCC = halfR0)
-				or (frame_oddEven='0' and hCC+1=R2Hsyncpos))) -- and R3Vwidth/=x"0"
+				or (frame_oddEven='0' and hCC+1=R2Hsyncpos)) and R3Hwidth/=x"0")
 				
 				or
 				
@@ -2714,10 +2715,12 @@ end if;
 				
 				--When a VSYNC starts on CRTC 0, 3 and 4, it is possible to modify the number of lines along the 
 				--way. => donc VSyncCounter max n'est pas 16 !
-				if (R3Vwidth=x"1" and vSyncCountCRTC0=16+1) then -- Logon System book
-					etat_vsync:=DO_NOTHING;
-					etat_monitor_vsync:="0000";
-				elsif (R3Vwidth=x"0" and vSyncCountCRTC0=16) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
+				--if (R3Vwidth=x"1" and vSyncCountCRTC0=17) then -- Logon System book
+				--	etat_vsync:=DO_NOTHING;
+				--	etat_monitor_vsync:="0000";
+				--els
+				-- facality
+				if (R3Vwidth=x"0" and vSyncCountCRTC0=0) or (R3Vwidth=x"8" and vSyncCountCRTC0=8) then --4 then -- (8/2) R3Vwidth then -- following Grim (forum)
 					etat_vsync:=DO_NOTHING;
 					etat_monitor_vsync:="0000";
 					--crtc_VSYNC<=DO_NOTHING;
@@ -2737,6 +2740,7 @@ end if;
 		  
 		  -- Logon's run - 3D meets the aging bits 2017
 		  -- WakeUp - 2012
+		  --When VCC=0, R12/R13 is re-read at the start of each line. R12/R13 can therefore be changed for each scanline when VCC=0
 		  --LineCounter_is0 <= false; -- if one line at top of char begin
 case crtc0_state is
 ----------------------------------------------------------------------------

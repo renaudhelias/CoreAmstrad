@@ -47,7 +47,7 @@ module osd (
 	//input [2:0] leds3,
 	//input       leds1,
 	//copilot
-	input [119:0] leds8_debug,
+	input [159:0] leds8_debug,
 	//input [39:0] leds8_debug,
 	//input [19:0] leds8_debug1,
 	//input [19:0] leds8_debug2,
@@ -77,7 +77,7 @@ parameter OSD_COLOR    = 3'd0;
 
 localparam OSD_WIDTH  = 10'd256;
 localparam OSD_HEIGHT = 10'd128;
-localparam SEG7_HEIGHT = 11'd384; // 10'd256;
+localparam SEG7_HEIGHT = OSD_HEIGHT + 11'd256;
 
 // *********************************************************************************
 // spi client
@@ -233,7 +233,7 @@ wire [2:0] osd_color = OSD_COLOR;
 //assign blue_out  = !osd_de?blue_in: {osd_pixel, osd_pixel, osd_color[0], blue_in[5:3] };
 
 //wire [6:0] segment [9:0];
-wire [6:0] segment [29:0];
+wire [6:0] segment [39:0];
 
 //osd_HEXA_7SEG my7segConverter0(.halfByte(3'b000 & leds_mouse_data[16]),.segment(segment[0]));
 //osd_HEXA_7SEG my7segConverter1(.halfByte(leds_mouse_data[15:12]),.segment(segment[1]));
@@ -297,10 +297,10 @@ wire [6:0] segment [29:0];
 //copilot
 genvar g;
 generate
-    for(g=0; g<30; g=g+1)
+    for(g=0; g<40; g=g+1)
     begin : GEN_HEX
         osd_HEXA_7SEG conv(
-            .halfByte(leds8_debug[119-(g*4) -: 4]),
+            .halfByte(leds8_debug[159-(g*4) -: 4]),
             .segment(segment[g])
         );
     end
@@ -308,7 +308,7 @@ endgenerate
 //copilot plus tards
 genvar d;
 generate
-    for(d=0; d<30; d=d+1)
+    for(d=0; d<40; d=d+1)
     begin : GEN_DISP
         osd_7SEG disp(
             .segment(segment[d]),
@@ -347,9 +347,9 @@ endgenerate
 //reg [1:0] matrice_h [9:0];
 //reg [2:0] matrice_v [9:0];
 //copilot
-wire matrice_pixel [29:0];
-reg [1:0] matrice_h [29:0];
-reg [2:0] matrice_v [29:0];
+wire matrice_pixel [39:0];
+reg [1:0] matrice_h [39:0];
+reg [2:0] matrice_v [39:0];
 
 //osd_7SEG my7segDisplayer0(.segment(segment[0]), .h(matrice_h[0]), .v(matrice_v[0]), .pixel(matrice_pixel[0]) ); 
 //osd_7SEG my7segDisplayer1(.segment(segment[1]), .h(matrice_h[1]), .v(matrice_v[1]), .pixel(matrice_pixel[1]) ); 
@@ -365,11 +365,12 @@ reg [2:0] matrice_v [29:0];
 reg [2:0] seg7_hB=3'd0; // horizontal big pixel counter from 0 to 5 (include borders)
 reg [1:0] seg7_h=2'd0; // horizontal big pixel counter from 0 to 3
 wire [4:0] seg7_vcntDiv4=seg7_vcnt[6:2]; // vertical big pixel counter
-wire [1:0] seg7_row = seg7_vcntDiv4 / 8;
+//copilot2
+wire [2:0] seg7_row = seg7_vcntDiv4 / 8;
 wire [2:0] seg7_row_v = seg7_vcntDiv4 % 8;
-wire seg7_row_valid = (seg7_row < 3) && (seg7_row_v < 7);
+wire seg7_row_valid = (seg7_row < 4) && (seg7_row_v < 7);
 wire [1:0] seg7_hcntModulo4=seg7_hcnt[1:0]; // inside a big pixel
-reg [3:0] seg7_i=0; // current 7segment selected
+reg [4:0] seg7_i=0; // current 7segment selected
 always @(posedge pclk) begin
 	if (osd_de)
 		begin

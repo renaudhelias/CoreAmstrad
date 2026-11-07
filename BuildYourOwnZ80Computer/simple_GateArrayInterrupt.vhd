@@ -145,7 +145,7 @@ entity simple_GateArrayInterrupt is
            BLUE_out : out  STD_LOGIC_VECTOR (5 downto 0);
 			  HSYNC_out : out STD_logic;
 			  VSYNC_out : out STD_logic;
-			  leds8_debug : out STD_LOGIC_VECTOR (119 downto 0)
+			  leds8_debug : out STD_LOGIC_VECTOR (159 downto 0)
 			  );
 end simple_GateArrayInterrupt;
 
@@ -1822,6 +1822,7 @@ begin
 		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
 		-- Seascape.dsk (delay of WRITE REGISTER)
 -- 4 5 6 7 9
+leds8_debug(40*4-1 downto 40*3)<=x"00ABCDEF00";
 leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(6) & registres(7) & registres(4) &  registres(9);
 
 --end if;

@@ -1822,8 +1822,10 @@ begin
 		--HD6845S_WriteMaskTable idem que UM6845R_WriteMaskTable sauf pour R8 (skew)
 		-- Seascape.dsk (delay of WRITE REGISTER)
 -- 4 5 6 7 9
-leds8_debug(40*4-1 downto 40*3)<=x"00ABCDEF00";
-leds8_debug(40*3-1 downto 40*2)<=registres(3) & registres(6) & registres(7) & registres(4) &  registres(9);
+leds8_debug(40*4-1 downto 40*3)<=registres(0) & registres(1) & registres(2) & registres(3) &  registres(16);
+leds8_debug(40*3-1 downto 40*2)<=registres(4) & registres(5) & registres(6) & registres(7) &  registres(17);
+leds8_debug(40*2-1 downto 40*1)<=registres(8) & registres(9) & registres(10) & registres(11) & x"00";
+leds8_debug(40*1-1 downto 8)<= registres(12) & registres(13) & registres(14) & registres(15);
 
 --end if;
 		case reg_select is
@@ -2307,54 +2309,10 @@ crtc_VSYNC<=etat_vsync;
 vsync_int<=etat_vsync;
 hsync_int<=etat_hsync; -- Seascape.dsk
 
---coreL.rbf :
---LineCounter (VCC)
---RasterCounter (RA)
---VTAdj counter
---MA high byte
---MA low byte
---leds8_debug<=LineCounter & RasterCounter & R5VtotAdjust & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0);
-
---coreV.rbf :
---VCC
---RA
---R4
---R5
---MA high byte
---leds8_debug<=LineCounter & RasterCounter & x"0000" & "00" & ADRESSE_MAcurrent_mem(13 downto 8);
-
---coreM.rbf
---MAStore high
---MAStore low
---MA current high
---MA current low
---VSync state
---leds8_debug<="00" & ADRESSE_MAstore_mem(13 downto 8) & ADRESSE_MAstore_mem(7 downto 0) & "00" & ADRESSE_MAcurrent_mem(13 downto 8) & ADRESSE_MAcurrent_mem(7 downto 0) & R7Vsyncpos ;
-
---corel2.rbf
---LineCounter
---R7Vsyncpos
---VsyncCount
---VSYNC
---leds8_debug<=LineCounter & R7Vsyncpos & x"0" & VsyncCount & "0000000" & VSYNC & x"00";
-
-
---coreM2.rbf
---MAStore high
---MAStore low
---MACurrent high
---MACurrent low
---leds8_debug<="00" & ADRESSE_maStore_mem(13 downto 8) &  ADRESSE_maStore_mem(7 downto 0) & "00" & ADRESSE_maCurrent_mem (13 downto 8) &  ADRESSE_maCurrent_mem(7 downto 0) & x"00";
-
---coreH3H1H2.rbf
---leds8_debug<=ADRESSE_maStore_mem(7 downto 0) & ADRESSE_MAcurrent_mem(7 downto 0) & LineCounter & RasterCounter & MAStoreSource;
---core.rbf
---leds8_debug(40*2-1 downto 40*1)<=conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
-leds8_debug(40*2-1 downto 40*1)<="00" & ADRESSE_maRegister_mem & "00" & ADRESSE_maStore_mem & x"00";
---& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust
---& conv_std_logic_vector(crtc0_state,8) & x"00" & LineCounter & RasterCounter & R5VtotAdjust;
---leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maRegister_mem & "0" & crtc_A_mem & "0000" & adress_ok & dispVBegin & dispVEnd & crossHV;
-leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & RasterCounter  & conv_std_logic_vector(crtc0_state,8);
+-- memory address
+--leds8_debug(40*2-1 downto 40*1)<="00" & ADRESSE_maRegister_mem & "00" & ADRESSE_maStore_mem & x"00";
+--leds8_debug(40*1-1 downto 0)<= "00" & ADRESSE_maCurrent_mem & LineCounter & RasterCounter  & conv_std_logic_vector(crtc0_state,8);
+leds8_debug(7 downto 0)<=conv_std_logic_vector(crtc0_state,8);
 
 				--setEvents() HSync strange behaviour : part 1
 				etat_monitor_hsync:=etat_monitor_hsync(2 downto 0) & etat_monitor_hsync(0);
